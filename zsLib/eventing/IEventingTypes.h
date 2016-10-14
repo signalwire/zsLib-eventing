@@ -183,7 +183,7 @@ namespace zsLib
       {
         PredefinedTypedef_First,
 
-        PredefinedTypedef_boolean = PredefinedTypedef_First,
+        PredefinedTypedef_bool = PredefinedTypedef_First,
 
         PredefinedTypedef_uchar,
         PredefinedTypedef_char,
@@ -220,10 +220,11 @@ namespace zsLib
 
         PredefinedTypedef_float,
         PredefinedTypedef_double,
+        PredefinedTypedef_ldouble,
         PredefinedTypedef_float32,
         PredefinedTypedef_float64,
 
-        PredefinedTypedef_ptr,
+        PredefinedTypedef_pointer,
 
         PredefinedTypedef_binary,
         PredefinedTypedef_size,
@@ -236,13 +237,14 @@ namespace zsLib
       };
 
       static const char *toString(PredefinedTypedefs type);
-      static PredefinedTypedefs toPredefinedTypedef(const char *type);
+      static PredefinedTypedefs toPredefinedTypedef(const char *type) throw (InvalidArgument);
       static PredefinedTypedefs toPreferredPredefinedTypedef(PredefinedTypedefs type);
 
       static BaseTypes getBaseType(PredefinedTypedefs type);
       static bool isSigned(PredefinedTypedefs type);
-      static size_t getMinBits(PredefinedTypedefs type);
-      static size_t getMaxBits(PredefinedTypedefs type);
+      static bool isUnsigned(PredefinedTypedefs type);
+      static size_t getMinBytes(PredefinedTypedefs type);
+      static size_t getMaxBytes(PredefinedTypedefs type);
 
       //-----------------------------------------------------------------------
       #pragma mark
@@ -257,7 +259,9 @@ namespace zsLib
 
         TypedefMap mTypedefs;
         ChannelMap mChannels;
+        OpCodeMap mOpCodes;
         TaskMap mTasks;
+        EventMap mEvents;
         DataTemplateMap mTemplates;
       };
 
@@ -271,6 +275,8 @@ namespace zsLib
         ChannelID         mID;
         Name              mName; // Company-Product-Component
         OperationalTypes  mType {OperationalType_Last};
+
+        size_t            mAssignedID {};
       };
 
       //-----------------------------------------------------------------------
@@ -281,7 +287,9 @@ namespace zsLib
       struct Task
       {
         Name mName;
-        OperationalTypes mType {OperationalType_Last};
+        OpCodeMap mOpCodes;
+
+        size_t            mAssignedID {};
       };
 
       //-----------------------------------------------------------------------
@@ -292,6 +300,9 @@ namespace zsLib
       struct OpCode
       {
         Name mName;
+        TaskWeakPtr mTask;
+
+        size_t            mAssignedID {};
       };
 
       //-----------------------------------------------------------------------
@@ -302,12 +313,16 @@ namespace zsLib
       struct Event
       {
         Name mName;
-        ChannelID mChannel;
 
         Log::Severity mSeverity {Log::Informational};
         Log::Level mLevel {Log::None};
-        Name mTask;
-        Hash DataTemplatePtr;
+
+        ChannelPtr mChannel;
+        TaskPtr mTask;
+        OpCodePtr mOpCode;
+        DataTemplatePtr mDataTemplate;
+
+        size_t            mAssignedID {};
       };
 
       //-----------------------------------------------------------------------
@@ -322,7 +337,7 @@ namespace zsLib
 
       //-----------------------------------------------------------------------
       #pragma mark
-      #pragma mark IEventingTypes::DataTemplate
+      #pragma mark IEventingTypes::DataType
       #pragma mark
 
       struct DataType

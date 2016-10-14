@@ -225,36 +225,310 @@ namespace zsLib
     //-------------------------------------------------------------------------
     const char *IEventingTypes::toString(PredefinedTypedefs type)
     {
+      switch (type)
+      {
+        case PredefinedTypedef_bool:      return "bool";
+
+        case PredefinedTypedef_uchar:     return "uchar";
+        case PredefinedTypedef_char:      return "char";
+        case PredefinedTypedef_schar:     return "schar";
+        case PredefinedTypedef_ushort:    return "ushort";
+        case PredefinedTypedef_short:     return "short";
+        case PredefinedTypedef_sshort:    return "sshort";
+        case PredefinedTypedef_uint:      return "uint";
+        case PredefinedTypedef_int:       return "int";
+        case PredefinedTypedef_sint:      return "sint";
+        case PredefinedTypedef_ulong:     return "ulong";
+        case PredefinedTypedef_long:      return "long";
+        case PredefinedTypedef_slong:     return "slong";
+        case PredefinedTypedef_ulonglong: return "ulonglong";
+        case PredefinedTypedef_longlong:  return "longlong";
+        case PredefinedTypedef_slonglong: return "slonglong";
+
+        case PredefinedTypedef_uint8:     return "uint8";
+        case PredefinedTypedef_int8:      return "int8";
+        case PredefinedTypedef_sint8:     return "sint8";
+        case PredefinedTypedef_uint16:    return "uint16";
+        case PredefinedTypedef_int16:     return "int16";
+        case PredefinedTypedef_sint16:    return "sint16";
+        case PredefinedTypedef_uint32:    return "uint32";
+        case PredefinedTypedef_int32:     return "int32";
+        case PredefinedTypedef_sint32:    return "sint32";
+        case PredefinedTypedef_uint64:    return "uint64";
+        case PredefinedTypedef_int64:     return "int64";
+        case PredefinedTypedef_sint64:    return "sint64";
+
+        case PredefinedTypedef_byte:      return "byte";
+        case PredefinedTypedef_word:      return "word";
+        case PredefinedTypedef_dword:     return "dword";
+        case PredefinedTypedef_qword:     return "qword";
+
+        case PredefinedTypedef_float:     return "float";
+        case PredefinedTypedef_double:    return "double";
+        case PredefinedTypedef_ldouble:   return "ldouble";
+        case PredefinedTypedef_float32:   return "float32";
+        case PredefinedTypedef_float64:   return "float64";
+
+        case PredefinedTypedef_pointer:   return "pointer";
+
+        case PredefinedTypedef_binary:    return "binary";
+        case PredefinedTypedef_size:      return "size";
+
+        case PredefinedTypedef_string:    return "string";
+        case PredefinedTypedef_astring:   return "astring";
+        case PredefinedTypedef_wstring:   return "wstring";
+      }
+
+      return "unknown";
     }
 
     //-------------------------------------------------------------------------
-    IEventingTypes::PredefinedTypedefs IEventingTypes::toPredefinedTypedef(const char *type)
+    IEventingTypes::PredefinedTypedefs IEventingTypes::toPredefinedTypedef(const char *type) throw (InvalidArgument)
     {
+      String str(type);
+      for (IEventingTypes::PredefinedTypedefs index = IEventingTypes::PredefinedTypedef_First; index <= IEventingTypes::PredefinedTypedef_Last; index = static_cast<IEventingTypes::PredefinedTypedefs>(static_cast<std::underlying_type<IEventingTypes::PredefinedTypedefs>::type>(index) + 1)) {
+        if (0 == str.compareNoCase(IEventingTypes::toString(index))) return index;
+      }
+
+      ZS_THROW_INVALID_ARGUMENT(String("Not a predefined type: ") + str);
+      return PredefinedTypedef_First;
     }
 
     //-------------------------------------------------------------------------
     IEventingTypes::PredefinedTypedefs IEventingTypes::toPreferredPredefinedTypedef(PredefinedTypedefs type)
     {
+      switch (type)
+      {
+        case PredefinedTypedef_schar:     return PredefinedTypedef_char;
+        case PredefinedTypedef_sshort:    return PredefinedTypedef_short;
+        case PredefinedTypedef_sint:      return PredefinedTypedef_int;
+        case PredefinedTypedef_slong:     return PredefinedTypedef_long;
+        case PredefinedTypedef_slonglong: return PredefinedTypedef_longlong;
+
+        case PredefinedTypedef_sint8:     return PredefinedTypedef_int8;
+        case PredefinedTypedef_sint16:    return PredefinedTypedef_int16;
+        case PredefinedTypedef_sint32:    return PredefinedTypedef_int32;
+        case PredefinedTypedef_sint64:    return PredefinedTypedef_int64;
+
+        case PredefinedTypedef_byte:      return PredefinedTypedef_uint8;
+        case PredefinedTypedef_word:      return PredefinedTypedef_uint16;
+        case PredefinedTypedef_dword:     return PredefinedTypedef_uint32;
+        case PredefinedTypedef_qword:     return PredefinedTypedef_uint64;
+
+        case PredefinedTypedef_astring:   PredefinedTypedef_string;
+      }
+      return type;
     }
 
     //-------------------------------------------------------------------------
     IEventingTypes::BaseTypes IEventingTypes::getBaseType(PredefinedTypedefs type)
     {
+      switch (type)
+      {
+        case PredefinedTypedef_bool:      return BaseType_Boolean;
+
+        case PredefinedTypedef_uchar:
+        case PredefinedTypedef_char:
+        case PredefinedTypedef_schar:
+        case PredefinedTypedef_ushort:
+        case PredefinedTypedef_short:
+        case PredefinedTypedef_sshort:
+        case PredefinedTypedef_uint:
+        case PredefinedTypedef_int:
+        case PredefinedTypedef_sint:
+        case PredefinedTypedef_ulong:
+        case PredefinedTypedef_long:
+        case PredefinedTypedef_slong:
+        case PredefinedTypedef_ulonglong:
+        case PredefinedTypedef_longlong:
+        case PredefinedTypedef_slonglong:
+
+        case PredefinedTypedef_uint8:
+        case PredefinedTypedef_int8:
+        case PredefinedTypedef_sint8:
+        case PredefinedTypedef_uint16:
+        case PredefinedTypedef_int16:
+        case PredefinedTypedef_sint16:
+        case PredefinedTypedef_uint32:
+        case PredefinedTypedef_int32:
+        case PredefinedTypedef_sint32:
+        case PredefinedTypedef_uint64:
+        case PredefinedTypedef_int64:
+        case PredefinedTypedef_sint64:
+
+        case PredefinedTypedef_byte:
+        case PredefinedTypedef_word:
+        case PredefinedTypedef_dword:
+        case PredefinedTypedef_qword:     return BaseType_Integer;
+
+        case PredefinedTypedef_float:
+        case PredefinedTypedef_double:
+        case PredefinedTypedef_ldouble:
+        case PredefinedTypedef_float32:
+        case PredefinedTypedef_float64:   return BaseType_Float;
+
+        case PredefinedTypedef_pointer:   return BaseType_Pointer;
+
+        case PredefinedTypedef_binary:    return BaseType_Binary;
+        case PredefinedTypedef_size:      return BaseType_Integer;
+
+        case PredefinedTypedef_string:
+        case PredefinedTypedef_astring:
+        case PredefinedTypedef_wstring:   return BaseType_String;
+      }
+
+      ZS_THROW_NOT_IMPLEMENTED(String("Missing base type conversion for predefined type:") + toString(type));
     }
 
     //-------------------------------------------------------------------------
     bool IEventingTypes::isSigned(PredefinedTypedefs type)
     {
+      switch (type)
+      {
+        case PredefinedTypedef_bool:
+
+        case PredefinedTypedef_uchar:
+        case PredefinedTypedef_ushort:
+        case PredefinedTypedef_uint:
+        case PredefinedTypedef_ulong:
+        case PredefinedTypedef_ulonglong:
+        case PredefinedTypedef_uint8:
+        case PredefinedTypedef_uint16:
+        case PredefinedTypedef_uint32:
+        case PredefinedTypedef_uint64:
+        case PredefinedTypedef_byte:
+        case PredefinedTypedef_word:
+        case PredefinedTypedef_dword:
+        case PredefinedTypedef_qword:     return false;
+      }
+
+      return true;
     }
 
     //-------------------------------------------------------------------------
-    size_t IEventingTypes::getMinBits(PredefinedTypedefs type)
+    bool IEventingTypes::isUnsigned(PredefinedTypedefs type)
     {
+      return !isSigned(type);
     }
 
     //-------------------------------------------------------------------------
-    size_t IEventingTypes::getMaxBits(PredefinedTypedefs type)
+    size_t IEventingTypes::getMinBytes(PredefinedTypedefs type)
     {
+      switch (type)
+      {
+        case PredefinedTypedef_bool:      return sizeof(bool);
+
+        case PredefinedTypedef_uchar:     return sizeof(char);
+        case PredefinedTypedef_char:      return sizeof(char);
+        case PredefinedTypedef_schar:     return sizeof(char);
+        case PredefinedTypedef_ushort:    return sizeof(short);
+        case PredefinedTypedef_short:     return sizeof(short);
+        case PredefinedTypedef_sshort:    return sizeof(short);
+        case PredefinedTypedef_uint:      return sizeof(int);
+        case PredefinedTypedef_int:       return sizeof(int);
+        case PredefinedTypedef_sint:      return sizeof(int);
+        case PredefinedTypedef_ulong:     return sizeof(int);
+        case PredefinedTypedef_long:      return sizeof(int);
+        case PredefinedTypedef_slong:     return sizeof(int);
+        case PredefinedTypedef_ulonglong: return sizeof(long long);
+        case PredefinedTypedef_longlong:  return sizeof(long long);
+        case PredefinedTypedef_slonglong: return sizeof(long long);
+
+        case PredefinedTypedef_uint8:     return 1;
+        case PredefinedTypedef_int8:      return 1;
+        case PredefinedTypedef_sint8:     return 1;
+        case PredefinedTypedef_uint16:    return 2;
+        case PredefinedTypedef_int16:     return 2;
+        case PredefinedTypedef_sint16:    return 2;
+        case PredefinedTypedef_uint32:    return 4;
+        case PredefinedTypedef_int32:     return 4;
+        case PredefinedTypedef_sint32:    return 4;
+        case PredefinedTypedef_uint64:    return 8;
+        case PredefinedTypedef_int64:     return 8;
+        case PredefinedTypedef_sint64:    return 8;
+
+        case PredefinedTypedef_byte:      return 1;
+        case PredefinedTypedef_word:      return 2;
+        case PredefinedTypedef_dword:     return 4;
+        case PredefinedTypedef_qword:     return 8;
+
+        case PredefinedTypedef_float:     return sizeof(float);
+        case PredefinedTypedef_double:    return sizeof(float);
+        case PredefinedTypedef_ldouble:   return sizeof(double);
+        case PredefinedTypedef_float32:   return 4;
+        case PredefinedTypedef_float64:   return 8;
+
+        case PredefinedTypedef_pointer:   return sizeof(int);
+
+        case PredefinedTypedef_binary:    return 0;
+        case PredefinedTypedef_size:      return sizeof(int);
+
+        case PredefinedTypedef_string:    return 0;
+        case PredefinedTypedef_astring:   return 0;
+        case PredefinedTypedef_wstring:   return 0;
+      }
+
+      return 0;
+    }
+
+    //-------------------------------------------------------------------------
+    size_t IEventingTypes::getMaxBytes(PredefinedTypedefs type)
+    {
+      switch (type)
+      {
+        case PredefinedTypedef_bool:      return sizeof(bool);
+
+        case PredefinedTypedef_uchar:     return sizeof(char);
+        case PredefinedTypedef_char:      return sizeof(char);
+        case PredefinedTypedef_schar:     return sizeof(char);
+        case PredefinedTypedef_ushort:    return sizeof(short);
+        case PredefinedTypedef_short:     return sizeof(short);
+        case PredefinedTypedef_sshort:    return sizeof(short);
+        case PredefinedTypedef_uint:      return sizeof(int);
+        case PredefinedTypedef_int:       return sizeof(int);
+        case PredefinedTypedef_sint:      return sizeof(int);
+        case PredefinedTypedef_ulong:     return sizeof(long long);
+        case PredefinedTypedef_long:      return sizeof(long long);
+        case PredefinedTypedef_slong:     return sizeof(long long);
+        case PredefinedTypedef_ulonglong: return sizeof(long long);
+        case PredefinedTypedef_longlong:  return sizeof(long long);
+        case PredefinedTypedef_slonglong: return sizeof(long long);
+
+        case PredefinedTypedef_uint8:     return 1;
+        case PredefinedTypedef_int8:      return 1;
+        case PredefinedTypedef_sint8:     return 1;
+        case PredefinedTypedef_uint16:    return 2;
+        case PredefinedTypedef_int16:     return 2;
+        case PredefinedTypedef_sint16:    return 2;
+        case PredefinedTypedef_uint32:    return 4;
+        case PredefinedTypedef_int32:     return 4;
+        case PredefinedTypedef_sint32:    return 4;
+        case PredefinedTypedef_uint64:    return 8;
+        case PredefinedTypedef_int64:     return 8;
+        case PredefinedTypedef_sint64:    return 8;
+
+        case PredefinedTypedef_byte:      return 1;
+        case PredefinedTypedef_word:      return 2;
+        case PredefinedTypedef_dword:     return 4;
+        case PredefinedTypedef_qword:     return 8;
+
+        case PredefinedTypedef_float:     return sizeof(float);
+        case PredefinedTypedef_double:    return sizeof(long double);
+        case PredefinedTypedef_ldouble:   return sizeof(long double);
+        case PredefinedTypedef_float32:   return 4;
+        case PredefinedTypedef_float64:   return 8;
+
+        case PredefinedTypedef_pointer:   return sizeof(long long);
+
+        case PredefinedTypedef_binary:    return 0;
+        case PredefinedTypedef_size:      return sizeof(long long);
+
+        case PredefinedTypedef_string:    return 0;
+        case PredefinedTypedef_astring:   return 0;
+        case PredefinedTypedef_wstring:   return 0;
+      }
+
+      return 0;
     }
 
   } // namespace eventing
