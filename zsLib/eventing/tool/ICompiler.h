@@ -29,68 +29,52 @@ either expressed or implied, of the FreeBSD Project.
 
 */
 
-#include <zsLibEventTool/internal/zsLibEventTool_Process.h>
+#pragma once
 
-#include <zsLib/Exception.h>
+#include <zsLib/eventing/tool/types.h>
 
-namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zsLib_eventing_tool) } } }
 
 namespace zsLib
 {
-  namespace EventTool
+  namespace eventing
   {
-    namespace internal
+    namespace tool
     {
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       #pragma mark
-      #pragma mark Buffer
+      #pragma mark ICompilerTypes
       #pragma mark
 
-      //-----------------------------------------------------------------------
-      Process::Process(
-                       const make_private &,
-                       const ICommandLine::Config &config
-                       ) :
-        mConfig(config)
+      interaction ICompilerTypes
       {
-      }
-
-      //-----------------------------------------------------------------------
-      Process::~Process()
-      {
-      }
+        struct Config
+        {
+          StringList mSources;
+        };
+      };
 
       //-----------------------------------------------------------------------
-      ProcessPtr Process::create(const ICommandLine::Config &config)
-      {
-        ProcessPtr pThis(std::make_shared<Process>(make_private{}, config));
-        pThis->mThisWeak = pThis;
-        return pThis;
-      }
-
       //-----------------------------------------------------------------------
-      void Process::process() throw (Failure)
+      //-----------------------------------------------------------------------
+      //-----------------------------------------------------------------------
+      #pragma mark
+      #pragma mark IProcess
+      #pragma mark
+
+      interaction ICompiler : public ICompilerTypes
       {
-      }
+        static void prepare(
+                            const char *configFile,
+                            Config &outConfig
+                            );
 
-    } // namespace internal
+        static ICompilerPtr create(const Config &config);
 
-    //-------------------------------------------------------------------------
-    //-------------------------------------------------------------------------
-    //-------------------------------------------------------------------------
-    //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IProcess
-    #pragma mark
-
-    //-------------------------------------------------------------------------
-    IProcessPtr IProcess::create(const ICommandLine::Config &config)
-    {
-      return internal::Process::create(config);
+        virtual void process() throw (Failure) = 0;
+      };
     }
-
-  } // namespace EventTool
-} // namespace zsLib
+  }
+}

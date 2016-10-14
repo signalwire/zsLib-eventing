@@ -31,7 +31,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_CommandLine.h>
 
-#include <zsLib/eventing/tool/IProcess.h>
+#include <zsLib/eventing/tool/ICompiler.h>
 #include <zsLib/eventing/tool/OutputStream.h>
 
 namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zsLib_eventing_tool) } } }
@@ -70,12 +70,13 @@ namespace zsLib
       {
         switch (flag)
         {
-          case Flag_None:     return "";
-          case Flag_Config:   return "c";
-          case Flag_Question: return "?";
-          case Flag_Help:     return "h";
-          case Flag_Source:   return "s";
-          case Flag_HelpAlt:  return "help";
+          case Flag_None:         return "";
+          case Flag_Config:       return "c";
+          case Flag_Question:     return "?";
+          case Flag_Help:         return "h";
+          case Flag_HelpAlt:      return "help";
+          case Flag_Source:       return "s";
+          case Flag_OutputName:   return "o";
         }
 
         return "unknown";
@@ -96,8 +97,9 @@ namespace zsLib
           " -h\n"
           " -help    output this help text.\n"
           "\n"
-          " -c       config_file_name - input event provider json configuration file.\n"
+          " -c       config_file_name          - input event provider json configuration file.\n"
           " -s       source_file_name_1 ... n  - input C/C++ source file.\n"
+          " -o       output_name ... n         - output name.\n"
           "\n";
       }
 
@@ -145,10 +147,10 @@ namespace zsLib
           validate(config);
           process(config);
         } catch (const InvalidArgument &e) {
-          output() << "[Error] " << e.message << "\n\n";
+          output() << "[Error] " << e.message() << "\n\n";
           result = -1;
         } catch (const Failure &e) {
-          output() << "[Error] " << e.message << "\n\n";
+          output() << "[Error] " << e.message() << "\n\n";
           result = e.result();
         }
         return result;
@@ -213,6 +215,7 @@ namespace zsLib
                   return;
               }
               case ICommandLine::Flag_Source: goto process_flag;
+              case ICommandLine::Flag_OutputName: goto process_flag;
             }
             ZS_THROW_INVALID_ARGUMENT("Internal error when processing argument: " + arg + " within context: " + processedThusFar);
           }
@@ -231,6 +234,10 @@ namespace zsLib
               case ICommandLine::Flag_Source: {
                 config.mSourceFiles.push_back(arg);
                 goto process_flag;  // process next source file in the list (maintain same flag)
+              }
+              case ICommandLine::Flag_OutputName: {
+                config.mOutputName = arg;
+                goto processed_flag;
               }
             }
 
@@ -266,14 +273,14 @@ namespace zsLib
       //-----------------------------------------------------------------------
       void ICommandLine::process(Config &config) throw (Failure)
       {
-        typedef IProcessTypes::Config ProcessConfig;
+        typedef ICompilerTypes::Config ProcessConfig;
 
         ProcessConfig processConfig;
 
         output() << "[Note] Using configuration file: " + config.mConfigFile << "\n";
         output() << "\n";
 
-        auto process = IProcess::create(processConfig);
+        auto process = ICompiler::create(processConfig);
         process->process();
       }
     }

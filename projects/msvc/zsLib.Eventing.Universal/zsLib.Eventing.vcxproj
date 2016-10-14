@@ -27,6 +27,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\zsLib\eventing\eventing.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\IEventingTypes.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\IHelper.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\internal\types.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_Helper.h" />

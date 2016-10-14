@@ -63,6 +63,7 @@ namespace zsLib
           Flag_Help,
           Flag_HelpAlt,
           Flag_Source,
+          Flag_OutputName,
 
           Flag_Last = Flag_HelpAlt,
         };
@@ -75,6 +76,7 @@ namespace zsLib
           StringList  mArguments;
           String      mConfigFile;
           StringList  mSourceFiles;
+          String      mOutputName;
         };
 
       };
@@ -110,7 +112,8 @@ namespace zsLib
 
         static void validate(Config &config) throw (InvalidArgument);
         static void process(Config &config) throw (Failure);
-      }
-    }
-  }
-}
+      };
+
+    } // namespace tool
+  } // namespace eventing
+} // namespace zsLib

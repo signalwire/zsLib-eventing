@@ -31,44 +31,6 @@ either expressed or implied, of the FreeBSD Project.
 
 #pragma once
 
-#include <zsLib/eventing/tool/types.h>
-
-
-namespace zsLib
-{
-  namespace eventing
-  {
-    namespace tool
-    {
-      //-----------------------------------------------------------------------
-      //-----------------------------------------------------------------------
-      //-----------------------------------------------------------------------
-      //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IProcessTypes
-      #pragma mark
-
-      interaction IProcessTypes
-      {
-        struct Config
-        {
-        };
-      };
-
-      //-----------------------------------------------------------------------
-      //-----------------------------------------------------------------------
-      //-----------------------------------------------------------------------
-      //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IProcess
-      #pragma mark
-
-      interaction IProcess : public IProcessTypes
-      {
-        static IProcessPtr create(const Config &config);
-
-        virtual void process() throw (Failure) = 0;
-      };
-    }
-  }
-}
+#include <zsLib/eventing/types.h>
+#include <zsLib/eventing/IEventingTypes.h>
+#include <zsLib/eventing/IHelper.h>

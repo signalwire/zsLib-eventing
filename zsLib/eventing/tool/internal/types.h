@@ -42,7 +42,7 @@ namespace zsLib
       namespace internal
       {
         ZS_DECLARE_CLASS_PTR(CommandLine);
-        ZS_DECLARE_CLASS_PTR(Process);
+        ZS_DECLARE_CLASS_PTR(Compiler);
       }
     }
   }

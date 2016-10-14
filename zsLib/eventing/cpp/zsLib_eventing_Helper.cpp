@@ -82,5 +82,18 @@ namespace zsLib
       return result;
     }
 
-  } // namespace EventTool
+    //-------------------------------------------------------------------------
+    String IHelper::getElementText(const ElementPtr &el)
+    {
+      if (!el) return String();
+      return el->getText();
+    }
+
+    //-------------------------------------------------------------------------
+    String IHelper::getElementTextAndDecode(const ElementPtr &el)
+    {
+      if (!el) return String();
+      return el->getTextDecoded();
+    }
+  } // namespace eventing
 } // namespace zsLib

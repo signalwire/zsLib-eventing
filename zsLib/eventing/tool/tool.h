@@ -34,5 +34,5 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/types.h>
 
 #include <zsLib/eventing/tool/ICommandLine.h>
-#include <zsLib/eventing/tool/IProcess.h>
+#include <zsLib/eventing/tool/ICompiler.h>
 #include <zsLib/eventing/tool/OutputStream.h>

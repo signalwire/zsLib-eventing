@@ -35,4 +35,4 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <zsLib/eventing/tool/internal/types.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_CommandLine.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Process.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Compiler.h>

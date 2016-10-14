@@ -44,6 +44,9 @@ namespace zsLib
   {
     namespace tool
     {
+      ZS_DECLARE_CLASS_PTR(StdOutputStream);
+      ZS_DECLARE_CLASS_PTR(DebugOutputStream);
+
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
@@ -66,13 +69,14 @@ namespace zsLib
       #pragma mark StdOutputStream
       #pragma mark
 
-      class StdOutputStream : IOutputDelegate
+      class StdOutputStream : public IOutputDelegate
       {
-        virtual void output(const char *str) const
+        virtual void output(const char *str) const override
         {
           std::cout << str;
         }
-        virtual void output(const wchar_t *str) const
+
+        virtual void output(const wchar_t *str) const override
         {
           std::cout << str;
         }
@@ -86,10 +90,10 @@ namespace zsLib
       #pragma mark DebugOutputStream
       #pragma mark
 
-      class DebugOutputStream : IOutputDelegate
+      class DebugOutputStream : public IOutputDelegate
       {
         //---------------------------------------------------------------------
-        virtual void output(const char *str) const
+        virtual void output(const char *str) const override
         {
 #ifdef _WIN32
           OutputDebugStringA(str);
@@ -97,7 +101,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        virtual void output(const wchar_t *str) const
+        virtual void output(const wchar_t *str) const override
         {
 #ifdef _WIN32
           OutputDebugStringW(str);
@@ -140,7 +144,7 @@ namespace zsLib
           if (c == CharTraits::eof())
             return CharTraits::not_eof(c);
 
-          m_outputBuffer.push_back(c);
+          m_outputBuffer.push_back(static_cast<char_type>(c));
           if (c == TEXT('\n'))
             sync();
 
@@ -189,12 +193,14 @@ namespace zsLib
         typedef tool_basic_streambuf< T, CharTraits > ToolStreamBuf;
         typedef std::basic_streambuf< T, CharTraits > StreamBuf;
         typedef std::basic_ostream< T, CharTraits > OStream;
-        typedef std::map<PUID, IOutputDelegate> OutputDelegateMap;
+        typedef std::map<PUID, IOutputDelegatePtr> OutputDelegateMap;
         ZS_DECLARE_PTR(OutputDelegateMap);
 
       public:
         //---------------------------------------------------------------------
-        tool_basic_ostream() : OStream((StreamBuf*)&m_streamBuffer) :
+        tool_basic_ostream() :
+          OStream((StreamBuf*)&mStreamBuffer),
+          mStreamBuffer(*this),
           mOutputs(make_shared<OutputDelegateMap>())
         {
           clear();
@@ -209,7 +215,7 @@ namespace zsLib
           if (0 == installID) return;
           AutoRecursiveLock lock(mLock);
           OutputDelegateMapPtr replacements(make_shared<OutputDelegateMap>(*mOutputs));
-          replacements[installID] = delegate;
+          (*replacements)[installID] = delegate;
           mOutputs = replacements;
         }
 
@@ -257,7 +263,7 @@ namespace zsLib
         #pragma mark
 
         //---------------------------------------------------------------------
-        virtual void output(const char *str) const
+        virtual void output(const char *str) const override
         {
           OutputDelegateMapPtr temp;
           {
@@ -271,7 +277,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        virtual void output(const wchar_t *str) const
+        virtual void output(const wchar_t *str) const override
         {
           OutputDelegateMapPtr temp;
           {
@@ -286,9 +292,9 @@ namespace zsLib
 
       protected:
         //---------------------------------------------------------------------
-        RecursiveLock mLock;
+        mutable RecursiveLock mLock;
 
-        ToolStreamBuf m_streamBuffer;
+        ToolStreamBuf mStreamBuffer;
         OutputDelegateMapPtr mOutputs;  // contents are non-mutable
 
         PUID mStdOutputInstall {};

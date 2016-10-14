@@ -42,6 +42,9 @@ namespace zsLib
       static SecureByteBlockPtr loadFile(const char *path);
       static ElementPtr read(const SecureByteBlockPtr buffer);
       static ElementPtr read(const SecureByteBlock &buffer);
+
+      static String getElementText(const ElementPtr &el);
+      static String getElementTextAndDecode(const ElementPtr &el);
     };
   }
 }

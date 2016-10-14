@@ -33,7 +33,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <zsLib/eventing/tool/internal/types.h>
 
-#include <zsLib/eventing/tool/IProcess.h>
+#include <zsLib/eventing/tool/ICompiler.h>
 
 namespace zsLib
 {
@@ -43,23 +43,23 @@ namespace zsLib
     {
       namespace internal
       {
-        class Process : public IProcess
+        class Compiler : public ICompiler
         {
           struct make_private {};
 
         public:
-          Process(
+          Compiler(
                   const make_private &,
                   const Config &config
                   );
-          ~Process();
+          ~Compiler();
 
-          static ProcessPtr create(const Config &config);
+          static CompilerPtr create(const Config &config);
 
           virtual void process() throw (Failure);
 
         private:
-          ProcessWeakPtr mThisWeak;
+          CompilerWeakPtr mThisWeak;
 
           Config mConfig;
         };

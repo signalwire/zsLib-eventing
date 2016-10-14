@@ -20,17 +20,19 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\zsLib\eventing\tool\ICommandLine.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\ICompiler.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\types.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_CommandLine.h" />
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_Process.h" />
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\IProcess.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_Compiler.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\OutputStream.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\tool.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\types.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_CommandLine.cpp" />
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_Process.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_Compiler.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E39B5144-3CFC-4431-ADA7-14C66DB794A4}</ProjectGuid>
@@ -93,6 +95,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4068;4290</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -107,6 +110,7 @@
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4068;4290</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -123,6 +127,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4068;4290</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -141,6 +146,7 @@
       <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4068;4290</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
