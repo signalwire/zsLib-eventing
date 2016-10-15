@@ -33,12 +33,18 @@
     <ClInclude Include="..\..\..\zsLib\eventing\IEventingTypes.h">
       <Filter>zsLib\eventing</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_EventingTypes.h">
+      <Filter>zsLib\eventing\internal</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_Helper.cpp">
       <Filter>zsLib\eventing\cpp</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing.cpp">
+      <Filter>zsLib\eventing\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_EventingTypes.cpp">
       <Filter>zsLib\eventing\cpp</Filter>
     </ClCompile>
   </ItemGroup>

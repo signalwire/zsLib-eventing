@@ -262,7 +262,7 @@ namespace zsLib
         OpCodeMap mOpCodes;
         TaskMap mTasks;
         EventMap mEvents;
-        DataTemplateMap mTemplates;
+        DataTemplateMap mDataTemplates;
 
         Provider() {}
         Provider(const ElementPtr &rootEl) throw (InvalidContent);
@@ -293,7 +293,7 @@ namespace zsLib
       static void createTypesdefs(
                                   ElementPtr typedefsEl,
                                   TypedefMap &outTypedefs
-                                  );
+                                  ) throw(InvalidContent);
 
       //-----------------------------------------------------------------------
       #pragma mark
@@ -316,6 +316,11 @@ namespace zsLib
         ElementPtr createElement(const char *objectName = NULL) const;
       };
 
+      static void createChannels(
+                                 ElementPtr channelsEl,
+                                 ChannelMap &outChannels
+                                 ) throw(InvalidContent);
+
       //-----------------------------------------------------------------------
       #pragma mark
       #pragma mark IEventingTypes::Task
@@ -329,12 +334,17 @@ namespace zsLib
         size_t    mValue {};
 
         Task() {}
-        Task(const ElementPtr &rootEl);
+        Task(const ElementPtr &rootEl) throw (InvalidContent);
 
         static TaskPtr create(const ElementPtr &el) { if (!el) return TaskPtr(); return make_shared<Task>(el); }
 
         ElementPtr createElement(const char *objectName = NULL) const;
       };
+
+      static void createTasks(
+                              ElementPtr tasksEl,
+                              TaskMap &outTasks
+                              ) throw (InvalidContent);
 
       //-----------------------------------------------------------------------
       #pragma mark
@@ -349,7 +359,7 @@ namespace zsLib
         size_t      mValue {};
 
         OpCode() {}
-        OpCode(const ElementPtr &rootEl);
+        OpCode(const ElementPtr &rootEl) throw (InvalidContent);
 
         static OpCodePtr create(const ElementPtr &el) { if (!el) return OpCodePtr(); return make_shared<OpCode>(el); }
 
@@ -359,7 +369,7 @@ namespace zsLib
       static void createOpCodes(
                                 ElementPtr opCodesEl,
                                 OpCodeMap &outOpCodes
-                                );
+                                ) throw (InvalidContent);
 
       //-----------------------------------------------------------------------
       #pragma mark
@@ -381,12 +391,20 @@ namespace zsLib
         size_t          mValue {};
 
         Event() {}
-        Event(const ElementPtr &rootEl);
+        Event(const ElementPtr &rootEl) throw (InvalidContent);
 
         static EventPtr create(const ElementPtr &el) { if (!el) return EventPtr(); return make_shared<Event>(el); }
 
         ElementPtr createElement(const char *objectName = NULL) const;
       };
+
+      static void createEvents(
+                               ElementPtr eventsEl,
+                               EventMap &outEvents,
+                               const OpCodeMap &opCodes,
+                               const TaskMap &tasks,
+                               const DataTemplateMap &dataTemplates
+                               ) throw (InvalidContent);
 
       //-----------------------------------------------------------------------
       #pragma mark
@@ -398,12 +416,20 @@ namespace zsLib
         DataTypeList mDataTypes;
 
         DataTemplate() {}
-        DataTemplate(const ElementPtr &rootEl);
+        DataTemplate(const ElementPtr &rootEl) throw (InvalidContent);
 
         static DataTemplatePtr create(const ElementPtr &el) { if (!el) return DataTemplatePtr(); return make_shared<DataTemplate>(el); }
 
         ElementPtr createElement(const char *objectName = NULL) const;
+
+        String hash() const;
       };
+
+      static void createDataTemplates(
+                                      ElementPtr templatesEl,
+                                      DataTemplateMap &outDataTemplates,
+                                      const TypedefMap &typedefs
+                                      ) throw (InvalidContent);
 
       //-----------------------------------------------------------------------
       #pragma mark
@@ -413,15 +439,27 @@ namespace zsLib
       struct DataType
       {
         PredefinedTypedefs mType {PredefinedTypedef_First};
-        String             mName;
+        String             mValueName;
 
         DataType() {}
-        DataType(const ElementPtr &rootEl);
+        DataType(
+                 const ElementPtr &rootEl,
+                 const TypedefMap *typedefs = NULL
+                 ) throw (InvalidContent);
 
-        static DataTypePtr create(const ElementPtr &el) { if (!el) return DataTypePtr(); return make_shared<DataType>(el); }
+        static DataTypePtr create(
+                                  const ElementPtr &el,
+                                  const TypedefMap *typedefs = NULL
+                                  ) { if (!el) return DataTypePtr(); return make_shared<DataType>(el, typedefs); }
 
         ElementPtr createElement(const char *objectName = NULL) const;
       };
+
+      static void createDataTypes(
+                                  ElementPtr dataTypesEl,
+                                  DataTypeList &outDataTypes,
+                                  const TypedefMap &typedefs
+                                  ) throw (InvalidContent);
     };
 
   } // namespace eventing

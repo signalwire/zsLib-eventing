@@ -64,6 +64,17 @@ namespace zsLib
                                                            );
       static String timeToString(const Time &value);
       static Time stringToTime(const String &str);
+
+      static String convertToHex(
+                                 const BYTE *buffer,
+                                 size_t bufferLengthInBytes,
+                                 bool outputUpperCase = false
+                                 );
+
+      static String convertToHex(
+                                 const SecureByteBlock &input,
+                                 bool outputUpperCase = false
+                                 );
     };
   }
 }

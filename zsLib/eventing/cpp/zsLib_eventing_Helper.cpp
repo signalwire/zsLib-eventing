@@ -36,6 +36,8 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <cstdio>
 
+#include <cryptopp/hex.h>
+
 namespace zsLib { namespace eventing { ZS_DECLARE_SUBSYSTEM(zsLib_eventing); } }
 
 
@@ -43,6 +45,9 @@ namespace zsLib
 {
   namespace eventing
   {
+    typedef CryptoPP::HexEncoder HexEncoder;
+    typedef CryptoPP::StringSink StringSink;
+
     namespace internal
     {
       //-----------------------------------------------------------------------
@@ -205,5 +210,31 @@ namespace zsLib
 
       return Time();
     }
+
+    //-----------------------------------------------------------------------
+    String IHelper::convertToHex(
+                                 const BYTE *buffer,
+                                 size_t bufferLengthInBytes,
+                                 bool outputUpperCase
+                                 )
+    {
+      String result;
+
+      HexEncoder encoder(new StringSink(result), outputUpperCase);
+      encoder.Put(buffer, bufferLengthInBytes);
+      encoder.MessageEnd();
+
+      return result;
+    }
+
+    //-----------------------------------------------------------------------
+    String IHelper::convertToHex(
+                                 const SecureByteBlock &input,
+                                 bool outputUpperCase
+                                 )
+    {
+      return convertToHex(input, input.size(), outputUpperCase);
+    }
+
   } // namespace eventing
 } // namespace zsLib

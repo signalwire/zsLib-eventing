@@ -31,11 +31,13 @@
     <ClInclude Include="..\..\..\zsLib\eventing\IEventingTypes.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\IHelper.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\internal\types.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_EventingTypes.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_Helper.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\types.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_EventingTypes.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_Helper.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -132,7 +134,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAsWinRT>false</CompileAsWinRT>
       <SDLCheck>true</SDLCheck>
-      <DisableSpecificWarnings>4068</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4068;4290</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -146,7 +148,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAsWinRT>false</CompileAsWinRT>
       <SDLCheck>true</SDLCheck>
-      <DisableSpecificWarnings>4068</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4068;4290</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -160,7 +162,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAsWinRT>false</CompileAsWinRT>
       <SDLCheck>true</SDLCheck>
-      <DisableSpecificWarnings>4068</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4068;4290</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -174,7 +176,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAsWinRT>false</CompileAsWinRT>
       <SDLCheck>true</SDLCheck>
-      <DisableSpecificWarnings>4068</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4068;4290</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -188,7 +190,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAsWinRT>false</CompileAsWinRT>
       <SDLCheck>true</SDLCheck>
-      <DisableSpecificWarnings>4068</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4068;4290</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -202,7 +204,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAsWinRT>false</CompileAsWinRT>
       <SDLCheck>true</SDLCheck>
-      <DisableSpecificWarnings>4068</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4068;4290</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>

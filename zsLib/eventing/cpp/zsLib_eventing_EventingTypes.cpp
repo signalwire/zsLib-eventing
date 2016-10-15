@@ -37,6 +37,8 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <cstdio>
 
+#include <cryptopp/sha.h>
+
 namespace zsLib { namespace eventing { ZS_DECLARE_SUBSYSTEM(zsLib_eventing); } }
 
 namespace zsLib
@@ -44,6 +46,8 @@ namespace zsLib
   namespace eventing
   {
     ZS_DECLARE_TYPEDEF_PTR(eventing::IHelper, UseEventingHelper);
+
+    typedef CryptoPP::SHA256 SHA256;
 
     namespace internal
     {
@@ -545,9 +549,14 @@ namespace zsLib
     #pragma mark
 
     //-------------------------------------------------------------------------
-    IEventingTypes::Provider::Provider(const ElementPtr &rootEl)
+    IEventingTypes::Provider::Provider(const ElementPtr &rootEl) throw(InvalidContent)
     {
       createTypesdefs(rootEl->findFirstChildElement("typedefs"), mTypedefs);
+      createChannels(rootEl->findFirstChildElement("channels"), mChannels);
+      createOpCodes(rootEl->findFirstChildElement("opCodes"), mOpCodes);
+      createTasks(rootEl->findFirstChildElement("tasks"), mTasks);
+      createDataTemplates(rootEl->findFirstChildElement("templates"), mDataTemplates, mTypedefs);
+      createEvents(rootEl->findFirstChildElement("events"), mEvents, mOpCodes, mTasks, mDataTemplates);
     }
 
     //-------------------------------------------------------------------------
@@ -606,9 +615,9 @@ namespace zsLib
         rootEl->adoptAsLastChild(eventsEl);
       }
 
-      if (mTemplates.size() > 0) {
+      if (mDataTemplates.size() > 0) {
         ElementPtr templatesEl = Element::create("templates");
-        for (auto iter = mTemplates.begin(); iter != mTemplates.end(); ++iter) {
+        for (auto iter = mDataTemplates.begin(); iter != mDataTemplates.end(); ++iter) {
           ElementPtr templateEl = (*iter).second->createElement("template");
           templatesEl->adoptAsLastChild(templateEl);
         }
@@ -630,7 +639,7 @@ namespace zsLib
     void IEventingTypes::createTypesdefs(
                                          ElementPtr typedefsEl,
                                          TypedefMap &outTypedefs
-                                         )
+                                         ) throw(InvalidContent)
     {
       typedef std::map<String, String> StringMap;
 
@@ -645,9 +654,6 @@ namespace zsLib
 
         if ((name.isEmpty()) ||
           (type.isEmpty())) continue;
-
-        name.toLower();
-        type.toLower();
 
         typedefs[name] = type;
 
@@ -673,6 +679,7 @@ namespace zsLib
             auto typedefObj = make_shared<IEventingTypes::Typedef>();
             typedefObj->mName = name;
             typedefObj->mType = IEventingTypes::toPreferredPredefinedTypedef(predefined);
+            outTypedefs[name] = typedefObj;
             break;
           } catch (const InvalidArgument &) {
             // valid case - ignored
@@ -743,6 +750,23 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
+    void IEventingTypes::createChannels(
+                                        ElementPtr channelsEl,
+                                        ChannelMap &outChannels
+                                        ) throw(InvalidContent)
+    {
+      if (NULL == channelsEl) return;
+
+      ElementPtr channelEl = channelsEl->findFirstChildElement("channel");
+      while (channelEl)
+      {
+        auto channel = Channel::create(channelEl);
+        outChannels[channel->mID] = channel;
+        channelEl = channelEl->findNextSiblingElement("channel");
+      }
+    }
+
+    //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
@@ -787,6 +811,281 @@ namespace zsLib
       }
 
       return channelEl;
+    }
+
+    //-------------------------------------------------------------------------
+    void IEventingTypes::createTasks(
+                                     ElementPtr tasksEl,
+                                     TaskMap &outTasks
+                                     ) throw (InvalidContent)
+    {
+      if (NULL == tasksEl) return;
+
+      ElementPtr taskEl = tasksEl->findFirstChildElement("task");
+      while (taskEl)
+      {
+        auto task = Task::create(taskEl);
+        for (auto iter = task->mOpCodes.begin(); iter != task->mOpCodes.end(); ++iter)
+        {
+          auto opCode = (*iter).second;
+          opCode->mTask = task;
+        }
+        taskEl = taskEl->findNextSiblingElement("task");
+      }
+    }
+
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    #pragma mark
+    #pragma mark IEventingTypes::OpCode
+    #pragma mark
+
+    //-------------------------------------------------------------------------
+    IEventingTypes::OpCode::OpCode(const ElementPtr &rootEl) throw (InvalidContent)
+    {
+      mName = UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("name"));
+      String value = UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("value"));
+
+      if (value.hasData()) {
+        try {
+          mValue = Numeric<decltype(mValue)>(value);
+        } catch (const Numeric<decltype(mValue)>::ValueOutOfRange &) {
+          ZS_THROW_CUSTOM(InvalidContent, String("OpCode value is out of range: ") + value);
+        }
+      }
+    }
+
+    //-------------------------------------------------------------------------
+    ElementPtr IEventingTypes::OpCode::createElement(const char *objectName) const
+    {
+      if (NULL == objectName) objectName = "opCode";
+
+      ElementPtr opCodeEl = Element::create(objectName);
+      if (mName.hasData()) opCodeEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("name", mName));
+      if (0 != mValue) opCodeEl->adoptAsLastChild(UseEventingHelper::createElementWithNumber("value", string(mValue)));
+      return opCodeEl;
+    }
+
+    //-------------------------------------------------------------------------
+    void IEventingTypes::createOpCodes(
+                                       ElementPtr opCodesEl,
+                                       OpCodeMap &outOpCodes
+                                       ) throw (InvalidContent)
+    {
+      if (!opCodesEl) return;
+
+      ElementPtr opCodeEl = opCodeEl->findFirstChildElement("opCode");
+      while (opCodeEl)
+      {
+        auto opCode = OpCode::create(opCodeEl);
+        outOpCodes[opCode->mName] = opCode;
+        opCodeEl = opCodeEl->findNextSiblingElement("opCode");
+      }
+    }
+
+    //-------------------------------------------------------------------------
+    void IEventingTypes::createEvents(
+                                      ElementPtr eventsEl,
+                                      EventMap &outEvents,
+                                      const OpCodeMap &opCodes,
+                                      const TaskMap &tasks,
+                                      const DataTemplateMap &dataTemplates
+                                      ) throw (InvalidContent)
+    {
+      if (!eventsEl) return;
+
+      ElementPtr eventEl = eventsEl->findFirstChildElement("event");
+      while (eventEl)
+      {
+        auto event = Event::create(eventEl);
+        outEvents[event->mName] = event;
+
+        String opCode = UseEventingHelper::getElementTextAndDecode(eventEl->findFirstChildElement("opCode"));
+        String task = UseEventingHelper::getElementTextAndDecode(eventEl->findFirstChildElement("task"));
+        String templateStr = UseEventingHelper::getElementTextAndDecode(eventEl->findFirstChildElement("template"));
+
+        if (task.hasData()) {
+          auto found = tasks.find(task);
+          if (found == tasks.end()) {
+            ZS_THROW_CUSTOM(InvalidContent, String("Event \"") + event->mName + "\" links to invalid task:" + task);
+          }
+
+          auto taskObj = (*found).second;
+
+          if (opCode.hasData()) {
+            auto foundOpCode = taskObj->mOpCodes.find(opCode);
+            if (foundOpCode != taskObj->mOpCodes.end()) {
+              auto opCodeObj = (*foundOpCode).second;
+              opCode = String();
+              event->mOpCode = opCodeObj;
+            }
+          }
+
+          event->mTask = taskObj;
+        }
+
+        if (opCode.hasData()) {
+          auto found = opCodes.find(opCode);
+          if (found == opCodes.end()) {
+            ZS_THROW_CUSTOM(InvalidContent, String("Event \"") + event->mName + "\" links to invalid opcode:" + opCode);
+          }
+          event->mOpCode = (*found).second;
+        }
+
+        if (templateStr.hasData()) {
+          auto found = dataTemplates.find(templateStr);
+          if (found == dataTemplates.end()) {
+            ZS_THROW_CUSTOM(InvalidContent, String("Event \"") + event->mName + "\" links to invalid data template:" + templateStr);
+          }
+          event->mDataTemplate = (*found).second;
+        }
+
+        eventEl = eventEl->findNextSiblingElement("event");
+      }
+    }
+
+
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    #pragma mark
+    #pragma mark IEventingTypes::DataTemplate
+    #pragma mark
+
+    //-------------------------------------------------------------------------
+    IEventingTypes::DataTemplate::DataTemplate(const ElementPtr &rootEl) throw (InvalidContent)
+    {
+    }
+
+    //-------------------------------------------------------------------------
+    ElementPtr IEventingTypes::DataTemplate::createElement(const char *objectName) const
+    {
+      if (NULL == objectName) objectName = "template";
+
+      auto templateEl = Element::create("template");
+
+      if (mDataTypes.size() > 0) {
+        ElementPtr dataTypesEl = Element::create("dataTypes");
+        for (auto iter = mDataTypes.begin(); iter != mDataTypes.end(); ++iter)
+        {
+          auto dataType = (*iter);
+          auto dataTypeEl = dataType->createElement("dataType");
+
+          dataTypesEl->adoptAsLastChild(dataTypeEl);
+        }
+        templateEl->adoptAsLastChild(templateEl);
+      }
+
+      return templateEl;
+    }
+
+    //-------------------------------------------------------------------------
+    String IEventingTypes::DataTemplate::hash() const
+    {
+      SHA256 hasher;
+
+      for (auto iter = mDataTypes.begin(); iter != mDataTypes.end(); ++iter)
+      {
+        auto dataType = (*iter);
+        auto typeStr = IEventingTypes::toString(dataType->mType);
+        hasher.Update(reinterpret_cast<const BYTE *>(typeStr), strlen(typeStr));
+        hasher.Update(reinterpret_cast<const BYTE *>(":"), strlen(":"));
+        hasher.Update(reinterpret_cast<const BYTE *>(dataType->mValueName.c_str()), dataType->mValueName.length());
+        hasher.Update(reinterpret_cast<const BYTE *>(":!:"), strlen(":!:"));
+      }
+
+      auto buffer = make_shared<SecureByteBlock>(hasher.DigestSize());
+      hasher.Final(buffer->BytePtr());
+
+      return UseEventingHelper::convertToHex(*buffer, false);
+    }
+
+    //-------------------------------------------------------------------------
+    void IEventingTypes::createDataTemplates(
+                                             ElementPtr templatesEl,
+                                             DataTemplateMap &outDataTemplates,
+                                             const TypedefMap &typedefs
+                                             ) throw (InvalidContent)
+    {
+      if (!templatesEl) return;
+
+      ElementPtr templateEl = templatesEl->findFirstChildElement("template");
+      while (templateEl)
+      {
+        auto templateObj = DataTemplate::create(templateEl);
+
+        ElementPtr typesEl = templateEl->findFirstChildElement("dataTypes");
+        createDataTypes(typesEl, templateObj->mDataTypes, typedefs);
+
+        templateEl = templateEl->findNextSiblingElement("template");
+      }
+    }
+
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    #pragma mark
+    #pragma mark IEventingTypes::DataType
+    #pragma mark
+
+    //-------------------------------------------------------------------------
+    IEventingTypes::DataType::DataType(
+                                       const ElementPtr &rootEl,
+                                       const TypedefMap *typedefs
+                                       ) throw (InvalidContent)
+    {
+      mValueName = UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("name"));
+      String type = UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("type"));
+
+      if (NULL != typedefs) {
+        auto found = typedefs->find(type);
+        if (found != typedefs->end()) {
+          mType = (*found).second->mType;
+          type = String();
+        }
+      }
+
+      if (type.hasData()) {
+        try {
+          mType = IEventingTypes::toPredefinedTypedef(type);
+        } catch (const InvalidArgument &) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Data type \"") + mValueName + "\" type is not valid: " + type);
+        }
+      }
+    }
+
+    //-------------------------------------------------------------------------
+    ElementPtr IEventingTypes::DataType::createElement(const char *objectName) const
+    {
+      if (NULL == objectName) objectName = "dataType";
+
+      ElementPtr dataTypeEl = Element::create(objectName);
+
+      if (mValueName.hasData()) dataTypeEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("name", mValueName));
+      dataTypeEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("type", IEventingTypes::toString(mType)));
+
+      return dataTypeEl;
+    }
+
+    //-------------------------------------------------------------------------
+    void IEventingTypes::createDataTypes(
+                                         ElementPtr dataTypesEl,
+                                         DataTypeList &outDataTypes,
+                                         const TypedefMap &typedefs
+                                         ) throw (InvalidContent)
+    {
+      if (!dataTypesEl) return;
+
+      ElementPtr dataTypeEl = dataTypesEl->findFirstChildElement("dataType");
+      while (dataTypeEl)
+      {
+        auto dataType = DataType::create(dataTypeEl, &typedefs);
+        dataTypeEl = dataTypeEl->findNextSiblingElement("dataType");
+      }
     }
 
   } // namespace eventing
