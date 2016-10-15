@@ -31,6 +31,9 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <zsLib/eventing/internal/zsLib_eventing_Helper.h>
 
+#include <zsLib/Numeric.h>
+#include <zsLib/Log.h>
+
 #include <cstdio>
 
 namespace zsLib { namespace eventing { ZS_DECLARE_SUBSYSTEM(zsLib_eventing); } }
@@ -42,7 +45,28 @@ namespace zsLib
   {
     namespace internal
     {
+      //-----------------------------------------------------------------------
+      //-----------------------------------------------------------------------
+      //-----------------------------------------------------------------------
+      //-----------------------------------------------------------------------
+      #pragma mark
+      #pragma mark Helper
+      #pragma mark
+
+      //-----------------------------------------------------------------------
+      Log::Params Helper::slog(const char *message)
+      {
+        return Log::Params(message, "eventing::Helper");
+      }
     } // namespace internal
+
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    #pragma mark
+    #pragma mark IHelper
+    #pragma mark
 
     //-------------------------------------------------------------------------
     SecureByteBlockPtr IHelper::loadFile(const char *path)
@@ -94,6 +118,92 @@ namespace zsLib
     {
       if (!el) return String();
       return el->getTextDecoded();
+    }
+
+    //-----------------------------------------------------------------------
+    ElementPtr IHelper::createElementWithText(
+                                              const String &elName,
+                                              const String &text
+                                              )
+    {
+      ElementPtr tmp = Element::create(elName);
+
+      if (text.isEmpty()) return tmp;
+
+      TextPtr tmpTxt = Text::create();
+      tmpTxt->setValue(text, Text::Format_JSONStringEncoded);
+
+      tmp->adoptAsFirstChild(tmpTxt);
+
+      return tmp;
+    }
+
+    //-----------------------------------------------------------------------
+    ElementPtr IHelper::createElementWithNumber(
+                                                const String &elName,
+                                                const String &numberAsStringValue
+                                                )
+    {
+      ElementPtr tmp = Element::create(elName);
+
+      if (numberAsStringValue.isEmpty()) {
+        TextPtr tmpTxt = Text::create();
+        tmpTxt->setValue("0", Text::Format_JSONNumberEncoded);
+        tmp->adoptAsFirstChild(tmpTxt);
+        return tmp;
+      }
+
+      TextPtr tmpTxt = Text::create();
+      tmpTxt->setValue(numberAsStringValue, Text::Format_JSONNumberEncoded);
+      tmp->adoptAsFirstChild(tmpTxt);
+
+      return tmp;
+    }
+
+    //-----------------------------------------------------------------------
+    ElementPtr IHelper::createElementWithTime(
+      const String &elName,
+      Time time
+    )
+    {
+      return createElementWithNumber(elName, IHelper::timeToString(time));
+    }
+
+    //-----------------------------------------------------------------------
+    ElementPtr IHelper::createElementWithTextAndJSONEncode(
+                                                           const String &elName,
+                                                           const String &textVal
+                                                           )
+    {
+      ElementPtr tmp = Element::create(elName);
+      if (textVal.isEmpty()) return tmp;
+
+      TextPtr tmpTxt = Text::create();
+      tmpTxt->setValueAndJSONEncode(textVal);
+      tmp->adoptAsFirstChild(tmpTxt);
+      return tmp;
+    }
+
+    //-----------------------------------------------------------------------
+    String IHelper::timeToString(const Time &value)
+    {
+      if (Time() == value) return String();
+      return string(value);
+    }
+
+    //-----------------------------------------------------------------------
+    Time IHelper::stringToTime(const String &str)
+    {
+      if (str.isEmpty()) return Time();
+      if ("0" == str) return Time();
+
+      try {
+        return Numeric<Time>(str);
+      } catch (const Numeric<Time>::ValueOutOfRange &) {
+        ZS_LOG_WARNING(Detail, internal::Helper::slog("unable to convert value to time") + ZS_PARAM("value", str))
+      }
+
+      return Time();
     }
   } // namespace eventing
 } // namespace zsLib

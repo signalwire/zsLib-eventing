@@ -45,6 +45,25 @@ namespace zsLib
 
       static String getElementText(const ElementPtr &el);
       static String getElementTextAndDecode(const ElementPtr &el);
+      static ElementPtr createElementWithText(
+                                              const String &elName,
+                                              const String &text
+                                              );
+      static ElementPtr createElementWithNumber(
+                                                const String &elName,
+                                                const String &numberAsStringValue
+                                                );
+      static ElementPtr createElementWithTime(
+                                              const String &elName,
+                                              Time time
+                                              );
+
+      static ElementPtr createElementWithTextAndJSONEncode(
+                                                           const String &elName,
+                                                           const String &textVal
+                                                           );
+      static String timeToString(const Time &value);
+      static Time stringToTime(const String &str);
     };
   }
 }

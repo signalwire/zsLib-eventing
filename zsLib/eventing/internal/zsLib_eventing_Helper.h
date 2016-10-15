@@ -33,9 +33,19 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <zsLib/eventing/IHelper.h>
 
+#include <zsLib/Log.h>
+
 namespace zsLib
 {
   namespace eventing
   {
+    namespace internal
+    {
+      class Helper : public IHelper
+      {
+      public:
+        static Log::Params slog(const char *message);
+      };
+    }
   }
 }

@@ -50,6 +50,7 @@ namespace zsLib
     interaction IEventingTypes
     {
       ZS_DECLARE_STRUCT_PTR(Provider);
+      ZS_DECLARE_STRUCT_PTR(Typedef);
       ZS_DECLARE_STRUCT_PTR(Channel);
       ZS_DECLARE_STRUCT_PTR(Task);
       ZS_DECLARE_STRUCT_PTR(OpCode);
@@ -69,8 +70,7 @@ namespace zsLib
       ZS_DECLARE_PTR(OpCode);
 
       typedef String TypedefName;
-      typedef String PredefinedTypedefName;
-      typedef std::map<TypedefName, PredefinedTypedefName> TypedefMap;
+      typedef std::map<TypedefName, TypedefPtr> TypedefMap;
 
       typedef String EventName;
       typedef std::map<EventName, EventPtr> EventMap;
@@ -98,7 +98,7 @@ namespace zsLib
       };
 
       static const char *toString(OperationalTypes type);
-      static OperationalTypes toOperationalTypes(const char *type) throw (InvalidArgument);
+      static OperationalTypes toOperationalType(const char *type) throw (InvalidArgument);
 
       //-----------------------------------------------------------------------
       #pragma mark
@@ -253,7 +253,7 @@ namespace zsLib
 
       struct Provider
       {
-        GUID mGUID {};
+        UUID mID;
         String mName;
         String mResourceName;
 
@@ -263,7 +263,37 @@ namespace zsLib
         TaskMap mTasks;
         EventMap mEvents;
         DataTemplateMap mTemplates;
+
+        Provider() {}
+        Provider(const ElementPtr &rootEl) throw (InvalidContent);
+
+        static ProviderPtr create(const ElementPtr &el) { if (!el) return ProviderPtr(); return make_shared<Provider>(el); }
+
+        ElementPtr createElement(const char *objectName = NULL) const;
       };
+
+      //-----------------------------------------------------------------------
+      #pragma mark
+      #pragma mark IEventingTypes::Typedef
+      #pragma mark
+
+      struct Typedef
+      {
+        TypedefName        mName; // Company-Product-Component
+        PredefinedTypedefs mType {PredefinedTypedef_First};
+
+        Typedef() {}
+        Typedef(const ElementPtr &rootEl);
+
+        static TypedefPtr create(const ElementPtr &el) { if (!el) return TypedefPtr(); return make_shared<Typedef>(el); }
+
+        ElementPtr createElement(const char *objectName = NULL) const;
+      };
+
+      static void createTypesdefs(
+                                  ElementPtr typedefsEl,
+                                  TypedefMap &outTypedefs
+                                  );
 
       //-----------------------------------------------------------------------
       #pragma mark
@@ -274,9 +304,16 @@ namespace zsLib
       {
         ChannelID         mID;
         Name              mName; // Company-Product-Component
-        OperationalTypes  mType {OperationalType_Last};
+        OperationalTypes  mType {OperationalType_First};
 
-        size_t            mAssignedID {};
+        size_t            mValue {};
+
+        Channel() {}
+        Channel(const ElementPtr &rootEl) throw (InvalidContent);
+
+        static ChannelPtr create(const ElementPtr &el) { if (!el) return ChannelPtr(); return make_shared<Channel>(el); }
+
+        ElementPtr createElement(const char *objectName = NULL) const;
       };
 
       //-----------------------------------------------------------------------
@@ -286,10 +323,17 @@ namespace zsLib
 
       struct Task
       {
-        Name mName;
+        Name      mName;
         OpCodeMap mOpCodes;
 
-        size_t            mAssignedID {};
+        size_t    mValue {};
+
+        Task() {}
+        Task(const ElementPtr &rootEl);
+
+        static TaskPtr create(const ElementPtr &el) { if (!el) return TaskPtr(); return make_shared<Task>(el); }
+
+        ElementPtr createElement(const char *objectName = NULL) const;
       };
 
       //-----------------------------------------------------------------------
@@ -299,11 +343,23 @@ namespace zsLib
 
       struct OpCode
       {
-        Name mName;
+        Name        mName;
         TaskWeakPtr mTask;
 
-        size_t            mAssignedID {};
+        size_t      mValue {};
+
+        OpCode() {}
+        OpCode(const ElementPtr &rootEl);
+
+        static OpCodePtr create(const ElementPtr &el) { if (!el) return OpCodePtr(); return make_shared<OpCode>(el); }
+
+        ElementPtr createElement(const char *objectName = NULL) const;
       };
+
+      static void createOpCodes(
+                                ElementPtr opCodesEl,
+                                OpCodeMap &outOpCodes
+                                );
 
       //-----------------------------------------------------------------------
       #pragma mark
@@ -312,17 +368,24 @@ namespace zsLib
 
       struct Event
       {
-        Name mName;
+        Name            mName;
 
-        Log::Severity mSeverity {Log::Informational};
-        Log::Level mLevel {Log::None};
+        Log::Severity   mSeverity {Log::Informational};
+        Log::Level      mLevel {Log::None};
 
-        ChannelPtr mChannel;
-        TaskPtr mTask;
-        OpCodePtr mOpCode;
+        ChannelPtr      mChannel;
+        TaskPtr         mTask;
+        OpCodePtr       mOpCode;
         DataTemplatePtr mDataTemplate;
 
-        size_t            mAssignedID {};
+        size_t          mValue {};
+
+        Event() {}
+        Event(const ElementPtr &rootEl);
+
+        static EventPtr create(const ElementPtr &el) { if (!el) return EventPtr(); return make_shared<Event>(el); }
+
+        ElementPtr createElement(const char *objectName = NULL) const;
       };
 
       //-----------------------------------------------------------------------
@@ -333,6 +396,13 @@ namespace zsLib
       struct DataTemplate
       {
         DataTypeList mDataTypes;
+
+        DataTemplate() {}
+        DataTemplate(const ElementPtr &rootEl);
+
+        static DataTemplatePtr create(const ElementPtr &el) { if (!el) return DataTemplatePtr(); return make_shared<DataTemplate>(el); }
+
+        ElementPtr createElement(const char *objectName = NULL) const;
       };
 
       //-----------------------------------------------------------------------
@@ -343,7 +413,14 @@ namespace zsLib
       struct DataType
       {
         PredefinedTypedefs mType {PredefinedTypedef_First};
-        String mName;
+        String             mName;
+
+        DataType() {}
+        DataType(const ElementPtr &rootEl);
+
+        static DataTypePtr create(const ElementPtr &el) { if (!el) return DataTypePtr(); return make_shared<DataType>(el); }
+
+        ElementPtr createElement(const char *objectName = NULL) const;
       };
     };
 

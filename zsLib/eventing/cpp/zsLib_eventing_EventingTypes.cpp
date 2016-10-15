@@ -30,16 +30,21 @@ either expressed or implied, of the FreeBSD Project.
 */
 
 #include <zsLib/eventing/internal/zsLib_eventing_EventingTypes.h>
+#include <zsLib/eventing/internal/zsLib_eventing_Helper.h>
+
+#include <zsLib/Numeric.h>
+#include <zsLib/Stringize.h>
 
 #include <cstdio>
 
 namespace zsLib { namespace eventing { ZS_DECLARE_SUBSYSTEM(zsLib_eventing); } }
 
-
 namespace zsLib
 {
   namespace eventing
   {
+    ZS_DECLARE_TYPEDEF_PTR(eventing::IHelper, UseEventingHelper);
+
     namespace internal
     {
     } // namespace internal
@@ -67,7 +72,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IEventingTypes::OperationalTypes IEventingTypes::toOperationalTypes(const char *type) throw (InvalidArgument)
+    IEventingTypes::OperationalTypes IEventingTypes::toOperationalType(const char *type) throw (InvalidArgument)
     {
       String str(type);
       for (IEventingTypes::OperationalTypes index = IEventingTypes::OperationalType_First; index <= IEventingTypes::OperationalType_Last; index = static_cast<IEventingTypes::OperationalTypes>(static_cast<std::underlying_type<IEventingTypes::OperationalTypes>::type>(index) + 1)) {
@@ -529,6 +534,259 @@ namespace zsLib
       }
 
       return 0;
+    }
+
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    #pragma mark
+    #pragma mark IEventingTypes::Provider
+    #pragma mark
+
+    //-------------------------------------------------------------------------
+    IEventingTypes::Provider::Provider(const ElementPtr &rootEl)
+    {
+      createTypesdefs(rootEl->findFirstChildElement("typedefs"), mTypedefs);
+    }
+
+    //-------------------------------------------------------------------------
+    ElementPtr IEventingTypes::Provider::createElement(const char *objectName) const
+    {
+      if (NULL == objectName) objectName = "provider";
+
+      ElementPtr rootEl = Element::create(objectName);
+
+      rootEl->adoptAsLastChild(UseEventingHelper::createElementWithText("id", string(mID)));
+      rootEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("name", mName));
+      rootEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("resourceName", mResourceName));
+
+      if (mTypedefs.size() > 0) {
+        ElementPtr typedefsEl = Element::create("typedefs");
+        for (auto iter = mTypedefs.begin(); iter != mTypedefs.end(); ++iter) {
+          ElementPtr typedefEl = (*iter).second->createElement("typedef");
+          typedefsEl->adoptAsLastChild(typedefEl);
+        }
+        rootEl->adoptAsLastChild(typedefsEl);
+      }
+
+      if (mChannels.size() > 0) {
+        ElementPtr channelsEl = Element::create("channels");
+        for (auto iter = mChannels.begin(); iter != mChannels.end(); ++iter) {
+          ElementPtr channelEl = (*iter).second->createElement("channel");
+          channelsEl->adoptAsLastChild(channelEl);
+        }
+        rootEl->adoptAsLastChild(channelsEl);
+      }
+
+      if (mOpCodes.size() > 0) {
+        ElementPtr opCodesEl = Element::create("opcodes");
+        for (auto iter = mOpCodes.begin(); iter != mOpCodes.end(); ++iter) {
+          ElementPtr opCodeEl = (*iter).second->createElement("opcode");
+          opCodesEl->adoptAsLastChild(opCodeEl);
+        }
+        rootEl->adoptAsLastChild(opCodesEl);
+      }
+
+      if (mTasks.size() > 0) {
+        ElementPtr tasksEl = Element::create("tasks");
+        for (auto iter = mTasks.begin(); iter != mTasks.end(); ++iter) {
+          ElementPtr taskEl = (*iter).second->createElement("task");
+          tasksEl->adoptAsLastChild(taskEl);
+        }
+        rootEl->adoptAsLastChild(tasksEl);
+      }
+
+      if (mEvents.size() > 0) {
+        ElementPtr eventsEl = Element::create("events");
+        for (auto iter = mEvents.begin(); iter != mEvents.end(); ++iter) {
+          ElementPtr eventEl = (*iter).second->createElement("event");
+          eventsEl->adoptAsLastChild(eventEl);
+        }
+        rootEl->adoptAsLastChild(eventsEl);
+      }
+
+      if (mTemplates.size() > 0) {
+        ElementPtr templatesEl = Element::create("templates");
+        for (auto iter = mTemplates.begin(); iter != mTemplates.end(); ++iter) {
+          ElementPtr templateEl = (*iter).second->createElement("template");
+          templatesEl->adoptAsLastChild(templateEl);
+        }
+        rootEl->adoptAsLastChild(templatesEl);
+      }
+
+      return rootEl;
+    }
+
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    #pragma mark
+    #pragma mark IEventingTypes::Typedef
+    #pragma mark
+
+    //-------------------------------------------------------------------------
+    void IEventingTypes::createTypesdefs(
+                                         ElementPtr typedefsEl,
+                                         TypedefMap &outTypedefs
+                                         )
+    {
+      typedef std::map<String, String> StringMap;
+
+      if (!typedefsEl) return;
+
+      StringMap typedefs;
+
+      ElementPtr typedefEl = typedefsEl->findFirstChildElement("typedef");
+      while (typedefEl) {
+        String name = UseEventingHelper::getElementTextAndDecode(typedefEl->findFirstChildElement("name"));
+        String type = UseEventingHelper::getElementTextAndDecode(typedefEl->findFirstChildElement("type"));
+
+        if ((name.isEmpty()) ||
+          (type.isEmpty())) continue;
+
+        name.toLower();
+        type.toLower();
+
+        typedefs[name] = type;
+
+        typedefEl = typedefEl->findNextSiblingElement("typedef");
+      }
+
+      StringMap tempTypedefs(typedefs);
+
+      while (tempTypedefs.size() > 0) {
+        StringMap processedTypedefs;
+
+        auto iter = tempTypedefs.begin();
+
+        String name = (*iter).first;
+        String type = (*iter).second;
+
+        tempTypedefs.erase(iter);
+
+        do {
+          try {
+            auto predefined = IEventingTypes::toPredefinedTypedef(type);
+
+            auto typedefObj = make_shared<IEventingTypes::Typedef>();
+            typedefObj->mName = name;
+            typedefObj->mType = IEventingTypes::toPreferredPredefinedTypedef(predefined);
+            break;
+          } catch (const InvalidArgument &) {
+            // valid case - ignored
+          }
+
+          auto found = typedefs.find(type);
+          if (found == typedefs.end()) {
+            ZS_THROW_CUSTOM(InvalidContent, String("Typedef not mapped to predefined type: ") + type);
+          }
+
+          auto foundProcessed = processedTypedefs.find(type);
+          if (foundProcessed != processedTypedefs.end()) {
+            ZS_THROW_CUSTOM(InvalidContent, String("Circular typedef not mapped to predefined type: ") + type);
+          }
+
+          processedTypedefs[type] = String();
+        } while (true);
+      }
+    }
+
+
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    #pragma mark
+    #pragma mark IEventingTypes::Channel
+    #pragma mark
+
+    //-------------------------------------------------------------------------
+    IEventingTypes::Channel::Channel(const ElementPtr &rootEl) throw (InvalidContent)
+    {
+      mID = UseEventingHelper::getElementTextAndDecode(rootEl->findLastChildElement("id"));
+      mName = UseEventingHelper::getElementTextAndDecode(rootEl->findLastChildElement("name"));
+      String type = UseEventingHelper::getElementTextAndDecode(rootEl->findLastChildElement("type"));
+      String value = UseEventingHelper::getElementText(rootEl->findLastChildElement("value"));
+
+      if (type.hasData()) {
+        try {
+          mType = IEventingTypes::toOperationalType(type);
+        } catch (const InvalidArgument &) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Channel operational type is invalid: ") + type);
+        }
+      }
+
+      if (value.hasData()) {
+        try {
+          mValue = Numeric<decltype(mValue)>(value);
+        } catch (const Numeric<decltype(mValue)>::ValueOutOfRange &) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Channel value is out of range: ") + value);
+        }
+      }
+    }
+
+    //-------------------------------------------------------------------------
+    ElementPtr IEventingTypes::Channel::createElement(const char *objectName) const
+    {
+      if (NULL == objectName) objectName = "channel";
+
+      ElementPtr channelEl = Element::create(objectName);
+      
+      if (mID.hasData()) channelEl->adoptAsLastChild(UseEventingHelper::createElementWithText("id", mID));
+      if (mName.hasData()) channelEl->adoptAsLastChild(UseEventingHelper::createElementWithText("name", mName));
+      channelEl->adoptAsLastChild(UseEventingHelper::createElementWithText("name", IEventingTypes::toString(mType)));
+      if (0 != mValue) channelEl->adoptAsLastChild(UseEventingHelper::createElementWithNumber("name", string(mValue)));
+
+      return channelEl;
+    }
+
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    #pragma mark
+    #pragma mark IEventingTypes::Task
+    #pragma mark
+
+    //-------------------------------------------------------------------------
+    IEventingTypes::Task::Task(const ElementPtr &rootEl)
+    {
+      mName = UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("name"));
+      String value = UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("value"));
+
+      if (value.hasData()) {
+        try {
+          mValue = Numeric<decltype(mValue)>(value);
+        } catch (const Numeric<decltype(mValue)>::ValueOutOfRange &) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Task value is out of range: ") + value);
+        }
+      }
+
+      createOpCodes(rootEl->findFirstChildElement("opCodes"), mOpCodes);
+    }
+
+    //-------------------------------------------------------------------------
+    ElementPtr IEventingTypes::Task::createElement(const char *objectName) const
+    {
+      if (NULL == objectName) objectName = "channel";
+
+      ElementPtr channelEl = Element::create(objectName);
+
+      if (mName.hasData()) channelEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("name", mName));
+      if (0 != mValue) channelEl->adoptAsLastChild(UseEventingHelper::createElementWithNumber("value", string(mValue)));
+
+      if (mOpCodes.size() > 0) {
+        ElementPtr opCodesEl = Element::create("opCodes");
+
+        for (auto iter = mOpCodes.begin(); iter != mOpCodes.end(); ++iter) {
+          ElementPtr opCode = (*iter).second->createElement("opCode");
+          opCodesEl->adoptAsLastChild(opCode);
+        }
+      }
+
+      return channelEl;
     }
 
   } // namespace eventing
