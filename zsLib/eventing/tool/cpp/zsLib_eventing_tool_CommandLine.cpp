@@ -77,6 +77,7 @@ namespace zsLib
           case Flag_HelpAlt:      return "help";
           case Flag_Source:       return "s";
           case Flag_OutputName:   return "o";
+          case Flag_Author:       return "author";
         }
 
         return "unknown";
@@ -100,6 +101,7 @@ namespace zsLib
           " -c       config_file_name          - input event provider json configuration file.\n"
           " -s       source_file_name_1 ... n  - input C/C++ source file.\n"
           " -o       output_name ... n         - output name.\n"
+          " -author  \"John Q Public\"         - manifest author.\n"
           "\n";
       }
 
@@ -142,7 +144,7 @@ namespace zsLib
 
         try
         {
-          Config config;
+          ICompilerTypes::Config config;
           prepare(arguments, config);
           validate(config);
           process(config);
@@ -159,11 +161,10 @@ namespace zsLib
       //-----------------------------------------------------------------------
       void ICommandLine::prepare(
                                  StringList arguments,
-                                 Config &outConfig
+                                 ICompilerTypes::Config &outConfig
                                  ) throw (InvalidArgument)
       {
-        ICommandLine::Config config;
-        config.mArguments = arguments;
+        ICompilerTypes::Config config;
 
         ICommandLine::Flags flag {ICommandLine::Flag_None};
 
@@ -216,6 +217,7 @@ namespace zsLib
               }
               case ICommandLine::Flag_Source: goto process_flag;
               case ICommandLine::Flag_OutputName: goto process_flag;
+              case ICommandLine::Flag_Author: goto process_flag;
             }
             ZS_THROW_INVALID_ARGUMENT("Internal error when processing argument: " + arg + " within context: " + processedThusFar);
           }
@@ -239,6 +241,10 @@ namespace zsLib
                 config.mOutputName = arg;
                 goto processed_flag;
               }
+              case ICommandLine::Flag_Author: {
+                config.mAuthor = arg;
+                goto processed_flag;
+              }
             }
 
             ZS_THROW_INVALID_ARGUMENT(String("Internal error when processing argument: ") + arg + " within context: " + processedThusFar);
@@ -260,7 +266,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void ICommandLine::validate(ICommandLine::Config &config) throw (InvalidArgument)
+      void ICommandLine::validate(ICompilerTypes::Config &config) throw (InvalidArgument)
       {
         if (config.mConfigFile.isEmpty()) {
           ZS_THROW_INVALID_ARGUMENT("Configuration file must be specified.");
@@ -271,7 +277,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void ICommandLine::process(Config &config) throw (Failure)
+      void ICommandLine::process(ICompilerTypes::Config &config) throw (Failure)
       {
         typedef ICompilerTypes::Config ProcessConfig;
 

@@ -40,8 +40,11 @@ namespace zsLib
     interaction IHelper
     {
       static SecureByteBlockPtr loadFile(const char *path);
+      static void saveFile(const char *path, SecureByteBlock &buffer) throw (StdError);
       static ElementPtr read(const SecureByteBlockPtr buffer);
       static ElementPtr read(const SecureByteBlock &buffer);
+      static SecureByteBlockPtr writeJSON(const Document &doc);
+      static SecureByteBlockPtr writeXML(const Document &doc);
 
       static String getElementText(const ElementPtr &el);
       static String getElementTextAndDecode(const ElementPtr &el);
@@ -64,6 +67,9 @@ namespace zsLib
                                                            );
       static String timeToString(const Time &value);
       static Time stringToTime(const String &str);
+
+      static String convertToString(const SecureByteBlock &buffer);
+      static SecureByteBlockPtr convertToBuffer(const String &str);
 
       static String convertToHex(
                                  const BYTE *buffer,

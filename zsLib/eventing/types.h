@@ -51,6 +51,7 @@ namespace zsLib
 
     ZS_DECLARE_CUSTOM_EXCEPTION(InvalidContent);
     ZS_DECLARE_CUSTOM_EXCEPTION_WITH_PROPERTIES_1(Failure, int, result);
+    ZS_DECLARE_CUSTOM_EXCEPTION_WITH_PROPERTIES_1(StdError, int, result);
 
     typedef zsLib::Exceptions::InvalidArgument InvalidArgument;
 
@@ -58,5 +59,7 @@ namespace zsLib
     using namespace zsLib::XML;
 
     ZS_DECLARE_INTERACTION_PTR(IHelper);
+    ZS_DECLARE_INTERACTION_PTR(IHasher);
+    ZS_DECLARE_INTERACTION_PTR(IHasherAlgorithm);
   }
 }

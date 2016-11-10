@@ -32,6 +32,9 @@ either expressed or implied, of the FreeBSD Project.
 #pragma once
 
 #include <zsLib/eventing/tool/types.h>
+#include <zsLib/eventing/tool/ICompiler.h>
+
+#include <zsLib/eventing/IEventingTypes.h>
 
 namespace zsLib
 {
@@ -49,7 +52,6 @@ namespace zsLib
 
       interaction ICommandLineTypes
       {
-        ZS_DECLARE_STRUCT_PTR(Config);
         ZS_DECLARE_TYPEDEF_PTR(std::list<String>, StringList);
 
         enum Flags
@@ -64,21 +66,13 @@ namespace zsLib
           Flag_HelpAlt,
           Flag_Source,
           Flag_OutputName,
+          Flag_Author,
 
-          Flag_Last = Flag_HelpAlt,
+          Flag_Last = Flag_Author,
         };
 
         static Flags toFlag(const char *str);
         static const char *toString(Flags flag);
-
-        struct Config
-        {
-          StringList  mArguments;
-          String      mConfigFile;
-          StringList  mSourceFiles;
-          String      mOutputName;
-        };
-
       };
 
       //-----------------------------------------------------------------------
@@ -107,11 +101,11 @@ namespace zsLib
 
         static void prepare(
                             StringList arguments,
-                            Config &outConfig
+                            ICompilerTypes::Config &outConfig
                             ) throw (InvalidArgument);
 
-        static void validate(Config &config) throw (InvalidArgument);
-        static void process(Config &config) throw (Failure);
+        static void validate(ICompilerTypes::Config &config) throw (InvalidArgument);
+        static void process(ICompilerTypes::Config &config) throw (Failure);
       };
 
     } // namespace tool

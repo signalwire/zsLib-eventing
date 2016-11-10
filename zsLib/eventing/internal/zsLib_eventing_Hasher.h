@@ -31,53 +31,20 @@ either expressed or implied, of the FreeBSD Project.
 
 #pragma once
 
-#include <zsLib/eventing/tool/types.h>
+#include <zsLib/eventing/IHasher.h>
 
-#include <zsLib/eventing/IEventingTypes.h>
+#include <zsLib/Log.h>
 
 namespace zsLib
 {
   namespace eventing
   {
-    namespace tool
+    namespace internal
     {
-      //-----------------------------------------------------------------------
-      //-----------------------------------------------------------------------
-      //-----------------------------------------------------------------------
-      //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark ICompilerTypes
-      #pragma mark
-
-      interaction ICompilerTypes
+      class Hasher : public IHasher
       {
-        ZS_DECLARE_TYPEDEF_PTR(IEventingTypes::Provider, Provider);
-
-        struct Config
-        {
-          String      mConfigFile;
-
-          StringList  mSourceFiles;
-          String      mOutputName;
-          String      mAuthor;
-
-          ProviderPtr mProvider;
-        };
-      };
-
-      //-----------------------------------------------------------------------
-      //-----------------------------------------------------------------------
-      //-----------------------------------------------------------------------
-      //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IProcess
-      #pragma mark
-
-      interaction ICompiler : public ICompilerTypes
-      {
-        static ICompilerPtr create(const Config &config);
-
-        virtual void process() throw (Failure) = 0;
+      public:
+        static Log::Params slog(const char *message);
       };
     }
   }

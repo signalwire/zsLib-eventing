@@ -43,22 +43,66 @@ namespace zsLib
     {
       namespace internal
       {
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
+        #pragma mark Compiler
+        #pragma mark
+
         class Compiler : public ICompiler
         {
           struct make_private {};
 
         public:
+          //-------------------------------------------------------------------
           Compiler(
                   const make_private &,
                   const Config &config
                   );
           ~Compiler();
 
+          //-------------------------------------------------------------------
+          #pragma mark
+          #pragma mark Compiler => ICompiler
+          #pragma mark
+
           static CompilerPtr create(const Config &config);
 
           virtual void process() throw (Failure);
 
+        protected:
+          //-------------------------------------------------------------------
+          #pragma mark
+          #pragma mark Compiler => (internal)
+          #pragma mark
+
+          void read() throw (Failure);
+          void prepareIndex() throw (Failure);
+          void validate() throw (Failure);
+          DocumentPtr generateManifest() const throw (Failure);
+          DocumentPtr generateWprp() const throw (Failure);
+          DocumentPtr generateJsonMan() const throw (Failure);
+          SecureByteBlockPtr generateXPlatformEventsHeader(
+                                                           const String &outputNameXPlatform,
+                                                           const String &outputNameWindows
+                                                           ) const throw (Failure);
+          SecureByteBlockPtr generateWindowsEventsHeader(
+                                                         const String &outputNameXPlatform,
+                                                         const String &outputNameWindows
+                                                         ) const throw (Failure);
+
+          void writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure);
+          void writeJSON(const String &outputName, const DocumentPtr &doc) const throw (Failure);
+          void writeBinary(const String &outputName, const SecureByteBlockPtr &buffer) const throw (Failure);
+
         private:
+          //-------------------------------------------------------------------
+          #pragma mark
+          #pragma mark Compiler => (data)
+          #pragma mark
+
           CompilerWeakPtr mThisWeak;
 
           Config mConfig;

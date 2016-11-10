@@ -33,4 +33,5 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <zsLib/eventing/types.h>
 #include <zsLib/eventing/IEventingTypes.h>
+#include <zsLib/eventing/IHasher.h>
 #include <zsLib/eventing/IHelper.h>

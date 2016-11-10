@@ -90,7 +90,32 @@ namespace zsLib
 
       if (read != size) SecureByteBlockPtr();
 
+      auto result = fclose(file);
+      if (0 != result) {
+        return SecureByteBlockPtr();
+      }
+
       return buffer;
+    }
+
+    //-------------------------------------------------------------------------
+    void IHelper::saveFile(const char *path, SecureByteBlock &buffer) throw (StdError)
+    {
+      FILE *file = NULL;
+      int errorNo = fopen_s(&file, path, "wb");
+      if (NULL == file) {
+        ZS_THROW_CUSTOM_PROPERTIES_1(StdError, errorNo, String("File could not be opened: ") + path);
+      }
+
+      auto written = fwrite(buffer.BytePtr(), sizeof(BYTE), buffer.SizeInBytes(), file);
+      if (written != buffer.SizeInBytes()) {
+        ZS_THROW_CUSTOM_PROPERTIES_1(StdError, NO_ERROR, String("Failed to write entire file: written=") + string(written) + ", buffer size=" + string(buffer.SizeInBytes()));
+      }
+
+      auto result = fclose(file);
+      if (0 != result) {
+        ZS_THROW_CUSTOM_PROPERTIES_1(StdError, errno, String("Failed to write entire file: written=") + string(written) + ", buffer size=" + string(buffer.SizeInBytes()));
+      }
     }
 
     //-------------------------------------------------------------------------
@@ -108,6 +133,28 @@ namespace zsLib
       ElementPtr result = doc->getFirstChildElement();
       if (!result) return ElementPtr();
       result->orphan();
+      return result;
+    }
+
+    //-------------------------------------------------------------------------
+    SecureByteBlockPtr IHelper::writeJSON(const Document &doc)
+    {
+      size_t bufferSize = 0;
+      auto buffer = doc.writeAsJSON(&bufferSize);
+      if (!buffer) return SecureByteBlockPtr();
+      SecureByteBlockPtr result(make_shared<SecureByteBlock>(bufferSize));
+      memcpy(result->BytePtr(), &(buffer[0]), bufferSize);
+      return result;
+    }
+
+    //-------------------------------------------------------------------------
+    SecureByteBlockPtr IHelper::writeXML(const Document &doc)
+    {
+      size_t bufferSize = 0;
+      auto buffer = doc.writeAsXML(&bufferSize);
+      if (!buffer) return SecureByteBlockPtr();
+      SecureByteBlockPtr result(make_shared<SecureByteBlock>(bufferSize));
+      memcpy(result->BytePtr(), &(buffer[0]), bufferSize);
       return result;
     }
 
@@ -209,6 +256,22 @@ namespace zsLib
       }
 
       return Time();
+    }
+
+    //-----------------------------------------------------------------------
+    String IHelper::convertToString(const SecureByteBlock &buffer)
+    {
+      if (buffer.size() < 1) return String();
+      return (const char *)(buffer.BytePtr());  // return buffer cast as const char *
+    }
+
+    //-----------------------------------------------------------------------
+    SecureByteBlockPtr IHelper::convertToBuffer(const String &str)
+    {
+      if (str.isEmpty()) return SecureByteBlockPtr();
+      auto result(make_shared<SecureByteBlock>(str.length()));
+      memcpy(result->BytePtr(), str.c_str(), str.length());
+      return result;
     }
 
     //-----------------------------------------------------------------------
