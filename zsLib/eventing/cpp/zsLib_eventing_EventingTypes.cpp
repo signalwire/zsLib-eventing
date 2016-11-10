@@ -747,6 +747,33 @@ namespace zsLib
     #pragma mark
 
     //-------------------------------------------------------------------------
+    IEventingTypes::Typedef::Typedef(
+                                     const ElementPtr &rootEl,
+                                     const AliasMap *aliases
+                                     ) throw (InvalidArgument)
+    {
+      if (!rootEl) return;
+
+      mName = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("name")));
+      String type = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("type")));
+
+      mType = toPredefinedTypedef(type);
+    }
+
+    //-------------------------------------------------------------------------
+    ElementPtr IEventingTypes::Typedef::createElement(const char *objectName) const
+    {
+      if (NULL == objectName) objectName = "typedef";
+
+      ElementPtr resultEl = Element::create(objectName);
+
+      resultEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("name", mName));
+      resultEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("type", toString(mType)));
+
+      return resultEl;
+    }
+
+    //-------------------------------------------------------------------------
     void IEventingTypes::createTypesdefs(
                                          ElementPtr typedefsEl,
                                          TypedefMap &ioTypedefs,
@@ -803,7 +830,7 @@ namespace zsLib
           try {
             auto predefined = IEventingTypes::toPredefinedTypedef(type);
 
-            auto typedefObj = make_shared<IEventingTypes::Typedef>();
+            auto typedefObj = IEventingTypes::Typedef::create();
             typedefObj->mName = name;
             typedefObj->mType = IEventingTypes::toPreferredPredefinedTypedef(predefined);
             ioTypedefs[name] = typedefObj;

@@ -305,8 +305,12 @@ namespace zsLib
         PredefinedTypedefs mType {PredefinedTypedef_First};
 
         Typedef() {}
-        Typedef(const ElementPtr &rootEl);
+        Typedef(
+                const ElementPtr &rootEl,
+                const AliasMap *aliases = NULL
+                ) throw (InvalidArgument);
 
+        static TypedefPtr create() { return make_shared<Typedef>(); }
         static TypedefPtr create(const ElementPtr &el) { if (!el) return TypedefPtr(); return make_shared<Typedef>(el); }
 
         ElementPtr createElement(const char *objectName = NULL) const;

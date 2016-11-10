@@ -21,15 +21,18 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\zsLib\eventing\eventing.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\IEventingTypes.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\IHasher.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\IHelper.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\internal\types.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_EventingTypes.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_Hasher.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_Helper.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\types.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_EventingTypes.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_Hasher.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_Helper.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
