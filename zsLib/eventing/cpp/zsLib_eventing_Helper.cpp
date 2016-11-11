@@ -74,10 +74,18 @@ namespace zsLib
     #pragma mark
 
     //-------------------------------------------------------------------------
-    SecureByteBlockPtr IHelper::loadFile(const char *path)
+    SecureByteBlockPtr IHelper::loadFile(const char *path) throw (StdError)
     {
+      String pathStr(path);
+#ifdef _WIN32
+      pathStr.replaceAll("/", "\\");
+#endif //_WIN32
+
       FILE *file = NULL;
-      fopen_s(&file, path, "rb");
+      auto error = fopen_s(&file, pathStr, "rb");
+      if (0 != error) {
+        ZS_THROW_CUSTOM_PROPERTIES_1(StdError, error, String("Failed to read file: ") + pathStr);
+      }
       if (NULL == file) return SecureByteBlockPtr();
 
       fseek(file, 0L, SEEK_END);
@@ -88,11 +96,13 @@ namespace zsLib
 
       auto read = fread(buffer->BytePtr(), sizeof(BYTE), size, file);
 
-      if (read != size) SecureByteBlockPtr();
+      if (read != size) {
+        ZS_THROW_CUSTOM_PROPERTIES_1(StdError, ferror(file), String("Failed to read file: ") + pathStr + ", buffer size=" + string(buffer->SizeInBytes()));
+      }
 
       auto result = fclose(file);
       if (0 != result) {
-        return SecureByteBlockPtr();
+        ZS_THROW_CUSTOM_PROPERTIES_1(StdError, errno, String("Failed to read file: ") + pathStr + ", buffer size=" + string(buffer->SizeInBytes()));
       }
 
       return buffer;
@@ -101,15 +111,20 @@ namespace zsLib
     //-------------------------------------------------------------------------
     void IHelper::saveFile(const char *path, SecureByteBlock &buffer) throw (StdError)
     {
+      String pathStr(path);
+#ifdef _WIN32
+      pathStr.replaceAll("/", "\\");
+#endif //_WIN32
+
       FILE *file = NULL;
-      int errorNo = fopen_s(&file, path, "wb");
+      int errorNo = fopen_s(&file, pathStr, "wb");
       if (NULL == file) {
         ZS_THROW_CUSTOM_PROPERTIES_1(StdError, errorNo, String("File could not be opened: ") + path);
       }
 
       auto written = fwrite(buffer.BytePtr(), sizeof(BYTE), buffer.SizeInBytes(), file);
       if (written != buffer.SizeInBytes()) {
-        ZS_THROW_CUSTOM_PROPERTIES_1(StdError, NO_ERROR, String("Failed to write entire file: written=") + string(written) + ", buffer size=" + string(buffer.SizeInBytes()));
+        ZS_THROW_CUSTOM_PROPERTIES_1(StdError, ferror(file), String("Failed to write entire file: written=") + string(written) + ", buffer size=" + string(buffer.SizeInBytes()));
       }
 
       auto result = fclose(file);

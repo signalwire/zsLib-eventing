@@ -729,7 +729,13 @@ namespace zsLib
 
           ProviderPtr &provider = mConfig.mProvider;
 
-          auto configRaw = UseEventingHelper::loadFile(mConfig.mConfigFile);
+          SecureByteBlockPtr configRaw;
+
+          try {
+            configRaw = UseEventingHelper::loadFile(mConfig.mConfigFile);
+          } catch (const StdError &e) {
+            ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_FILE_FAILED_TO_LOAD, String("Failed to load main configuration file: ") + mConfig.mConfigFile + ", error=" + string(e.result()) + ", reason=" + e.message());
+          }
           if (!configRaw) {
             ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_FILE_FAILED_TO_LOAD, String("Failed to load main configuration file: ") + mConfig.mConfigFile);
           }
@@ -781,7 +787,12 @@ namespace zsLib
             String fileName = mConfig.mSourceFiles.front();
             mConfig.mSourceFiles.pop_front();
 
-            auto file = UseEventingHelper::loadFile(fileName);
+            SecureByteBlockPtr file;
+            try {
+              file = UseEventingHelper::loadFile(fileName);
+            } catch (const StdError &e) {
+              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_FILE_FAILED_TO_LOAD, String("Failed to load main configuration file: ") + mConfig.mConfigFile + ", error=" + string(e.result()) + ", reason=" + e.message());
+            }
             if (!file) {
               ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_FILE_FAILED_TO_LOAD, String("Failed to load file: ") + fileName);
             }
@@ -1329,7 +1340,7 @@ namespace zsLib
         //---------------------------------------------------------------------
         void Compiler::validate() throw (Failure)
         {
-          ProviderPtr &provider = mConfig.mProvider;
+          //ProviderPtr &provider = mConfig.mProvider;
         }
 
         //---------------------------------------------------------------------
@@ -1532,7 +1543,13 @@ namespace zsLib
                       if (IEventingTypes::PredefinedTypedef_size != dataType->mType) {
                         ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Template binary missing size: T_" + hash);
                         dataTemplateEl->adoptAsLastChild(createDataEl("UInt32", dataType->mValueName));
-                        dataTemplateEl->adoptAsLastChild(createDataEl("Binary", lastDataType->mValueName));
+
+                        // add the binary data type with length
+                        {
+                          ElementPtr dataEl = createDataEl("Binary", lastDataType->mValueName);
+                          dataEl->setAttribute("length", dataType->mValueName);
+                          dataTemplateEl->adoptAsLastChild(dataEl);
+                        }
                       }
                       goto next;
                     }
@@ -2170,8 +2187,8 @@ namespace zsLib
           ss << "namespace zsLib {\n";
           ss << "  namespace eventing {\n";
 
-          ss << "#define ZS_INTERNAL_INIT_EVENTING_" << provider->mName << "() EventRegister" << provider->mName;
-          ss << "#define ZS_INTERNAL_DEINIT_EVENTING_" << provider->mName << "() EventRegister" << provider->mName;
+          ss << "#define ZS_INTERNAL_INIT_EVENTING_" << provider->mName << "() EventRegister" << provider->mName << "()\n";
+          ss << "#define ZS_INTERNAL_DEINIT_EVENTING_" << provider->mName << "() EventRegister" << provider->mName << "()\n";
 
           ss << getFunctions();
 
@@ -2351,7 +2368,7 @@ namespace zsLib
             auto output = UseEventingHelper::writeXML(*doc);
             UseEventingHelper::saveFile(outputName, *output);
           } catch (const StdError &e) {
-            ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Failed to save XML file \"" + outputName + "\": " + e.message());
+            ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Failed to save XML file \"" + outputName + "\": " + " error=" + string(e.result()) + ", reason=" + e.message());
           }
         }
 
@@ -2363,7 +2380,7 @@ namespace zsLib
             auto output = UseEventingHelper::writeJSON(*doc);
             UseEventingHelper::saveFile(outputName, *output);
           } catch (const StdError &e) {
-            ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Failed to save JSON file \"" + outputName + "\": " + e.message());
+            ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Failed to save JSON file \"" + outputName + "\": " + " error=" + string(e.result()) + ", reason=" + e.message());
           }
         }
 
@@ -2377,7 +2394,7 @@ namespace zsLib
           try {
             UseEventingHelper::saveFile(outputName, *buffer);
           } catch (const StdError &e) {
-            ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Failed to save file \"" + outputName + "\": " + e.message());
+            ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Failed to save file \"" + outputName + "\": " + " error=" + string(e.result()) + ", reason=" + e.message());
           }
         }
 

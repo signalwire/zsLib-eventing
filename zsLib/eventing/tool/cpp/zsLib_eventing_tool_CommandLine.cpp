@@ -177,8 +177,7 @@ namespace zsLib
 
           if (processedThusFar.isEmpty()) {
             processedThusFar = arg;
-          }
-          else {
+          } else {
             processedThusFar += " " + arg;
           }
 
@@ -195,6 +194,7 @@ namespace zsLib
               case ICommandLine::Flag_Source:
               {
                 flag = ICommandLine::Flag_None;
+                break;
               }
             }
 
@@ -271,22 +271,15 @@ namespace zsLib
         if (config.mConfigFile.isEmpty()) {
           ZS_THROW_INVALID_ARGUMENT("Configuration file must be specified.");
         }
-        if (config.mSourceFiles.size() < 1) {
-          ZS_THROW_INVALID_ARGUMENT("At least one source file must be specified.");
-        }
       }
 
       //-----------------------------------------------------------------------
       void ICommandLine::process(ICompilerTypes::Config &config) throw (Failure)
       {
-        typedef ICompilerTypes::Config ProcessConfig;
-
-        ProcessConfig processConfig;
-
         output() << "[Note] Using configuration file: " + config.mConfigFile << "\n";
         output() << "\n";
 
-        auto process = ICompiler::create(processConfig);
+        auto process = ICompiler::create(config);
         process->process();
       }
     }

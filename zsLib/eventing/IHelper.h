@@ -39,7 +39,7 @@ namespace zsLib
   {
     interaction IHelper
     {
-      static SecureByteBlockPtr loadFile(const char *path);
+      static SecureByteBlockPtr loadFile(const char *path) throw (StdError);
       static void saveFile(const char *path, SecureByteBlock &buffer) throw (StdError);
       static ElementPtr read(const SecureByteBlockPtr buffer);
       static ElementPtr read(const SecureByteBlock &buffer);

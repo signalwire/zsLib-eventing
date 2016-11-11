@@ -699,12 +699,12 @@ namespace zsLib
         mResourceName = aliasLookup(UseEventingHelper::getElementTextAndDecode(resourceNameEl));
       }
 
-      createTypesdefs(rootEl->findFirstChildElement("typedefs"), mTypedefs);
-      createChannels(rootEl->findFirstChildElement("channels"), mChannels);
-      createOpCodes(rootEl->findFirstChildElement("opCodes"), mOpCodes);
-      createTasks(rootEl->findFirstChildElement("tasks"), mTasks);
-      createDataTemplates(rootEl->findFirstChildElement("templates"), mDataTemplates, mTypedefs);
-      createEvents(rootEl->findFirstChildElement("events"), mEvents, mChannels, mOpCodes, mTasks, mDataTemplates);
+      createTypesdefs(rootEl->findFirstChildElement("typedefs"), mTypedefs, &mAliases);
+      createChannels(rootEl->findFirstChildElement("channels"), mChannels, &mAliases);
+      createOpCodes(rootEl->findFirstChildElement("opCodes"), mOpCodes, &mAliases);
+      createTasks(rootEl->findFirstChildElement("tasks"), mTasks, &mAliases);
+      createDataTemplates(rootEl->findFirstChildElement("templates"), mDataTemplates, mTypedefs, &mAliases);
+      createEvents(rootEl->findFirstChildElement("events"), mEvents, mChannels, mOpCodes, mTasks, mDataTemplates, &mAliases);
     }
 
     //-------------------------------------------------------------------------
@@ -1050,7 +1050,7 @@ namespace zsLib
     {
       if (!opCodesEl) return;
 
-      ElementPtr opCodeEl = opCodeEl->findFirstChildElement("opCode");
+      ElementPtr opCodeEl = opCodesEl->findFirstChildElement("opCode");
       while (opCodeEl)
       {
         auto opCode = OpCode::create(opCodeEl);
