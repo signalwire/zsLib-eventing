@@ -50,7 +50,9 @@ namespace zsLib
     ZS_DECLARE_TYPEDEF_PTR(std::list<String>, StringList);
 
     ZS_DECLARE_CUSTOM_EXCEPTION(InvalidContent);
+    ZS_DECLARE_CUSTOM_EXCEPTION_WITH_PROPERTIES_1(InvalidContentWithLine, ULONG, lineNumber);
     ZS_DECLARE_CUSTOM_EXCEPTION_WITH_PROPERTIES_1(Failure, int, result);
+    ZS_DECLARE_CUSTOM_EXCEPTION_WITH_PROPERTIES_2(FailureWithLine, int, result, ULONG, lineNumber);
     ZS_DECLARE_CUSTOM_EXCEPTION_WITH_PROPERTIES_1(StdError, int, result);
 
     typedef zsLib::Exceptions::InvalidArgument InvalidArgument;

@@ -154,6 +154,10 @@ namespace zsLib
         } catch (const Failure &e) {
           output() << "[Error] " << e.message() << "\n\n";
           result = e.result();
+        } catch (const FailureWithLine &e) {
+          output() << "[Error] " << e.message() << "\n";
+          output() << "[Info]  LINE=" << e.lineNumber() << "\n\n";
+          result = e.result();
         }
         return result;
       }

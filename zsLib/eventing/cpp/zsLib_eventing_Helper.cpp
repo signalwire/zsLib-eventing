@@ -152,10 +152,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    SecureByteBlockPtr IHelper::writeJSON(const Document &doc)
+    SecureByteBlockPtr IHelper::writeJSON(
+                                          const Document &doc,
+                                          bool prettyPrint
+                                          )
     {
       size_t bufferSize = 0;
-      auto buffer = doc.writeAsJSON(&bufferSize);
+      auto buffer = doc.writeAsJSON(prettyPrint, &bufferSize);
       if (!buffer) return SecureByteBlockPtr();
       SecureByteBlockPtr result(make_shared<SecureByteBlock>(bufferSize));
       memcpy(result->BytePtr(), &(buffer[0]), bufferSize);

@@ -70,7 +70,7 @@ namespace zsLib
 
           static CompilerPtr create(const Config &config);
 
-          virtual void process() throw (Failure);
+          virtual void process() throw (Failure, FailureWithLine);
 
         protected:
           //-------------------------------------------------------------------
@@ -78,10 +78,10 @@ namespace zsLib
           #pragma mark Compiler => (internal)
           #pragma mark
 
-          void read() throw (Failure);
+          void read() throw (Failure, FailureWithLine);
           void prepareIndex() throw (Failure);
           void validate() throw (Failure);
-          DocumentPtr generateManifest() const throw (Failure);
+          DocumentPtr generateManifest(const String &resourcePostFix) const throw (Failure);
           DocumentPtr generateWprp() const throw (Failure);
           DocumentPtr generateJsonMan() const throw (Failure);
           SecureByteBlockPtr generateXPlatformEventsHeader(
@@ -90,7 +90,8 @@ namespace zsLib
                                                            ) const throw (Failure);
           SecureByteBlockPtr generateWindowsEventsHeader(
                                                          const String &outputNameXPlatform,
-                                                         const String &outputNameWindows
+                                                         const String &outputNameWindows,
+                                                         const String &outputNameWindowsETW
                                                          ) const throw (Failure);
 
           void writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure);

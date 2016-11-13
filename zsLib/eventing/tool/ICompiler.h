@@ -77,7 +77,7 @@ namespace zsLib
       {
         static ICompilerPtr create(const Config &config);
 
-        virtual void process() throw (Failure) = 0;
+        virtual void process() throw (Failure, FailureWithLine) = 0;
       };
     }
   }

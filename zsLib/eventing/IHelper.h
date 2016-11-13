@@ -43,7 +43,10 @@ namespace zsLib
       static void saveFile(const char *path, SecureByteBlock &buffer) throw (StdError);
       static ElementPtr read(const SecureByteBlockPtr buffer);
       static ElementPtr read(const SecureByteBlock &buffer);
-      static SecureByteBlockPtr writeJSON(const Document &doc);
+      static SecureByteBlockPtr writeJSON(
+                                          const Document &doc,
+                                          bool prettyPrint = true
+                                          );
       static SecureByteBlockPtr writeXML(const Document &doc);
 
       static String getElementText(const ElementPtr &el);

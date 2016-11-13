@@ -734,6 +734,8 @@ namespace zsLib
           }
         }
 
+        ioAliases[aliasName] = aliasValue;
+
         aliasEl = aliasEl->findNextSiblingElement("alias");
       }
     }
@@ -973,6 +975,7 @@ namespace zsLib
           ElementPtr opCode = (*iter).second->createElement("opCode");
           opCodesEl->adoptAsLastChild(opCode);
         }
+        channelEl->adoptAsLastChild(opCodesEl);
       }
 
       return channelEl;
@@ -1238,7 +1241,7 @@ namespace zsLib
 
           dataTypesEl->adoptAsLastChild(dataTypeEl);
         }
-        templateEl->adoptAsLastChild(templateEl);
+        templateEl->adoptAsLastChild(dataTypesEl);
       }
 
       return templateEl;

@@ -102,46 +102,139 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
-      <DisableSpecificWarnings>4453;28204;4068</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4453;28204;4068;4290</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ZSLIB_EVENTING_NOOP;_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE=1;%(ClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <ClCompile>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
-      <DisableSpecificWarnings>4453;28204;4068</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4453;28204;4068;4290</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ZSLIB_EVENTING_NOOP;_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE=1;%(ClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
-      <DisableSpecificWarnings>4453;28204;4068</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4453;28204;4068;4290</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ZSLIB_EVENTING_NOOP;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
-      <DisableSpecificWarnings>4453;28204;4068</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4453;28204;4068;4290</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ZSLIB_EVENTING_NOOP;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
-      <DisableSpecificWarnings>4453;28204;4068</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4453;28204;4068;4290</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ZSLIB_EVENTING_NOOP;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
-      <DisableSpecificWarnings>4453;28204;4068</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4453;28204;4068;4290</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ZSLIB_EVENTING_NOOP;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\date.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Event.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\internal\zsLib_eventing_Log.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\Log.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\noop.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Exception.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\extras\uuid\config.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\extras\uuid\uuid.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\extras\uuid\uuidd.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\extras\uuid\uuidP.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\extras\uuid\uuid_types.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\helpers.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\platform.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\types.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib.events.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib.events_win.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib.events_win_etw.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Event.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Exception.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_IPAddress.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Log.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueue.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThread.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadBasic.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadPool.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingBlackberryChannels.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWindows.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWinRT.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingMainThreadMessageQueueForApple.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Numeric.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Promise.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Proxy.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_ProxyPack.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_ProxySubscriptions.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Singleton.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Socket.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_SocketMonitor.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Stringize.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_TearAway.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Timer.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_TimerMonitor.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_XML.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\IPAddress.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Log.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\MessageQueue.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\MessageQueueAssociator.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\MessageQueueThread.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\MessageQueueThreadPool.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Numeric.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Promise.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Proxy.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\ProxySubscriptions.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\SafeInt.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Singleton.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Socket.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\String.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Stringize.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\TearAway.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Timer.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\types.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\WeightedMovingAverage.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\XML.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\zsLib.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\eventing.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\IEventingTypes.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\IHasher.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\IHelper.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\types.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_EventingTypes.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_Hasher.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_Helper.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\ICommandLine.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\ICompiler.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\types.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_CommandLine.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_Compiler.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\OutputStream.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\tool.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\types.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\types.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="App.xaml.h">
       <DependentUpon>App.xaml</DependentUpon>
@@ -162,6 +255,10 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
+    <None Include="..\..\..\..\zsLib\zsLib\cpp\zsLib.events.json" />
+    <None Include="..\..\..\..\zsLib\zsLib\internal\zsLib.events.jman" />
+    <None Include="..\..\..\..\zsLib\zsLib\internal\zsLib.events_win_etw.man" />
+    <None Include="..\..\..\..\zsLib\zsLib\internal\zsLib.events_win_etw.wprp" />
     <None Include="zsLib.Eventing.Tool.Compiler_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
@@ -174,6 +271,154 @@
     <Image Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Event.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Exception.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_helpers.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_IPAddress.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Log.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueue.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThread.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadBasic.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadPool.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingBlackberryChannels.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWindows.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWinRT.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingMainThreadMessageQueueForApple.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Numeric.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Promise.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Proxy.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Singleton.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Socket.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_SocketMonitor.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_String.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Stringize.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Timer.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_TimerMonitor.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XML.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLAttribute.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLComment.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLDeclaration.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLDocument.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLElement.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLGenerator.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLNode.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLParser.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLParserPos.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLParserWarningTypes.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLText.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLUnknown.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\clear.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\compare.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\copy.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\gen_uuid.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\gen_uuid_nt.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\isnull.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\pack.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\parse.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\tst_uuid.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\unpack.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\unparse.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\uuid_time.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\win32\strptime.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_EventingTypes.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_Hasher.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_Helper.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_CommandLine.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_Compiler.cpp" />
     <ClCompile Include="App.xaml.cpp">
       <DependentUpon>App.xaml</DependentUpon>
     </ClCompile>
@@ -193,15 +438,9 @@
     <ProjectReference Include="..\..\..\..\cryptopp\projects\msvs\cryptopp.Universal\cryptopp.vcxproj">
       <Project>{cc14ffe5-0018-4d8d-bc2c-c93477ce081c}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\zsLib\projects\msvs\zsLib.Universal\zsLib.vcxproj">
-      <Project>{55555c53-504f-4237-abc0-b2f59558a0e9}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\zsLib.Eventing.Tool.Universal\zsLib.Eventing.Tool.vcxproj">
-      <Project>{c3d2d2b7-91f8-41a6-af7f-dfedfcf95abd}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\zsLib.Eventing.Universal\zsLib.Eventing.vcxproj">
-      <Project>{a19b7d13-a6ee-43bb-a913-aeb34f91bf98}</Project>
-    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\..\..\zsLib\zsLib\license.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
