@@ -163,7 +163,6 @@
     <ClInclude Include="..\..\..\..\zsLib\zsLib\helpers.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\platform.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\types.h" />
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_ETWTracing.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Event.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Exception.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_IPAddress.h" />
@@ -188,7 +187,6 @@
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_TearAway.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Timer.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_TimerMonitor.h" />
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Tracing.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_XML.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\IPAddress.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\Log.h" />
@@ -235,8 +233,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\zsLib\zsLib\cpp\zsLib.events.json" />
-    <None Include="..\..\..\..\zsLib\zsLib\internal\zsLib_ETWTracing.man" />
-    <None Include="..\..\..\..\zsLib\zsLib\internal\zsLib_ETWTracing.wprp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{75CD59A3-CFC3-4F5E-AE2E-30E55157AA22}</ProjectGuid>

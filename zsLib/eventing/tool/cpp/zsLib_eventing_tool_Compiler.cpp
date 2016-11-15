@@ -57,6 +57,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #define ZS_EVENTING_METHOD_TOTAL_PARAMS (7)
 
+#define ZS_EVENTING_METHOD_COMPACT_PREFIX "COMPACT_"
 #define ZS_EVENTING_METHOD_PROVIDER "PROVIDER"
 #define ZS_EVENTING_METHOD_ALIAS "ALIAS"
 #define ZS_EVENTING_METHOD_INCLUDE "INCLUDE"
@@ -99,6 +100,7 @@ namespace zsLib
         {
           const char *mPos {};
           bool mStartOfLine {true};
+          ULONG mStartOfLineCount {0};
           ULONG mLineCount {1};
         };
 
@@ -151,7 +153,10 @@ namespace zsLib
         }
 
         //-----------------------------------------------------------------------
-        static bool skipCComments(const char * &p)
+        static bool skipCComments(
+                                  const char * &p,
+                                  ULONG *lineCount
+                                  )
         {
           if ('/' != *p) return false;
           if ('*' != *(p + 1)) return false;
@@ -160,6 +165,9 @@ namespace zsLib
 
           while ('\0' != *p)
           {
+            if (NULL != lineCount) {
+              if ('\n' == *p) (++(*lineCount));
+            }
             if ('*' != *p) {
               ++p;
               continue;
@@ -230,7 +238,7 @@ namespace zsLib
 
           while ('\0' != *p)
           {
-            if (skipCComments(p)) break;
+            if (skipCComments(p, currentLine)) break;
             if (skipCPPComments(p)) continue;
             if (skipEOL(p, currentLine)) break;
 
@@ -240,13 +248,22 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        static bool skipQuote(const char * &p)
+        static bool skipQuote(
+                              const char * &p,
+                              ULONG *currentLine
+                              )
         {
           if ('\"' != *p) return false;
 
           ++p;
           while ('\0' != *p) {
             switch (*p) {
+              case '\n': {
+                if (NULL != currentLine) {
+                  ++(*currentLine);
+                }
+                break;
+              }
               case '\"': {
                 ++p;
                 return true;
@@ -268,6 +285,7 @@ namespace zsLib
         static String getEventingLine(ParseState &state) throw (InvalidContentWithLine)
         {
           auto prefixLength = strlen(ZS_EVENTING_PREFIX);
+          state.mStartOfLineCount = 0;
 
           const char * &p = state.mPos;
 
@@ -278,7 +296,7 @@ namespace zsLib
               state.mStartOfLine = true;
               continue;
             }
-            if (skipCComments(p)) continue;
+            if (skipCComments(p, &(state.mLineCount))) continue;
             if (skipCPPComments(p)) continue;
 
             if (state.mStartOfLine) {
@@ -292,6 +310,8 @@ namespace zsLib
               state.mStartOfLine = true;
               continue;
             }
+
+            state.mStartOfLineCount = state.mLineCount;
 
             p += prefixLength;
 
@@ -307,13 +327,13 @@ namespace zsLib
                 state.mStartOfLine = true;
                 continue;
               }
-              if (skipCComments(p)) continue;
+              if (skipCComments(p, &(state.mLineCount))) continue;
               if (skipCPPComments(p)) continue;
               if (state.mStartOfLine) {
                 // start of line
                 if (skipPreprocessorDirective(p, &(state.mLineCount))) continue;
               }
-              if (skipQuote(p)) continue;
+              if (skipQuote(p, &(state.mLineCount))) continue;
 
               char value = *p;
               ++p;
@@ -328,7 +348,7 @@ namespace zsLib
                 }
                 continue;
               }
-              if ('(' == *p) {
+              if ('(' == value) {
                 ++bracketDepth;
                 foundBracket = true;
                 continue;
@@ -389,7 +409,7 @@ namespace zsLib
                 startOfLine = true;
                 goto found_space;
               }
-              if (skipCComments(p)) goto found_space;
+              if (skipCComments(p, &lineCount)) goto found_space;
               if (skipCPPComments(p)) goto found_space;
               if (startOfLine) {
                 // start of line
@@ -505,7 +525,8 @@ namespace zsLib
           std::stringstream ss;
 
           const char *pos = str.c_str()+1;
-          if ('L' == *(str.c_str())) {
+          if (('L' == *(str.c_str())) ||
+              ('u' == *(str.c_str()))) {
             ++pos;
             wstr = true;
           }
@@ -743,6 +764,7 @@ namespace zsLib
         //---------------------------------------------------------------------
         void Compiler::process() throw (Failure, FailureWithLine)
         {
+          outputMacros();
           read();
           prepareIndex();
           validate();
@@ -766,6 +788,79 @@ namespace zsLib
         #pragma mark
         #pragma mark Compiler => (internal)
         #pragma mark
+
+        //---------------------------------------------------------------------
+        void Compiler::outputMacros()
+        {
+#if 0
+          //#define ZS_EVENTING_1(xSubsystem, xSeverity, xLevel, xSymbol, xChannelID, xTaskID, xOpCode, xType1, xName1, xValue1)
+          {
+            for (size_t index = 0; index <= 38; ++index)
+            {
+              tool::output() << "#define ZS_EVENTING_" << string(index) << "(xSubsystem, xSeverity, xLevel, xSymbol, xChannelID, xTaskID, xOpCode";
+              for (size_t total = 1; total <= index; ++total)
+              {
+                tool::output() << ", xType" << string(total) << ", xName" << string(total) << ", xValue" << string(total);
+              }
+
+              tool::output() << ")\n";
+            }
+          }
+          //#define ZS_EVENTING_COMPACT_1(xSubsystem, xSeverity, xLevel, xSymbol, xChannelID, xTaskID, xOpCode, xType1AndName1, xValue1)
+          {
+            for (size_t index = 0; index <= 65; ++index)
+            {
+              tool::output() << "#define ZS_EVENTING_COMPACT_" << string(index) << "(xSubsystem, xSeverity, xLevel, xSymbol, xChannelID, xTaskID, xOpCode";
+              for (size_t total = 1; total <= index; ++total)
+              {
+                tool::output() << ", xType" << string(total) << "AndName" << string(total) << ", xValue" << string(total);
+              }
+
+              tool::output() << ")\n";
+            }
+          }
+          //#define ZS_EVENTING_1(xSubsystem, xSeverity, xLevel, xSymbol, xChannelID, xTaskID, xOpCode, xType1, xName1, xValue1) ZS_INTERNAL_EVENTING_EVENT_##xSymbol(xSubsystem, xValue1)
+          {
+            tool::output() << "\n\n";
+            for (size_t index = 0; index <= 38; ++index)
+            {
+              tool::output() << "#define ZS_EVENTING_" << string(index) << "(xSubsystem, xSeverity, xLevel, xSymbol, xChannelID, xTaskID, xOpCode";
+              for (size_t total = 1; total <= index; ++total)
+              {
+                tool::output() << ", xType" << string(total) << ", xName" << string(total) << ", xValue" << string(total);
+              }
+
+              tool::output() << ") \\\n";
+              tool::output() << "                                                                                ZS_INTERNAL_EVENTING_EVENT_##xSymbol(xSubsystem";
+              for (size_t total = 1; total <= index; ++total)
+              {
+                tool::output() << ", xValue" << string(total);
+              }
+              tool::output() << ")\n\n";
+            }
+          }
+          //#define ZS_EVENTING_COMPACT_1(xSubsystem, xSeverity, xLevel, xSymbol, xChannelID, xTaskID, xOpCode, xType1, xName1, xValue1) ZS_INTERNAL_EVENTING_EVENT_##xSymbol(xSubsystem, xValue1)
+          {
+            tool::output() << "\n\n";
+            for (size_t index = 0; index <= 65; ++index)
+            {
+              tool::output() << "#define ZS_EVENTING_COMPACT_" << string(index) << "(xSubsystem, xSeverity, xLevel, xSymbol, xChannelID, xTaskID, xOpCode";
+              for (size_t total = 1; total <= index; ++total)
+              {
+                tool::output() << ", xType" << string(total) << "AndName" << string(total) << ", xValue" << string(total);
+              }
+
+              tool::output() << ") \\\n";
+              tool::output() << "                                                                                ZS_INTERNAL_EVENTING_EVENT_##xSymbol(xSubsystem";
+              for (size_t total = 1; total <= index; ++total)
+              {
+                tool::output() << ", xValue" << string(total);
+              }
+              tool::output() << ")\n\n";
+            }
+          }
+#endif //0
+        }
 
         //---------------------------------------------------------------------
         void Compiler::read() throw (Failure, FailureWithLine)
@@ -875,15 +970,55 @@ namespace zsLib
               state.mPos = reinterpret_cast<const char *>(file->BytePtr());
               while ('\0' != *(state.mPos))
               {
-                ULONG currentLine = state.mLineCount;
                 String line = getEventingLine(state);
                 if (line.isEmpty()) continue;
 
+                ULONG currentLine = state.mStartOfLineCount;
+
                 String method;
                 ArgumentMap args;
-                parseLine(line.c_str(), method, args, state.mLineCount);
+                parseLine(line.c_str(), method, args, currentLine);
 
                 if (method.isEmpty()) continue;
+
+                if (0 == (method.substr(0, strlen(ZS_EVENTING_METHOD_COMPACT_PREFIX)).compare(ZS_EVENTING_METHOD_COMPACT_PREFIX)))
+                {
+                  method = method.substr(strlen(ZS_EVENTING_METHOD_COMPACT_PREFIX));
+                  ArgumentMap tempArgs;
+
+                  size_t index = 0;
+                  for (size_t index = 0; index < args.size(); ++index)
+                  {
+                    if (index < ZS_EVENTING_METHOD_TOTAL_PARAMS) {
+                      tempArgs[index] = args[index];
+                      continue;
+                    }
+
+                    size_t resultIndex = index - ZS_EVENTING_METHOD_TOTAL_PARAMS;
+                    if (0 == (resultIndex % 2)) {
+                      String tempArg = args[index];
+                      auto findPos = tempArg.find("/");
+                      if (findPos == String::npos) {
+                        ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Compact parameter missing slash \"/\" in line: " + line);
+                      }
+                      String typeStr = tempArg.substr(0, findPos);
+                      String nameStr = tempArg.substr(findPos + 1);
+                      findPos = tempArg.find("/", findPos+1);
+                      if (findPos != String::npos) {
+                        ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Compact parameter missing has extra slash \"/\" in line: " + line);
+                      }
+                      typeStr.trim();
+                      nameStr.trim();
+                      tempArgs[ZS_EVENTING_METHOD_TOTAL_PARAMS + ((resultIndex / 2)*3)] = typeStr;
+                      tempArgs[ZS_EVENTING_METHOD_TOTAL_PARAMS + ((resultIndex / 2)*3) + 1] = nameStr;
+                    } else {
+                      tempArgs[ZS_EVENTING_METHOD_TOTAL_PARAMS + ((resultIndex / 2) * 3) + 2] = args[index];
+                    }
+                  }
+
+                  args.clear();
+                  args = tempArgs;
+                }
 
                 if (isNumber(method.c_str())) {
                   size_t totalParams{};
@@ -1609,8 +1744,20 @@ namespace zsLib
             {
               auto opCode = (*iter).second;
 
-              for (IEventingTypes::PredefinedOpCodes index = IEventingTypes::PredefinedOpCode_First; index <= IEventingTypes::PredefinedOpCode_Last; index = static_cast<IEventingTypes::PredefinedOpCodes>(static_cast<std::underlying_type<IEventingTypes::PredefinedOpCodes>::type>(index) + 1)) {
-                if (opCode->mValue == index) goto skip_next;
+              switch (static_cast<IEventingTypes::PredefinedOpCodes>(opCode->mValue))
+              {
+                case IEventingTypes::PredefinedOpCode_Info:       goto skip_next;
+                case IEventingTypes::PredefinedOpCode_Start:      goto skip_next;
+                case IEventingTypes::PredefinedOpCode_Stop:       goto skip_next;
+                case IEventingTypes::PredefinedOpCode_DC_Start:   goto skip_next;
+                case IEventingTypes::PredefinedOpCode_DC_Stop:    goto skip_next;
+                case IEventingTypes::PredefinedOpCode_Extension:  goto skip_next;
+                case IEventingTypes::PredefinedOpCode_Reply:      goto skip_next;
+                case IEventingTypes::PredefinedOpCode_Resume:     goto skip_next;
+                case IEventingTypes::PredefinedOpCode_Suspend:    goto skip_next;
+                case IEventingTypes::PredefinedOpCode_Send:       goto skip_next;
+                case IEventingTypes::PredefinedOpCode_Receive:    goto skip_next;
+                default:  break;
               }
 
               {

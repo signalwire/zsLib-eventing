@@ -369,9 +369,6 @@
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_TimerMonitor.h">
       <Filter>zsLib\internal</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Tracing.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_XML.h">
       <Filter>zsLib\internal</Filter>
     </ClInclude>
@@ -379,9 +376,6 @@
       <Filter>zsLib\internal</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\types.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_ETWTracing.h">
       <Filter>zsLib\internal</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\zsLib\zsLib\extras\uuid\config.h">
@@ -462,12 +456,6 @@
   <ItemGroup>
     <None Include="..\..\..\..\zsLib\zsLib\cpp\zsLib.events.json">
       <Filter>zsLib\cpp</Filter>
-    </None>
-    <None Include="..\..\..\..\zsLib\zsLib\internal\zsLib_ETWTracing.man">
-      <Filter>zsLib\internal</Filter>
-    </None>
-    <None Include="..\..\..\..\zsLib\zsLib\internal\zsLib_ETWTracing.wprp">
-      <Filter>zsLib\internal</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -78,6 +78,7 @@ namespace zsLib
           #pragma mark Compiler => (internal)
           #pragma mark
 
+          void outputMacros();
           void read() throw (Failure, FailureWithLine);
           void prepareIndex() throw (Failure);
           void validate() throw (Failure);
