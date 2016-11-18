@@ -66,9 +66,11 @@ either expressed or implied, of the FreeBSD Project.
 #define ZS_EVENTING_METHOD_TASK "TASK"
 #define ZS_EVENTING_METHOD_OPCODE "OPCODE"
 #define ZS_EVENTING_METHOD_TASK_OPCODE "TASK_OPCODE"
-#define ZS_EVENTING_METHOD_INIT "INIT"
-#define ZS_EVENTING_METHOD_DEINIT "DEINIT"
+#define ZS_EVENTING_METHOD_REGISTER "REGISTER"
+#define ZS_EVENTING_METHOD_UNREGISTER "UNREGISTER"
+#define ZS_EVENTING_METHOD_EXCLUSIVE "EXCLUSIVE"
 
+#define ZS_EVENTING_METHOD_ASSIGN_VALUE "ASSIGN_VALUE"
 
 namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zsLib_eventing_tool) } } }
 
@@ -865,6 +867,8 @@ namespace zsLib
         //---------------------------------------------------------------------
         void Compiler::read() throw (Failure, FailureWithLine)
         {
+          typedef std::set<String> NameSet;
+
           HashSet processedHashes;
 
           ProviderPtr &provider = mConfig.mProvider;
@@ -967,6 +971,7 @@ namespace zsLib
 
             try {
               ParseState state;
+              bool excluseMode = false;
               state.mPos = reinterpret_cast<const char *>(file->BytePtr());
               while ('\0' != *(state.mPos))
               {
@@ -980,6 +985,13 @@ namespace zsLib
                 parseLine(line.c_str(), method, args, currentLine);
 
                 if (method.isEmpty()) continue;
+
+                if (excluseMode) {
+                  if (ZS_EVENTING_METHOD_EXCLUSIVE != method) {
+                    tool::output() << "[Info] Exclusive mode skipping: " << line << "\n";
+                    continue;
+                  }
+                }
 
                 if (0 == (method.substr(0, strlen(ZS_EVENTING_METHOD_COMPACT_PREFIX)).compare(ZS_EVENTING_METHOD_COMPACT_PREFIX)))
                 {
@@ -1109,10 +1121,19 @@ namespace zsLib
                     dataTemplate = IEventingTypes::DataTemplate::create();
                   }
 
+                  NameSet nameSet;
                   for (decltype(totalParams) loop = 0; loop < totalParams; ++loop)
                   {
                     String type = provider->aliasLookup(args[ZS_EVENTING_METHOD_TOTAL_PARAMS + (loop * 3)]);
                     String name = provider->aliasLookup(args[ZS_EVENTING_METHOD_TOTAL_PARAMS + (loop * 3) + 1]);
+
+                    String upperName = name;
+                    upperName.toUpper();
+
+                    if (nameSet.end() != nameSet.find(upperName)) {
+                      ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, String("Event has duplicate name \"") + name + "\" in line: " + line);
+                    }
+                    nameSet.insert(upperName);
 
                     auto dataType = IEventingTypes::DataType::create();
                     dataType->mValueName = name;
@@ -1385,11 +1406,58 @@ namespace zsLib
                   continue;
                 }
 
-                if ((ZS_EVENTING_METHOD_INIT == method) ||
-                  (ZS_EVENTING_METHOD_DEINIT == method)) {
+                if ((ZS_EVENTING_METHOD_REGISTER == method) ||
+                    (ZS_EVENTING_METHOD_UNREGISTER == method)) {
+                  if (1 != args.size()) {
+                    ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Invalid number of arguments in (un)register \"" + string(args.size()) + "\" in line: " + line);
+                  }
+                  String providerName = provider->aliasLookup(args[0]);
                   prepareProvider(mConfig);
                   if (provider->mName.hasData()) {
-                    ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, String("INIT does not match provider name \"") + provider->mName + "\" in line: " + line);
+                    if (provider->mName != providerName) {
+                      ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, String("REGISTER does not match provider name \"") + provider->mName + "\" in line: " + line);
+                    }
+                  } else {
+                    provider->mName = providerName;
+                  }
+                  continue;
+                }
+
+                if (ZS_EVENTING_METHOD_EXCLUSIVE == method) {
+                  prepareProvider(mConfig);
+                  String providerName = provider->aliasLookup(args[0]);
+                  if ("x" == providerName) {
+                    tool::output() << "[Info] Contents are no longer exclusive\n";
+                    excluseMode = false;
+                  } else if (provider->mName != providerName) {
+                    tool::output() << "[Info] Contents are exclusive to provider \"" << providerName << "\" and current provider is \"" <<  provider->mName << "\"\n";
+                    excluseMode = true;
+                  }
+                  continue;
+                }
+
+                if (ZS_EVENTING_METHOD_ASSIGN_VALUE == method) {
+                  if (2 != args.size()) {
+                    ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Invalid number of arguments in assign value \"" + string(args.size()) + "\" in line: " + line);
+                  }
+                  prepareProvider(mConfig);
+                  String eventName = provider->aliasLookup(args[0]);
+                  String eventValue = provider->aliasLookup(args[1]);
+                  auto found = provider->mEvents.find(eventName);
+                  if (found == provider->mEvents.end()) {
+                    ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Event name not found \"" + eventName + "\" in line: " + line);
+                  }
+                  auto event = (*found).second;
+                  try {
+                    auto newValue = Numeric<decltype(event->mValue)>(eventValue);
+                    if (0 != event->mValue) {
+                      if (newValue != event->mValue) {
+                        ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Event found \"" + eventName + "\" but value mismatches previous value in line: " + line);
+                      }
+                    }
+                    event->mValue = newValue;
+                  } catch (const Numeric<decltype(event->mValue)>::ValueOutOfRange &) {
+                    ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Event value not valid in event \"" + eventName + "\" in line: " + line);
                   }
                   continue;
                 }
@@ -2377,20 +2445,22 @@ namespace zsLib
               size_t totalPointers = 0;
               size_t maxSize = 0;
               bool nextMustBeSize = false;
-              for (auto iterDataType = event->mDataTemplate->mDataTypes.begin(); iterDataType != event->mDataTemplate->mDataTypes.end(); ++iterDataType) {
-                auto dataType = (*iterDataType);
-                if (!nextMustBeSize) {
-                  maxSize += IEventingTypes::getMaxBytes(dataType->mType);
-                  nextMustBeSize = false;
-                }
-                switch (IEventingTypes::getBaseType(dataType->mType))
-                {
+              if (event->mDataTemplate) {
+                for (auto iterDataType = event->mDataTemplate->mDataTypes.begin(); iterDataType != event->mDataTemplate->mDataTypes.end(); ++iterDataType) {
+                  auto dataType = (*iterDataType);
+                  if (!nextMustBeSize) {
+                    maxSize += IEventingTypes::getMaxBytes(dataType->mType);
+                    nextMustBeSize = false;
+                  }
+                  switch (IEventingTypes::getBaseType(dataType->mType))
+                  {
                   case IEventingTypes::BaseType_Boolean:
                   case IEventingTypes::BaseType_Integer:
                   case IEventingTypes::BaseType_Float:
                   case IEventingTypes::BaseType_Pointer:  break;
                   case IEventingTypes::BaseType_Binary:   ++totalPointers; nextMustBeSize = true; break;
                   case IEventingTypes::BaseType_String:   ++totalPointers; break;
+                  }
                 }
               }
 
@@ -2406,107 +2476,109 @@ namespace zsLib
 
               nextMustBeSize = false;
               size_t loop = 1;
-              for (auto iterDataType = event->mDataTemplate->mDataTypes.begin(); iterDataType != event->mDataTemplate->mDataTypes.end(); ++iterDataType, ++loop) {
-                auto dataType = (*iterDataType);
+              if (event->mDataTemplate) {
+                for (auto iterDataType = event->mDataTemplate->mDataTypes.begin(); iterDataType != event->mDataTemplate->mDataTypes.end(); ++iterDataType, ++loop) {
+                  auto dataType = (*iterDataType);
 
-                switch (dataType->mType)
-                {
-                  case IEventingTypes::PredefinedTypedef_bool: {
-                    ss << "    zsLib::eventing::eventWriteBuffer<bool>(xxPOutputBuffer, (xValue" << string(loop) << ")); \\\n";
-                    break;
+                  switch (dataType->mType)
+                  {
+                    case IEventingTypes::PredefinedTypedef_bool: {
+                      ss << "    zsLib::eventing::eventWriteBuffer<bool>(xxPOutputBuffer, (xValue" << string(loop) << ")); \\\n";
+                      break;
+                    }
+
+                    case IEventingTypes::PredefinedTypedef_uchar:
+                    case IEventingTypes::PredefinedTypedef_ushort:
+                    case IEventingTypes::PredefinedTypedef_uint:
+                    case IEventingTypes::PredefinedTypedef_ulong:
+                    case IEventingTypes::PredefinedTypedef_ulonglong:
+                    case IEventingTypes::PredefinedTypedef_uint8:
+                    case IEventingTypes::PredefinedTypedef_uint16:
+                    case IEventingTypes::PredefinedTypedef_uint32:
+                    case IEventingTypes::PredefinedTypedef_uint64:
+                    case IEventingTypes::PredefinedTypedef_byte:
+                    case IEventingTypes::PredefinedTypedef_word:
+                    case IEventingTypes::PredefinedTypedef_dword:
+                    case IEventingTypes::PredefinedTypedef_qword: {
+                      String typeStr = String("uint") + string(IEventingTypes::getMaxBytes(dataType->mType) * 8) + "_t";
+                      ss << "    zsLib::eventing::eventWriteBuffer<" << typeStr << ">(xxPOutputBuffer, static_cast<" << typeStr << ">(xValue" << string(loop) << ")); \\\n";
+                      break;
+                    }
+
+                    case IEventingTypes::PredefinedTypedef_char:
+                    case IEventingTypes::PredefinedTypedef_schar:
+                    case IEventingTypes::PredefinedTypedef_short:
+                    case IEventingTypes::PredefinedTypedef_sshort:
+                    case IEventingTypes::PredefinedTypedef_int:
+                    case IEventingTypes::PredefinedTypedef_sint:
+                    case IEventingTypes::PredefinedTypedef_long:
+                    case IEventingTypes::PredefinedTypedef_slong:
+                    case IEventingTypes::PredefinedTypedef_longlong:
+                    case IEventingTypes::PredefinedTypedef_slonglong:
+                    case IEventingTypes::PredefinedTypedef_int8:
+                    case IEventingTypes::PredefinedTypedef_sint8:
+                    case IEventingTypes::PredefinedTypedef_int16:
+                    case IEventingTypes::PredefinedTypedef_sint16:
+                    case IEventingTypes::PredefinedTypedef_int32:
+                    case IEventingTypes::PredefinedTypedef_sint32:
+                    case IEventingTypes::PredefinedTypedef_int64:
+                    case IEventingTypes::PredefinedTypedef_sint64: {
+                      String typeStr = String("int") + string(IEventingTypes::getMaxBytes(dataType->mType) * 8) + "_t";
+                      ss << "    zsLib::eventing::eventWriteBuffer<" << typeStr << ">(xxPOutputBuffer, static_cast<" << typeStr << ">(xValue" << string(loop) << ")); \\\n";
+                      break;
+                    }
+
+                    case IEventingTypes::PredefinedTypedef_float:
+                    case IEventingTypes::PredefinedTypedef_double:
+                    case IEventingTypes::PredefinedTypedef_ldouble:
+                    case IEventingTypes::PredefinedTypedef_float32:
+                    case IEventingTypes::PredefinedTypedef_float64: {
+                      String typeStr = (IEventingTypes::getMaxBytes(dataType->mType) <= 4 ? "float" : "double");
+                      ss << "    zsLib::eventing::eventWriteBuffer<" << typeStr << ">(xxPOutputBuffer, static_cast<" << typeStr << ">(xValue" << string(loop) << ")); \\\n";
+                      break;
+                    }
+
+                    case IEventingTypes::PredefinedTypedef_pointer: {
+                      ss << "    zsLib::eventing::eventWriteBuffer<uintptr_t>(xxPOutputBuffer, reinterpret_cast<uintptr_t>(xValue" << string(loop) << ")); \\\n";
+                      break;
+                    }
+
+                    case IEventingTypes::PredefinedTypedef_binary: {
+                      ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, reinterpret_cast<const BYTE *>(xValue" << string(loop) << "), xxIndirectSize, (xValue" << string(loop + 1) << ")); \\\n";
+                      if (loop + 1 > event->mDataTemplate->mDataTypes.size()) {
+                        ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, String("Binary data missing size"));
+                      }
+                      nextMustBeSize = true;
+                      goto next_loop;
+                    }
+                    case IEventingTypes::PredefinedTypedef_size: {
+                      nextMustBeSize = false;
+                      break;
+                    }
+
+                    case IEventingTypes::PredefinedTypedef_string: {
+                      ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, (xValue" << string(loop) << "), xxIndirectSize); \\\n";
+                      break;
+                    }
+                    case IEventingTypes::PredefinedTypedef_astring: {
+                      ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, (xValue" << string(loop) << "), xxIndirectSize); \\\n";
+                      break;
+                    }
+                    case IEventingTypes::PredefinedTypedef_wstring: {
+                      ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, (xValue" << string(loop) << "), xxIndirectSize); \\\n";
+                      break;
+                    }
                   }
 
-                  case IEventingTypes::PredefinedTypedef_uchar:
-                  case IEventingTypes::PredefinedTypedef_ushort:
-                  case IEventingTypes::PredefinedTypedef_uint:
-                  case IEventingTypes::PredefinedTypedef_ulong:
-                  case IEventingTypes::PredefinedTypedef_ulonglong:
-                  case IEventingTypes::PredefinedTypedef_uint8:
-                  case IEventingTypes::PredefinedTypedef_uint16:
-                  case IEventingTypes::PredefinedTypedef_uint32:
-                  case IEventingTypes::PredefinedTypedef_uint64:
-                  case IEventingTypes::PredefinedTypedef_byte:
-                  case IEventingTypes::PredefinedTypedef_word:
-                  case IEventingTypes::PredefinedTypedef_dword:
-                  case IEventingTypes::PredefinedTypedef_qword: {
-                    String typeStr = String("uint") + string(IEventingTypes::getMaxBytes(dataType->mType) * 8) + "_t";
-                    ss << "    zsLib::eventing::eventWriteBuffer<" << typeStr << ">(xxPOutputBuffer, static_cast<" << typeStr << ">(xValue" << string(loop) << ")); \\\n";
-                    break;
-                  }
-
-                  case IEventingTypes::PredefinedTypedef_char:
-                  case IEventingTypes::PredefinedTypedef_schar:
-                  case IEventingTypes::PredefinedTypedef_short:
-                  case IEventingTypes::PredefinedTypedef_sshort:
-                  case IEventingTypes::PredefinedTypedef_int:
-                  case IEventingTypes::PredefinedTypedef_sint:
-                  case IEventingTypes::PredefinedTypedef_long:
-                  case IEventingTypes::PredefinedTypedef_slong:
-                  case IEventingTypes::PredefinedTypedef_longlong:
-                  case IEventingTypes::PredefinedTypedef_slonglong:
-                  case IEventingTypes::PredefinedTypedef_int8:
-                  case IEventingTypes::PredefinedTypedef_sint8:
-                  case IEventingTypes::PredefinedTypedef_int16:
-                  case IEventingTypes::PredefinedTypedef_sint16:
-                  case IEventingTypes::PredefinedTypedef_int32:
-                  case IEventingTypes::PredefinedTypedef_sint32:
-                  case IEventingTypes::PredefinedTypedef_int64:
-                  case IEventingTypes::PredefinedTypedef_sint64: {
-                    String typeStr = String("int") + string(IEventingTypes::getMaxBytes(dataType->mType) * 8) + "_t";
-                    ss << "    zsLib::eventing::eventWriteBuffer<" << typeStr << ">(xxPOutputBuffer, static_cast<" << typeStr << ">(xValue" << string(loop) << ")); \\\n";
-                    break;
-                  }
-
-                  case IEventingTypes::PredefinedTypedef_float:
-                  case IEventingTypes::PredefinedTypedef_double:
-                  case IEventingTypes::PredefinedTypedef_ldouble:
-                  case IEventingTypes::PredefinedTypedef_float32:
-                  case IEventingTypes::PredefinedTypedef_float64: {
-                    String typeStr = (IEventingTypes::getMaxBytes(dataType->mType) <= 4 ? "float" : "double");
-                    ss << "    zsLib::eventing::eventWriteBuffer<" << typeStr << ">(xxPOutputBuffer, static_cast<" << typeStr << ">(xValue" << string(loop) << ")); \\\n";
-                    break;
-                  }
-
-                  case IEventingTypes::PredefinedTypedef_pointer: {
-                    ss << "    zsLib::eventing::eventWriteBuffer<uintptr_t>(xxPOutputBuffer, reinterpret_cast<uintptr_t>(xValue" << string(loop) << ")); \\\n";
-                    break;
-                  }
-
-                  case IEventingTypes::PredefinedTypedef_binary: {
-                    ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, reinterpret_cast<const BYTE *>(xValue" << string(loop) << "), xxIndirectSize, (xValue" << string(loop + 1) << ")); \\\n";
-                    if (loop + 1 > event->mDataTemplate->mDataTypes.size()) {
+                  {
+                    if (nextMustBeSize) {
                       ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, String("Binary data missing size"));
                     }
-                    nextMustBeSize = true;
-                    goto next_loop;
-                  }
-                  case IEventingTypes::PredefinedTypedef_size: {
-                    nextMustBeSize = false;
-                    break;
                   }
 
-                  case IEventingTypes::PredefinedTypedef_string: {
-                    ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, (xValue" << string(loop) << "), xxIndirectSize); \\\n";
-                    break;
+                next_loop:
+                  {
                   }
-                  case IEventingTypes::PredefinedTypedef_astring: {
-                    ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, (xValue" << string(loop) << "), xxIndirectSize); \\\n";
-                    break;
-                  }
-                  case IEventingTypes::PredefinedTypedef_wstring: {
-                    ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, (xValue" << string(loop) << "), xxIndirectSize); \\\n";
-                    break;
-                  }
-                }
-
-                {
-                  if (nextMustBeSize) {
-                    ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, String("Binary data missing size"));
-                  }
-                }
-
-              next_loop:
-                {
                 }
               }
 
@@ -2590,122 +2662,123 @@ namespace zsLib
 
               size_t index = 1;
               bool nextMustBeSize = false;
-              for (auto iterDataType = event->mDataTemplate->mDataTypes.begin(); iterDataType != event->mDataTemplate->mDataTypes.end(); ++iterDataType, ++index) {
-                auto dataType = (*iterDataType);
-                switch (IEventingTypes::getBaseType(dataType->mType))
-                {
-                  case IEventingTypes::BaseType_Boolean:  goto output_next;
-                  case IEventingTypes::BaseType_Integer: {
-                    if (IEventingTypes::PredefinedTypedef_size == dataType->mType) {
-                      nextMustBeSize = false;
+              if (event->mDataTemplate) {
+                for (auto iterDataType = event->mDataTemplate->mDataTypes.begin(); iterDataType != event->mDataTemplate->mDataTypes.end(); ++iterDataType, ++index) {
+                  auto dataType = (*iterDataType);
+                  switch (IEventingTypes::getBaseType(dataType->mType))
+                  {
+                    case IEventingTypes::BaseType_Boolean:  goto output_next;
+                    case IEventingTypes::BaseType_Integer: {
+                      if (IEventingTypes::PredefinedTypedef_size == dataType->mType) {
+                        nextMustBeSize = false;
+                        goto skip_next;
+                      }
+                      goto output_next;
+                    }
+                    case IEventingTypes::BaseType_Float:    goto output_next;
+                    case IEventingTypes::BaseType_Pointer:  goto output_next;
+                    case IEventingTypes::BaseType_Binary: {
+                      ss << ", static_cast<size_t>(xValue" << (index+1) << ")";
+                      ss << ", reinterpret_cast<const BYTE *>(xValue" << index << ")";
+                      nextMustBeSize = true;
                       goto skip_next;
                     }
-                    goto output_next;
-                  }
-                  case IEventingTypes::BaseType_Float:    goto output_next;
-                  case IEventingTypes::BaseType_Pointer:  goto output_next;
-                  case IEventingTypes::BaseType_Binary: {
-                    ss << ", static_cast<size_t>(xValue" << (index+1) << ")";
-                    ss << ", reinterpret_cast<const BYTE *>(xValue" << index << ")";
-                    nextMustBeSize = true;
-                    goto skip_next;
-                  }
-                  case IEventingTypes::BaseType_String:   goto output_next;
-                }
-
-              output_next:
-                {
-                  if (nextMustBeSize) {
-                    ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, String("Binary data missing size"));
+                    case IEventingTypes::BaseType_String:   goto output_next;
                   }
 
-                  switch (dataType->mType)
+                output_next:
                   {
-                    case IEventingTypes::PredefinedTypedef_bool: {
-                      ss << ", (bool)(xValue" << index << ")";
-                      break;
+                    if (nextMustBeSize) {
+                      ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, String("Binary data missing size"));
                     }
 
-                    case IEventingTypes::PredefinedTypedef_uchar:
-                    case IEventingTypes::PredefinedTypedef_ushort:
-                    case IEventingTypes::PredefinedTypedef_uint:
-                    case IEventingTypes::PredefinedTypedef_ulong:
-                    case IEventingTypes::PredefinedTypedef_ulonglong:
-                    case IEventingTypes::PredefinedTypedef_uint8:
-                    case IEventingTypes::PredefinedTypedef_uint16:
-                    case IEventingTypes::PredefinedTypedef_uint32:
-                    case IEventingTypes::PredefinedTypedef_uint64:
-                    case IEventingTypes::PredefinedTypedef_byte:
-                    case IEventingTypes::PredefinedTypedef_word:
-                    case IEventingTypes::PredefinedTypedef_dword:
-                    case IEventingTypes::PredefinedTypedef_qword:
-                    case IEventingTypes::PredefinedTypedef_size:
+                    switch (dataType->mType)
                     {
-                      String typeStr = String("uint") + string(IEventingTypes::getMaxBytes(dataType->mType) * 8) + "_t";
-                      ss << ", static_cast<" << typeStr << ">(xValue" << string(index) << ")";
-                      break;
-                    }
+                      case IEventingTypes::PredefinedTypedef_bool: {
+                        ss << ", (bool)(xValue" << index << ")";
+                        break;
+                      }
 
-                    case IEventingTypes::PredefinedTypedef_char:
-                    case IEventingTypes::PredefinedTypedef_schar:
-                    case IEventingTypes::PredefinedTypedef_short:
-                    case IEventingTypes::PredefinedTypedef_sshort:
-                    case IEventingTypes::PredefinedTypedef_int:
-                    case IEventingTypes::PredefinedTypedef_sint:
-                    case IEventingTypes::PredefinedTypedef_long:
-                    case IEventingTypes::PredefinedTypedef_slong:
-                    case IEventingTypes::PredefinedTypedef_longlong:
-                    case IEventingTypes::PredefinedTypedef_slonglong:
-                    case IEventingTypes::PredefinedTypedef_int8:
-                    case IEventingTypes::PredefinedTypedef_sint8:
-                    case IEventingTypes::PredefinedTypedef_int16:
-                    case IEventingTypes::PredefinedTypedef_sint16:
-                    case IEventingTypes::PredefinedTypedef_int32:
-                    case IEventingTypes::PredefinedTypedef_sint32:
-                    case IEventingTypes::PredefinedTypedef_int64:
-                    case IEventingTypes::PredefinedTypedef_sint64: {
-                      String typeStr = String("int") + string(IEventingTypes::getMaxBytes(dataType->mType) * 8) + "_t";
-                      ss << ", static_cast<" << typeStr << ">(xValue" << string(index) << ")";
-                      break;
-                    }
+                      case IEventingTypes::PredefinedTypedef_uchar:
+                      case IEventingTypes::PredefinedTypedef_ushort:
+                      case IEventingTypes::PredefinedTypedef_uint:
+                      case IEventingTypes::PredefinedTypedef_ulong:
+                      case IEventingTypes::PredefinedTypedef_ulonglong:
+                      case IEventingTypes::PredefinedTypedef_uint8:
+                      case IEventingTypes::PredefinedTypedef_uint16:
+                      case IEventingTypes::PredefinedTypedef_uint32:
+                      case IEventingTypes::PredefinedTypedef_uint64:
+                      case IEventingTypes::PredefinedTypedef_byte:
+                      case IEventingTypes::PredefinedTypedef_word:
+                      case IEventingTypes::PredefinedTypedef_dword:
+                      case IEventingTypes::PredefinedTypedef_qword:
+                      case IEventingTypes::PredefinedTypedef_size:
+                      {
+                        String typeStr = String("uint") + string(IEventingTypes::getMaxBytes(dataType->mType) * 8) + "_t";
+                        ss << ", static_cast<" << typeStr << ">(xValue" << string(index) << ")";
+                        break;
+                      }
 
-                    case IEventingTypes::PredefinedTypedef_float:
-                    case IEventingTypes::PredefinedTypedef_double:
-                    case IEventingTypes::PredefinedTypedef_ldouble:
-                    case IEventingTypes::PredefinedTypedef_float32:
-                    case IEventingTypes::PredefinedTypedef_float64: {
-                      String typeStr = (IEventingTypes::getMaxBytes(dataType->mType) <= 4 ? "float" : "double");
-                      ss << ", static_cast<" << typeStr << ">(xValue" << string(index) << ")";
-                      break;
-                    }
+                      case IEventingTypes::PredefinedTypedef_char:
+                      case IEventingTypes::PredefinedTypedef_schar:
+                      case IEventingTypes::PredefinedTypedef_short:
+                      case IEventingTypes::PredefinedTypedef_sshort:
+                      case IEventingTypes::PredefinedTypedef_int:
+                      case IEventingTypes::PredefinedTypedef_sint:
+                      case IEventingTypes::PredefinedTypedef_long:
+                      case IEventingTypes::PredefinedTypedef_slong:
+                      case IEventingTypes::PredefinedTypedef_longlong:
+                      case IEventingTypes::PredefinedTypedef_slonglong:
+                      case IEventingTypes::PredefinedTypedef_int8:
+                      case IEventingTypes::PredefinedTypedef_sint8:
+                      case IEventingTypes::PredefinedTypedef_int16:
+                      case IEventingTypes::PredefinedTypedef_sint16:
+                      case IEventingTypes::PredefinedTypedef_int32:
+                      case IEventingTypes::PredefinedTypedef_sint32:
+                      case IEventingTypes::PredefinedTypedef_int64:
+                      case IEventingTypes::PredefinedTypedef_sint64: {
+                        String typeStr = String("int") + string(IEventingTypes::getMaxBytes(dataType->mType) * 8) + "_t";
+                        ss << ", static_cast<" << typeStr << ">(xValue" << string(index) << ")";
+                        break;
+                      }
 
-                    case IEventingTypes::PredefinedTypedef_pointer: {
-                      ss << ", reinterpret_cast<const void *>(xValue" << string(index) << ")";
-                      break;
-                    }
+                      case IEventingTypes::PredefinedTypedef_float:
+                      case IEventingTypes::PredefinedTypedef_double:
+                      case IEventingTypes::PredefinedTypedef_ldouble:
+                      case IEventingTypes::PredefinedTypedef_float32:
+                      case IEventingTypes::PredefinedTypedef_float64: {
+                        String typeStr = (IEventingTypes::getMaxBytes(dataType->mType) <= 4 ? "float" : "double");
+                        ss << ", static_cast<" << typeStr << ">(xValue" << string(index) << ")";
+                        break;
+                      }
 
-                    case IEventingTypes::PredefinedTypedef_binary: break;
+                      case IEventingTypes::PredefinedTypedef_pointer: {
+                        ss << ", reinterpret_cast<const void *>(xValue" << string(index) << ")";
+                        break;
+                      }
 
-                    case IEventingTypes::PredefinedTypedef_string: {
-                      ss << ", (xValue" << string(index) << ")";
-                      break;
+                      case IEventingTypes::PredefinedTypedef_binary: break;
+
+                      case IEventingTypes::PredefinedTypedef_string: {
+                        ss << ", (xValue" << string(index) << ")";
+                        break;
+                      }
+                      case IEventingTypes::PredefinedTypedef_astring: {
+                        ss << ", (xValue" << string(index) << ")";
+                        break;
+                      }
+                      case IEventingTypes::PredefinedTypedef_wstring: {
+                        ss << ", (xValue" << string(index) << ")";
+                        break;
+                      }
                     }
-                    case IEventingTypes::PredefinedTypedef_astring: {
-                      ss << ", (xValue" << string(index) << ")";
-                      break;
-                    }
-                    case IEventingTypes::PredefinedTypedef_wstring: {
-                      ss << ", (xValue" << string(index) << ")";
-                      break;
-                    }
+                    continue;
                   }
-                  continue;
-                }
-              skip_next:
-                {
+                skip_next:
+                  {
+                  }
                 }
               }
-
               if (nextMustBeSize) {
                 ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, String("Binary data missing size"));
               }
