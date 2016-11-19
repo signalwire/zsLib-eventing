@@ -32,12 +32,13 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/internal/zsLib_eventing_EventingTypes.h>
 #include <zsLib/eventing/internal/zsLib_eventing_Helper.h>
 
+#include <zsLib/eventing/IHasher.h>
+
 #include <zsLib/Numeric.h>
 #include <zsLib/Stringize.h>
 
-#include <cstdio>
 
-#include <cryptopp/sha.h>
+#include <cstdio>
 
 namespace zsLib { namespace eventing { ZS_DECLARE_SUBSYSTEM(zsLib_eventing); } }
 
@@ -584,6 +585,9 @@ namespace zsLib
       rootEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("symbol", mSymbolName));
       rootEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("description", mDescription));
       rootEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("resourceName", mResourceName));
+      if (mUniqueHash.hasData()) {
+        rootEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("uniqueHash", mUniqueHash));
+      }
 
       if (mAliases.size() > 0) {
         ElementPtr aliasesEl = Element::create("aliases");
@@ -699,12 +703,124 @@ namespace zsLib
         mResourceName = aliasLookup(UseEventingHelper::getElementTextAndDecode(resourceNameEl));
       }
 
+      ElementPtr uniqueHashEl = rootEl->findFirstChildElement("uniqueHash");
+      if (uniqueHashEl) {
+        String uniqueHash = UseEventingHelper::getElementTextAndDecode(uniqueHashEl);
+        if (mUniqueHash.hasData()) {
+          if (uniqueHash != mUniqueHash) {
+            ZS_THROW_CUSTOM(InvalidContent, String("Provider unique hash already has a value: ") + mUniqueHash);
+          }
+        }
+        mUniqueHash = aliasLookup(uniqueHash);
+      }
+
       createTypesdefs(rootEl->findFirstChildElement("typedefs"), mTypedefs, &mAliases);
       createChannels(rootEl->findFirstChildElement("channels"), mChannels, &mAliases);
       createOpCodes(rootEl->findFirstChildElement("opCodes"), mOpCodes, &mAliases);
       createTasks(rootEl->findFirstChildElement("tasks"), mTasks, &mAliases);
       createDataTemplates(rootEl->findFirstChildElement("templates"), mDataTemplates, mTypedefs, &mAliases);
       createEvents(rootEl->findFirstChildElement("events"), mEvents, mChannels, mOpCodes, mTasks, mDataTemplates, &mAliases);
+    }
+
+    //-------------------------------------------------------------------------
+    String IEventingTypes::Provider::hash() const
+    {
+      auto hasher = IHasher::sha256();
+
+      hasher->update(string(mID));
+      hasher->update(":");
+      hasher->update(mName);
+      hasher->update(":");
+      hasher->update(mSymbolName);
+      hasher->update(":");
+      hasher->update(mDescription);
+      hasher->update(":");
+      hasher->update(mResourceName);
+      hasher->update(":");
+      hasher->update(mUniqueHash);
+
+      hasher->update(":list:aliases");
+      for (auto iter = mAliases.begin(); iter != mAliases.end(); ++iter)
+      {
+        auto &aliasIn = (*iter).first;
+        auto &aliasOut = (*iter).second;
+
+        hasher->update(":next:");
+        hasher->update(aliasIn);
+        hasher->update(":");
+        hasher->update(aliasOut);
+      }
+
+      hasher->update(":list:typedefs");
+      for (auto iter = mTypedefs.begin(); iter != mTypedefs.end(); ++iter)
+      {
+        hasher->update(":");
+        hasher->update((*iter).second->hash());
+      }
+
+      hasher->update(":list:channels");
+      for (auto iter = mChannels.begin(); iter != mChannels.end(); ++iter)
+      {
+        hasher->update(":");
+        hasher->update((*iter).second->hash());
+      }
+
+      hasher->update(":list:opcodes");
+      for (auto iter = mOpCodes.begin(); iter != mOpCodes.end(); ++iter)
+      {
+        hasher->update(":");
+        hasher->update((*iter).second->hash());
+      }
+
+      hasher->update(":list:opcodes");
+      for (auto iter = mTasks.begin(); iter != mTasks.end(); ++iter)
+      {
+        hasher->update(":");
+        hasher->update((*iter).second->hash());
+      }
+
+      hasher->update(":list:events");
+      for (auto iter = mEvents.begin(); iter != mEvents.end(); ++iter)
+      {
+        hasher->update(":");
+        hasher->update((*iter).second->hash());
+      }
+
+      hasher->update(":list:templates");
+      for (auto iter = mDataTemplates.begin(); iter != mDataTemplates.end(); ++iter)
+      {
+        hasher->update(":");
+        hasher->update((*iter).second->hash());
+      }
+      hasher->update(":end");
+
+      return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
+    }
+
+    //-------------------------------------------------------------------------
+    String IEventingTypes::Provider::uniqueEventingHash() const
+    {
+      auto hasher = IHasher::sha256();
+
+      hasher->update(string(mID));
+      hasher->update(":");
+      hasher->update(mName);
+      hasher->update(":");
+      hasher->update(mSymbolName);
+      hasher->update(":");
+      hasher->update(mDescription);
+      hasher->update(":");
+      hasher->update(mResourceName);
+
+      hasher->update(":list:events");
+      for (auto iter = mEvents.begin(); iter != mEvents.end(); ++iter)
+      {
+        hasher->update(":");
+        hasher->update((*iter).second->hash());
+      }
+      hasher->update(":end");
+
+      return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
     }
 
     //-------------------------------------------------------------------------
@@ -773,6 +889,19 @@ namespace zsLib
       resultEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("type", toString(mType)));
 
       return resultEl;
+    }
+
+    //-------------------------------------------------------------------------
+    String IEventingTypes::Typedef::hash() const
+    {
+      auto hasher = IHasher::sha256();
+
+      hasher->update(mName);
+      hasher->update(":");
+      hasher->update(toString(mType));
+      hasher->update(":end");
+
+      return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
     }
 
     //-------------------------------------------------------------------------
@@ -909,6 +1038,23 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
+    String IEventingTypes::Channel::hash() const
+    {
+      auto hasher = IHasher::sha256();
+
+      hasher->update(mID);
+      hasher->update(":");
+      hasher->update(mName);
+      hasher->update(":");
+      hasher->update(toString(mType));
+      hasher->update(":");
+      hasher->update(string(mValue));
+      hasher->update(":end");
+
+      return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
+    }
+
+    //-------------------------------------------------------------------------
     void IEventingTypes::createChannels(
                                         ElementPtr channelsEl,
                                         ChannelMap &outChannels,
@@ -982,6 +1128,29 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
+    String IEventingTypes::Task::hash() const
+    {
+      auto hasher = IHasher::sha256();
+
+      hasher->update(mName);
+
+      hasher->update(":list");
+      for (auto iter = mOpCodes.begin(); iter != mOpCodes.end(); ++iter)
+      {
+        auto opCode = (*iter).second;
+
+        hasher->update(":");
+        String hash = opCode->hash();
+        hasher->update(hash);
+      }
+      hasher->update(":");
+      hasher->update(string(mValue));
+      hasher->update(":end");
+
+      return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
+    }
+
+    //-------------------------------------------------------------------------
     void IEventingTypes::createTasks(
                                      ElementPtr tasksEl,
                                      TaskMap &outTasks,
@@ -1042,6 +1211,25 @@ namespace zsLib
       if (mName.hasData()) opCodeEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("name", mName));
       if (0 != mValue) opCodeEl->adoptAsLastChild(UseEventingHelper::createElementWithNumber("value", string(mValue)));
       return opCodeEl;
+    }
+
+    //-------------------------------------------------------------------------
+    String IEventingTypes::OpCode::hash() const
+    {
+      auto hasher = IHasher::sha256();
+
+      hasher->update(mName);
+
+      hasher->update(":");
+      auto task = mTask.lock();
+      if (task) {
+        hasher->update(task->hash());
+      }
+      hasher->update(":");
+      hasher->update(string(mValue));
+      hasher->update(":end");
+
+      return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
     }
 
     //-------------------------------------------------------------------------
@@ -1125,6 +1313,39 @@ namespace zsLib
         eventEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("template", mDataTemplate->hash()));
       }
       return eventEl;
+    }
+
+    //-------------------------------------------------------------------------
+    String IEventingTypes::Event::hash() const
+    {
+      auto hasher = IHasher::sha256();
+
+      hasher->update(mName);
+      hasher->update(":");
+      hasher->update(Log::toString(mSeverity));
+      hasher->update(":");
+      hasher->update(Log::toString(mLevel));
+      hasher->update(":");
+      if (mChannel) {
+        hasher->update(mChannel->hash());
+      }
+      hasher->update(":");
+      if (mTask) {
+        hasher->update(mTask->hash());
+      }
+      hasher->update(":");
+      if (mOpCode) {
+        hasher->update(mOpCode->hash());
+      }
+      hasher->update(":");
+      if (mDataTemplate) {
+        hasher->update(mDataTemplate->hash());
+      }
+      hasher->update(":");
+      hasher->update(string(mValue));
+      hasher->update(":end");
+
+      return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
     }
 
     //-------------------------------------------------------------------------
@@ -1250,22 +1471,19 @@ namespace zsLib
     //-------------------------------------------------------------------------
     String IEventingTypes::DataTemplate::hash() const
     {
-      SHA256 hasher;
+      auto hasher = IHasher::sha256();
 
       for (auto iter = mDataTypes.begin(); iter != mDataTypes.end(); ++iter)
       {
         auto dataType = (*iter);
         auto typeStr = IEventingTypes::toString(dataType->mType);
-        hasher.Update(reinterpret_cast<const BYTE *>(typeStr), strlen(typeStr));
-        hasher.Update(reinterpret_cast<const BYTE *>(":"), strlen(":"));
-        hasher.Update(reinterpret_cast<const BYTE *>(dataType->mValueName.c_str()), dataType->mValueName.length());
-        hasher.Update(reinterpret_cast<const BYTE *>(":!:"), strlen(":!:"));
+        hasher->update(typeStr);
+        hasher->update(":");
+        hasher->update(dataType->mValueName);
+        hasher->update(":!:");
       }
 
-      auto buffer = make_shared<SecureByteBlock>(hasher.DigestSize());
-      hasher.Final(buffer->BytePtr());
-
-      return UseEventingHelper::convertToHex(*buffer, false);
+      return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
     }
 
     //-------------------------------------------------------------------------
@@ -1346,6 +1564,20 @@ namespace zsLib
       dataTypeEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("type", IEventingTypes::toString(mType)));
 
       return dataTypeEl;
+    }
+
+    //-------------------------------------------------------------------------
+    String IEventingTypes::DataType::hash() const
+    {
+      auto hasher = IHasher::sha256();
+
+      auto typeStr = IEventingTypes::toString(mType);
+      hasher->update(typeStr);
+      hasher->update(":");
+      hasher->update(mValueName);
+      hasher->update(":!:");
+
+      return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
     }
 
     //-------------------------------------------------------------------------
