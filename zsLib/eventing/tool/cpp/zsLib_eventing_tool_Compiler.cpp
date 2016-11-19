@@ -1430,7 +1430,12 @@ namespace zsLib
         //---------------------------------------------------------------------
         void Compiler::validate() throw (Failure)
         {
-          //ProviderPtr &provider = mConfig.mProvider;
+          ProviderPtr &provider = mConfig.mProvider;
+          if (!provider) return;
+
+          if (provider->mUniqueHash.isEmpty()) {
+            provider->mUniqueHash = provider->uniqueEventingHash();
+          }
         }
 
         //---------------------------------------------------------------------

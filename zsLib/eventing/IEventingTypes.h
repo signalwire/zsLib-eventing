@@ -268,6 +268,7 @@ namespace zsLib
         String mSymbolName;   // e.g. "zsLib"
         String mDescription;
         String mResourceName;
+        String mUniqueHash;
 
         AliasMap mAliases;
         TypedefMap mTypedefs;
@@ -285,6 +286,9 @@ namespace zsLib
 
         ElementPtr createElement(const char *objectName = NULL) const;
         void parse(const ElementPtr &rootEl) throw (InvalidContent);
+
+        String hash() const;
+        String uniqueEventingHash() const;
 
         String aliasLookup(const String &value);
       };
@@ -314,6 +318,8 @@ namespace zsLib
         static TypedefPtr create(const ElementPtr &el) { if (!el) return TypedefPtr(); return make_shared<Typedef>(el); }
 
         ElementPtr createElement(const char *objectName = NULL) const;
+
+        String hash() const;
       };
 
       static void createTypesdefs(
@@ -348,6 +354,8 @@ namespace zsLib
                                  ) { if (!el) return ChannelPtr(); return make_shared<Channel>(el, aliases); }
 
         ElementPtr createElement(const char *objectName = NULL) const;
+
+        String hash() const;
       };
 
       static void createChannels(
@@ -381,6 +389,8 @@ namespace zsLib
                               ) { if (!el) return TaskPtr(); return make_shared<Task>(el, aliases); }
 
         ElementPtr createElement(const char *objectName = NULL) const;
+
+        String hash() const;
       };
 
       static void createTasks(
@@ -414,6 +424,8 @@ namespace zsLib
                                 ) { if (!el) return OpCodePtr(); return make_shared<OpCode>(el, aliases); }
 
         ElementPtr createElement(const char *objectName = NULL) const;
+
+        String hash() const;
       };
 
       static void createOpCodes(
@@ -441,6 +453,8 @@ namespace zsLib
         DataTemplatePtr mDataTemplate;
 
         size_t          mValue {};
+
+        String hash() const;
 
         Event() {}
         Event(
@@ -525,6 +539,8 @@ namespace zsLib
                                   ) { if (!el) return DataTypePtr(); return make_shared<DataType>(el, typedefs, aliases); }
 
         ElementPtr createElement(const char *objectName = NULL) const;
+
+        String hash() const;
       };
 
       static void createDataTypes(

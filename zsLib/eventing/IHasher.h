@@ -45,6 +45,7 @@ namespace zsLib
     {
       virtual const BYTE *digest() const = 0;
       virtual size_t digestSize() const = 0;
+      virtual void update(const char *str) = 0;
       virtual void update(const BYTE *buffer, size_t length) = 0;
       virtual const BYTE *finalize() = 0;
     };
@@ -63,10 +64,11 @@ namespace zsLib
 
         static IHasherAlgorithmPtr create() { return make_shared<HasherAlgorithm>(); }
 
-        virtual const BYTE *digest() const { return &(mOutput[0]); }
-        virtual size_t digestSize() const { return static_cast<size_t>(mHasher.DigestSize());  }
-        virtual void update(const BYTE *buffer, size_t length) { return mHasher.Update(buffer, length); }
-        virtual const BYTE *finalize() { mHasher.Final(&(mOutput[0])); return &(mOutput[0]); }
+        virtual const BYTE *digest() const override { return &(mOutput[0]); }
+        virtual size_t digestSize() const override { return static_cast<size_t>(mHasher.DigestSize());  }
+        virtual void update(const char *str) override { if (!str) return; mHasher.Update(reinterpret_cast<const BYTE *>(str), strlen(str)); }
+        virtual void update(const BYTE *buffer, size_t length) override { mHasher.Update(buffer, length); }
+        virtual const BYTE *finalize() override { mHasher.Final(&(mOutput[0])); return &(mOutput[0]); }
 
       private:
         BYTE mOutput[sizeof(THasher)] {};
