@@ -425,7 +425,7 @@ namespace zsLib
 
         ElementPtr createElement(const char *objectName = NULL) const;
 
-        String hash() const;
+        String hash(bool calledFromTask = false) const;
       };
 
       static void createOpCodes(

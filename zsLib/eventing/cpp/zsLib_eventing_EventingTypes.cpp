@@ -1140,7 +1140,7 @@ namespace zsLib
         auto opCode = (*iter).second;
 
         hasher->update(":");
-        String hash = opCode->hash();
+        String hash = opCode->hash(true);
         hasher->update(hash);
       }
       hasher->update(":");
@@ -1214,7 +1214,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IEventingTypes::OpCode::hash() const
+    String IEventingTypes::OpCode::hash(bool calledFromTask) const
     {
       auto hasher = IHasher::sha256();
 
@@ -1222,7 +1222,8 @@ namespace zsLib
 
       hasher->update(":");
       auto task = mTask.lock();
-      if (task) {
+      if ((task) &&
+          (!calledFromTask)) {
         hasher->update(task->hash());
       }
       hasher->update(":");
