@@ -2412,7 +2412,7 @@ namespace zsLib
             "      return gHandle;\n"
             "    }\n\n";
 
-          ss << "#define ZS_INTERNAL_REGISTER_EVENTING_" << provider->mName << "() ZS_EVENTING_REGISTER_EVENT_WRITER(zsLib::eventing::getEventHandle" << provider->mName << "(), \"" << string(provider->mID) << "\", \"" << provider->mName << "\")\n";
+          ss << "#define ZS_INTERNAL_REGISTER_EVENTING_" << provider->mName << "() ZS_EVENTING_REGISTER_EVENT_WRITER(zsLib::eventing::getEventHandle" << provider->mName << "(), \"" << string(provider->mID) << "\", \"" << provider->mName << "\", \"" << provider->mUniqueHash << "\")\n";
           ss << "#define ZS_INTERNAL_UNREGISTER_EVENTING_" << provider->mName << "() ZS_EVENTING_UNREGISTER_EVENT_WRITER(zsLib::eventing::getEventHandle" << provider->mName << "())\n\n";
 
           for (auto iter = provider->mEvents.begin(); iter != provider->mEvents.end(); ++iter)
