@@ -38,9 +38,9 @@ Example of running the tool:
 The prefixes are as follows:
 `.h` - A non-windows cross platform header file that maps the event macros to generate event on cross platform machines (except windows).  
 `.jman` - A json based manifest file containing detailed information about the provider and all provider events which can be read by this eventing tool to capture, read, and re-emit events from a remote cross platform machine onto a windows machine to then capture using an event recorder (such as Windows Performance Recorder)  
-`_win.h` - A windows specific header that maps event macros to the windows event generation macros (an eventing header generated from the `_win_etw.man` using the message compiler)
+`_win.h` - A windows specific header that maps event macros to the windows event generation macros (an eventing header generated from the `_win_etw.man` using the message compiler)  
 `_win_etw.man` - A windows specific manifest file to generate a windows header file for capturing events on windows as well as an information DLL to display the events on windows in a human readable friendly manner (such as Windows Performance Analyzer).
-`-win_etw.wprp` - Windows Performance Recorder Profile file which contains the provider information needed to capture the events using a windows event recorder (such as Windows Performance Recorder)
+`-win_etw.wprp` - Windows Performance Recorder Profile file which contains the provider information needed to capture the events using a windows event recorder (such as Windows Performance Recorder)  
 
 The `_win_etw.man` file is needed to generate a `_win_etw.h` and  file using the windows message compiler.
 
@@ -66,8 +66,8 @@ path/example.events_win_etw.h
 FinalOutputPath/example.events_win_etw.dll
 ````
 
-`_win_etw.h` - A windows specific header file for capturing events generated on a windows platform
-`_win_etw.dll` - A resource DLL containing all the information needed to display the captured events in a human readable format using an event viewer (such as the Windows Performance Analyzer)
+`_win_etw.h` - A windows specific header file for capturing events generated on a windows platform  
+`_win_etw.dll` - A resource DLL containing all the information needed to display the captured events in a human readable format using an event viewer (such as the Windows Performance Analyzer)  
 
 
 The following windows batch script can be used to register the compiled message DLL for viewing events with a windows event viewer (such as the Windows Perforamce Analyzer):  
