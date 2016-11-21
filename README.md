@@ -56,7 +56,7 @@ link -dll -noentry /MACHINE:x86 -out:IntermediateOutputPath\example.events_win_e
 echo Copy files to output directory...
 copy IntermediateOutputPath\example.events_win_etw.dll "FinalOutputPath\"
 copy "path\example.events_win_etw.man" "FinalOutputPath\"
-copy "path\zsLib.events_win_etw.wprp" "FinalOutputPath\"
+copy "path\example.events_win_etw.wprp" "FinalOutputPath\"
 icacls "FinalOutputPath\example.events_win_etw.dll" /grant Users:RX
 ````
 
