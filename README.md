@@ -70,6 +70,9 @@ FinalOutputPath/example.events_win_etw.dll
 `_win_etw.dll` - A resource DLL containing all the information needed to display the captured events in a human readable format using an event viewer (such as the Windows Performance Analyzer)  
 
 
+Once the `_win_etw.h` generation is complete, the source is ready to compile on Windows. On other non-windows platforms, this windows specific header is not used an thus generating this header is not needed.
+
+
 The following windows batch script can be used to register the compiled message DLL for viewing events with a windows event viewer (such as the Windows Perforamce Analyzer):  
 ````bat
 echo.
@@ -92,3 +95,5 @@ echo.
 cd "FinalOutputPath\"
 wevtutil.exe um example.events_win_etw.man
 ````
+
+NOTE: To compile a project to not use the eventing header, define the following preprocesssor macro `ZSLIB_EVENTING_NOOP`. This will ensure all the eventing macros are compiled to dummy no-operational code.
