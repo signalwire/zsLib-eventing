@@ -53,6 +53,7 @@ namespace zsLib
       interaction ICommandLineTypes
       {
         ZS_DECLARE_TYPEDEF_PTR(std::list<String>, StringList);
+        ZS_DECLARE_CUSTOM_EXCEPTION(NoopException);
 
         enum Flags
         {
@@ -101,10 +102,14 @@ namespace zsLib
 
         static void prepare(
                             StringList arguments,
-                            ICompilerTypes::Config &outConfig
+                            ICompilerTypes::Config &outConfig,
+                            bool &outDidOutputHelp
                             ) throw (InvalidArgument);
 
-        static void validate(ICompilerTypes::Config &config) throw (InvalidArgument);
+        static void validate(
+                             ICompilerTypes::Config &config,
+                             bool didOutputHelp
+                             ) throw (InvalidArgument, NoopException);
         static void process(ICompilerTypes::Config &config) throw (Failure);
       };
 

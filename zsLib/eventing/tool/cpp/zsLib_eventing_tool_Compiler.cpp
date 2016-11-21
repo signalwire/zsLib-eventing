@@ -1717,8 +1717,8 @@ namespace zsLib
             providerEl->setAttribute("name", provider->mName);
             providerEl->setAttribute("message", "$(string.Provider)");
             providerEl->setAttribute("symbol", "PROVIDER_" + toSymbol(provider->mSymbolName));
-            providerEl->setAttribute("messageFileName", provider->mResourceName + resourcePostFix + ".dll");
-            providerEl->setAttribute("resourceFileName", provider->mResourceName + resourcePostFix + ".dll");
+            providerEl->setAttribute("messageFileName", provider->mResourceName + resourcePostFix);
+            providerEl->setAttribute("resourceFileName", provider->mResourceName + resourcePostFix);
             addEOL(providerEl);
             outerEventsEl->adoptAsLastChild(providerEl);
             addEOL(outerEventsEl);

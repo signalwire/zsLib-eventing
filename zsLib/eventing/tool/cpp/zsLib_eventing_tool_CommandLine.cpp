@@ -145,8 +145,9 @@ namespace zsLib
         try
         {
           ICompilerTypes::Config config;
-          prepare(arguments, config);
-          validate(config);
+          bool didOutputHelp {false};
+          prepare(arguments, config, didOutputHelp);
+          validate(config, didOutputHelp);
           process(config);
         } catch (const InvalidArgument &e) {
           output() << "[Error] " << e.message() << "\n\n";
@@ -158,6 +159,8 @@ namespace zsLib
           output() << "[Error] " << e.message() << "\n";
           output() << "[Info]  LINE=" << e.lineNumber() << "\n\n";
           result = e.result();
+        } catch (const ICommandLine::NoopException &) {
+          // do nothing expection
         }
         return result;
       }
@@ -165,7 +168,8 @@ namespace zsLib
       //-----------------------------------------------------------------------
       void ICommandLine::prepare(
                                  StringList arguments,
-                                 ICompilerTypes::Config &outConfig
+                                 ICompilerTypes::Config &outConfig,
+                                 bool &outDidOutputHelp
                                  ) throw (InvalidArgument)
       {
         ICompilerTypes::Config config;
@@ -216,8 +220,9 @@ namespace zsLib
               case ICommandLine::Flag_Help:
               case ICommandLine::Flag_HelpAlt:
               {
-                  outputHelp();
-                  return;
+                outDidOutputHelp = true;
+                outputHelp();
+                return;
               }
               case ICommandLine::Flag_Source: goto process_flag;
               case ICommandLine::Flag_OutputName: goto process_flag;
@@ -270,9 +275,13 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void ICommandLine::validate(ICompilerTypes::Config &config) throw (InvalidArgument)
+      void ICommandLine::validate(
+                                  ICompilerTypes::Config &config,
+                                  bool didOutputHelp
+                                  ) throw (InvalidArgument, NoopException)
       {
         if (config.mConfigFile.isEmpty()) {
+          ZS_THROW_CUSTOM_IF(NoopException, didOutputHelp);
           ZS_THROW_INVALID_ARGUMENT("Configuration file must be specified.");
         }
       }
