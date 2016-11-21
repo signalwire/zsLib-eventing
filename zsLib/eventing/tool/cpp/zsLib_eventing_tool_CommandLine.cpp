@@ -204,6 +204,10 @@ namespace zsLib
                 flag = ICommandLine::Flag_None;
                 break;
               }
+              default:
+              {
+                break;
+              }
             }
 
             if (ICommandLine::Flag_None != flag) {
@@ -254,6 +258,7 @@ namespace zsLib
                 config.mAuthor = arg;
                 goto processed_flag;
               }
+              default: break;
             }
 
             ZS_THROW_INVALID_ARGUMENT(String("Internal error when processing argument: ") + arg + " within context: " + processedThusFar);

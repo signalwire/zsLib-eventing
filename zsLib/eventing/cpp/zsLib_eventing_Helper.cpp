@@ -82,7 +82,15 @@ namespace zsLib
 #endif //_WIN32
 
       FILE *file = NULL;
+#ifdef _WIN32
       auto error = fopen_s(&file, pathStr, "rb");
+#else
+      int error = 0;
+      file = fopen(pathStr, "rb");
+      if (!file) {
+        error = errno;
+      }
+#endif //_WIN32
       if (0 != error) {
         ZS_THROW_CUSTOM_PROPERTIES_1(StdError, error, String("Failed to read file: ") + pathStr);
       }
@@ -117,9 +125,17 @@ namespace zsLib
 #endif //_WIN32
 
       FILE *file = NULL;
-      int errorNo = fopen_s(&file, pathStr, "wb");
+#ifdef _WIN32
+      int error = fopen_s(&file, pathStr, "wb");
+#else
+      int error = 0;
+      file = fopen(pathStr, "wb");
+      if (!file) {
+        error = errno;
+      }
+#endif //_WIN32
       if (NULL == file) {
-        ZS_THROW_CUSTOM_PROPERTIES_1(StdError, errorNo, String("File could not be opened: ") + path);
+        ZS_THROW_CUSTOM_PROPERTIES_1(StdError, error, String("File could not be opened: ") + path);
       }
 
       auto written = fwrite(buffer.BytePtr(), sizeof(BYTE), buffer.SizeInBytes(), file);

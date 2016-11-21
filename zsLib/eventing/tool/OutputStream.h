@@ -38,6 +38,10 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <iostream>
 
+#ifndef _WIN32
+#define TEXT(xText) xText
+#endif //_WIN32
+
 namespace zsLib
 {
   namespace eventing
@@ -124,14 +128,16 @@ namespace zsLib
         typedef typename CharTraits::off_type off_type;
         typedef typename CharTraits::char_type char_type;
         typedef typename CharTraits::int_type int_type;
-        typedef std::vector< typename T > BufferType;
+        typedef std::vector<T> BufferType;
 
       public:
         //---------------------------------------------------------------------
         tool_basic_streambuf(IOutputDelegate &outputer) :
           mOutputer(outputer)
         {
+#ifdef _WIN32
           _Init(NULL, NULL, NULL, &pBegin, &pCurrent, &pLength);
+#endif //_WIN32
           m_outputBuffer.reserve(32);
         }
 
@@ -203,7 +209,9 @@ namespace zsLib
           mStreamBuffer(*this),
           mOutputs(make_shared<OutputDelegateMap>())
         {
+#ifdef _WIN32
           clear();
+#endif //_WIN32
         }
 
         //---------------------------------------------------------------------

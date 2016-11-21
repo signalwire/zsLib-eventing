@@ -486,7 +486,8 @@ namespace zsLib
                 outArguments[index] = result;
                 ++index;
               }
-              ss.swap(std::stringstream());
+              std::stringstream emptySS;
+              ss.swap(emptySS);
               lastWasSpace = true;
               if (!done) continue;
               break;
@@ -998,7 +999,6 @@ namespace zsLib
                   method = method.substr(strlen(ZS_EVENTING_METHOD_COMPACT_PREFIX));
                   ArgumentMap tempArgs;
 
-                  size_t index = 0;
                   for (size_t index = 0; index < args.size(); ++index)
                   {
                     if (index < ZS_EVENTING_METHOD_TOTAL_PARAMS) {
@@ -1547,6 +1547,7 @@ namespace zsLib
               if ((opCode->mValue < 10) && (opCode->mValue > 239)) {
                 try {
                   auto predefinedType = IEventingTypes::toPredefinedOpCode(opCode->mName);
+                  (void)predefinedType; // unused
                   goto found_predefined_opcode;
                 } catch (const InvalidArgument &) {
                 }

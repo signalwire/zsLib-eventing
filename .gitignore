@@ -6,3 +6,6 @@ Generated Files/
 [Rr]elease/
 ipch/
 *.user
+xcshareddata/
+xcuserdata/
+*.xcuserdatad/

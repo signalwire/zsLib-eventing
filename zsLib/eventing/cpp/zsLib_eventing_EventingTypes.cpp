@@ -325,7 +325,8 @@ namespace zsLib
         case PredefinedTypedef_dword:     return PredefinedTypedef_uint32;
         case PredefinedTypedef_qword:     return PredefinedTypedef_uint64;
 
-        case PredefinedTypedef_astring:   PredefinedTypedef_string;
+        case PredefinedTypedef_astring:   return PredefinedTypedef_string;
+        default:                          break;
       }
       return type;
     }
@@ -410,6 +411,7 @@ namespace zsLib
         case PredefinedTypedef_word:
         case PredefinedTypedef_dword:
         case PredefinedTypedef_qword:     return false;
+        default:                          break;
       }
 
       return true;
@@ -1088,7 +1090,7 @@ namespace zsLib
     IEventingTypes::Task::Task(
                                const ElementPtr &rootEl,
                                const AliasMap *aliases
-                               )
+                               ) throw (InvalidContent)
     {
       mName = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("name")));
       String value = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("value")));

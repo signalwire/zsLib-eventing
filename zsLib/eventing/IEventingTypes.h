@@ -67,7 +67,7 @@ namespace zsLib
       ZS_DECLARE_PTR(TaskMap);
 
       typedef std::map<Name, OpCodePtr> OpCodeMap;
-      ZS_DECLARE_PTR(OpCode);
+      ZS_DECLARE_PTR(OpCodeMap);
 
       typedef String TypedefName;
       typedef std::map<TypedefName, TypedefPtr> TypedefMap;
