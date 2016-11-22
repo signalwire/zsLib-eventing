@@ -21,7 +21,7 @@
 		00D866391DE38BCC00B7EB56 /* zsLib_helpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D866131DE38BCC00B7EB56 /* zsLib_helpers.cpp */; };
 		00D8663A1DE38BCC00B7EB56 /* zsLib_IPAddress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D866141DE38BCC00B7EB56 /* zsLib_IPAddress.cpp */; };
 		00D8663B1DE38BCC00B7EB56 /* zsLib_Log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D866151DE38BCC00B7EB56 /* zsLib_Log.cpp */; };
-		00D8663C1DE38BCC00B7EB56 /* zsLib_MessageQueue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D866161DE38BCC00B7EB56 /* zsLib_MessageQueue.cpp */; };
+		00D8663C1DE38BCC00B7EB56 /* zsLib_MessageQueue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D866161DE38BCC00B7EB56 /* zsLib_MessageQueue.cpp */; settings = {COMPILER_FLAGS = "-Wno-unused-function"; }; };
 		00D8663D1DE38BCC00B7EB56 /* zsLib_MessageQueueThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D866171DE38BCC00B7EB56 /* zsLib_MessageQueueThread.cpp */; };
 		00D8663E1DE38BCC00B7EB56 /* zsLib_MessageQueueThreadBasic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D866181DE38BCC00B7EB56 /* zsLib_MessageQueueThreadBasic.cpp */; };
 		00D8663F1DE38BCC00B7EB56 /* zsLib_MessageQueueThreadPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D866191DE38BCC00B7EB56 /* zsLib_MessageQueueThreadPool.cpp */; };
