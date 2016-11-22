@@ -2470,8 +2470,10 @@ namespace zsLib
                 }
               }
 
-              ss << "    BYTE xxOutputBuffer[" << maxSize << "]; \\\n";
-              ss << "    BYTE *xxPOutputBuffer = &(xxOutputBuffer[0]); \\\n";
+              if (maxSize > 0) {
+                ss << "    BYTE xxOutputBuffer[" << maxSize << "]; \\\n";
+                ss << "    BYTE *xxPOutputBuffer = &(xxOutputBuffer[0]); \\\n";
+              }
 
               if (totalPointers > 0) {
                 ss << "    BYTE *xxIndirectBuffer[" << totalPointers << "]; \\\n"; 
@@ -2589,7 +2591,7 @@ namespace zsLib
               }
 
               if (totalPointers > 0) {
-                ss << "    ZS_EVENTING_WRITE_EVENT_WITH_BUFFERS(zsLib::eventing::getEventHandle" << provider->mName << "(), " << Log::toString(event->mSeverity) << ", " << Log::toString(event->mLevel) << ", " << getCurrentSubsystemStr << ".getName(), __func__, __LINE__, " << string(event->mValue) << ", &(xxOutputBuffer[0]), " << string(maxSize) << ", &(xxIndirectBuffer[0]), &(xxIndirectSize[0]), " << string(totalPointers) << "); \\\n";
+                ss << "    ZS_EVENTING_WRITE_EVENT_WITH_BUFFERS(zsLib::eventing::getEventHandle" << provider->mName << "(), " << Log::toString(event->mSeverity) << ", " << Log::toString(event->mLevel) << ", " << getCurrentSubsystemStr << ".getName(), __func__, __LINE__, " << string(event->mValue) << ", " << (maxSize > 0 ? "&(xxOutputBuffer[0])" : "NULL") << ", " << string(maxSize) << ", &(xxIndirectBuffer[0]), &(xxIndirectSize[0]), " << string(totalPointers) << "); \\\n";
               } else {
                 ss << "    ZS_EVENTING_WRITE_EVENT(zsLib::eventing::getEventHandle" << provider->mName << "(), " << Log::toString(event->mSeverity) << ", " << Log::toString(event->mLevel) << ", " << getCurrentSubsystemStr << ".getName(), __func__, __LINE__, " << string(event->mValue) << ", &(xxOutputBuffer[0]), " << string(maxSize) << "); \\\n";
               }
