@@ -2353,17 +2353,17 @@ namespace zsLib
           "      p += sizeof(value);\n"
           "    }\n"
 
-          "    inline void eventWriteBuffer(const BYTE ** &p, const BYTE *buffer, size_t * &bufferSizes, size_t size)\n"
+          "    inline void eventWriteBuffer(BYTE ** &p, const BYTE *buffer, size_t * &bufferSizes, size_t size)\n"
           "    {\n"
-          "      (*p) = buffer;\n"
+          "      (*p) = const_cast<BYTE *>(buffer);\n"
           "      (*bufferSizes) = size;\n"
           "      ++p;\n"
           "      ++bufferSizes;\n"
           "    }\n"
 
-          "    inline void eventWriteBuffer(const BYTE ** &p, const char *str, size_t * &bufferSizes)\n"
+          "    inline void eventWriteBuffer(BYTE ** &p, const char *str, size_t * &bufferSizes)\n"
           "    {\n"
-          "      (*p) = reinterpret_cast<const BYTE *>(str);\n"
+          "      (*p) = const_cast<BYTE *>(reinterpret_cast<const BYTE *>(str));\n"
           "      (*bufferSizes) = (NULL == str ? 0 : strlen(str)) * sizeof(char);\n"
           "      ++p;\n"
           "      ++bufferSizes;\n"
@@ -2474,10 +2474,10 @@ namespace zsLib
               ss << "    BYTE *xxPOutputBuffer = &(xxOutputBuffer[0]); \\\n";
 
               if (totalPointers > 0) {
-                ss << "    const BYTE *xxIndirectBuffer[" << totalPointers << "]; \\\n"; 
+                ss << "    BYTE *xxIndirectBuffer[" << totalPointers << "]; \\\n"; 
                 ss << "    BYTE **xxPIndirectBuffer = &(xxIndirectBuffer[0]); \\\n";
                 ss << "    size_t xxIndirectSize[" << totalPointers << "]; \\\n"; 
-                ss << "    size_t *xxPIndirectBuffer = &(xxIndirectSize[0]); \\\n";
+                ss << "    size_t *xxPIndirectSize = &(xxIndirectSize[0]); \\\n";
               }
 
               nextMustBeSize = false;
@@ -2550,7 +2550,7 @@ namespace zsLib
                     }
 
                     case IEventingTypes::PredefinedTypedef_binary: {
-                      ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, reinterpret_cast<const BYTE *>(xValue" << string(loop) << "), xxIndirectSize, (xValue" << string(loop + 1) << ")); \\\n";
+                      ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, reinterpret_cast<const BYTE *>(xValue" << string(loop) << "), xxPIndirectSize, (xValue" << string(loop + 1) << ")); \\\n";
                       if (loop + 1 > event->mDataTemplate->mDataTypes.size()) {
                         ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, String("Binary data missing size"));
                       }
@@ -2563,15 +2563,15 @@ namespace zsLib
                     }
 
                     case IEventingTypes::PredefinedTypedef_string: {
-                      ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, (xValue" << string(loop) << "), xxIndirectSize); \\\n";
+                      ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, (xValue" << string(loop) << "), xxPIndirectSize); \\\n";
                       break;
                     }
                     case IEventingTypes::PredefinedTypedef_astring: {
-                      ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, (xValue" << string(loop) << "), xxIndirectSize); \\\n";
+                      ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, (xValue" << string(loop) << "), xxPIndirectSize); \\\n";
                       break;
                     }
                     case IEventingTypes::PredefinedTypedef_wstring: {
-                      ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, (xValue" << string(loop) << "), xxIndirectSize); \\\n";
+                      ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, (xValue" << string(loop) << "), xxPIndirectSize); \\\n";
                       break;
                     }
                   }
@@ -2589,9 +2589,9 @@ namespace zsLib
               }
 
               if (totalPointers > 0) {
-                ss << "    ZS_EVENTING_WRITE_EVENT_WITH_BUFFERS(zsLib::eventing::getEventHandle" << provider->mName << "(), " << Log::toString(event->mSeverity) << ", " << Log::toString(event->mLevel) << ", " << getCurrentSubsystemStr << ".getName(), __func__, __LINE__, &(xxOutputBuffer[0]), " << string(maxSize) << ", &(xxIndirectBuffer[0]), &(xxIndirectSize[0]), " << string(totalPointers) << "); \\\n";
+                ss << "    ZS_EVENTING_WRITE_EVENT_WITH_BUFFERS(zsLib::eventing::getEventHandle" << provider->mName << "(), " << Log::toString(event->mSeverity) << ", " << Log::toString(event->mLevel) << ", " << getCurrentSubsystemStr << ".getName(), __func__, __LINE__, " << string(event->mValue) << ", &(xxOutputBuffer[0]), " << string(maxSize) << ", &(xxIndirectBuffer[0]), &(xxIndirectSize[0]), " << string(totalPointers) << "); \\\n";
               } else {
-                ss << "    ZS_EVENTING_WRITE_EVENT(zsLib::eventing::getEventHandle" << provider->mName << "(), " << Log::toString(event->mSeverity) << ", " << Log::toString(event->mLevel) << ", " << getCurrentSubsystemStr << ".getName(), __func__, __LINE__, &(xxOutputBuffer[0], " << string(maxSize) << ")); \\\n";
+                ss << "    ZS_EVENTING_WRITE_EVENT(zsLib::eventing::getEventHandle" << provider->mName << "(), " << Log::toString(event->mSeverity) << ", " << Log::toString(event->mLevel) << ", " << getCurrentSubsystemStr << ".getName(), __func__, __LINE__, " << string(event->mValue) << ", &(xxOutputBuffer[0]), " << string(maxSize) << "); \\\n";
               }
 
               ss << "  }\n";
