@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		008698A31DE3F543009D669C /* zsLib_eventing_tool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008698911DE3F543009D669C /* zsLib_eventing_tool.cpp */; };
 		008698A41DE3F543009D669C /* zsLib_eventing_tool_CommandLine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008698921DE3F543009D669C /* zsLib_eventing_tool_CommandLine.cpp */; };
-		008698A51DE3F543009D669C /* zsLib_eventing_tool_Compiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008698931DE3F543009D669C /* zsLib_eventing_tool_Compiler.cpp */; };
+		008698A51DE3F543009D669C /* zsLib_eventing_tool_Compiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008698931DE3F543009D669C /* zsLib_eventing_tool_Compiler.cpp */; settings = {COMPILER_FLAGS = "-Wno-documentation"; }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
