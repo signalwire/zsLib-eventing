@@ -53,6 +53,7 @@ namespace zsLib
       ZS_DECLARE_STRUCT_PTR(Typedef);
       ZS_DECLARE_STRUCT_PTR(Channel);
       ZS_DECLARE_STRUCT_PTR(Task);
+      ZS_DECLARE_STRUCT_PTR(Keyword);
       ZS_DECLARE_STRUCT_PTR(OpCode);
       ZS_DECLARE_STRUCT_PTR(DataTemplate);
       ZS_DECLARE_STRUCT_PTR(DataType);
@@ -65,6 +66,9 @@ namespace zsLib
       typedef String Name;
       typedef std::map<Name, TaskPtr> TaskMap;
       ZS_DECLARE_PTR(TaskMap);
+
+      typedef std::map<Name, KeywordPtr> KeywordMap;
+      ZS_DECLARE_PTR(KeywordMap);
 
       typedef std::map<Name, OpCodePtr> OpCodeMap;
       ZS_DECLARE_PTR(OpCodeMap);
@@ -275,6 +279,7 @@ namespace zsLib
         ChannelMap mChannels;
         OpCodeMap mOpCodes;
         TaskMap mTasks;
+        KeywordMap mKeywords;
         EventMap mEvents;
         DataTemplateMap mDataTemplates;
 
@@ -401,6 +406,40 @@ namespace zsLib
 
       //-----------------------------------------------------------------------
       #pragma mark
+      #pragma mark IEventingTypes::Keyword
+      #pragma mark
+      
+      struct Keyword
+      {
+        Name      mName;
+
+        uint64_t  mMask {};
+
+        Keyword() {}
+        Keyword(
+                const ElementPtr &rootEl,
+                const AliasMap *aliases = NULL
+                ) throw (InvalidContent);
+
+        static KeywordPtr create() { return make_shared<Keyword>(); }
+        static KeywordPtr create(
+                                 const ElementPtr &el,
+                                 const AliasMap *aliases = NULL
+                                 ) { if (!el) return KeywordPtr(); return make_shared<Keyword>(el, aliases); }
+
+        ElementPtr createElement(const char *objectName = NULL) const;
+
+        String hash() const;
+      };
+
+      static void createKeywords(
+                                 ElementPtr tasksEl,
+                                 KeywordMap &outKeywords,
+                                 const AliasMap *aliases = NULL
+                                 ) throw (InvalidContent);
+
+      //-----------------------------------------------------------------------
+      #pragma mark
       #pragma mark IEventingTypes::OpCode
       #pragma mark
 
@@ -451,6 +490,7 @@ namespace zsLib
         TaskPtr         mTask;
         OpCodePtr       mOpCode;
         DataTemplatePtr mDataTemplate;
+        KeywordMap      mKeywords;
 
         size_t          mValue {};
 
@@ -477,6 +517,7 @@ namespace zsLib
                                const ChannelMap &channels,
                                const OpCodeMap &opCodes,
                                const TaskMap &tasks,
+                               const KeywordMap &keywords,
                                const DataTemplateMap &dataTemplates,
                                const AliasMap *aliases = NULL
                                ) throw (InvalidContent);

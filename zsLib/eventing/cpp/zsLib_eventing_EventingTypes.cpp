@@ -720,8 +720,9 @@ namespace zsLib
       createChannels(rootEl->findFirstChildElement("channels"), mChannels, &mAliases);
       createOpCodes(rootEl->findFirstChildElement("opCodes"), mOpCodes, &mAliases);
       createTasks(rootEl->findFirstChildElement("tasks"), mTasks, &mAliases);
+      createKeywords(rootEl->findFirstChildElement("keywords"), mKeywords, &mAliases);
       createDataTemplates(rootEl->findFirstChildElement("templates"), mDataTemplates, mTypedefs, &mAliases);
-      createEvents(rootEl->findFirstChildElement("events"), mEvents, mChannels, mOpCodes, mTasks, mDataTemplates, &mAliases);
+      createEvents(rootEl->findFirstChildElement("events"), mEvents, mChannels, mOpCodes, mTasks, mKeywords, mDataTemplates, &mAliases);
     }
 
     //-------------------------------------------------------------------------
@@ -774,13 +775,20 @@ namespace zsLib
         hasher->update((*iter).second->hash());
       }
 
-      hasher->update(":list:opcodes");
+      hasher->update(":list:tasks");
       for (auto iter = mTasks.begin(); iter != mTasks.end(); ++iter)
       {
         hasher->update(":");
         hasher->update((*iter).second->hash());
       }
 
+      hasher->update(":list:keywords");
+      for (auto iter = mKeywords.begin(); iter != mKeywords.end(); ++iter)
+      {
+        hasher->update(":");
+        hasher->update((*iter).second->hash());
+      }
+      
       hasher->update(":list:events");
       for (auto iter = mEvents.begin(); iter != mEvents.end(); ++iter)
       {
@@ -1111,10 +1119,10 @@ namespace zsLib
     {
       if (NULL == objectName) objectName = "channel";
 
-      ElementPtr channelEl = Element::create(objectName);
+      ElementPtr taskEl = Element::create(objectName);
 
-      if (mName.hasData()) channelEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("name", mName));
-      if (0 != mValue) channelEl->adoptAsLastChild(UseEventingHelper::createElementWithNumber("value", string(mValue)));
+      if (mName.hasData()) taskEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("name", mName));
+      if (0 != mValue) taskEl->adoptAsLastChild(UseEventingHelper::createElementWithNumber("value", string(mValue)));
 
       if (mOpCodes.size() > 0) {
         ElementPtr opCodesEl = Element::create("opCodes");
@@ -1123,10 +1131,10 @@ namespace zsLib
           ElementPtr opCode = (*iter).second->createElement("opCode");
           opCodesEl->adoptAsLastChild(opCode);
         }
-        channelEl->adoptAsLastChild(opCodesEl);
+        taskEl->adoptAsLastChild(opCodesEl);
       }
 
-      return channelEl;
+      return taskEl;
     }
 
     //-------------------------------------------------------------------------
@@ -1175,6 +1183,79 @@ namespace zsLib
         }
         outTasks[task->mName] = task;
         taskEl = taskEl->findNextSiblingElement("task");
+      }
+    }
+
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    #pragma mark
+    #pragma mark IEventingTypes::Keyword
+    #pragma mark
+
+    //-------------------------------------------------------------------------
+    IEventingTypes::Keyword::Keyword(
+                                     const ElementPtr &rootEl,
+                                     const AliasMap *aliases
+                                     ) throw (InvalidContent)
+    {
+      mName = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("name")));
+      String mask = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("mask")));
+
+      if (mask.hasData()) {
+        try {
+          mMask = Numeric<decltype(mMask)>(mask);
+        } catch (const Numeric<decltype(mMask)>::ValueOutOfRange &) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Keyword mask is out of range: ") + mask);
+        }
+      }
+    }
+
+    //-------------------------------------------------------------------------
+    ElementPtr IEventingTypes::Keyword::createElement(const char *objectName) const
+    {
+      if (NULL == objectName) objectName = "keyword";
+
+      ElementPtr keywordEl = Element::create(objectName);
+
+      if (mName.hasData()) keywordEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("name", mName));
+      if (0 != mMask) keywordEl->adoptAsLastChild(UseEventingHelper::createElementWithNumber("mask", string(mMask)));
+
+      return keywordEl;
+    }
+
+    //-------------------------------------------------------------------------
+    String IEventingTypes::Keyword::hash() const
+    {
+      auto hasher = IHasher::sha256();
+
+      hasher->update(mName);
+      hasher->update(":");
+      hasher->update(reinterpret_cast<const BYTE *>(&mMask), sizeof(mMask));
+      hasher->update(":end");
+
+      return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
+    }
+
+    //-------------------------------------------------------------------------
+    void IEventingTypes::createKeywords(
+                                        ElementPtr keywordsEl,
+                                        KeywordMap &outKeywords,
+                                        const AliasMap *aliases
+                                        ) throw (InvalidContent)
+    {
+      if (NULL == keywordsEl) return;
+
+      ElementPtr keywordEl = keywordsEl->findFirstChildElement("keyword");
+      while (keywordEl)
+      {
+        auto keyword = Keyword::create(keywordEl);
+        if (outKeywords.find(keyword->mName) != outKeywords.end()) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Keyword already exists: ") + keyword->mName);
+        }
+        outKeywords[keyword->mName] = keyword;
+        keywordEl = keywordEl->findNextSiblingElement("keyword");
       }
     }
 
@@ -1309,6 +1390,15 @@ namespace zsLib
       if (mTask) {
         eventEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("task", mTask->mName));
       }
+      if (mKeywords.size() > 0) {
+        auto keywordsEl = Element::create("keywords");
+        for (auto iter = mKeywords.begin(); iter != mKeywords.end(); ++iter) {
+          auto keyword = (*iter).second;
+          
+          keywordsEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("keyword", keyword->mName));
+        }
+        eventEl->adoptAsLastChild(keywordsEl);
+      }
       if (mOpCode) {
         eventEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("opCode", mOpCode->mName));
       }
@@ -1336,6 +1426,13 @@ namespace zsLib
       if (mTask) {
         hasher->update(mTask->hash());
       }
+      hasher->update(":keywords:start:");
+      for (auto iter = mKeywords.begin(); iter != mKeywords.end(); ++iter) {
+        auto keyword = (*iter).second;
+        hasher->update(keyword->mName);
+        hasher->update(":");
+      }
+      hasher->update(":keywords:end:");
       hasher->update(":");
       if (mOpCode) {
         hasher->update(mOpCode->hash());
@@ -1358,6 +1455,7 @@ namespace zsLib
                                       const ChannelMap &channels,
                                       const OpCodeMap &opCodes,
                                       const TaskMap &tasks,
+                                      const KeywordMap &keywords,
                                       const DataTemplateMap &dataTemplates,
                                       const AliasMap *aliases
                                       ) throw (InvalidContent)

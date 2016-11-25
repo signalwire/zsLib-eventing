@@ -64,6 +64,7 @@ either expressed or implied, of the FreeBSD Project.
 #define ZS_EVENTING_METHOD_SOURCE "SOURCE"
 #define ZS_EVENTING_METHOD_CHANNEL "CHANNEL"
 #define ZS_EVENTING_METHOD_TASK "TASK"
+#define ZS_EVENTING_METHOD_KEYWORD "KEYWORD"
 #define ZS_EVENTING_METHOD_OPCODE "OPCODE"
 #define ZS_EVENTING_METHOD_TASK_OPCODE "TASK_OPCODE"
 #define ZS_EVENTING_METHOD_REGISTER "REGISTER"
@@ -87,6 +88,7 @@ namespace zsLib
       typedef std::set<String> HashSet;
       typedef std::map<size_t, String> ArgumentMap;
       typedef std::set<size_t> IndexSet;
+      typedef std::set<uint64_t> Index64Set;
 
       namespace internal
       {
@@ -679,6 +681,27 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
+        static bool insert(
+                           Index64Set &indexes,
+                           uint64_t index,
+                           bool throwIfFound = true
+                           ) throw (InvalidArgument)
+        {
+          if (0 == index) return false;
+          
+          auto found = indexes.find(index);
+          if (found == indexes.end()) {
+            indexes.insert(index);
+            return true;
+          }
+          
+          if (throwIfFound) {
+            ZS_THROW_INVALID_ARGUMENT(String("Duplicate value: ") + string(index));
+          }
+          return false;
+        }
+        
+        //---------------------------------------------------------------------
         static String toSymbol(const String &str)
         {
           String temp(str);
@@ -1066,6 +1089,32 @@ namespace zsLib
                   String channelID = provider->aliasLookup(args[4]);
                   String taskID = provider->aliasLookup(args[5]);
                   String opCode = provider->aliasLookup(args[6]);
+                  
+                  std::list<String> keywordIDs;
+
+                  auto findKeywordPos = taskID.find("/");
+                  if (findKeywordPos == String::npos) {
+                    String keywordsStr = taskID.substr(findKeywordPos + 1);
+                    taskID = taskID.substr(0, findKeywordPos);
+                    taskID.trim();
+                    taskID = provider->aliasLookup(taskID);
+                    
+                    while (true)
+                    {
+                      findKeywordPos = keywordsStr.find("/");
+                      if (findKeywordPos == String::npos) {
+                        keywordsStr.trim();
+                        keywordIDs.push_back(provider->aliasLookup(keywordsStr));
+                        break;
+                      }
+                      
+                      String keywordID = keywordsStr.substr(0, findKeywordPos);
+                      keywordID.trim();
+                      keywordIDs.push_back(provider->aliasLookup(keywordID));
+                      
+                      keywordsStr = keywordsStr.substr(findKeywordPos + 1);
+                    }
+                  }
 
                   // map channel
                   {
@@ -1092,6 +1141,21 @@ namespace zsLib
                       if (found != event->mTask->mOpCodes.end()) {
                         event->mOpCode = (*found).second;
                       }
+                    }
+                  }
+                  
+                  // map keywords
+                  {
+                    for (auto iterKeywords = keywordIDs.begin(); iterKeywords != keywordIDs.end(); ++iterKeywords)
+                    {
+                      auto &keywordID = (*iterKeywords);
+                      auto found = provider->mKeywords.find(keywordID);
+                      if (found == provider->mKeywords.end()) {
+                        ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Event has invalid keywords: " + line);
+                      }
+
+                      auto keyword = (*found).second;
+                      event->mKeywords[keyword->mName] = keyword;
                     }
                   }
 
@@ -1358,6 +1422,26 @@ namespace zsLib
                   tool::output() << "[Info] Found task: " << task->mName << "\n";
                   continue;
                 }
+
+                if (ZS_EVENTING_METHOD_KEYWORD == method) {
+                  if (1 != args.size()) {
+                    ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Invalid number of arguments in keyword \"" + string(args.size()) + "\" in line: " + line);
+                  }
+                  prepareProvider(mConfig);
+                  
+                  auto keyword = IEventingTypes::Keyword::create();
+                  keyword->mName = provider->aliasLookup(args[0]);
+                  
+                  {
+                    auto found = provider->mKeywords.find(keyword->mName);
+                    if (found == provider->mKeywords.end()) {
+                      provider->mKeywords[keyword->mName] = keyword;
+                    }
+                  }
+                  tool::output() << "[Info] Found keyword: " << keyword->mName << "\n";
+                  continue;
+                }
+
                 if (ZS_EVENTING_METHOD_OPCODE == method) {
                   if (1 != args.size()) {
                     ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Invalid number of arguments in opcode \"" + string(args.size()) + "\" in line: " + line);
@@ -1606,6 +1690,52 @@ namespace zsLib
           } catch (const InvalidArgument &e) {
             ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Task OpCode index is not valid: " + e.message());
           }
+          
+          try {
+            Index64Set consumedIndexes;
+            
+            for (auto iter = provider->mKeywords.begin(); iter != provider->mKeywords.end(); ++iter)
+            {
+              auto keyword = (*iter).second;
+              if (0 == keyword->mMask) continue;
+              insert(consumedIndexes, keyword->mMask);
+            }
+
+            uint64_t current = 1;
+            for (auto iter = provider->mKeywords.begin(); iter != provider->mKeywords.end(); ++iter)
+            {
+              auto keyword = (*iter).second;
+              if (0 != keyword->mMask) continue;
+              
+              bool foundKeywordBitmask {};
+
+              do {
+                while (!insert(consumedIndexes, current, false))
+                {
+                  current = current << 1;
+                  if (0x8000000000000000ULL == current) {
+                    ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Keyword mask exceeds maximum bitmask: " + keyword->mName);
+                  }
+                }
+
+                // ensure this bit is not already consumed by any existing keyword(s)
+                foundKeywordBitmask = false;
+                for (auto iterSet = consumedIndexes.begin(); iterSet != consumedIndexes.end(); ++iterSet) {
+                  auto &mask = (*iterSet);
+                  if (mask == current) continue;  // skip if it was the same one added
+                  
+                  if (0 != (mask & current)) {
+                    foundKeywordBitmask = true;
+                    break;
+                  }
+                }
+              } while (foundKeywordBitmask);
+
+              keyword->mMask = current;
+            }
+          } catch (const InvalidArgument &e) {
+            ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Keyword mask is not valid: " + e.message());
+          }
 
           try {
             IndexSet consumedIndexes;
@@ -1672,6 +1802,7 @@ namespace zsLib
           ElementPtr providerEl = Element::create("provider");
           ElementPtr channelsEl = Element::create("channels");
           ElementPtr tasksEl = Element::create("tasks");
+          ElementPtr keywordsEl = Element::create("keywords");
           ElementPtr opCodesEl = Element::create("opcodes");
           ElementPtr dataTemplatesEl = Element::create("templates");
           ElementPtr innerEventsEl = Element::create("events");
@@ -1811,6 +1942,32 @@ namespace zsLib
             providerEl->adoptAsLastChild(tasksEl);
             addEOL(providerEl);
           }
+          
+          //<keywords>
+          //  <keyword name="Read" mask="0x1" symbol="KEYWORD_READ" message="$(string.Keyword.Read)" />
+          //</keywords>
+          if (provider->mKeywords.size() > 0) {
+            addEOL(keywordsEl);
+            for (auto iter = provider->mKeywords.begin(); iter != provider->mKeywords.end(); ++iter)
+            {
+              auto keyword = (*iter).second;
+              ElementPtr keywordEl = Element::create("keyword");
+              keywordEl->setAttribute("name", keyword->mName);
+              keywordEl->setAttribute("symbol", "KEYWORD_" + toSymbol(keyword->mName));
+              if (0 != keyword->mMask) {
+                keywordEl->setAttribute("mask", String("0x") + Stringize<uint64_t>(keyword->mMask, 16).string());
+              }
+              keywordEl->setAttribute("message", "$(string.Keyword." + keyword->mName + ")");
+
+              keywordsEl->adoptAsLastChild(keywordEl);
+              addEOL(keywordsEl);
+
+              stringTableEl->adoptAsLastChild(createStringEl("Keyword." + keyword->mName, keyword->mName));
+              addEOL(stringTableEl);
+            }
+            providerEl->adoptAsLastChild(keywordsEl);
+            addEOL(providerEl);
+          }
 
           if (provider->mOpCodes.size() > 0) {
             addEOL(opCodesEl);
@@ -1854,7 +2011,7 @@ namespace zsLib
             providerEl->adoptAsLastChild(opCodesEl);
             addEOL(providerEl);
           }
-
+          
           if (provider->mDataTemplates.size() > 0) {
             addEOL(dataTemplatesEl);
             for (auto iter = provider->mDataTemplates.begin(); iter != provider->mDataTemplates.end(); ++iter)
@@ -1990,7 +2147,7 @@ namespace zsLib
           if (provider->mEvents.size() > 0) {
             /*
             <events>
-              <event symbol="ZsExceptionEventFired" channel="zs" template="T_Exception" task="Exception" opcode="Exception" value="1001" level="win:Error" message="$(string.Event.ZsExceptionEventFired)" />
+              <event symbol="ZsExceptionEventFired" channel="zs" template="T_Exception" task="Exception" keywords="Read Write" opcode="Exception" value="1001" level="win:Error" message="$(string.Event.ZsExceptionEventFired)" />
               <event symbol="ZsMessageQueueCreate" channel="zs" template="T_BasicThis" task="MessageQueue" opcode="win:Start" value="1101" level="win:Informational" message="$(string.Event.ZsMessageQueueCreate)" />
             */
             addEOL(innerEventsEl);
@@ -2011,6 +2168,18 @@ namespace zsLib
               }
               if (event->mTask) {
                 eventEl->setAttribute("task", event->mTask->mName);
+              }
+              if (event->mKeywords.size() > 0) {
+                String keywordsStr;
+                for (auto iterKeywords = event->mKeywords.begin(); iterKeywords != event->mKeywords.end(); ++iterKeywords) {
+                  auto keyword = (*iterKeywords).second;
+                  if (keywordsStr.hasData()) {
+                    keywordsStr += keyword->mName + " ";
+                  } else {
+                    keywordsStr += keyword->mName;
+                  }
+                }
+                eventEl->setAttribute("keywords", keywordsStr);
               }
               if (event->mOpCode) {
                 if ((event->mOpCode->mValue < 10) || (event->mOpCode->mValue > 239)) {
@@ -2345,37 +2514,6 @@ namespace zsLib
         static const char *getFunctions()
         {
           static const char *functions =
-          "\n"
-          "    template <typename TWriteType>\n"
-          "    void eventWriteBuffer(BYTE * &p, TWriteType value)\n"
-          "    {\n"
-          "      memcpy(&p, &value, sizeof(value));\n"
-          "      p += sizeof(value);\n"
-          "    }\n"
-
-          "    inline void eventWriteBuffer(BYTE ** &p, const BYTE *buffer, size_t * &bufferSizes, size_t size)\n"
-          "    {\n"
-          "      (*p) = const_cast<BYTE *>(buffer);\n"
-          "      (*bufferSizes) = size;\n"
-          "      ++p;\n"
-          "      ++bufferSizes;\n"
-          "    }\n"
-
-          "    inline void eventWriteBuffer(BYTE ** &p, const char *str, size_t * &bufferSizes)\n"
-          "    {\n"
-          "      (*p) = const_cast<BYTE *>(reinterpret_cast<const BYTE *>(str));\n"
-          "      (*bufferSizes) = (NULL == str ? 0 : strlen(str)) * sizeof(char);\n"
-          "      ++p;\n"
-          "      ++bufferSizes;\n"
-          "    }\n"
-
-          "    inline void eventWriteBuffer(const BYTE ** &p, const wchar_t *str, size_t * &bufferSizes)\n"
-          "    {\n"
-          "      (*p) = reinterpret_cast<const BYTE *>(str);\n"
-          "      (*bufferSizes) = (NULL == str ? 0 : wcslen(str)) * sizeof(wchar_t);\n"
-          "      ++p;\n"
-          "      ++bufferSizes;\n"
-          "    }\n"
           "\n";
 
           return functions;
@@ -2395,30 +2533,92 @@ namespace zsLib
           ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
           ss << "#pragma once\n\n";
           ss << "#include <zsLib/eventing/noop.h>\n";
-          ss << "#ifdef _WIN32\n\n";
-          ss << "#include \"" << fileNameAfterPath(outputNameWindows) << "\"\n\n";
-          ss << "#else\n\n";
           ss << "#include <zsLib/eventing/Log.h>\n";
           ss << "#include <stdint.h>\n\n";
           ss << "namespace zsLib {\n";
           ss << "  namespace eventing {\n";
 
           ss << getFunctions();
+          
+          String getEventingHandleFunction = "getEventHandle_" + provider->mName + "()";
+          String getEventingHandleFunctionWithNamespace = "zsLib::eventing::" + getEventingHandleFunction;
 
           ss <<
             "\n"
-            "    inline uintptr_t &getEventHandle" << provider->mName << "()\n"
+            "    inline uintptr_t &" << getEventingHandleFunction << "\n"
             "    {\n"
             "      static uintptr_t gHandle {};\n"
             "      return gHandle;\n"
             "    }\n\n";
 
-          ss << "#define ZS_INTERNAL_REGISTER_EVENTING_" << provider->mName << "() ZS_EVENTING_REGISTER_EVENT_WRITER(zsLib::eventing::getEventHandle" << provider->mName << "(), \"" << string(provider->mID) << "\", \"" << provider->mName << "\", \"" << provider->mUniqueHash << "\")\n";
-          ss << "#define ZS_INTERNAL_UNREGISTER_EVENTING_" << provider->mName << "() ZS_EVENTING_UNREGISTER_EVENT_WRITER(zsLib::eventing::getEventHandle" << provider->mName << "())\n\n";
+          ss << "#define ZS_INTERNAL_REGISTER_EVENTING_" << provider->mName << "() ZS_EVENTING_REGISTER_EVENT_WRITER(" << getEventingHandleFunctionWithNamespace << ", \"" << string(provider->mID) << "\", \"" << provider->mName << "\", \"" << provider->mUniqueHash << "\")\n";
+          ss << "#define ZS_INTERNAL_UNREGISTER_EVENTING_" << provider->mName << "() ZS_EVENTING_UNREGISTER_EVENT_WRITER(" << getEventingHandleFunctionWithNamespace << ")\n\n";
 
           for (auto iter = provider->mEvents.begin(); iter != provider->mEvents.end(); ++iter)
           {
             auto event = (*iter).second;
+
+//            inline const USE_EVENT_DESCRIPTOR *getEventDescriptor_ExceptionEvent()
+//            {
+//              static const USE_EVENT_DESCRIPTOR description {0,0,0,0,0,0,0x8000000000000000};
+//              return &description;
+//            }
+            
+//            typedef struct _EVENT_DESCRIPTOR {
+//              USHORT    Id;
+//              UCHAR     Version;
+//              UCHAR     Channel;
+//              UCHAR     Level;
+//              UCHAR     Opcode;
+//              USHORT    Task;
+//              ULONGLONG Keyword;
+//            }
+            
+            {
+              ss << "\n";
+              ss << "    inline const USE_EVENT_DESCRIPTOR *getEventDescriptor_" << event->mName << "()\n";
+              ss << "    {\n";
+              ss << "      static const USE_EVENT_DESCRIPTOR description {\n";
+              
+              ss << string(event->mValue) << ", ";
+              ss << "0, "; // version not supported
+              if (event->mChannel) {
+                ss << string(event->mChannel->mValue) << ", ";
+              } else {
+                ss << "0, ";
+              }
+              ss <<  string(static_cast<std::underlying_type<IEventingTypes::PredefinedLevels>::type>(IEventingTypes::toPredefinedLevel(event->mSeverity, event->mLevel))) << ", ";
+              
+              if (event->mOpCode) {
+                ss << string(event->mOpCode->mValue) << ", ";
+              } else {
+                ss << "0, ";
+              }
+              
+              if (event->mTask) {
+                ss << string(event->mTask->mValue) << ", ";
+              } else {
+                ss << "0, ";
+              }
+              
+              ss << "0x";
+              if (event->mKeywords.size() > 0) {
+                uint64_t mask = 0;
+                for (auto iterKeywords = event->mKeywords.begin(); iterKeywords != event->mKeywords.end(); ++iterKeywords)
+                {
+                  auto keyword = (*iterKeywords).second;
+                  mask = mask | keyword->mMask;
+                }
+                ss << Stringize<decltype(mask)>(mask, 16).string();
+              } else {
+                ss << "8000000000000000";
+              }
+              ss << "ULL";
+
+              ss << "};\n";
+              ss << "      return &description;\n";
+              ss << "    }\n";
+            }
 
             {
               ss << "\n";
@@ -2441,46 +2641,50 @@ namespace zsLib
             {
               String getCurrentSubsystemStr;
               if ("x" == event->mSubsystem) {
-                ss << "  if (ZS_EVENTING_IS_LOGGING(" << Log::toString(event->mLevel) << ")) { \\\n";
+                ss << "  if (ZS_EVENTING_IS_LOGGING(" << getEventingHandleFunctionWithNamespace << ", " << Log::toString(event->mLevel) << ")) { \\\n";
                 getCurrentSubsystemStr = "(ZS_GET_SUBSYSTEM())";
               } else {
-                ss << "  if (ZS_EVENTING_IS_SUBSYSTEM_LOGGING(xSubsystem, " << Log::toString(event->mLevel) << ")) { \\\n";
+                ss << "  if (ZS_EVENTING_IS_SUBSYSTEM_LOGGING(" << getEventingHandleFunctionWithNamespace << ", xSubsystem, " << Log::toString(event->mLevel) << ")) { \\\n";
                 getCurrentSubsystemStr = "(xSubsystem)";
               }
+              
 
-              size_t totalPointers = 0;
-              size_t maxSize = 0;
+              size_t totalDataTypes = 0;
+              size_t totalPointerTypes = 0;
+              size_t totalStringTypes = 0;
+
               bool nextMustBeSize = false;
               if (event->mDataTemplate) {
                 for (auto iterDataType = event->mDataTemplate->mDataTypes.begin(); iterDataType != event->mDataTemplate->mDataTypes.end(); ++iterDataType) {
                   auto dataType = (*iterDataType);
-                  if (!nextMustBeSize) {
-                    maxSize += IEventingTypes::getMaxBytes(dataType->mType);
+                  if (nextMustBeSize) {
                     nextMustBeSize = false;
+                    continue;
                   }
                   switch (IEventingTypes::getBaseType(dataType->mType))
                   {
-                  case IEventingTypes::BaseType_Boolean:
-                  case IEventingTypes::BaseType_Integer:
-                  case IEventingTypes::BaseType_Float:
-                  case IEventingTypes::BaseType_Pointer:  break;
-                  case IEventingTypes::BaseType_Binary:   ++totalPointers; nextMustBeSize = true; break;
-                  case IEventingTypes::BaseType_String:   ++totalPointers; break;
+                    case IEventingTypes::BaseType_Boolean:
+                    case IEventingTypes::BaseType_Integer:
+                    case IEventingTypes::BaseType_Float:
+                    case IEventingTypes::BaseType_Pointer:  ++totalDataTypes; break;
+                    case IEventingTypes::BaseType_Binary:   ++totalPointerTypes; nextMustBeSize = true; break;
+                    case IEventingTypes::BaseType_String:   ++totalStringTypes; break;
                   }
                 }
               }
-
-              if (maxSize > 0) {
-                ss << "    BYTE xxOutputBuffer[" << maxSize << "]; \\\n";
-                ss << "    BYTE *xxPOutputBuffer = &(xxOutputBuffer[0]); \\\n";
-              }
-
-              if (totalPointers > 0) {
-                ss << "    BYTE *xxIndirectBuffer[" << totalPointers << "]; \\\n"; 
-                ss << "    BYTE **xxPIndirectBuffer = &(xxIndirectBuffer[0]); \\\n";
-                ss << "    size_t xxIndirectSize[" << totalPointers << "]; \\\n"; 
-                ss << "    size_t *xxPIndirectSize = &(xxIndirectSize[0]); \\\n";
-              }
+              
+              size_t totalTypes = totalDataTypes + totalPointerTypes + totalStringTypes;
+              
+#define ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES (3)
+              
+              ss << "    zsLib::eventing::USE_EVENT_DATA_DESCRIPTOR xxDescriptors[" << string(ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES+totalTypes) << "]; \\\n";
+              ss << "    size_t xxLineNumber = __LINE__; \\\n\n";
+              
+              ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_ASTR(&(xxDescriptors[0]), " << getCurrentSubsystemStr << ".getName()); \\\n";
+              ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_ASTR(&(xxDescriptors[1]), __func__); \\\n";
+              ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_VALUE(&(xxDescriptors[2]), xxLineNumber, sizeof(xxLineNumber)); \\\n\n";
+              
+              size_t current = ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES;
 
               nextMustBeSize = false;
               size_t loop = 1;
@@ -2488,10 +2692,15 @@ namespace zsLib
                 for (auto iterDataType = event->mDataTemplate->mDataTypes.begin(); iterDataType != event->mDataTemplate->mDataTypes.end(); ++iterDataType, ++loop) {
                   auto dataType = (*iterDataType);
 
+                  String originalValueStr = "(xValue" + string(loop) + ")";
+                  String newValueStr = "xxVal" + string(current);
+
+                  bool isDataType = true;
+
                   switch (dataType->mType)
                   {
                     case IEventingTypes::PredefinedTypedef_bool: {
-                      ss << "    zsLib::eventing::eventWriteBuffer<bool>(xxPOutputBuffer, (xValue" << string(loop) << ")); \\\n";
+                      ss << "    zsLib::eventing::USE_EVENT_DATA_BOOL_TYPE " << newValueStr << " {" << originalValueStr << " ? 1 : 0}; \\\n";
                       break;
                     }
 
@@ -2509,7 +2718,7 @@ namespace zsLib
                     case IEventingTypes::PredefinedTypedef_dword:
                     case IEventingTypes::PredefinedTypedef_qword: {
                       String typeStr = String("uint") + string(IEventingTypes::getMaxBytes(dataType->mType) * 8) + "_t";
-                      ss << "    zsLib::eventing::eventWriteBuffer<" << typeStr << ">(xxPOutputBuffer, static_cast<" << typeStr << ">(xValue" << string(loop) << ")); \\\n";
+                      ss << "    " << typeStr << " " << newValueStr << "{" << originalValueStr << "}; \\\n";
                       break;
                     }
 
@@ -2532,27 +2741,35 @@ namespace zsLib
                     case IEventingTypes::PredefinedTypedef_int64:
                     case IEventingTypes::PredefinedTypedef_sint64: {
                       String typeStr = String("int") + string(IEventingTypes::getMaxBytes(dataType->mType) * 8) + "_t";
-                      ss << "    zsLib::eventing::eventWriteBuffer<" << typeStr << ">(xxPOutputBuffer, static_cast<" << typeStr << ">(xValue" << string(loop) << ")); \\\n";
+                      ss << "    " << typeStr << " " << newValueStr << "{" << originalValueStr << "}; \\\n";
                       break;
                     }
 
                     case IEventingTypes::PredefinedTypedef_float:
+                    case IEventingTypes::PredefinedTypedef_float32: {
+                      ss << "    float " << newValueStr << "{" << originalValueStr << "}; \\\n";
+                      break;
+                    }
                     case IEventingTypes::PredefinedTypedef_double:
-                    case IEventingTypes::PredefinedTypedef_ldouble:
-                    case IEventingTypes::PredefinedTypedef_float32:
                     case IEventingTypes::PredefinedTypedef_float64: {
-                      String typeStr = (IEventingTypes::getMaxBytes(dataType->mType) <= 4 ? "float" : "double");
-                      ss << "    zsLib::eventing::eventWriteBuffer<" << typeStr << ">(xxPOutputBuffer, static_cast<" << typeStr << ">(xValue" << string(loop) << ")); \\\n";
+                      ss << "    double " << newValueStr << "{" << originalValueStr << "}; \\\n";
+                      break;
+                    }
+                    case IEventingTypes::PredefinedTypedef_ldouble: {
+                      ss << "    long double " << newValueStr << "{" << originalValueStr << "}; \\\n";
                       break;
                     }
 
                     case IEventingTypes::PredefinedTypedef_pointer: {
-                      ss << "    zsLib::eventing::eventWriteBuffer<uintptr_t>(xxPOutputBuffer, reinterpret_cast<uintptr_t>(xValue" << string(loop) << ")); \\\n";
+                      ss << "    uintptr_t " << newValueStr << " = reinterpret_cast<uintptr_t>(" << originalValueStr << "); \\\n";
                       break;
                     }
 
                     case IEventingTypes::PredefinedTypedef_binary: {
-                      ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, reinterpret_cast<const BYTE *>(xValue" << string(loop) << "), xxPIndirectSize, (xValue" << string(loop + 1) << ")); \\\n";
+                      isDataType = false;
+                      
+                      ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_BUFFER(&(xxDescriptors[" << current << "]), " << originalValueStr << ", (xValue" << string(loop+1) << ")); \\\n";
+
                       if (loop + 1 > event->mDataTemplate->mDataTypes.size()) {
                         ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, String("Binary data missing size"));
                       }
@@ -2564,21 +2781,24 @@ namespace zsLib
                       break;
                     }
 
-                    case IEventingTypes::PredefinedTypedef_string: {
-                      ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, (xValue" << string(loop) << "), xxPIndirectSize); \\\n";
-                      break;
-                    }
+                    case IEventingTypes::PredefinedTypedef_string:
                     case IEventingTypes::PredefinedTypedef_astring: {
-                      ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, (xValue" << string(loop) << "), xxPIndirectSize); \\\n";
+                      isDataType = false;
+                      ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_ASTR(&(xxDescriptors[" << current << "]), " << originalValueStr << "); \\\n";
                       break;
                     }
                     case IEventingTypes::PredefinedTypedef_wstring: {
-                      ss << "    zsLib::eventing::eventWriteBuffer(xxPIndirectBuffer, (xValue" << string(loop) << "), xxPIndirectSize); \\\n";
+                      isDataType = false;
+                      ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_WSTR(&(xxDescriptors[" << current << "]), " << originalValueStr << "); \\\n";
                       break;
                     }
                   }
 
                   {
+                    if (isDataType) {
+                      ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_VALUE(&(xxDescriptors[" << current << "]), " << newValueStr << ", sizeof(" << newValueStr << ")); \\\n";
+                    }
+                    ++current;
                     if (nextMustBeSize) {
                       ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, String("Binary data missing size"));
                     }
@@ -2590,11 +2810,7 @@ namespace zsLib
                 }
               }
 
-              if (totalPointers > 0) {
-                ss << "    ZS_EVENTING_WRITE_EVENT_WITH_BUFFERS(zsLib::eventing::getEventHandle" << provider->mName << "(), " << Log::toString(event->mSeverity) << ", " << Log::toString(event->mLevel) << ", " << getCurrentSubsystemStr << ".getName(), __func__, __LINE__, " << string(event->mValue) << ", " << (maxSize > 0 ? "&(xxOutputBuffer[0])" : "NULL") << ", " << string(maxSize) << ", &(xxIndirectBuffer[0]), &(xxIndirectSize[0]), " << string(totalPointers) << "); \\\n";
-              } else {
-                ss << "    ZS_EVENTING_WRITE_EVENT(zsLib::eventing::getEventHandle" << provider->mName << "(), " << Log::toString(event->mSeverity) << ", " << Log::toString(event->mLevel) << ", " << getCurrentSubsystemStr << ".getName(), __func__, __LINE__, " << string(event->mValue) << ", &(xxOutputBuffer[0]), " << string(maxSize) << "); \\\n";
-              }
+              ss << "    ZS_EVENTING_WRITE_EVENT(" << getEventingHandleFunctionWithNamespace << ", " << Log::toString(event->mSeverity) << ", " << Log::toString(event->mLevel) << ", zsLib::eventing::getEventDescriptor_" << event->mName << "(), &(xxDescriptors[0]), " << string(ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES+totalTypes) << "); \\\n";
 
               ss << "  }\n";
             }
@@ -2603,7 +2819,6 @@ namespace zsLib
           ss << "\n";
           ss << "  } // namespace eventing\n";
           ss << "} // namespace zsLib\n\n";
-          ss << "#endif // _WIN32\n\n";
 
           return UseEventingHelper::convertToBuffer(ss.str());
         }
