@@ -1093,7 +1093,7 @@ namespace zsLib
                   std::list<String> keywordIDs;
 
                   auto findKeywordPos = taskID.find("/");
-                  if (findKeywordPos == String::npos) {
+                  if (findKeywordPos != String::npos) {
                     String keywordsStr = taskID.substr(findKeywordPos + 1);
                     taskID = taskID.substr(0, findKeywordPos);
                     taskID.trim();
@@ -2541,7 +2541,7 @@ namespace zsLib
           ss << getFunctions();
           
           String getEventingHandleFunction = "getEventHandle_" + provider->mName + "()";
-          String getEventingHandleFunctionWithNamespace = "zsLib::eventing::" + getEventingHandleFunction;
+          String getEventingHandleFunctionWithNamespace = "::zsLib::eventing::" + getEventingHandleFunction;
 
           ss <<
             "\n"
@@ -2578,7 +2578,7 @@ namespace zsLib
               ss << "\n";
               ss << "    inline const USE_EVENT_DESCRIPTOR *getEventDescriptor_" << event->mName << "()\n";
               ss << "    {\n";
-              ss << "      static const USE_EVENT_DESCRIPTOR description {\n";
+              ss << "      static const USE_EVENT_DESCRIPTOR description {";
               
               ss << string(event->mValue) << ", ";
               ss << "0, "; // version not supported
@@ -2613,9 +2613,7 @@ namespace zsLib
               } else {
                 ss << "8000000000000000";
               }
-              ss << "ULL";
-
-              ss << "};\n";
+              ss << "ULL};\n";
               ss << "      return &description;\n";
               ss << "    }\n";
             }
@@ -2677,12 +2675,13 @@ namespace zsLib
               
 #define ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES (3)
               
-              ss << "    zsLib::eventing::USE_EVENT_DATA_DESCRIPTOR xxDescriptors[" << string(ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES+totalTypes) << "]; \\\n";
-              ss << "    size_t xxLineNumber = __LINE__; \\\n\n";
-              
+              ss << "    ::zsLib::eventing::USE_EVENT_DATA_DESCRIPTOR xxDescriptors[" << string(ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES+totalTypes) << "]; \\\n";
+              ss << "    size_t xxLineNumber = __LINE__; \\\n";
+              ss << "    \\\n";
               ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_ASTR(&(xxDescriptors[0]), " << getCurrentSubsystemStr << ".getName()); \\\n";
               ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_ASTR(&(xxDescriptors[1]), __func__); \\\n";
-              ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_VALUE(&(xxDescriptors[2]), xxLineNumber, sizeof(xxLineNumber)); \\\n\n";
+              ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_VALUE(&(xxDescriptors[2]), &xxLineNumber, sizeof(xxLineNumber)); \\\n";
+              ss << "    \\\n";
               
               size_t current = ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES;
 
@@ -2700,7 +2699,7 @@ namespace zsLib
                   switch (dataType->mType)
                   {
                     case IEventingTypes::PredefinedTypedef_bool: {
-                      ss << "    zsLib::eventing::USE_EVENT_DATA_BOOL_TYPE " << newValueStr << " {" << originalValueStr << " ? 1 : 0}; \\\n";
+                      ss << "    ::zsLib::eventing::USE_EVENT_DATA_BOOL_TYPE " << newValueStr << " {" << originalValueStr << " ? 1 : 0}; \\\n";
                       break;
                     }
 
@@ -2777,6 +2776,7 @@ namespace zsLib
                       goto next_loop;
                     }
                     case IEventingTypes::PredefinedTypedef_size: {
+                      isDataType = false;
                       nextMustBeSize = false;
                       break;
                     }
@@ -2796,7 +2796,7 @@ namespace zsLib
 
                   {
                     if (isDataType) {
-                      ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_VALUE(&(xxDescriptors[" << current << "]), " << newValueStr << ", sizeof(" << newValueStr << ")); \\\n";
+                      ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_VALUE(&(xxDescriptors[" << current << "]), &(" << newValueStr << "), sizeof(" << newValueStr << ")); \\\n";
                     }
                     ++current;
                     if (nextMustBeSize) {
@@ -2810,7 +2810,7 @@ namespace zsLib
                 }
               }
 
-              ss << "    ZS_EVENTING_WRITE_EVENT(" << getEventingHandleFunctionWithNamespace << ", " << Log::toString(event->mSeverity) << ", " << Log::toString(event->mLevel) << ", zsLib::eventing::getEventDescriptor_" << event->mName << "(), &(xxDescriptors[0]), " << string(ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES+totalTypes) << "); \\\n";
+              ss << "    ZS_EVENTING_WRITE_EVENT(" << getEventingHandleFunctionWithNamespace << ", " << Log::toString(event->mSeverity) << ", " << Log::toString(event->mLevel) << ", ::zsLib::eventing::getEventDescriptor_" << event->mName << "(), &(xxDescriptors[0]), " << string(ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES+totalTypes) << "); \\\n";
 
               ss << "  }\n";
             }
