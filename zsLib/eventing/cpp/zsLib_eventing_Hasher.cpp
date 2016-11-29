@@ -143,5 +143,17 @@ namespace zsLib
       return hashAsString(buffer->BytePtr(), buffer->SizeInBytes(), algorithm);
     }
 
+    //-----------------------------------------------------------------------
+    SecureByteBlockPtr IHasher::hmacKeyFromPassphrase(const char *passphrase)
+    {
+      return IHelper::convertToBuffer(passphrase);
+    }
+
+    //-----------------------------------------------------------------------
+    SecureByteBlockPtr IHasher::hmacKeyFromPassphrase(const std::string &passphrase)
+    {
+      return IHelper::convertToBuffer(passphrase.c_str());
+    }
+
   } // namespace eventing
 } // namespace zsLib

@@ -35,11 +35,13 @@ either expressed or implied, of the FreeBSD Project.
 
 namespace zsLib
 {
-  namespace EventTool
+  namespace eventing
   {
     namespace internal
     {
       ZS_DECLARE_CLASS_PTR(Helper);
+      ZS_DECLARE_CLASS_PTR(RemoteClient);
+      ZS_DECLARE_CLASS_PTR(RemoteServer);
     }
   }
 }

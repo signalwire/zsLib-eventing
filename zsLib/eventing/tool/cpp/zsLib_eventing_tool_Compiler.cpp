@@ -1480,10 +1480,12 @@ namespace zsLib
                     task = (*found).second;
                   }
 
+                  opCode->mTask = task;
+
                   {
                     auto found = task->mOpCodes.find(opCode->mName);
                     if (found == task->mOpCodes.end()) {
-                      provider->mOpCodes[opCode->mName] = opCode;
+                      task->mOpCodes[opCode->mName] = opCode;
                     }
                   }
                   tool::output() << "[Info] Found task opcode: " << task->mName << ", " << opCode->mName << "\n";
@@ -2573,6 +2575,22 @@ namespace zsLib
 //              USHORT    Task;
 //              ULONGLONG Keyword;
 //            }
+
+            String keywordValue = "(0x";
+            if (event->mKeywords.size() > 0) {
+              uint64_t mask = 0;
+              for (auto iterKeywords = event->mKeywords.begin(); iterKeywords != event->mKeywords.end(); ++iterKeywords)
+              {
+                auto keyword = (*iterKeywords).second;
+                mask = mask | keyword->mMask;
+              }
+              keywordValue += Stringize<decltype(mask)>(mask, 16).string();
+            }
+            else {
+              keywordValue += "8000000000000000";
+            }
+
+            keywordValue += "ULL)";
             
             {
               ss << "\n";
@@ -2601,19 +2619,8 @@ namespace zsLib
                 ss << "0, ";
               }
               
-              ss << "0x";
-              if (event->mKeywords.size() > 0) {
-                uint64_t mask = 0;
-                for (auto iterKeywords = event->mKeywords.begin(); iterKeywords != event->mKeywords.end(); ++iterKeywords)
-                {
-                  auto keyword = (*iterKeywords).second;
-                  mask = mask | keyword->mMask;
-                }
-                ss << Stringize<decltype(mask)>(mask, 16).string();
-              } else {
-                ss << "8000000000000000";
-              }
-              ss << "ULL};\n";
+              ss << keywordValue;
+              ss << "};\n";
               ss << "      return &description;\n";
               ss << "    }\n";
             }
@@ -2639,10 +2646,10 @@ namespace zsLib
             {
               String getCurrentSubsystemStr;
               if ("x" == event->mSubsystem) {
-                ss << "  if (ZS_EVENTING_IS_LOGGING(" << getEventingHandleFunctionWithNamespace << ", " << Log::toString(event->mLevel) << ")) { \\\n";
+                ss << "  if (ZS_EVENTING_IS_LOGGING(" << getEventingHandleFunctionWithNamespace << ", " << keywordValue << ", " << Log::toString(event->mLevel) << ")) { \\\n";
                 getCurrentSubsystemStr = "(ZS_GET_SUBSYSTEM())";
               } else {
-                ss << "  if (ZS_EVENTING_IS_SUBSYSTEM_LOGGING(" << getEventingHandleFunctionWithNamespace << ", xSubsystem, " << Log::toString(event->mLevel) << ")) { \\\n";
+                ss << "  if (ZS_EVENTING_IS_SUBSYSTEM_LOGGING(" << getEventingHandleFunctionWithNamespace << ", " << keywordValue << ", xSubsystem, " << Log::toString(event->mLevel) << ")) { \\\n";
                 getCurrentSubsystemStr = "(xSubsystem)";
               }
               
@@ -2835,17 +2842,134 @@ namespace zsLib
           const ProviderPtr &provider = mConfig.mProvider;
           if (!provider) return SecureByteBlockPtr();
 
-          ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
-          ss << "#pragma once\n\n";
-          ss << "#include <zsLib/eventing/noop.h>\n\n";
-          ss << "#ifndef _WIN32\n\n";
-          ss << "#include \"" << fileNameAfterPath(outputNameXPlatform) << "\"\n\n";
-          ss << "#else\n\n";
+          ss << "/*\n";
+          ss << " " << ZS_EVENTING_GENERATED_BY << "\n";
+          ss <<
+            " - Stand-alone compiler header for generating ETW events on Windows and NO-OP events cross-platform.\n"
+            "*/\n"
+            "\n"
+            "#pragma once\n"
+            "\n"
+            "#ifdef ZS_EVENTING_NOOP\n"
+            "\n"
+            "#include <zsLib/eventing/noop.h>\n"
+            "\n"
+            "#else /* ZS_EVENTING_NOOP */\n"
+            "\n"
+            "#ifndef ZS_EVENTING_IS_SUBSYSTEM_LOGGING\n"
+            "#define ZS_EVENTING_IS_SUBSYSTEM_LOGGING(xSubsystem, xLevel)\n"
+            "#endif /* ZS_EVENTING_IS_SUBSYSTEM_LOGGING */\n"
+            "\n"
+            "#ifndef ZS_EVENTING_IS_LOGGING\n"
+            "#define ZS_EVENTING_IS_LOGGING(xLevel)\n"
+            "#endif /* ZS_EVENTING_IS_LOGGING */\n"
+            "\n"
+            "#ifndef ZS_EVENTING_GET_SUBSYSTEM_NAME\n"
+            "#define ZS_EVENTING_GET_SUBSYSTEM_NAME ((const char *)NULL)\n"
+            "#endif /* ZS_EVENTING_GET_SUBSYSTEM_NAME */\n"
+            "\n"
+            "#ifndef ZS_EVENTING_EXCLUSIVE\n"
+            "#define ZS_EVENTING_EXCLUSIVE(xProviderName)\n"
+            "#define ZS_EVENTING_PROVIDER(xUUID, xName, xSymbolName, xDescription, xResourceName)\n"
+            "#define ZS_EVENTING_ALIAS(xAliasInput, xAliasOuput)\n"
+            "#define ZS_EVENTING_INCLUDE(xSourceStr)\n"
+            "#define ZS_EVENTING_SOURCE(xSourceStr)\n"
+            "#define ZS_EVENTING_CHANNEL(xID, xNameStr, xOperationalType)\n"
+            "#define ZS_EVENTING_TASK(xName)\n"
+            "#define ZS_EVENTING_KEYWORD(xName)\n"
+            "#define ZS_EVENTING_OPCODE(xName)\n"
+            "#define ZS_EVENTING_TASK_OPCODE(xTaskName, xOpCodeName)\n"
+            "#define ZS_EVENTING_ASSIGN_VALUE(xSymbol, xValue)\n"
+            "#endif /* ZS_EVENTING_EXCLUSIVE */\n"
+            "\n"
+            "#ifndef _WIN32\n"
+            "\n"
+            "#ifndef ZS_EVENTING_REGISTER\n"
+            "#define ZS_EVENTING_REGISTER(xProviderName)\n"
+            "#define ZS_EVENTING_UNREGISTER(xProviderName)\n"
+            "\n";
+
+          for (int index = 0; index <= 38; ++index)
+          {
+            ss << "#define ZS_EVENTING_" << string(index) << "(xSubsystem, xSeverity, xLevel, xSymbol, xChannelID, xTaskID, xOpCode";
+            for (int paramIndex = 1; paramIndex <= index; ++paramIndex)
+            {
+              ss << ", xType" << string(paramIndex) << ", xName" << string(paramIndex) << ", xValue" << string(paramIndex);
+            }
+            ss << ")\n";
+          }
+
+          ss << "\n";
+
+          for (int index = 0; index <= 60; ++index)
+          {
+            ss << "#define ZS_EVENTING_COMPACT_" << string(index) << "(xSubsystem, xSeverity, xLevel, xSymbol, xChannelID, xTaskID, xOpCode";
+            for (int paramIndex = 1; paramIndex <= index; ++paramIndex)
+            {
+              ss << ", xType" << string(paramIndex) << "AndName" << string(paramIndex) << ", xValue" << string(paramIndex);
+            }
+            ss << ")\n";
+          }
+
+          ss <<
+            "#endif /* ZS_EVENTING_REGISTER */\n"
+            "\n"
+            "#else /* ndef _WIN32 */\n"
+            "\n";
+
           ss << "#include \"" << fileNameAfterPath(outputNameWindowsETW) << "\"\n";
-          ss << "#include <stdint.h>\n";
-          ss << "#include <zsLib/eventing/Log.h>\n\n";
-          ss << "namespace zsLib {\n";
-          ss << "  namespace eventing {\n\n";
+
+          ss <<
+            "#include <stdint.h>\n"
+            "\n"
+            "#ifndef ZS_EVENTING_REGISTER\n"
+            "#define ZS_EVENTING_REGISTER(xProviderName)                                     ZS_INTERNAL_REGISTER_EVENTING_##xProviderName()\n"
+            "#define ZS_EVENTING_UNREGISTER(xProviderName)                                   ZS_INTERNAL_UNREGISTER_EVENTING_##xProviderName()\n"
+            "\n";
+
+          for (int index = 0; index <= 38; ++index)
+          {
+            ss << "#define ZS_EVENTING_" << string(index) << "(xSubsystem, xSeverity, xLevel, xSymbol, xChannelID, xTaskID, xOpCode";
+            for (int paramIndex = 1; paramIndex <= index; ++paramIndex)
+            {
+              ss << ", xType" << string(paramIndex) << ", xName" << string(paramIndex) << ", xValue" << string(paramIndex);
+            }
+            ss << ") \\\n";
+            ss << "                                                                                ZS_INTERNAL_EVENTING_EVENT_##xSymbol(xSubsystem";
+            for (int paramIndex = 1; paramIndex <= index; ++paramIndex)
+            {
+              ss << ", xValue" << string(paramIndex);
+            }
+            ss << ")\n\n";
+          }
+
+          ss << "\n";
+
+          for (int index = 0; index <= 38; ++index)
+          {
+            ss << "#define ZS_EVENTING_COMPACT_" << string(index) << "(xSubsystem, xSeverity, xLevel, xSymbol, xChannelID, xTaskID, xOpCode";
+            for (int paramIndex = 1; paramIndex <= index; ++paramIndex)
+            {
+              ss << ", xType" << string(paramIndex) << "AndName" << string(paramIndex) << ", xValue" << string(paramIndex);
+            }
+            ss << ") \\\n";
+            ss << "                                                                                ZS_INTERNAL_EVENTING_EVENT_##xSymbol(xSubsystem";
+            for (int paramIndex = 1; paramIndex <= index; ++paramIndex)
+            {
+              ss << ", xValue" << string(paramIndex);
+            }
+            ss << ")\n\n";
+          }
+
+          ss << "#endif /* ZS_EVENTING_REGISTER */\n\n";
+
+          ss <<
+            "#ifndef ZS_EVENTING_IS_LOGGING\n"
+            "#define ZS_EVENTING_IS_LOGGING(xLevel)\n"
+            "#define ZS_EVENTING_IS_SUBSYSTEM_LOGGING(xSubsystem, xLevel)\n"
+            "#define ZS_EVENTING_GET_CURRENT_SUBSYSTEM_NAME() ((const char *)NULL)\n"
+            "#define ZS_EVENTING_GET_SUBSYSTEM_NAME(xSubsystem) #xSubsystem\n"
+            "#endif /*ZS_EVENTING_IS_LOGGING */\n\n";
 
           ss << "#define ZS_INTERNAL_REGISTER_EVENTING_" << provider->mName << "() EventRegister" << provider->mName << "()\n";
           ss << "#define ZS_INTERNAL_UNREGISTER_EVENTING_" << provider->mName << "() EventUnregister" << provider->mName << "()\n\n";
@@ -2874,14 +2998,14 @@ namespace zsLib
             {
               String getCurrentSubsystemStr;
               if ("x" == event->mSubsystem) {
-                ss << "if (ZS_EVENTING_IS_LOGGING(" << Log::toString(event->mLevel) << ")) { ";
-                getCurrentSubsystemStr = "(ZS_GET_SUBSYSTEM())";
+                ss << "ZS_EVENTING_IS_LOGGING(" << Log::toString(event->mLevel) << ") { ";
+                getCurrentSubsystemStr = "ZS_EVENTING_GET_CURRENT_SUBSYSTEM_NAME()";
               } else {
-                ss << "if (ZS_EVENTING_IS_SUBSYSTEM_LOGGING(xSubsystem, " << Log::toString(event->mLevel) << ")) { ";
-                getCurrentSubsystemStr = "(xSubsystem)";
+                ss << "ZS_EVENTING_IS_SUBSYSTEM_LOGGING(xSubsystem, " << Log::toString(event->mLevel) << ") { ";
+                getCurrentSubsystemStr = "ZS_EVENTING_GET_SUBSYSTEM_NAME(xSubsystem)";
               }
 
-              ss << "EventWrite" << event->mName << "(" << getCurrentSubsystemStr << ".getName(), __func__, __LINE__";
+              ss << "EventWrite" << event->mName << "(" << getCurrentSubsystemStr << ", __func__, __LINE__";
 
               size_t index = 1;
               bool nextMustBeSize = false;
@@ -3012,10 +3136,11 @@ namespace zsLib
             }
           }
 
-          ss << "\n";
-          ss << "  } // namespace eventing\n";
-          ss << "} // namespace zsLib\n\n";
-          ss << "#endif // _WIN32\n\n";
+          ss <<
+            "\n"
+            "#endif /* ndef _WIN32 */\n"
+            "\n"
+            "#endif /* ZS_EVENTING_NOOP */\n";
 
           return UseEventingHelper::convertToBuffer(ss.str());
         }

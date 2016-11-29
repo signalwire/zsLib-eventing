@@ -34,6 +34,8 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/tool/ICompiler.h>
 #include <zsLib/eventing/tool/OutputStream.h>
 
+#include <zsLib/IHelper.h>
+
 namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zsLib_eventing_tool) } } }
 
 namespace zsLib
@@ -140,6 +142,7 @@ namespace zsLib
       //-----------------------------------------------------------------------
       int ICommandLine::performDefaultHandling(const StringList &arguments)
       {
+        zsLib::IHelper::setup();
         int result = 0;
 
         try

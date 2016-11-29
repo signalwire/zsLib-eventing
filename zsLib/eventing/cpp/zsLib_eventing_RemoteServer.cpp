@@ -29,11 +29,21 @@ either expressed or implied, of the FreeBSD Project.
 
 */
 
-#pragma once
+#include <zsLib/eventing/internal/zsLib_eventing_Helper.h>
 
-#include <zsLib/eventing/types.h>
-#include <zsLib/eventing/IEventingTypes.h>
-#include <zsLib/eventing/IHasher.h>
-#include <zsLib/eventing/IHelper.h>
-#include <zsLib/eventing/IRemoteClient.h>
-#include <zsLib/eventing/IRemoteServer.h>
+#include <zsLib/Log.h>
+
+
+namespace zsLib { namespace eventing { ZS_DECLARE_SUBSYSTEM(zsLib_eventing); } }
+
+
+namespace zsLib
+{
+  namespace eventing
+  {
+    namespace internal
+    {
+    } // namespace internal
+
+  } // namespace eventing
+} // namespace zsLib

@@ -27,6 +27,10 @@
     <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_EventingTypes.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_Hasher.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_Helper.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_RemoteClient.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_RemoteServer.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\IRemoteClient.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\IRemoteServer.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\types.h" />
   </ItemGroup>
   <ItemGroup>
@@ -34,6 +38,8 @@
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_EventingTypes.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_Hasher.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_Helper.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_RemoteClient.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_RemoteServer.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FFF92483-103E-4C15-86C3-8865737273CF}</ProjectGuid>

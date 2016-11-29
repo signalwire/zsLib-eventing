@@ -35,6 +35,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/String.h>
 #include <zsLib/Exception.h>
 #include <zsLib/XML.h>
+#include <zsLib/Proxy.h>
 
 #include <cryptopp/AllocatorWithNul.h>
 
@@ -63,5 +64,10 @@ namespace zsLib
     ZS_DECLARE_INTERACTION_PTR(IHelper);
     ZS_DECLARE_INTERACTION_PTR(IHasher);
     ZS_DECLARE_INTERACTION_PTR(IHasherAlgorithm);
+    ZS_DECLARE_INTERACTION_PTR(IRemoteClient);
+    ZS_DECLARE_INTERACTION_PTR(IRemoteServer);
+
+    ZS_DECLARE_INTERACTION_PROXY(IRemoteClientDelegate);
+    ZS_DECLARE_INTERACTION_PROXY(IRemoteServerDelegate);
   }
 }

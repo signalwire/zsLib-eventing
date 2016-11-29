@@ -31,9 +31,22 @@ either expressed or implied, of the FreeBSD Project.
 
 #pragma once
 
-#include <zsLib/eventing/types.h>
-#include <zsLib/eventing/IEventingTypes.h>
-#include <zsLib/eventing/IHasher.h>
 #include <zsLib/eventing/IHelper.h>
-#include <zsLib/eventing/IRemoteClient.h>
 #include <zsLib/eventing/IRemoteServer.h>
+
+#include <zsLib/Log.h>
+
+namespace zsLib
+{
+  namespace eventing
+  {
+    namespace internal
+    {
+      class Helper : public IHelper
+      {
+      public:
+        static Log::Params slog(const char *message);
+      };
+    }
+  }
+}

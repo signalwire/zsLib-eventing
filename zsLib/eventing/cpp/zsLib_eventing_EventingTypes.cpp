@@ -436,13 +436,13 @@ namespace zsLib
         case PredefinedTypedef_ushort:    return sizeof(short);
         case PredefinedTypedef_short:     return sizeof(short);
         case PredefinedTypedef_sshort:    return sizeof(short);
-        case PredefinedTypedef_uint:      return sizeof(int);
-        case PredefinedTypedef_int:       return sizeof(int);
-        case PredefinedTypedef_sint:      return sizeof(int);
-        case PredefinedTypedef_ulong:     return sizeof(int);
-        case PredefinedTypedef_long:      return sizeof(int);
-        case PredefinedTypedef_slong:     return sizeof(int);
-        case PredefinedTypedef_ulonglong: return sizeof(long long);
+        case PredefinedTypedef_uint:      return sizeof(uint32_t);
+        case PredefinedTypedef_int:       return sizeof(int32_t);
+        case PredefinedTypedef_sint:      return sizeof(int32_t);
+        case PredefinedTypedef_ulong:     return sizeof(uint32_t);
+        case PredefinedTypedef_long:      return sizeof(int32_t);
+        case PredefinedTypedef_slong:     return sizeof(int32_t);
+        case PredefinedTypedef_ulonglong: return sizeof(unsigned long long);
         case PredefinedTypedef_longlong:  return sizeof(long long);
         case PredefinedTypedef_slonglong: return sizeof(long long);
 
@@ -490,19 +490,19 @@ namespace zsLib
       {
         case PredefinedTypedef_bool:      return sizeof(bool);
 
-        case PredefinedTypedef_uchar:     return sizeof(char);
+        case PredefinedTypedef_uchar:     return sizeof(unsigned char);
         case PredefinedTypedef_char:      return sizeof(char);
         case PredefinedTypedef_schar:     return sizeof(char);
-        case PredefinedTypedef_ushort:    return sizeof(short);
+        case PredefinedTypedef_ushort:    return sizeof(unsigned short);
         case PredefinedTypedef_short:     return sizeof(short);
         case PredefinedTypedef_sshort:    return sizeof(short);
-        case PredefinedTypedef_uint:      return sizeof(int);
-        case PredefinedTypedef_int:       return sizeof(int);
-        case PredefinedTypedef_sint:      return sizeof(int);
-        case PredefinedTypedef_ulong:     return sizeof(long long);
+        case PredefinedTypedef_uint:      return sizeof(uint64_t);
+        case PredefinedTypedef_int:       return sizeof(int64_t);
+        case PredefinedTypedef_sint:      return sizeof(int64_t);
+        case PredefinedTypedef_ulong:     return sizeof(unsigned long long);
         case PredefinedTypedef_long:      return sizeof(long long);
         case PredefinedTypedef_slong:     return sizeof(long long);
-        case PredefinedTypedef_ulonglong: return sizeof(long long);
+        case PredefinedTypedef_ulonglong: return sizeof(unsigned long long);
         case PredefinedTypedef_longlong:  return sizeof(long long);
         case PredefinedTypedef_slonglong: return sizeof(long long);
 
@@ -1058,7 +1058,7 @@ namespace zsLib
       hasher->update(":");
       hasher->update(toString(mType));
       hasher->update(":");
-      hasher->update(string(mValue));
+      hasher->update(mValue);
       hasher->update(":end");
 
       return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
@@ -1154,7 +1154,7 @@ namespace zsLib
         hasher->update(hash);
       }
       hasher->update(":");
-      hasher->update(string(mValue));
+      hasher->update(mValue);
       hasher->update(":end");
 
       return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
@@ -1310,7 +1310,7 @@ namespace zsLib
         hasher->update(task->hash());
       }
       hasher->update(":");
-      hasher->update(string(mValue));
+      hasher->update(mValue);
       hasher->update(":end");
 
       return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
@@ -1442,7 +1442,7 @@ namespace zsLib
         hasher->update(mDataTemplate->hash());
       }
       hasher->update(":");
-      hasher->update(string(mValue));
+      hasher->update(mValue);
       hasher->update(":end");
 
       return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
