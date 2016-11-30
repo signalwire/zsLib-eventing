@@ -46,8 +46,10 @@ namespace zsLib
     {
       virtual const BYTE *digest() const = 0;
       virtual size_t digestSize() const = 0;
+      String digestAsString() const;
       virtual void update(const BYTE *buffer, size_t length) = 0;
       virtual const BYTE *finalize() = 0;
+      String finalizeAsString()                                                { finalize(); return digestAsString(); }
 
       void update(const char *str)                                             { if (!str) return; update(reinterpret_cast<const BYTE *>(str), strlen(str)); }
       void update(const std::string &str)                                      { if (str.size() < 1) return; update(reinterpret_cast<const BYTE *>(str.c_str()), str.length()); }
