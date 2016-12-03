@@ -424,6 +424,29 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
+    bool IEventingTypes::isAString(PredefinedTypedefs type)
+    {
+      switch (type)
+      {
+        case PredefinedTypedef_string:    return true;
+        case PredefinedTypedef_astring:   return true;
+        default:                          break;
+      }
+      return false;
+    }
+    
+    //-------------------------------------------------------------------------
+    bool IEventingTypes::isWString(PredefinedTypedefs type)
+    {
+      switch (type)
+      {
+        case PredefinedTypedef_wstring:   return true;
+        default:                          break;
+      }
+      return false;
+    }
+
+    //-------------------------------------------------------------------------
     size_t IEventingTypes::getMinBytes(PredefinedTypedefs type)
     {
       switch (type)

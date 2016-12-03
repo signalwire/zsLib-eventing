@@ -7,12 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		008666541DEE6ED100CBA4FD /* zsLib_eventing_RemoteClient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008666521DEE6ED100CBA4FD /* zsLib_eventing_RemoteClient.cpp */; };
-		008666551DEE6ED200CBA4FD /* zsLib_eventing_RemoteServer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008666531DEE6ED100CBA4FD /* zsLib_eventing_RemoteServer.cpp */; };
 		008698631DE3F476009D669C /* zsLib_eventing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008698461DE3F476009D669C /* zsLib_eventing.cpp */; };
 		008698641DE3F476009D669C /* zsLib_eventing_EventingTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008698471DE3F476009D669C /* zsLib_eventing_EventingTypes.cpp */; };
 		008698651DE3F476009D669C /* zsLib_eventing_Hasher.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008698481DE3F476009D669C /* zsLib_eventing_Hasher.cpp */; };
 		008698661DE3F476009D669C /* zsLib_eventing_Helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008698491DE3F476009D669C /* zsLib_eventing_Helper.cpp */; };
+		009CEECF1DF0AFA9000FF4D2 /* zsLib_eventing_RemoteEventing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 009CEECE1DF0AFA9000FF4D2 /* zsLib_eventing_RemoteEventing.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,12 +27,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0086664E1DEE6EBC00CBA4FD /* IRemoteClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRemoteClient.h; sourceTree = "<group>"; };
-		0086664F1DEE6EBC00CBA4FD /* IRemoteServer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRemoteServer.h; sourceTree = "<group>"; };
-		008666501DEE6EC700CBA4FD /* zsLib_eventing_RemoteClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_RemoteClient.h; sourceTree = "<group>"; };
-		008666511DEE6EC700CBA4FD /* zsLib_eventing_RemoteServer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_RemoteServer.h; sourceTree = "<group>"; };
-		008666521DEE6ED100CBA4FD /* zsLib_eventing_RemoteClient.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zsLib_eventing_RemoteClient.cpp; sourceTree = "<group>"; };
-		008666531DEE6ED100CBA4FD /* zsLib_eventing_RemoteServer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zsLib_eventing_RemoteServer.cpp; sourceTree = "<group>"; };
 		008698371DE3F458009D669C /* libzsLib-eventing-ios.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libzsLib-eventing-ios.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		008698461DE3F476009D669C /* zsLib_eventing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zsLib_eventing.cpp; sourceTree = "<group>"; };
 		008698471DE3F476009D669C /* zsLib_eventing_EventingTypes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zsLib_eventing_EventingTypes.cpp; sourceTree = "<group>"; };
@@ -48,6 +41,9 @@
 		008698511DE3F476009D669C /* zsLib_eventing_Hasher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_Hasher.h; sourceTree = "<group>"; };
 		008698521DE3F476009D669C /* zsLib_eventing_Helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_Helper.h; sourceTree = "<group>"; };
 		008698621DE3F476009D669C /* types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
+		009CEECE1DF0AFA9000FF4D2 /* zsLib_eventing_RemoteEventing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zsLib_eventing_RemoteEventing.cpp; sourceTree = "<group>"; };
+		009CEED01DF0AFB8000FF4D2 /* zsLib_eventing_RemoteEventing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_RemoteEventing.h; sourceTree = "<group>"; };
+		009CEED11DF0AFC0000FF4D2 /* IRemoteEventing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRemoteEventing.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,8 +91,7 @@
 				0086984B1DE3F476009D669C /* IEventingTypes.h */,
 				0086984C1DE3F476009D669C /* IHasher.h */,
 				0086984D1DE3F476009D669C /* IHelper.h */,
-				0086664E1DEE6EBC00CBA4FD /* IRemoteClient.h */,
-				0086664F1DEE6EBC00CBA4FD /* IRemoteServer.h */,
+				009CEED11DF0AFC0000FF4D2 /* IRemoteEventing.h */,
 				008698621DE3F476009D669C /* types.h */,
 			);
 			path = eventing;
@@ -109,8 +104,7 @@
 				008698471DE3F476009D669C /* zsLib_eventing_EventingTypes.cpp */,
 				008698481DE3F476009D669C /* zsLib_eventing_Hasher.cpp */,
 				008698491DE3F476009D669C /* zsLib_eventing_Helper.cpp */,
-				008666521DEE6ED100CBA4FD /* zsLib_eventing_RemoteClient.cpp */,
-				008666531DEE6ED100CBA4FD /* zsLib_eventing_RemoteServer.cpp */,
+				009CEECE1DF0AFA9000FF4D2 /* zsLib_eventing_RemoteEventing.cpp */,
 			);
 			path = cpp;
 			sourceTree = "<group>";
@@ -122,8 +116,7 @@
 				008698501DE3F476009D669C /* zsLib_eventing_EventingTypes.h */,
 				008698511DE3F476009D669C /* zsLib_eventing_Hasher.h */,
 				008698521DE3F476009D669C /* zsLib_eventing_Helper.h */,
-				008666501DEE6EC700CBA4FD /* zsLib_eventing_RemoteClient.h */,
-				008666511DEE6EC700CBA4FD /* zsLib_eventing_RemoteServer.h */,
+				009CEED01DF0AFB8000FF4D2 /* zsLib_eventing_RemoteEventing.h */,
 			);
 			path = internal;
 			sourceTree = "<group>";
@@ -185,12 +178,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				008666541DEE6ED100CBA4FD /* zsLib_eventing_RemoteClient.cpp in Sources */,
 				008698661DE3F476009D669C /* zsLib_eventing_Helper.cpp in Sources */,
 				008698651DE3F476009D669C /* zsLib_eventing_Hasher.cpp in Sources */,
+				009CEECF1DF0AFA9000FF4D2 /* zsLib_eventing_RemoteEventing.cpp in Sources */,
 				008698641DE3F476009D669C /* zsLib_eventing_EventingTypes.cpp in Sources */,
 				008698631DE3F476009D669C /* zsLib_eventing.cpp in Sources */,
-				008666551DEE6ED200CBA4FD /* zsLib_eventing_RemoteServer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

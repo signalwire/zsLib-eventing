@@ -254,6 +254,8 @@ namespace zsLib
       static BaseTypes getBaseType(PredefinedTypedefs type);
       static bool isSigned(PredefinedTypedefs type);
       static bool isUnsigned(PredefinedTypedefs type);
+      static bool isAString(PredefinedTypedefs type);
+      static bool isWString(PredefinedTypedefs type);
       static size_t getMinBytes(PredefinedTypedefs type);
       static size_t getMaxBytes(PredefinedTypedefs type);
 

@@ -59,6 +59,8 @@ namespace zsLib
 
     namespace internal
     {
+      void installRemoteEventingSettingsDefaults();
+      
 
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
@@ -135,6 +137,7 @@ namespace zsLib
     {
       zsLib::IHelper::setup();
       internal::CryptoPPHelper::singleton();
+      internal::installRemoteEventingSettingsDefaults();
     }
 
 #ifdef WINRT

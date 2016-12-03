@@ -64,10 +64,8 @@ namespace zsLib
     ZS_DECLARE_INTERACTION_PTR(IHelper);
     ZS_DECLARE_INTERACTION_PTR(IHasher);
     ZS_DECLARE_INTERACTION_PTR(IHasherAlgorithm);
-    ZS_DECLARE_INTERACTION_PTR(IRemoteClient);
-    ZS_DECLARE_INTERACTION_PTR(IRemoteServer);
+    ZS_DECLARE_INTERACTION_PTR(IRemoteEventing);
 
-    ZS_DECLARE_INTERACTION_PROXY(IRemoteClientDelegate);
-    ZS_DECLARE_INTERACTION_PROXY(IRemoteServerDelegate);
+    ZS_DECLARE_INTERACTION_PROXY(IRemoteEventingDelegate);
   }
 }

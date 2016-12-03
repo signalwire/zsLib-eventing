@@ -2624,6 +2624,74 @@ namespace zsLib
               ss << "      return &description;\n";
               ss << "    }\n";
             }
+            
+//            enum EventParameterTypes
+//            {
+//              EventParameterType_Boolean = 1,
+//              EventParameterType_UnsignedInteger = 2,
+//              EventParameterType_SignedInteger = 2 | 4,
+//              EventParameterType_FloatingPoint = 8,
+//              EventParameterType_Pointer = 16,
+//              EventParameterType_Binary = 16 | 32,
+//              EventParameterType_String = 16 | 64,
+//            };
+            
+
+            {
+              ss << "\n";
+              ss << "    inline const USE_EVENT_PARAMETER_DESCRIPTOR *getEventParameterDescriptor_" << event->mName << "()\n";
+              ss << "    {\n";
+              ss << "      static const USE_EVENT_PARAMETER_DESCRIPTOR descriptions [] =\n";
+              ss << "      {\n";
+              ss << "        {EventParameterType_AString},\n";
+              ss << "        {EventParameterType_AString},\n";
+              ss << "        {EventParameterType_UnsignedInteger}";
+              
+              if (event->mDataTemplate) {
+                bool nextMustBeSize = false;
+                for (auto iterDataType = event->mDataTemplate->mDataTypes.begin(); iterDataType != event->mDataTemplate->mDataTypes.end(); ++iterDataType) {
+                  auto dataType = (*iterDataType);
+                  if (nextMustBeSize) {
+                    nextMustBeSize = false;
+                    continue;
+                  }
+                  
+                  String typeStr;
+
+                  switch (IEventingTypes::getBaseType(dataType->mType))
+                  {
+                    case IEventingTypes::BaseType_Boolean:  typeStr = "Boolean"; break;
+                    case IEventingTypes::BaseType_Integer:  {
+                      if (IEventingTypes::isSigned(dataType->mType)) {
+                        typeStr = "SignedInteger";
+                      } else {
+                        typeStr = "UnsignedInteger";
+                      }
+                      break;
+                    }
+                    case IEventingTypes::BaseType_Float:    typeStr = "FloatingPoint"; break;
+                    case IEventingTypes::BaseType_Pointer:  typeStr = "Pointer"; break;
+                    case IEventingTypes::BaseType_Binary:   typeStr = "Binary"; nextMustBeSize = true; break;
+                    case IEventingTypes::BaseType_String:   {
+                      if (IEventingTypes::isAString(dataType->mType)) {
+                        typeStr = "AString";
+                      } else {
+                        typeStr = "WString";
+                      }
+                      break;
+                    }
+                  }
+
+                  ss << ",\n";
+                  ss << "        {EventParameterType_" << typeStr << "}";
+                }
+              }
+              
+              ss << "\n";
+              ss << "      };\n";
+              ss << "      return &(descriptions[0]);\n";
+              ss << "    }\n";
+            }
 
             {
               ss << "\n";
@@ -2817,8 +2885,7 @@ namespace zsLib
                 }
               }
 
-              ss << "    ZS_EVENTING_WRITE_EVENT(" << getEventingHandleFunctionWithNamespace << ", " << Log::toString(event->mSeverity) << ", " << Log::toString(event->mLevel) << ", ::zsLib::eventing::getEventDescriptor_" << event->mName << "(), &(xxDescriptors[0]), " << string(ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES+totalTypes) << "); \\\n";
-
+              ss << "    ZS_EVENTING_WRITE_EVENT(" << getEventingHandleFunctionWithNamespace << ", " << Log::toString(event->mSeverity) << ", " << Log::toString(event->mLevel) << ", ::zsLib::eventing::getEventDescriptor_" << event->mName << "(), ::zsLib::eventing::getEventParameterDescriptor_" << event->mName << "(), &(xxDescriptors[0]), " << string(ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES+totalTypes) << "); \\\n";
               ss << "  }\n";
             }
           }

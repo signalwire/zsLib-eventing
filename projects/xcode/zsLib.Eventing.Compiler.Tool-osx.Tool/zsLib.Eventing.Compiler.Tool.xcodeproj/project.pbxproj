@@ -10,8 +10,8 @@
 		0086662F1DEE6C2E00CBA4FD /* zsLib_Settings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0086662E1DEE6C2E00CBA4FD /* zsLib_Settings.cpp */; };
 		008666311DEE6C4900CBA4FD /* zsLib_Helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008666301DEE6C4900CBA4FD /* zsLib_Helper.cpp */; };
 		008666431DEE6E1D00CBA4FD /* zsLib_MessageQueueManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008666421DEE6E1D00CBA4FD /* zsLib_MessageQueueManager.cpp */; };
-		0086665B1DEE6F5E00CBA4FD /* zsLib_eventing_RemoteClient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008666591DEE6F5E00CBA4FD /* zsLib_eventing_RemoteClient.cpp */; };
-		0086665C1DEE6F5E00CBA4FD /* zsLib_eventing_RemoteServer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0086665A1DEE6F5E00CBA4FD /* zsLib_eventing_RemoteServer.cpp */; };
+		009CEED51DF0B006000FF4D2 /* zsLib_eventing_RemoteEventing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 009CEED41DF0B006000FF4D2 /* zsLib_eventing_RemoteEventing.cpp */; };
+		009CEEDD1DF1C278000FF4D2 /* zsLib_WindowsEventProviderLogger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 009CEEDC1DF1C278000FF4D2 /* zsLib_WindowsEventProviderLogger.cpp */; };
 		00D865A21DE3723B00B7EB56 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D865A11DE3723B00B7EB56 /* main.cpp */; };
 		00D865B61DE3752400B7EB56 /* libcryptopp-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 00D865B31DE3750D00B7EB56 /* libcryptopp-osx.a */; };
 		00D865C81DE38AB400B7EB56 /* zsLib_eventing_EventingTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D865C41DE38AB300B7EB56 /* zsLib_eventing_EventingTypes.cpp */; };
@@ -106,12 +106,11 @@
 		008666321DEE6D5800CBA4FD /* zsLib_Helper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib_Helper.h; path = ../../../../zsLib/zsLib/internal/zsLib_Helper.h; sourceTree = "<group>"; };
 		008666421DEE6E1D00CBA4FD /* zsLib_MessageQueueManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_MessageQueueManager.cpp; path = ../../../../zsLib/zsLib/cpp/zsLib_MessageQueueManager.cpp; sourceTree = "<group>"; };
 		008666561DEE6F0D00CBA4FD /* zsLib_MessageQueueManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib_MessageQueueManager.h; path = ../../../../zsLib/zsLib/internal/zsLib_MessageQueueManager.h; sourceTree = "<group>"; };
-		008666571DEE6F5000CBA4FD /* IRemoteClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = IRemoteClient.h; path = ../../../zsLib/eventing/IRemoteClient.h; sourceTree = "<group>"; };
-		008666581DEE6F5000CBA4FD /* IRemoteServer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = IRemoteServer.h; path = ../../../zsLib/eventing/IRemoteServer.h; sourceTree = "<group>"; };
-		008666591DEE6F5E00CBA4FD /* zsLib_eventing_RemoteClient.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_eventing_RemoteClient.cpp; path = ../../../zsLib/eventing/cpp/zsLib_eventing_RemoteClient.cpp; sourceTree = "<group>"; };
-		0086665A1DEE6F5E00CBA4FD /* zsLib_eventing_RemoteServer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_eventing_RemoteServer.cpp; path = ../../../zsLib/eventing/cpp/zsLib_eventing_RemoteServer.cpp; sourceTree = "<group>"; };
-		0086665D1DEE6F6B00CBA4FD /* zsLib_eventing_RemoteClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_RemoteClient.h; path = ../../../zsLib/eventing/internal/zsLib_eventing_RemoteClient.h; sourceTree = "<group>"; };
-		0086665E1DEE6F6B00CBA4FD /* zsLib_eventing_RemoteServer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_RemoteServer.h; path = ../../../zsLib/eventing/internal/zsLib_eventing_RemoteServer.h; sourceTree = "<group>"; };
+		009CEED21DF0AFEB000FF4D2 /* IRemoteEventing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = IRemoteEventing.h; path = ../../../zsLib/eventing/IRemoteEventing.h; sourceTree = "<group>"; };
+		009CEED31DF0AFFA000FF4D2 /* zsLib_eventing_RemoteEventing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_RemoteEventing.h; path = ../../../zsLib/eventing/internal/zsLib_eventing_RemoteEventing.h; sourceTree = "<group>"; };
+		009CEED41DF0B006000FF4D2 /* zsLib_eventing_RemoteEventing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_eventing_RemoteEventing.cpp; path = ../../../zsLib/eventing/cpp/zsLib_eventing_RemoteEventing.cpp; sourceTree = "<group>"; };
+		009CEED61DF11455000FF4D2 /* types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = types.h; path = ../../../zsLib/eventing/types.h; sourceTree = "<group>"; };
+		009CEEDC1DF1C278000FF4D2 /* zsLib_WindowsEventProviderLogger.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_WindowsEventProviderLogger.cpp; path = ../../../../zsLib/zsLib/cpp/zsLib_WindowsEventProviderLogger.cpp; sourceTree = "<group>"; };
 		00D8659E1DE3723B00B7EB56 /* zsLib.Eventing.Compiler.Tool */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = zsLib.Eventing.Compiler.Tool; sourceTree = BUILT_PRODUCTS_DIR; };
 		00D865A11DE3723B00B7EB56 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		00D865AE1DE3750D00B7EB56 /* cryptopp-osx.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "cryptopp-osx.xcodeproj"; path = "/Users/robin/Repos/ortclib/ortclib-sdk/ortc/xplatform/zsLib-eventing/projects/xcode/../../../cryptopp/projects/xcode/cryptopp-osx/cryptopp-osx.xcodeproj"; sourceTree = "<absolute>"; };
@@ -355,10 +354,10 @@
 				00D865C11DE38A5100B7EB56 /* IEventingTypes.h */,
 				00D865C21DE38A5100B7EB56 /* IHasher.h */,
 				00D865C31DE38A5100B7EB56 /* IHelper.h */,
+				009CEED21DF0AFEB000FF4D2 /* IRemoteEventing.h */,
 				00D8660E1DE38BA000B7EB56 /* Log.h */,
-				008666571DEE6F5000CBA4FD /* IRemoteClient.h */,
-				008666581DEE6F5000CBA4FD /* IRemoteServer.h */,
 				00D8660F1DE38BA000B7EB56 /* noop.h */,
+				009CEED61DF11455000FF4D2 /* types.h */,
 			);
 			name = eventing;
 			sourceTree = "<group>";
@@ -392,6 +391,7 @@
 				00D866251DE38BCC00B7EB56 /* zsLib_Stringize.cpp */,
 				00D866261DE38BCC00B7EB56 /* zsLib_Timer.cpp */,
 				00D866271DE38BCC00B7EB56 /* zsLib_TimerMonitor.cpp */,
+				009CEEDC1DF1C278000FF4D2 /* zsLib_WindowsEventProviderLogger.cpp */,
 				00D866281DE38BCC00B7EB56 /* zsLib_XML.cpp */,
 				00D866291DE38BCC00B7EB56 /* zsLib_XMLAttribute.cpp */,
 				00D8662A1DE38BCC00B7EB56 /* zsLib_XMLComment.cpp */,
@@ -473,8 +473,7 @@
 				00D865C41DE38AB300B7EB56 /* zsLib_eventing_EventingTypes.cpp */,
 				00D865C51DE38AB300B7EB56 /* zsLib_eventing_Hasher.cpp */,
 				00D865C61DE38AB300B7EB56 /* zsLib_eventing_Helper.cpp */,
-				008666591DEE6F5E00CBA4FD /* zsLib_eventing_RemoteClient.cpp */,
-				0086665A1DEE6F5E00CBA4FD /* zsLib_eventing_RemoteServer.cpp */,
+				009CEED41DF0B006000FF4D2 /* zsLib_eventing_RemoteEventing.cpp */,
 				00D865C71DE38AB400B7EB56 /* zsLib_eventing.cpp */,
 			);
 			name = cpp;
@@ -487,8 +486,7 @@
 				00D865CD1DE38AE900B7EB56 /* zsLib_eventing_EventingTypes.h */,
 				00D865CE1DE38AE900B7EB56 /* zsLib_eventing_Hasher.h */,
 				00D865CF1DE38AE900B7EB56 /* zsLib_eventing_Helper.h */,
-				0086665D1DEE6F6B00CBA4FD /* zsLib_eventing_RemoteClient.h */,
-				0086665E1DEE6F6B00CBA4FD /* zsLib_eventing_RemoteServer.h */,
+				009CEED31DF0AFFA000FF4D2 /* zsLib_eventing_RemoteEventing.h */,
 				00D866101DE38BB600B7EB56 /* zsLib_eventing_Log.h */,
 			);
 			name = internal;
@@ -665,7 +663,6 @@
 				00D866591DE38BCC00B7EB56 /* zsLib_XMLText.cpp in Sources */,
 				00D8663A1DE38BCC00B7EB56 /* zsLib_IPAddress.cpp in Sources */,
 				00D8664E1DE38BCC00B7EB56 /* zsLib_XML.cpp in Sources */,
-				0086665C1DEE6F5E00CBA4FD /* zsLib_eventing_RemoteServer.cpp in Sources */,
 				00D866461DE38BCC00B7EB56 /* zsLib_Proxy.cpp in Sources */,
 				00D866521DE38BCC00B7EB56 /* zsLib_XMLDocument.cpp in Sources */,
 				008666311DEE6C4900CBA4FD /* zsLib_Helper.cpp in Sources */,
@@ -673,10 +670,11 @@
 				00D866501DE38BCC00B7EB56 /* zsLib_XMLComment.cpp in Sources */,
 				00D865C91DE38AB400B7EB56 /* zsLib_eventing_Hasher.cpp in Sources */,
 				00D866411DE38BCC00B7EB56 /* zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWindows.cpp in Sources */,
-				0086665B1DEE6F5E00CBA4FD /* zsLib_eventing_RemoteClient.cpp in Sources */,
 				00D8663E1DE38BCC00B7EB56 /* zsLib_MessageQueueThreadBasic.cpp in Sources */,
 				00D865D81DE38B1200B7EB56 /* zsLib_eventing_tool_CommandLine.cpp in Sources */,
 				00D8665B1DE38BCC00B7EB56 /* zsLib.cpp in Sources */,
+				009CEED51DF0B006000FF4D2 /* zsLib_eventing_RemoteEventing.cpp in Sources */,
+				009CEEDD1DF1C278000FF4D2 /* zsLib_WindowsEventProviderLogger.cpp in Sources */,
 				00D8664D1DE38BCC00B7EB56 /* zsLib_TimerMonitor.cpp in Sources */,
 				008666431DEE6E1D00CBA4FD /* zsLib_MessageQueueManager.cpp in Sources */,
 				00D866541DE38BCC00B7EB56 /* zsLib_XMLGenerator.cpp in Sources */,

@@ -35,5 +35,4 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/IEventingTypes.h>
 #include <zsLib/eventing/IHasher.h>
 #include <zsLib/eventing/IHelper.h>
-#include <zsLib/eventing/IRemoteClient.h>
-#include <zsLib/eventing/IRemoteServer.h>
+#include <zsLib/eventing/IRemoteEventing.h>
