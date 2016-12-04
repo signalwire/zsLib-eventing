@@ -699,18 +699,18 @@ namespace zsLib
               switch (data.Size) {
                 case 2:  {
                   uint16_t value {};
-                  memcpy(&value, data.Ptr, sizeof(value));
+                  memcpy(&value, (const void *)(data.Ptr), sizeof(value));
                   usePacked.PutWord16(value);
                   break;
                 }
                 case 4:  {
                   uint32_t value {};
-                  memcpy(&value, data.Ptr, sizeof(value));
+                  memcpy(&value, (const void *)(data.Ptr), sizeof(value));
                   usePacked.PutWord32(value);
                   break;
                 }
                 case 8:  {
-                  memcpy(&data64, data.Ptr, sizeof(data64));
+                  memcpy(&data64, (const void *)(data.Ptr), sizeof(data64));
                   IHelper::setBE64(&data64, data64);
                   usePacked.Put((const BYTE *)(&data64), sizeof(data64));
                   break;
@@ -1639,7 +1639,7 @@ namespace zsLib
         String valueFloatBytesStr = IHelper::getElementText(rootEl->findFirstChildElement("valueFloatBytes"));
 
         try {
-          float valueFloat = Numeric<uint32_t>(valueFloatStr);
+          float valueFloat = Numeric<float>(valueFloatStr);
           
           auto valueBuffer = IHelper::convertFromHex(valueFloatBytesStr);
           if ((!valueBuffer) ||
@@ -1650,7 +1650,7 @@ namespace zsLib
           }
 
           if (0 != memcmp(valueBuffer->BytePtr(), &valueFloat, sizeof(valueFloat))) mFlipEndianFloat = true;
-        } catch (const Numeric<uint32_t>::ValueOutOfRange &) {
+        } catch (const Numeric<float>::ValueOutOfRange &) {
           ZS_LOG_WARNING(Detail, log("received welcome but missing value32"));
           disconnect();
           return;
@@ -1963,7 +1963,7 @@ namespace zsLib
         
         size_t expecting = (sizeof(uint16_t)*descriptorCount);
         if (remaining < expecting) {
-          ZS_LOG_WARNING(Debug, log("event message did not contain enough data") + ZS_PARAMIZE(index) + ZS_PARAMIZE(expecting) + ZS_PARAMIZE(remaining) + ZS_PARAM("actual size", buffer.SizeInBytes()));
+          ZS_LOG_WARNING(Debug, log("event message did not contain enough data") + ZS_PARAMIZE(expecting) + ZS_PARAMIZE(remaining) + ZS_PARAM("actual size", buffer.SizeInBytes()));
           return;
         }
 
@@ -1994,7 +1994,7 @@ namespace zsLib
             
             dataDescriptors[index].Size = dataTypeSize;
             if (0 != dataDescriptors[index].Size) {
-              dataDescriptors[index].Ptr = pos;
+              dataDescriptors[index].Ptr = reinterpret_cast<uintptr_t>(pos);
             }
 
             pos += dataTypeSize;

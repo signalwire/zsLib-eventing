@@ -147,11 +147,11 @@
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_EventingTypes.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_Hasher.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_Helper.cpp" />
-    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_RemoteClient.cpp" />
-    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_RemoteServer.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_RemoteEventing.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_CommandLine.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_Compiler.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_Monitor.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -231,16 +231,15 @@
     <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_EventingTypes.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_Hasher.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_Helper.h" />
-    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_RemoteClient.h" />
-    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_RemoteServer.h" />
-    <ClInclude Include="..\..\..\zsLib\eventing\IRemoteClient.h" />
-    <ClInclude Include="..\..\..\zsLib\eventing\IRemoteServer.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_RemoteEventing.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\IRemoteEventing.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\ICommandLine.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\ICompiler.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\types.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_CommandLine.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_Compiler.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_Monitor.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\OutputStream.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\tool.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\types.h" />

@@ -42,17 +42,11 @@
     <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_Hasher.h">
       <Filter>zsLib\eventing\internal</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_RemoteServer.h">
-      <Filter>zsLib\eventing\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_RemoteClient.h">
-      <Filter>zsLib\eventing\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\IRemoteClient.h">
+    <ClInclude Include="..\..\..\zsLib\eventing\IRemoteEventing.h">
       <Filter>zsLib\eventing</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\IRemoteServer.h">
-      <Filter>zsLib\eventing</Filter>
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_RemoteEventing.h">
+      <Filter>zsLib\eventing\internal</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -68,10 +62,7 @@
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_Hasher.cpp">
       <Filter>zsLib\eventing\cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_RemoteClient.cpp">
-      <Filter>zsLib\eventing\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_RemoteServer.cpp">
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_RemoteEventing.cpp">
       <Filter>zsLib\eventing\cpp</Filter>
     </ClCompile>
   </ItemGroup>

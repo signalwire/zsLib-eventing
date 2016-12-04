@@ -79,27 +79,27 @@ namespace zsLib
           switch (data.Size) {
             case 1: {
               uint8_t value = 0;
-              memcpy(&value, data.Ptr, sizeof(uint8_t));
+              memcpy(&value, (const void *)(data.Ptr), sizeof(uint8_t));
               return value;
             }
             case 2: {
               uint16_t value = 0;
-              memcpy(&value, data.Ptr, sizeof(uint16_t));
+              memcpy(&value, (const void *)(data.Ptr), sizeof(uint16_t));
               return value;
             }
             case 4: {
               uint32_t value = 0;
-              memcpy(&value, data.Ptr, sizeof(uint32_t));
+              memcpy(&value, (const void *)(data.Ptr), sizeof(uint32_t));
               return value;
             }
             case 8: {
               uint64_t value = 0;
-              memcpy(&value, data.Ptr, sizeof(uint64_t));
+              memcpy(&value, (const void *)(data.Ptr), sizeof(uint64_t));
               return value;
             }
             default: {
               uint64_t value = 0;
-              memcpy(&value, data.Ptr, sizeof(uint64_t) > data.Size ? data.Size : sizeof(uint64_t));
+              memcpy(&value, (const void *)(data.Ptr), sizeof(uint64_t) > data.Size ? data.Size : sizeof(uint64_t));
               return value;
             }
           }
@@ -114,27 +114,27 @@ namespace zsLib
           switch (data.Size) {
             case 1: {
               int8_t value = 0;
-              memcpy(&value, data.Ptr, sizeof(int8_t));
+              memcpy(&value, (const void *)(data.Ptr), sizeof(int8_t));
               return value;
             }
             case 2: {
               int16_t value = 0;
-              memcpy(&value, data.Ptr, sizeof(int16_t));
+              memcpy(&value, (const void *)(data.Ptr), sizeof(int16_t));
               return value;
             }
             case 4: {
               int32_t value = 0;
-              memcpy(&value, data.Ptr, sizeof(int32_t));
+              memcpy(&value, (const void *)(data.Ptr), sizeof(int32_t));
               return value;
             }
             case 8: {
               int64_t value = 0;
-              memcpy(&value, data.Ptr, sizeof(int64_t));
+              memcpy(&value, (const void *)(data.Ptr), sizeof(int64_t));
               return value;
             }
             default: {
               int64_t value = 0;
-              memcpy(&value, data.Ptr, sizeof(int64_t) > data.Size ? data.Size : sizeof(int64_t));
+              memcpy(&value, (const void *)(data.Ptr), sizeof(int64_t) > data.Size ? data.Size : sizeof(int64_t));
               return value;
             }
           }
@@ -148,17 +148,17 @@ namespace zsLib
           
           if (sizeof(float) == data.Size) {
             float value {};
-            memcpy(&value, data.Ptr, sizeof(value));
+            memcpy(&value, (const void *)(data.Ptr), sizeof(value));
             return value;
           }
           if (sizeof(double) == data.Size) {
             double value ={};
-            memcpy(&value, data.Ptr, sizeof(value));
+            memcpy(&value, (const void *)(data.Ptr), sizeof(value));
             return value;
           }
           
           double value = 0;
-          memcpy(&value, data.Ptr, sizeof(double) > data.Size ? data.Size : sizeof(double));
+          memcpy(&value, (const void *)(data.Ptr), sizeof(double) > data.Size ? data.Size : sizeof(double));
           return value;
         }
         
@@ -198,7 +198,7 @@ namespace zsLib
               if (0 == total) return String();
               
               wchar_t *temp = new wchar_t[total+1] {};
-              memcpy(temp, data.Ptr, data.Size);
+              memcpy(temp, (const void *)(data.Ptr), data.Size);
               
               String result(&(temp[0]));
               

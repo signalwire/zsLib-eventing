@@ -176,12 +176,6 @@
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_WindowsEventProviderLogger.cpp">
       <Filter>zsLib\cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_RemoteServer.cpp">
-      <Filter>zsLib\eventing\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_RemoteClient.cpp">
-      <Filter>zsLib\eventing\cpp</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueManager.cpp">
       <Filter>zsLib\cpp</Filter>
     </ClCompile>
@@ -190,6 +184,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Helper.cpp">
       <Filter>zsLib\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_RemoteEventing.cpp">
+      <Filter>zsLib\eventing\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_Monitor.cpp">
+      <Filter>zsLib\eventing\tool\cpp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -453,18 +453,6 @@
     <ClInclude Include="..\..\..\zsLib\eventing\tool\ICompiler.h">
       <Filter>zsLib\eventing\tool</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\IRemoteClient.h">
-      <Filter>zsLib\eventing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\IRemoteServer.h">
-      <Filter>zsLib\eventing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_RemoteClient.h">
-      <Filter>zsLib\eventing\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_RemoteServer.h">
-      <Filter>zsLib\eventing\internal</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\zsLib\zsLib\IMessageQueue.h">
       <Filter>zsLib</Filter>
     </ClInclude>
@@ -500,6 +488,15 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\zsLib\zsLib\IFactory.h">
       <Filter>zsLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_RemoteEventing.h">
+      <Filter>zsLib\eventing\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\IRemoteEventing.h">
+      <Filter>zsLib\eventing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_Monitor.h">
+      <Filter>zsLib\eventing\tool\internal</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
