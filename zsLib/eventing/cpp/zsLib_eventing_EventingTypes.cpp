@@ -1659,7 +1659,7 @@ namespace zsLib
 
         {
           auto found = outDataTemplates.find(hash);
-          if (found != outDataTemplates.end()) {
+          if (found == outDataTemplates.end()) {
             // only insert the data template if it's not been inserted before
             outDataTemplates[hash] = templateObj;
           }
