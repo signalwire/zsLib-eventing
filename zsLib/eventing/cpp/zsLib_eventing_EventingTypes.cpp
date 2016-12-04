@@ -1099,7 +1099,7 @@ namespace zsLib
       hasher->update(":");
       hasher->update(toString(mType));
       hasher->update(":");
-      hasher->update(mValue);
+      hasher->update(string(mValue));
       hasher->update(":end");
 
       return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
@@ -1195,7 +1195,7 @@ namespace zsLib
         hasher->update(hash);
       }
       hasher->update(":");
-      hasher->update(mValue);
+      hasher->update(string(mValue));
       hasher->update(":end");
 
       return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
@@ -1351,7 +1351,7 @@ namespace zsLib
         hasher->update(task->hash());
       }
       hasher->update(":");
-      hasher->update(mValue);
+      hasher->update(string(mValue));
       hasher->update(":end");
 
       return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
@@ -1483,7 +1483,7 @@ namespace zsLib
         hasher->update(mDataTemplate->hash());
       }
       hasher->update(":");
-      hasher->update(mValue);
+      hasher->update(string(mValue));
       hasher->update(":end");
 
       return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
