@@ -43,6 +43,7 @@ namespace zsLib
       {
         ZS_DECLARE_CLASS_PTR(CommandLine);
         ZS_DECLARE_CLASS_PTR(Compiler);
+        ZS_DECLARE_CLASS_PTR(Monitor);
       }
     }
   }

@@ -49,6 +49,7 @@ either expressed or implied, of the FreeBSD Project.
 #define ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_QUEUED_ASYNC_DATA_BEFORED_EVENTS_DROPPED     "zsLib/eventing/remote-eventing/max-queued-async-data-before-events-dropped"
 #define ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_QUEUED_OUTGOING_DATA_BEFORED_EVENTS_DROPPED  "zsLib/eventing/remote-eventing/max-queued-outgoing-data-before-events-dropped"
 #define ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_NOTIFY_TIMER                                     "zsLib/eventing/remote-eventing/notify-timer-in-seconds"
+#define ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_USE_IPV6                                         "zsLib/eventing/remote-eventing/use-ipv6"
 
 namespace zsLib
 {
@@ -415,6 +416,8 @@ namespace zsLib
         size_t mMaxOutstandingEvents {};
         size_t mMaxQueuedAsyncDataBeforeEventsDropped {};
         size_t mMaxQueuedOutgoingDataBeforeEventsDropped {};
+        bool mUseIPv6 {};
+        
         EventingAtomIndex mEventingAtomIndex {};
 
         States mState {State_Pending};

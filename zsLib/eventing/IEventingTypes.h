@@ -58,6 +58,7 @@ namespace zsLib
       ZS_DECLARE_STRUCT_PTR(DataTemplate);
       ZS_DECLARE_STRUCT_PTR(DataType);
       ZS_DECLARE_STRUCT_PTR(Event);
+      ZS_DECLARE_STRUCT_PTR(Subsystem);
 
       typedef String ChannelID;
       typedef std::map<ChannelID, ChannelPtr> ChannelMap;
@@ -75,13 +76,16 @@ namespace zsLib
 
       typedef String TypedefName;
       typedef std::map<TypedefName, TypedefPtr> TypedefMap;
-
+      
       typedef String AliasName;
       typedef String AliasValue;
       typedef std::map<String, String> AliasMap;
 
       typedef String EventName;
       typedef std::map<EventName, EventPtr> EventMap;
+
+      typedef String SubsystemName;
+      typedef std::map<SubsystemName, SubsystemPtr> SubsystemMap;
 
       typedef String Hash;
       typedef std::map<Hash, DataTemplatePtr> DataTemplateMap;
@@ -284,6 +288,7 @@ namespace zsLib
         KeywordMap mKeywords;
         EventMap mEvents;
         DataTemplateMap mDataTemplates;
+        SubsystemMap mSubsystems;
 
         Provider() {}
         Provider(const ElementPtr &rootEl) throw (InvalidContent);
@@ -574,12 +579,12 @@ namespace zsLib
                  const AliasMap *aliases = NULL
                  ) throw (InvalidContent);
 
-          static DataTypePtr create() { return make_shared<DataType>(); }
-          static DataTypePtr create(
-                                  const ElementPtr &el,
-                                  const TypedefMap *typedefs = NULL,
-                                  const AliasMap *aliases = NULL
-                                  ) { if (!el) return DataTypePtr(); return make_shared<DataType>(el, typedefs, aliases); }
+        static DataTypePtr create() { return make_shared<DataType>(); }
+        static DataTypePtr create(
+                                const ElementPtr &el,
+                                const TypedefMap *typedefs = NULL,
+                                const AliasMap *aliases = NULL
+                                ) { if (!el) return DataTypePtr(); return make_shared<DataType>(el, typedefs, aliases); }
 
         ElementPtr createElement(const char *objectName = NULL) const;
 
@@ -592,6 +597,38 @@ namespace zsLib
                                   const TypedefMap &typedefs,
                                   const AliasMap *aliases = NULL
                                   ) throw (InvalidContent);
+      
+      //-----------------------------------------------------------------------
+      #pragma mark
+      #pragma mark IEventingTypes::DataType
+      #pragma mark
+      
+      struct Subsystem
+      {
+        SubsystemName mName;
+        Log::Level mLevel {Log::Level::Level_First};
+
+        Subsystem() {}
+        Subsystem(
+                  const ElementPtr &rootEl,
+                  const AliasMap *aliases = NULL
+                  ) throw (InvalidContent);
+        static SubsystemPtr create() { return make_shared<Subsystem>(); }
+        static SubsystemPtr create(
+                                   const ElementPtr &el,
+                                   const AliasMap *aliases = NULL
+                                   ) { if (!el) return SubsystemPtr(); return make_shared<Subsystem>(el, aliases); }
+
+        ElementPtr createElement(const char *objectName = NULL) const;
+
+        String hash() const;
+      };
+      
+      static void createSubsystems(
+                                   ElementPtr dataTypesEl,
+                                   SubsystemMap &outSubsystems,
+                                   const AliasMap *aliases = NULL
+                                   ) throw (InvalidContent);
     };
 
   } // namespace eventing

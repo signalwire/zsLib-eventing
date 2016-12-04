@@ -12,6 +12,7 @@
 		008666431DEE6E1D00CBA4FD /* zsLib_MessageQueueManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008666421DEE6E1D00CBA4FD /* zsLib_MessageQueueManager.cpp */; };
 		009CEED51DF0B006000FF4D2 /* zsLib_eventing_RemoteEventing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 009CEED41DF0B006000FF4D2 /* zsLib_eventing_RemoteEventing.cpp */; };
 		009CEEDD1DF1C278000FF4D2 /* zsLib_WindowsEventProviderLogger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 009CEEDC1DF1C278000FF4D2 /* zsLib_WindowsEventProviderLogger.cpp */; };
+		009CEEE31DF341AB000FF4D2 /* zsLib_eventing_tool_Monitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 009CEEE21DF341AB000FF4D2 /* zsLib_eventing_tool_Monitor.cpp */; };
 		00D865A21DE3723B00B7EB56 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D865A11DE3723B00B7EB56 /* main.cpp */; };
 		00D865B61DE3752400B7EB56 /* libcryptopp-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 00D865B31DE3750D00B7EB56 /* libcryptopp-osx.a */; };
 		00D865C81DE38AB400B7EB56 /* zsLib_eventing_EventingTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D865C41DE38AB300B7EB56 /* zsLib_eventing_EventingTypes.cpp */; };
@@ -111,6 +112,8 @@
 		009CEED41DF0B006000FF4D2 /* zsLib_eventing_RemoteEventing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_eventing_RemoteEventing.cpp; path = ../../../zsLib/eventing/cpp/zsLib_eventing_RemoteEventing.cpp; sourceTree = "<group>"; };
 		009CEED61DF11455000FF4D2 /* types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = types.h; path = ../../../zsLib/eventing/types.h; sourceTree = "<group>"; };
 		009CEEDC1DF1C278000FF4D2 /* zsLib_WindowsEventProviderLogger.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_WindowsEventProviderLogger.cpp; path = ../../../../zsLib/zsLib/cpp/zsLib_WindowsEventProviderLogger.cpp; sourceTree = "<group>"; };
+		009CEEE21DF341AB000FF4D2 /* zsLib_eventing_tool_Monitor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_eventing_tool_Monitor.cpp; path = ../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_Monitor.cpp; sourceTree = "<group>"; };
+		009CEEE41DF341B7000FF4D2 /* zsLib_eventing_tool_Monitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_tool_Monitor.h; path = ../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_Monitor.h; sourceTree = "<group>"; };
 		00D8659E1DE3723B00B7EB56 /* zsLib.Eventing.Compiler.Tool */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = zsLib.Eventing.Compiler.Tool; sourceTree = BUILT_PRODUCTS_DIR; };
 		00D865A11DE3723B00B7EB56 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		00D865AE1DE3750D00B7EB56 /* cryptopp-osx.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "cryptopp-osx.xcodeproj"; path = "/Users/robin/Repos/ortclib/ortclib-sdk/ortc/xplatform/zsLib-eventing/projects/xcode/../../../cryptopp/projects/xcode/cryptopp-osx/cryptopp-osx.xcodeproj"; sourceTree = "<absolute>"; };
@@ -497,6 +500,7 @@
 			children = (
 				00D865D51DE38B1200B7EB56 /* zsLib_eventing_tool_CommandLine.cpp */,
 				00D865D61DE38B1200B7EB56 /* zsLib_eventing_tool_Compiler.cpp */,
+				009CEEE21DF341AB000FF4D2 /* zsLib_eventing_tool_Monitor.cpp */,
 				00D865D71DE38B1200B7EB56 /* zsLib_eventing_tool.cpp */,
 			);
 			name = cpp;
@@ -508,6 +512,7 @@
 				00D865DB1DE38B1B00B7EB56 /* types.h */,
 				00D865DC1DE38B1B00B7EB56 /* zsLib_eventing_tool_CommandLine.h */,
 				00D865DD1DE38B1B00B7EB56 /* zsLib_eventing_tool_Compiler.h */,
+				009CEEE41DF341B7000FF4D2 /* zsLib_eventing_tool_Monitor.h */,
 				00D865DE1DE38B1B00B7EB56 /* zsLib_eventing_tool.h */,
 			);
 			name = internal;
@@ -681,6 +686,7 @@
 				00D866451DE38BCC00B7EB56 /* zsLib_Promise.cpp in Sources */,
 				00D8665A1DE38BCC00B7EB56 /* zsLib_XMLUnknown.cpp in Sources */,
 				00D866491DE38BCC00B7EB56 /* zsLib_SocketMonitor.cpp in Sources */,
+				009CEEE31DF341AB000FF4D2 /* zsLib_eventing_tool_Monitor.cpp in Sources */,
 				00D865C81DE38AB400B7EB56 /* zsLib_eventing_EventingTypes.cpp in Sources */,
 				00D865A21DE3723B00B7EB56 /* main.cpp in Sources */,
 				00D866511DE38BCC00B7EB56 /* zsLib_XMLDeclaration.cpp in Sources */,

@@ -35,6 +35,14 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <zsLib/eventing/tool/ICompiler.h>
 
+#define ZS_EVENTING_TOOL_INVALID_CONTENT (-2)
+#define ZS_EVENTING_TOOL_FILE_FAILED_TO_LOAD (-3)
+#define ZS_EVENTING_TOOL_METHOD_NOT_UNDERSTOOD (-4)
+#define ZS_EVENTING_TOOL_SYSTEM_ERROR (-5)
+#define ZS_EVENTING_TOOL_INTERNAL_ERROR (-99)
+
+#define ZS_EVENTING_TOTAL_BUILT_IN_EVENT_DATA (3)
+
 namespace zsLib
 {
   namespace eventing

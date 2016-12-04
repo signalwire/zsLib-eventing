@@ -106,6 +106,7 @@ namespace zsLib
           ISettings::setUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_QUEUED_ASYNC_DATA_BEFORED_EVENTS_DROPPED, (100*1024));
           ISettings::setUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_QUEUED_OUTGOING_DATA_BEFORED_EVENTS_DROPPED, (100*1024));
           ISettings::setUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_NOTIFY_TIMER, 5);
+          ISettings::setBool(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_USE_IPV6, false);
         }
       };
 
@@ -182,7 +183,8 @@ namespace zsLib
         mMaxPackedSize(static_cast<decltype(mMaxPackedSize)>(ISettings::getUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_PACKED_SIZE))),
         mMaxOutstandingEvents(static_cast<decltype(mMaxOutstandingEvents)>(ISettings::getUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_OUTSTANDING_EVENTS))),
         mMaxQueuedAsyncDataBeforeEventsDropped(static_cast<decltype(mMaxQueuedAsyncDataBeforeEventsDropped)>(ISettings::getUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_QUEUED_ASYNC_DATA_BEFORED_EVENTS_DROPPED))),
-        mMaxQueuedOutgoingDataBeforeEventsDropped(static_cast<decltype(mMaxQueuedOutgoingDataBeforeEventsDropped)>(ISettings::getUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_QUEUED_OUTGOING_DATA_BEFORED_EVENTS_DROPPED)))
+        mMaxQueuedOutgoingDataBeforeEventsDropped(static_cast<decltype(mMaxQueuedOutgoingDataBeforeEventsDropped)>(ISettings::getUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_QUEUED_OUTGOING_DATA_BEFORED_EVENTS_DROPPED))),
+        mUseIPv6(ISettings::getBool(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_USE_IPV6))
       {
         ZS_LOG_DETAIL(log("Created"));
       }
@@ -1020,6 +1022,8 @@ namespace zsLib
         }
         
         setState(State_Shutdown);
+        
+        mGracefulShutdownReference.reset();
       }
 
       //-----------------------------------------------------------------------
@@ -1063,14 +1067,14 @@ namespace zsLib
         
         ZS_LOG_DEBUG(log("step - attempting to bind"));
         
-        IPAddress bindIP(IPAddress::anyV4(), mListenPort);
-        
+        IPAddress bindIP(mUseIPv6 ? IPAddress::anyV4() : IPAddress::anyV6(), mListenPort);
+
         if (Time() == mBindFailureTime) {
           mBindFailureTime = zsLib::now() + mMaxWaitToBindTime;
         }
 
         try {
-          mBindSocket = Socket::createTCP();
+          mBindSocket = Socket::createTCP(mUseIPv6 ? Socket::Create::Family::IPv6 : Socket::Create::Family::IPv4);
           mBindSocket->setBlocking(false);
           mBindSocket->setDelegate(mThisWeak.lock());
           mBindSocket->bind(bindIP);
@@ -1120,9 +1124,9 @@ namespace zsLib
         }
         
         ZS_LOG_DEBUG(log("conencting"));
-        
+
         try {
-          mConnectSocket = Socket::createTCP();
+          mConnectSocket = Socket::createTCP(mUseIPv6 ? Socket::Create::Family::IPv6 : Socket::Create::Family::IPv4);
           mConnectSocket->setBlocking(false);
           mConnectSocket->setDelegate(mThisWeak.lock());
           bool wouldBlock = false;
@@ -2063,16 +2067,21 @@ namespace zsLib
         sendData(MessageType_Welcome, welcomeEl);
         
         for (auto iter = mLocalSubsystems.begin(); iter != mLocalSubsystems.end(); ++iter) {
-          auto info = (*iter).second;
+          auto &info = (*iter).second;
           announceSubsystemToRemote(info);
         }
         
         for (auto iter = mLocalAnnouncedProviders.begin(); iter != mLocalAnnouncedProviders.end(); ++iter) {
-          auto info = (*iter).second;
+          auto &info = (*iter).second;
           announceProviderToRemote(info);
         }
+        
+        for (auto iter = mSetRemoteSubsystemsLevels.begin(); iter != mSetRemoteSubsystemsLevels.end(); ++iter) {
+          auto &info = (*iter).second;
+          requestSetRemoteSubsystemLevel(info);
+        }
       }
-      
+
       //-----------------------------------------------------------------------
       void RemoteEventing::sendNotify()
       {

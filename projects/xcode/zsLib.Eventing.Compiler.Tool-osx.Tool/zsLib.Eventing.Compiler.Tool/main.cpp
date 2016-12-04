@@ -10,13 +10,27 @@
 #include <zsLib/eventing/tool/OutputStream.h>
 
 #include <iostream>
+#include <signal.h>
 
 namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zsLib_eventing_tool) } } }
 
 using namespace zsLib::eventing::tool;
 
+void my_handler(int s) {
+  ICommandLine::interrupt();
+  exit(1);
+}
+
 int main(int argc, char * const argv[])
 {
+  struct sigaction sigIntHandler;
+  
+  sigIntHandler.sa_handler = my_handler;
+  sigemptyset(&sigIntHandler.sa_mask);
+  sigIntHandler.sa_flags = 0;
+  
+  sigaction(SIGINT, &sigIntHandler, NULL);
+
   ICommandLine::StringList arguments;
   
   if (argc > 0) {
@@ -27,7 +41,6 @@ int main(int argc, char * const argv[])
   output().installStdOutput();
   output().installDebugger();
   
-  ICommandLine::outputHeader();
   arguments = ICommandLine::toList(argc, argv);
   return ICommandLine::performDefaultHandling(arguments);
 }

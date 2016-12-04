@@ -49,12 +49,6 @@ either expressed or implied, of the FreeBSD Project.
 
 #define ZS_EVENTING_PREFIX "ZS_EVENTING_"
 
-#define ZS_EVENTING_TOOL_INVALID_CONTENT (-2)
-#define ZS_EVENTING_TOOL_FILE_FAILED_TO_LOAD (-3)
-#define ZS_EVENTING_TOOL_METHOD_NOT_UNDERSTOOD (-4)
-#define ZS_EVENTING_TOOL_SYSTEM_ERROR (-5)
-#define ZS_EVENTING_TOOL_INTERNAL_ERROR (-99)
-
 #define ZS_EVENTING_METHOD_TOTAL_PARAMS (7)
 
 #define ZS_EVENTING_METHOD_COMPACT_PREFIX "COMPACT_"
@@ -72,6 +66,8 @@ either expressed or implied, of the FreeBSD Project.
 #define ZS_EVENTING_METHOD_EXCLUSIVE "EXCLUSIVE"
 
 #define ZS_EVENTING_METHOD_ASSIGN_VALUE "ASSIGN_VALUE"
+
+#define ZS_EVENTING_METHOD_SUBSYSTEM_DEFAULT_LEVEL "SUBSYSTEM_DEFAULT_LEVEL"
 
 namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zsLib_eventing_tool) } } }
 
@@ -1328,6 +1324,7 @@ namespace zsLib
                     }
                   }
                   provider->mResourceName = resouceNameStr;
+                  tool::output() << "[Info] Found provider \"" << provider->mName << "\" in file \"" << fileName << "\"\n";
                   continue;
                 }
 
@@ -1506,6 +1503,7 @@ namespace zsLib
                   } else {
                     provider->mName = providerName;
                   }
+                  tool::output() << "[Info] Found (un)register \"" << provider->mName << "\" in file \"" << fileName << "\"\n";
                   continue;
                 }
 
@@ -1545,6 +1543,37 @@ namespace zsLib
                   } catch (const Numeric<decltype(event->mValue)>::ValueOutOfRange &) {
                     ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Event value not valid in event \"" + eventName + "\" in line: " + line);
                   }
+                  tool::output() << "[Info] Assign event \"" << event->mName << "\" value \"" << string(event->mValue) << "\" in file \"" << fileName << "\"\n";
+                  continue;
+                }
+                if (ZS_EVENTING_METHOD_SUBSYSTEM_DEFAULT_LEVEL == method) {
+                  if (2 != args.size()) {
+                    ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Invalid number of arguments in assign value \"" + string(args.size()) + "\" in line: " + line);
+                  }
+                  prepareProvider(mConfig);
+                  String subsystemName = provider->aliasLookup(args[0]);
+                  String subsystemLevel = provider->aliasLookup(args[1]);
+                  
+                  auto subsystem = IEventingTypes::Subsystem::create();
+                  subsystem->mName = subsystemName;
+                  
+                  try {
+                    subsystem->mLevel = zsLib::Log::toLevel(subsystemLevel);
+                  } catch (const InvalidArgument &) {
+                    ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Invalid level \"" + subsystemLevel + "\" in line: " + line);
+                  }
+
+                  auto found = provider->mSubsystems.find(subsystemName);
+                  if (found != provider->mSubsystems.end()) {
+                    auto hash1 = subsystem->hash();
+                    auto hash2 = (*found).second->hash();
+                    if (hash1 != hash2) {
+                      tool::output() << "[Warning] Subsystem default level has changed \"" << subsystem->mName << "\" and new level is \"" << zsLib::Log::toString(subsystem->mLevel) << "\"\n";
+                    }
+                  }
+
+                  provider->mSubsystems[subsystem->mName] = subsystem;
+                  tool::output() << "[Info] Assign subsystem \"" << subsystem->mName << "\" default level \"" << Log::toString(subsystem->mLevel) << "\" in file \"" << fileName << "\"\n";
                   continue;
                 }
 
@@ -2553,7 +2582,16 @@ namespace zsLib
             "      return gHandle;\n"
             "    }\n\n";
 
-          ss << "#define ZS_INTERNAL_REGISTER_EVENTING_" << provider->mName << "() ZS_EVENTING_REGISTER_EVENT_WRITER(" << getEventingHandleFunctionWithNamespace << ", \"" << string(provider->mID) << "\", \"" << provider->mName << "\", \"" << provider->mUniqueHash << "\")\n";
+          ss << "#define ZS_INTERNAL_REGISTER_EVENTING_" << provider->mName << "() \\\n";
+          ss << "    { \\\n";
+          ss << "      ZS_EVENTING_REGISTER_EVENT_WRITER(" << getEventingHandleFunctionWithNamespace << ", \"" << string(provider->mID) << "\", \"" << provider->mName << "\", \"" << provider->mUniqueHash << "\"); \\\n";
+          for (auto iter = provider->mSubsystems.begin(); iter != provider->mSubsystems.end(); ++iter) {
+            auto subsystem = (*iter).second;
+            ss << "      ZS_EVENTING_REGISTER_SUBSYSTEM_DEFAULT_LEVEL(" << subsystem->mName << ", " << zsLib::Log::toString(subsystem->mLevel) << "); \\\n";
+          }
+          ss << "    }\n";
+          ss << "\n";
+
           ss << "#define ZS_INTERNAL_UNREGISTER_EVENTING_" << provider->mName << "() ZS_EVENTING_UNREGISTER_EVENT_WRITER(" << getEventingHandleFunctionWithNamespace << ")\n\n";
 
           for (auto iter = provider->mEvents.begin(); iter != provider->mEvents.end(); ++iter)
@@ -2947,6 +2985,7 @@ namespace zsLib
             "#define ZS_EVENTING_OPCODE(xName)\n"
             "#define ZS_EVENTING_TASK_OPCODE(xTaskName, xOpCodeName)\n"
             "#define ZS_EVENTING_ASSIGN_VALUE(xSymbol, xValue)\n"
+            "#define ZS_EVENTING_SUBSYSTEM_DEFAULT_LEVEL(xSubsystemName, xLevel)\n"
             "#endif /* ZS_EVENTING_EXCLUSIVE */\n"
             "\n"
             "#ifndef _WIN32\n"

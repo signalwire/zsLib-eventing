@@ -677,6 +677,16 @@ namespace zsLib
         }
         rootEl->adoptAsLastChild(templatesEl);
       }
+      
+      if (mSubsystems.size() > 0) {
+        ElementPtr subsystemsEl = Element::create("subsystems");
+        for (auto iter = mSubsystems.begin(); iter != mSubsystems.end(); ++iter)
+        {
+          auto subsystemEl = (*iter).second->createElement("subsystem");
+          subsystemsEl->adoptAsLastChild(subsystemEl);
+        }
+        rootEl->adoptAsLastChild(subsystemsEl);
+      }
 
       return rootEl;
     }
@@ -746,6 +756,7 @@ namespace zsLib
       createKeywords(rootEl->findFirstChildElement("keywords"), mKeywords, &mAliases);
       createDataTemplates(rootEl->findFirstChildElement("templates"), mDataTemplates, mTypedefs, &mAliases);
       createEvents(rootEl->findFirstChildElement("events"), mEvents, mChannels, mOpCodes, mTasks, mKeywords, mDataTemplates, &mAliases);
+      createSubsystems(rootEl->findFirstChildElement("subsystems"), mSubsystems, &mAliases);
     }
 
     //-------------------------------------------------------------------------
@@ -825,8 +836,15 @@ namespace zsLib
         hasher->update(":");
         hasher->update((*iter).second->hash());
       }
-      hasher->update(":end");
 
+      hasher->update(":list:subsystems");
+      for (auto iter = mSubsystems.begin(); iter != mSubsystems.end(); ++iter)
+      {
+        hasher->update(":");
+        hasher->update((*iter).second->hash());
+      }
+      hasher->update(":end");
+      
       return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
     }
 
@@ -1719,8 +1737,82 @@ namespace zsLib
       {
         auto dataType = DataType::create(dataTypeEl, &typedefs, aliases);
         dataTypeEl = dataTypeEl->findNextSiblingElement("dataType");
+        outDataTypes.push_back(dataType);
       }
     }
 
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    #pragma mark
+    #pragma mark IEventingTypes::Subsystem
+    #pragma mark
+    
+    //-------------------------------------------------------------------------
+    IEventingTypes::Subsystem::Subsystem(
+                                         const ElementPtr &rootEl,
+                                         const AliasMap *aliases
+                                         ) throw (InvalidContent)
+    {
+      mName = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("name")));
+      String levelStr = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("level")));
+      
+      if (levelStr.hasData()) {
+        try {
+          mLevel = zsLib::Log::toLevel(levelStr);
+        } catch (const InvalidArgument &) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Subsystem \"") + mName + "\" level is not valid: " + levelStr);
+        }
+      }
+    }
+    
+    //-------------------------------------------------------------------------
+    ElementPtr IEventingTypes::Subsystem::createElement(const char *objectName) const
+    {
+      if (NULL == objectName) objectName = "subsystem";
+      
+      ElementPtr subsystemEl = Element::create(objectName);
+      
+      if (mName.hasData()) subsystemEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("name", mName));
+      subsystemEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("level", zsLib::Log::toString(mLevel)));
+      
+      return subsystemEl;
+    }
+
+    //-------------------------------------------------------------------------
+    String IEventingTypes::Subsystem::hash() const
+    {
+      auto hasher = IHasher::sha256();
+      
+      hasher->update(":subsystem:");
+      hasher->update(mName);
+      hasher->update(":");
+      hasher->update(Log::toString(mLevel));
+      hasher->update(":");
+      
+      return UseEventingHelper::convertToHex(hasher->finalize(), hasher->digestSize());
+    }
+    
+    //-------------------------------------------------------------------------
+    void IEventingTypes::createSubsystems(
+                                          ElementPtr subsystemsEl,
+                                          SubsystemMap &outSubsystems,
+                                          const AliasMap *aliases
+                                          ) throw (InvalidContent)
+    {
+      if (!subsystemsEl) return;
+      
+      ElementPtr subsystemEl = subsystemsEl->findFirstChildElement("subsystem");
+      while (subsystemEl)
+      {
+        auto subsystem = Subsystem::create(subsystemEl, aliases);
+        subsystemEl = subsystemEl->findNextSiblingElement("subsystem");
+
+        // NOTE: This could override a previous value, but that's okay
+        outSubsystems[subsystem->mName] = subsystem;
+      }
+    }
+    
   } // namespace eventing
 } // namespace zsLib
