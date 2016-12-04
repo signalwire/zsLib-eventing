@@ -35,6 +35,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/tool/ICompiler.h>
 
 #include <zsLib/eventing/IEventingTypes.h>
+#include <zsLib/eventing/IRemoteEventing.h>
 
 #include <zsLib/IPAddress.h>
 
@@ -90,7 +91,7 @@ namespace zsLib
           bool mMonitor {};
           bool mQuietMode {};
           IPAddress mIPAddress;
-          WORD mPort {63311};
+          WORD mPort {IRemoteEventingTypes::Port_Default};
           Seconds mTimeout;
           StringList mJMANFiles;
           bool mOutputJSON {};

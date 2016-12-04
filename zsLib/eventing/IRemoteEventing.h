@@ -63,6 +63,11 @@ namespace zsLib
         
         State_Last            = State_Shutdown
       };
+
+      enum Ports : WORD
+      {
+        Port_Default = 63311
+      };
       
       static const char *toString(States state);
       States toState(const char *state) throw (InvalidArgument);      

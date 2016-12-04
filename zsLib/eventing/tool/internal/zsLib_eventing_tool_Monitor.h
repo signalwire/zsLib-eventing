@@ -38,6 +38,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/IRemoteEventing.h>
 #include <zsLib/eventing/IEventingTypes.h>
 
+#include <zsLib/ITimer.h>
 #include <zsLib/Log.h>
 #include <zsLib/Singleton.h>
 
@@ -60,7 +61,8 @@ namespace zsLib
         class Monitor : public MessageQueueAssociator,
                         public ISingletonManagerDelegate,
                         public IRemoteEventingDelegate,
-                        public ILogEventingDelegate
+                        public ILogEventingDelegate,
+                        public ITimerDelegate
         {
         protected:
           struct make_private {};
@@ -117,6 +119,13 @@ namespace zsLib
           #pragma mark
           
           virtual void notifySingletonCleanup() override;
+
+          //-------------------------------------------------------------------
+          #pragma mark
+          #pragma mark Monitor::ITimerDelegate
+          #pragma mark
+
+          virtual void onTimer(ITimerPtr timer) override;
 
           //-------------------------------------------------------------------
           #pragma mark
@@ -193,6 +202,8 @@ namespace zsLib
           std::atomic<bool> mShouldQuit {false};
           std::atomic<size_t> mTotalEventsDropped {};
           std::atomic<size_t> mTotalEvents {};
+
+          ITimerPtr mAutoQuitTimer;
 
           IRemoteEventingPtr mRemote;
         };

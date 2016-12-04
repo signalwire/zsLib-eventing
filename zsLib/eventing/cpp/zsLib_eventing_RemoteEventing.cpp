@@ -174,7 +174,7 @@ namespace zsLib
                                      Seconds maxWaitToBindTime
                                      ) :
         MessageQueueAssociator(queue),
-        mDelegate(IRemoteEventingDelegateProxy::create(connectionDelegate)),
+        mDelegate(IRemoteEventingDelegateProxy::createWeak(connectionDelegate)),
         mServerIP(serverIP),
         mListenPort(listenPort),
         mMaxWaitToBindTime(maxWaitToBindTime),
@@ -1126,7 +1126,7 @@ namespace zsLib
         ZS_LOG_DEBUG(log("conencting"));
 
         try {
-          mConnectSocket = Socket::createTCP(mUseIPv6 ? Socket::Create::Family::IPv6 : Socket::Create::Family::IPv4);
+          mConnectSocket = Socket::createTCP(mServerIP.isIPv4() ? Socket::Create::Family::IPv4 : Socket::Create::Family::IPv6);
           mConnectSocket->setBlocking(false);
           mConnectSocket->setDelegate(mThisWeak.lock());
           bool wouldBlock = false;

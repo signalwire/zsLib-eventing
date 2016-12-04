@@ -294,6 +294,11 @@ namespace zsLib
           // set-up remote
           {
             AutoRecursiveLock lock(mLock);
+
+            if (Seconds() != mMonitorInfo.mTimeout) {
+              mAutoQuitTimer = ITimer::create(mThisWeak.lock(), zsLib::now() + mMonitorInfo.mTimeout);
+            }
+
             if (mMonitorInfo.mIPAddress.isAddressEmpty()) {
               mRemote = IRemoteEventing::listenForRemote(mThisWeak.lock(), mMonitorInfo.mPort, mMonitorInfo.mSecret);
               if (!mMonitorInfo.mQuietMode) {
@@ -396,6 +401,27 @@ namespace zsLib
         void Monitor::notifySingletonCleanup()
         {
           internalInterrupt();
+        }
+
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
+        #pragma mark Monitor::ITimerDelegate
+        #pragma mark
+
+        //---------------------------------------------------------------------
+        void Monitor::onTimer(ITimerPtr timer)
+        {
+          AutoRecursiveLock lock(mLock);
+          if (timer == mAutoQuitTimer) {
+            if (!mMonitorInfo.mQuietMode) {
+              tool::output() << "[Info] Auto-quit timer fired.\n";
+            }
+            cancel();
+            return;
+          }
         }
 
         //---------------------------------------------------------------------
@@ -677,6 +703,11 @@ namespace zsLib
 
           if (mRemote) {
             mRemote->shutdown();
+          }
+
+          if (mAutoQuitTimer) {
+            mAutoQuitTimer->cancel();
+            mAutoQuitTimer.reset();
           }
 
           if (mGracefulShutdownReference) {
