@@ -78,6 +78,7 @@ namespace zsLib
           Flag_MonitorTimeout,
           Flag_MonitorJMAN,
           Flag_MonitorJSON,
+          Flag_MonitorProvider,
           Flag_MonitorSecret,
 
           Flag_Last = Flag_MonitorSecret,
@@ -96,6 +97,7 @@ namespace zsLib
           StringList mJMANFiles;
           bool mOutputJSON {};
           String mSecret;
+          StringList mSubscribeProviders;
         };
       };
 

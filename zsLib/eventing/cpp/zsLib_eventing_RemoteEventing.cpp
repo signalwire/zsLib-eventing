@@ -581,9 +581,9 @@ namespace zsLib
                                             EventingAtomDataArray eventingAtomDataArray,
                                             Severity severity,
                                             Level level,
-                                            LOG_EVENT_DESCRIPTOR_HANDLE inDescriptor,
-                                            LOG_EVENT_PARAMETER_DESCRIPTOR_HANDLE inParameterDescriptor,
-                                            LOG_EVENT_DATA_DESCRIPTOR_HANDLE inDataDescriptor,
+                                            EVENT_DESCRIPTOR_HANDLE descriptor,
+                                            EVENT_PARAMETER_DESCRIPTOR_HANDLE parameterDescriptor,
+                                            EVENT_DATA_DESCRIPTOR_HANDLE dataDescriptor,
                                             size_t dataDescriptorCount
                                             )
       {
@@ -604,10 +604,6 @@ namespace zsLib
           return;
         }
 
-        auto descriptor = (zsLib::eventing::USE_EVENT_DESCRIPTOR *)(inDescriptor);
-        auto paramterDescriptor = (zsLib::eventing::USE_EVENT_PARAMETER_DESCRIPTOR *)(inParameterDescriptor);
-        auto dataDescriptor = (zsLib::eventing::USE_EVENT_DATA_DESCRIPTOR *)(inDataDescriptor);
-        
         ByteQueuePtr packed(make_shared<ByteQueue>());
 
         ByteQueue &usePacked = *packed;
@@ -663,7 +659,7 @@ namespace zsLib
         usePacked.PutWord16(static_cast<CryptoPP::word16>(dataDescriptorCount));
 
         for (size_t index = 0; index < dataDescriptorCount; ++index) {
-          auto &param = paramterDescriptor[index];
+          auto &param = parameterDescriptor[index];
           usePacked.PutWord16(static_cast<uint16_t>(param.Type));
         }
 
@@ -678,7 +674,7 @@ namespace zsLib
           if (data.Ptr) {
             bool endianFlip {true};
 
-            switch (paramterDescriptor[index].Type) {
+            switch (parameterDescriptor[index].Type) {
               case EventParameterType_Boolean:
               case EventParameterType_UnsignedInteger:
               case EventParameterType_SignedInteger:
@@ -2039,9 +2035,9 @@ namespace zsLib
                         provider->mHandle,
                         severity,
                         level,
-                        (Log::LOG_EVENT_DESCRIPTOR_HANDLE) (&descriptor),
-                        (Log::LOG_EVENT_PARAMETER_DESCRIPTOR_HANDLE) (&(paramDescriptors[0])),
-                        (Log::LOG_EVENT_DATA_DESCRIPTOR_HANDLE) (&(dataDescriptors[0])),
+                        (&descriptor),
+                        (&(paramDescriptors[0])),
+                        (&(dataDescriptors[0])),
                         descriptorCount
                         );
       }

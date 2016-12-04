@@ -62,6 +62,7 @@ namespace zsLib
                         public ISingletonManagerDelegate,
                         public IRemoteEventingDelegate,
                         public ILogEventingDelegate,
+                        public ILogEventingProviderDelegate,
                         public ITimerDelegate
         {
         protected:
@@ -76,8 +77,11 @@ namespace zsLib
         public:
           typedef zsLib::Log::Severity Severity;
           typedef zsLib::Log::Level Level;
+          typedef zsLib::Log::EventingAtomData EventingAtomData;
           typedef zsLib::Log::EventingAtomIndex EventingAtomIndex;
-          
+          typedef zsLib::Log::ProviderHandle ProviderHandle;
+          typedef zsLib::Log::EventingAtomDataArray EventingAtomDataArray;
+
           ZS_DECLARE_TYPEDEF_PTR(IEventingTypes::Provider, Provider);
           ZS_DECLARE_TYPEDEF_PTR(IEventingTypes::Event, Event);
           typedef std::map<UUID, ProviderPtr> ProviderMap;
@@ -154,6 +158,20 @@ namespace zsLib
 
           //-------------------------------------------------------------------
           #pragma mark
+          #pragma mark Monitor::ILogEventingProviderDelegate
+          #pragma mark
+
+          virtual void notifyEventingProviderRegistered(
+                                                        ProviderHandle handle,
+                                                        EventingAtomDataArray eventingAtomDataArray
+                                                        ) override;
+          virtual void notifyEventingProviderUnregistered(
+                                                          ProviderHandle handle,
+                                                          EventingAtomDataArray eventingAtomDataArray
+                                                          ) override;
+
+          //-------------------------------------------------------------------
+          #pragma mark
           #pragma mark Monitor::ILogEventingDelegate
           #pragma mark
 
@@ -165,9 +183,9 @@ namespace zsLib
                                         EventingAtomDataArray eventingAtomDataArray,
                                         Severity severity,
                                         Level level,
-                                        LOG_EVENT_DESCRIPTOR_HANDLE descriptor,
-                                        LOG_EVENT_PARAMETER_DESCRIPTOR_HANDLE paramDescriptor,
-                                        LOG_EVENT_DATA_DESCRIPTOR_HANDLE dataDescriptor,
+                                        EVENT_DESCRIPTOR_HANDLE descriptor,
+                                        EVENT_PARAMETER_DESCRIPTOR_HANDLE paramDescriptor,
+                                        EVENT_DATA_DESCRIPTOR_HANDLE dataDescriptor,
                                         size_t dataDescriptorCount
                                         ) override;
 

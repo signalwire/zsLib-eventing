@@ -72,7 +72,7 @@ namespace zsLib
         }
         
         //---------------------------------------------------------------------
-        static uint64_t getUnsignedValue(USE_EVENT_DATA_DESCRIPTOR &data)
+        static uint64_t getUnsignedValue(const USE_EVENT_DATA_DESCRIPTOR &data)
         {
           if (!data.Ptr) return 0;
           
@@ -107,7 +107,7 @@ namespace zsLib
         }
         
         //---------------------------------------------------------------------
-        static int64_t getSignedValue(USE_EVENT_DATA_DESCRIPTOR &data)
+        static int64_t getSignedValue(const USE_EVENT_DATA_DESCRIPTOR &data)
         {
           if (!data.Ptr) return 0;
           
@@ -142,7 +142,7 @@ namespace zsLib
         }
         
         //---------------------------------------------------------------------
-        static double getFloatValue(USE_EVENT_DATA_DESCRIPTOR &data)
+        static double getFloatValue(const USE_EVENT_DATA_DESCRIPTOR &data)
         {
           if (!data.Ptr) return 0.0f;
           
@@ -164,8 +164,8 @@ namespace zsLib
         
         //---------------------------------------------------------------------
         static String valueAsString(
-                                    USE_EVENT_PARAMETER_DESCRIPTOR &param,
-                                    USE_EVENT_DATA_DESCRIPTOR &data,
+                                    const USE_EVENT_PARAMETER_DESCRIPTOR &param,
+                                    const USE_EVENT_DATA_DESCRIPTOR &data,
                                     bool &outIsNumber
                                     )
         {
@@ -326,6 +326,7 @@ namespace zsLib
           }
 
           if (mMonitorInfo.mOutputJSON) {
+            Log::addEventingProviderListener(mThisWeak.lock());
             Log::addEventingListener(mThisWeak.lock());
           }
         }
@@ -492,20 +493,16 @@ namespace zsLib
         #pragma mark
         #pragma mark Monitor::ILogEventingDelegate
         #pragma mark
-        
+
         //---------------------------------------------------------------------
-        void Monitor::notifyWriteEvent(
-                                      ProviderHandle handle,
-                                      EventingAtomDataArray eventingAtomDataArray,
-                                      Severity severity,
-                                      Level level,
-                                      LOG_EVENT_DESCRIPTOR_HANDLE inDescriptor,
-                                      LOG_EVENT_PARAMETER_DESCRIPTOR_HANDLE inParamDescriptor,
-                                      LOG_EVENT_DATA_DESCRIPTOR_HANDLE inDataDescriptor,
-                                      size_t dataDescriptorCount
-                                      )
+        void Monitor::notifyEventingProviderRegistered(
+                                                       ProviderHandle handle,
+                                                       EventingAtomDataArray eventingAtomDataArray
+                                                       )
         {
           ProviderInfo *provider = reinterpret_cast<ProviderInfo *>(eventingAtomDataArray[mEventingAtom]);
+
+          bool subscribeLogging = false;
 
           // process event
           {
@@ -521,19 +518,20 @@ namespace zsLib
               if (Log::getEventingWriterInfo(handle, provider->mProviderID, provider->mProviderName, provider->mProviderUniqueHash)) {
                 auto found = mProviders.find(provider->mProviderID);
                 if (found != mProviders.end()) {
-                  
+
                   auto existingProvider = (*found).second;
-                  
+
                   if (existingProvider->mUniqueHash == provider->mProviderUniqueHash) {
                     provider->mExistingProvider = (*found).second;
-                    
+
                     // process all events into a quick lookup map
                     for (auto iter = provider->mExistingProvider->mEvents.begin(); iter != provider->mExistingProvider->mEvents.end(); ++iter)
                     {
                       auto event = (*iter).second;
                       provider->mEvents[event->mValue] = event;
                     }
-                  } else {
+                  }
+                  else {
                     if (!mMonitorInfo.mQuietMode) {
                       tool::output() << "[Warning] Provider \"" << provider->mProviderName << "\" hashes do not match: X=" << existingProvider->mUniqueHash << " Y=" << provider->mProviderUniqueHash << "\n";
                     }
@@ -541,13 +539,59 @@ namespace zsLib
                 }
               }
             }
+
+            for (auto iter = mMonitorInfo.mSubscribeProviders.begin(); iter != mMonitorInfo.mSubscribeProviders.end(); ++iter)
+            {
+              auto &name = (*iter);
+              if (0 == name.compareNoCase(provider->mProviderName)) {
+                if (!mMonitorInfo.mQuietMode) {
+                  tool::output() << "[Info] Provider \"" << provider->mProviderName << "\" is subscribed.\n";
+                }
+                subscribeLogging = true;
+              }
+            }
           }
-          
+
+          if (subscribeLogging) {
+            Log::setEventingLogging(handle, mID, true);
+          }
+        }
+
+        //---------------------------------------------------------------------
+        void Monitor::notifyEventingProviderUnregistered(
+                                                         ProviderHandle handle,
+                                                         EventingAtomDataArray eventingAtomDataArray
+                                                         )
+        {
+          ProviderInfo *provider = reinterpret_cast<ProviderInfo *>(eventingAtomDataArray[mEventingAtom]);
+          if (!provider) return;
+          Log::setEventingLogging(handle, mID, false);
+        }
+
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
+        #pragma mark Monitor::ILogEventingDelegate
+        #pragma mark
+        
+        //---------------------------------------------------------------------
+        void Monitor::notifyWriteEvent(
+                                      ProviderHandle handle,
+                                      EventingAtomDataArray eventingAtomDataArray,
+                                      Severity severity,
+                                      Level level,
+                                      EVENT_DESCRIPTOR_HANDLE descriptor,
+                                      EVENT_PARAMETER_DESCRIPTOR_HANDLE paramDescriptor,
+                                      EVENT_DATA_DESCRIPTOR_HANDLE dataDescriptor,
+                                      size_t dataDescriptorCount
+                                      )
+        {
+          ProviderInfo *provider = reinterpret_cast<ProviderInfo *>(eventingAtomDataArray[mEventingAtom]);
+          if (!provider) return;
+
           String output;
-          
-          USE_EVENT_DESCRIPTOR *descriptor = (USE_EVENT_DESCRIPTOR *)inDescriptor;
-          USE_EVENT_PARAMETER_DESCRIPTOR *paramDescriptor = (USE_EVENT_PARAMETER_DESCRIPTOR *)inParamDescriptor;
-          USE_EVENT_DATA_DESCRIPTOR *dataDescriptor = (USE_EVENT_DATA_DESCRIPTOR *)inDataDescriptor;
 
           if (provider->mEvents.size() > 0) {
             auto found = provider->mEvents.find(descriptor->Id);
@@ -719,8 +763,9 @@ namespace zsLib
           
           if (mMonitorInfo.mOutputJSON) {
             Log::removeEventingListener(pThis);
+            Log::removeEventingProviderListener(pThis);
           }
-          
+
           mRemote.reset();
 
           if (mMonitorInfo.mOutputJSON) {

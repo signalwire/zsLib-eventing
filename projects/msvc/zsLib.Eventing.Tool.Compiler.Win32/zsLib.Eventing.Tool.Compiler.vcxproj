@@ -157,6 +157,8 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\..\zsLib\zsLib\date.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\Event.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\EventTypes.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\internal\zsLib_eventing_EventTypes.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\internal\zsLib_eventing_Log.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\Log.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\noop.h" />

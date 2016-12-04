@@ -89,6 +89,7 @@ namespace zsLib
           case Flag_MonitorTimeout:   return "timeout";
           case Flag_MonitorJMAN:      return "jman";
           case Flag_MonitorJSON:      return "output-json";
+          case Flag_MonitorProvider:  return "provider";
           case Flag_MonitorSecret:    return "secret";
         }
         return "unknown";
@@ -120,6 +121,7 @@ namespace zsLib
           " -timeout      n_seconds                 - how long to monitor before quitting\n"
           " -jman         jman_file_name_1...n      - input jman provider file\n"
           " -output-json                            - output events as json events to command line\n"
+          " -provider     provider_name1...n        - subscribe to provider events by name\n"
           " -secret       connection_secret         - shared secret between client and server\n"
           "\n";
       }
@@ -245,6 +247,11 @@ namespace zsLib
                 flag = ICommandLine::Flag_None;
                 break;
               }
+              case ICommandLine::Flag_MonitorProvider:
+              {
+                flag = ICommandLine::Flag_None;
+                break;
+              }
               default:
               {
                 break;
@@ -260,11 +267,11 @@ namespace zsLib
               case ICommandLine::Flag_None: {
                 ZS_THROW_INVALID_ARGUMENT(String("Command line flag is not understood: ") + arg + " within context " + processedThusFar);
               }
-              case ICommandLine::Flag_Quiet:          {
+              case ICommandLine::Flag_Quiet:            {
                 monitorInfo.mQuietMode = true;
                 goto processed_flag;
               }
-              case ICommandLine::Flag_Config:         goto process_flag;
+              case ICommandLine::Flag_Config:           goto process_flag;
               case ICommandLine::Flag_Question:
               case ICommandLine::Flag_Help:
               case ICommandLine::Flag_HelpAlt:
@@ -273,22 +280,23 @@ namespace zsLib
                 outputHelp();
                 return;
               }
-              case ICommandLine::Flag_Source:         goto process_flag;
-              case ICommandLine::Flag_OutputName:     goto process_flag;
-              case ICommandLine::Flag_Author:         goto process_flag;
-              case ICommandLine::Flag_Monitor:        {
+              case ICommandLine::Flag_Source:           goto process_flag;
+              case ICommandLine::Flag_OutputName:       goto process_flag;
+              case ICommandLine::Flag_Author:           goto process_flag;
+              case ICommandLine::Flag_Monitor:          {
                 monitorInfo.mMonitor = true;
                 goto processed_flag;
               }
-              case ICommandLine::Flag_MonitorPort:    goto process_flag;
-              case ICommandLine::Flag_MonitorIP:      goto process_flag;
-              case ICommandLine::Flag_MonitorTimeout: goto process_flag;
-              case ICommandLine::Flag_MonitorJMAN:    goto process_flag;
-              case ICommandLine::Flag_MonitorJSON:    {
+              case ICommandLine::Flag_MonitorPort:      goto process_flag;
+              case ICommandLine::Flag_MonitorIP:        goto process_flag;
+              case ICommandLine::Flag_MonitorTimeout:   goto process_flag;
+              case ICommandLine::Flag_MonitorJMAN:      goto process_flag;
+              case ICommandLine::Flag_MonitorJSON:      {
                 monitorInfo.mOutputJSON = true;
                 goto processed_flag;
               }
-              case ICommandLine::Flag_MonitorSecret:  goto process_flag;
+              case ICommandLine::Flag_MonitorProvider:  goto process_flag;
+              case ICommandLine::Flag_MonitorSecret:    goto process_flag;
             }
             ZS_THROW_INVALID_ARGUMENT("Internal error when processing argument: " + arg + " within context: " + processedThusFar);
           }
@@ -344,6 +352,10 @@ namespace zsLib
               case ICommandLine::Flag_MonitorJMAN:    {
                 monitorInfo.mJMANFiles.push_back(arg);
                 goto process_flag;  // process next source file in the list (maintain same flag)
+              }
+              case ICommandLine::Flag_MonitorProvider: {
+                monitorInfo.mSubscribeProviders.push_back(arg);
+                goto process_flag;
               }
               case ICommandLine::Flag_MonitorSecret:    {
                 monitorInfo.mSecret = arg;

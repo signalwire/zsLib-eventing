@@ -498,6 +498,12 @@
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_Monitor.h">
       <Filter>zsLib\eventing\tool\internal</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\EventTypes.h">
+      <Filter>zsLib\eventing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\internal\zsLib_eventing_EventTypes.h">
+      <Filter>zsLib\eventing\internal</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\..\..\zsLib\zsLib\license.txt">

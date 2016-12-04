@@ -282,9 +282,9 @@ namespace zsLib
                                       EventingAtomDataArray eventingAtomDataArray,
                                       Severity severity,
                                       Level level,
-                                      LOG_EVENT_DESCRIPTOR_HANDLE descriptor,
-                                      LOG_EVENT_PARAMETER_DESCRIPTOR_HANDLE parameterDescriptor,
-                                      LOG_EVENT_DATA_DESCRIPTOR_HANDLE dataDescriptor,
+                                      EVENT_DESCRIPTOR_HANDLE descriptor,
+                                      EVENT_PARAMETER_DESCRIPTOR_HANDLE parameterDescriptor,
+                                      EVENT_DATA_DESCRIPTOR_HANDLE dataDescriptor,
                                       size_t dataDescriptorCount
                                       ) override;
         
