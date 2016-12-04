@@ -751,7 +751,7 @@ namespace zsLib
 
       createTypesdefs(rootEl->findFirstChildElement("typedefs"), mTypedefs, &mAliases);
       createChannels(rootEl->findFirstChildElement("channels"), mChannels, &mAliases);
-      createOpCodes(rootEl->findFirstChildElement("opCodes"), mOpCodes, &mAliases);
+      createOpCodes(rootEl->findFirstChildElement("opcodes"), mOpCodes, &mAliases);
       createTasks(rootEl->findFirstChildElement("tasks"), mTasks, &mAliases);
       createKeywords(rootEl->findFirstChildElement("keywords"), mKeywords, &mAliases);
       createDataTemplates(rootEl->findFirstChildElement("templates"), mDataTemplates, mTypedefs, &mAliases);
@@ -1152,7 +1152,7 @@ namespace zsLib
         }
       }
 
-      createOpCodes(rootEl->findFirstChildElement("opCodes"), mOpCodes, aliases);
+      createOpCodes(rootEl->findFirstChildElement("opcodes"), mOpCodes, aliases);
     }
 
     //-------------------------------------------------------------------------
@@ -1166,10 +1166,10 @@ namespace zsLib
       if (0 != mValue) taskEl->adoptAsLastChild(UseEventingHelper::createElementWithNumber("value", string(mValue)));
 
       if (mOpCodes.size() > 0) {
-        ElementPtr opCodesEl = Element::create("opCodes");
+        ElementPtr opCodesEl = Element::create("opcodes");
 
         for (auto iter = mOpCodes.begin(); iter != mOpCodes.end(); ++iter) {
-          ElementPtr opCode = (*iter).second->createElement("opCode");
+          ElementPtr opCode = (*iter).second->createElement("opcode");
           opCodesEl->adoptAsLastChild(opCode);
         }
         taskEl->adoptAsLastChild(opCodesEl);
@@ -1329,7 +1329,7 @@ namespace zsLib
     //-------------------------------------------------------------------------
     ElementPtr IEventingTypes::OpCode::createElement(const char *objectName) const
     {
-      if (NULL == objectName) objectName = "opCode";
+      if (NULL == objectName) objectName = "opcode";
 
       ElementPtr opCodeEl = Element::create(objectName);
       if (mName.hasData()) opCodeEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("name", mName));
@@ -1366,7 +1366,7 @@ namespace zsLib
     {
       if (!opCodesEl) return;
 
-      ElementPtr opCodeEl = opCodesEl->findFirstChildElement("opCode");
+      ElementPtr opCodeEl = opCodesEl->findFirstChildElement("opcode");
       while (opCodeEl)
       {
         auto opCode = OpCode::create(opCodeEl);
@@ -1374,7 +1374,7 @@ namespace zsLib
           ZS_THROW_CUSTOM(InvalidContent, String("OpCode already exists: ") + opCode->mName);
         }
         outOpCodes[opCode->mName] = opCode;
-        opCodeEl = opCodeEl->findNextSiblingElement("opCode");
+        opCodeEl = opCodeEl->findNextSiblingElement("opcode");
       }
     }
 
@@ -1441,7 +1441,7 @@ namespace zsLib
         eventEl->adoptAsLastChild(keywordsEl);
       }
       if (mOpCode) {
-        eventEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("opCode", mOpCode->mName));
+        eventEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("opcode", mOpCode->mName));
       }
       if (mDataTemplate) {
         eventEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("template", mDataTemplate->hash()));
@@ -1494,7 +1494,7 @@ namespace zsLib
                                       ElementPtr eventsEl,
                                       EventMap &outEvents,
                                       const ChannelMap &channels,
-                                      const OpCodeMap &opCodes,
+                                      OpCodeMap &opCodes,
                                       const TaskMap &tasks,
                                       const KeywordMap &keywords,
                                       const DataTemplateMap &dataTemplates,
@@ -1510,7 +1510,7 @@ namespace zsLib
         outEvents[event->mName] = event;
 
         String channel = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(eventEl->findFirstChildElement("channel")));
-        String opCode = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(eventEl->findFirstChildElement("opCode")));
+        String opCode = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(eventEl->findFirstChildElement("opcode")));
         String task = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(eventEl->findFirstChildElement("task")));
         String templateStr = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(eventEl->findFirstChildElement("template")));
         String valueStr = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(eventEl->findFirstChildElement("value")));
@@ -1546,9 +1546,18 @@ namespace zsLib
         if (opCode.hasData()) {
           auto found = opCodes.find(opCode);
           if (found == opCodes.end()) {
-            ZS_THROW_CUSTOM(InvalidContent, String("Event \"") + event->mName + "\" links to invalid opcode:" + opCode);
+            try {
+              auto predefinedOpCode = IEventingTypes::toPredefinedOpCode(opCode);
+              event->mOpCode = IEventingTypes::OpCode::create();
+              event->mOpCode->mName = opCode;
+              event->mOpCode->mValue = predefinedOpCode;
+              opCodes[opCode] = event->mOpCode;
+            } catch (const InvalidArgument &) {
+              ZS_THROW_CUSTOM(InvalidContent, String("Event \"") + event->mName + "\" links to invalid opcode:" + opCode);
+            }
+          } else {
+            event->mOpCode = (*found).second;
           }
-          event->mOpCode = (*found).second;
         }
 
         if (templateStr.hasData()) {

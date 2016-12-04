@@ -522,7 +522,7 @@ namespace zsLib
                                ElementPtr eventsEl,
                                EventMap &outEvents,
                                const ChannelMap &channels,
-                               const OpCodeMap &opCodes,
+                               OpCodeMap &opCodes,
                                const TaskMap &tasks,
                                const KeywordMap &keywords,
                                const DataTemplateMap &dataTemplates,

@@ -86,7 +86,7 @@ namespace zsLib
           case Flag_Author:           return "author";
           case Flag_Monitor:          return "monitor";
           case Flag_MonitorPort:      return "port";
-          case Flag_MonitorIP:        return "ip";
+          case Flag_MonitorIP:        return "connect";
           case Flag_MonitorTimeout:   return "timeout";
           case Flag_MonitorJMAN:      return "jman";
           case Flag_MonitorJSON:      return "output-json";
