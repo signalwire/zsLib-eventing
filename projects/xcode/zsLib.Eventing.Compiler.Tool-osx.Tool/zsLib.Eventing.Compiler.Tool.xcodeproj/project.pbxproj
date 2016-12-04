@@ -92,6 +92,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		00836BBF1DF4A9E800E03A5A /* EventTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = EventTypes.h; path = ../../../../zsLib/zsLib/eventing/EventTypes.h; sourceTree = "<group>"; };
+		00836BC01DF4A9FD00E03A5A /* zsLib_eventing_EventTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_EventTypes.h; path = ../../../../zsLib/zsLib/eventing/internal/zsLib_eventing_EventTypes.h; sourceTree = "<group>"; };
 		008666241DEE6B4D00CBA4FD /* IFactory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = IFactory.h; path = ../../../../zsLib/zsLib/IFactory.h; sourceTree = "<group>"; };
 		008666251DEE6B4D00CBA4FD /* IHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = IHelper.h; path = ../../../../zsLib/zsLib/IHelper.h; sourceTree = "<group>"; };
 		008666261DEE6B4D00CBA4FD /* IMessageQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = IMessageQueue.h; path = ../../../../zsLib/zsLib/IMessageQueue.h; sourceTree = "<group>"; };
@@ -354,6 +356,7 @@
 				00D865BD1DE375A300B7EB56 /* internal */,
 				00D865BB1DE3759800B7EB56 /* tool */,
 				00D865C01DE38A5100B7EB56 /* eventing.h */,
+				00836BBF1DF4A9E800E03A5A /* EventTypes.h */,
 				00D865C11DE38A5100B7EB56 /* IEventingTypes.h */,
 				00D865C21DE38A5100B7EB56 /* IHasher.h */,
 				00D865C31DE38A5100B7EB56 /* IHelper.h */,
@@ -486,6 +489,7 @@
 			isa = PBXGroup;
 			children = (
 				00D865CC1DE38AE900B7EB56 /* types.h */,
+				00836BC01DF4A9FD00E03A5A /* zsLib_eventing_EventTypes.h */,
 				00D865CD1DE38AE900B7EB56 /* zsLib_eventing_EventingTypes.h */,
 				00D865CE1DE38AE900B7EB56 /* zsLib_eventing_Hasher.h */,
 				00D865CF1DE38AE900B7EB56 /* zsLib_eventing_Helper.h */,
