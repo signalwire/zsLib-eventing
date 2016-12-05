@@ -2083,7 +2083,7 @@ namespace zsLib
         welcomeEl->adoptAsFirstChild(IHelper::createElementWithNumber("value32", string(endian32)));
         welcomeEl->adoptAsFirstChild(IHelper::createElementWithText("value32Bytes", IHelper::convertToHex(&(endian32Bytes[0]), sizeof(endian32Bytes))));
         welcomeEl->adoptAsFirstChild(IHelper::createElementWithNumber("valueFloat", string(endianFloat)));
-        welcomeEl->adoptAsFirstChild(IHelper::createElementWithNumber("valueFloatBytes", IHelper::convertToHex(&(endianFloatBytes[0]), sizeof(endianFloatBytes))));
+        welcomeEl->adoptAsFirstChild(IHelper::createElementWithText("valueFloatBytes", IHelper::convertToHex(&(endianFloatBytes[0]), sizeof(endianFloatBytes))));
         
         sendData(MessageType_Welcome, welcomeEl);
         
