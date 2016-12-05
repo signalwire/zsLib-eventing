@@ -1562,7 +1562,7 @@ namespace zsLib
 
         ElementPtr challengeEl = Element::create("challenge");
 
-        mChallengeSalt = IHelper::randomString(IHasher::sha1DigestSize() * 8 / 5);
+        mChallengeSalt = IHelper::randomString(IHasher::sha256DigestSize() * 8 / 5);
         challengeEl->adoptAsFirstChild(IHelper::createElementWithNumber("version", "1"));
         challengeEl->adoptAsFirstChild(IHelper::createElementWithText("salt", mChallengeSalt));
         challengeEl->adoptAsFirstChild(IHelper::createElementWithText("proof", mExpectingHelloProofInChallenge));
