@@ -1191,7 +1191,7 @@ namespace zsLib
       bool RemoteEventing::stepNotifyTimer()
       {
         if (mNotifyTimer) {
-          ZS_LOG_TRACE(log("step -already have notify timer"));
+          ZS_LOG_TRACE(log("step - already have notify timer"));
           return true;
         }
         
