@@ -93,8 +93,9 @@ namespace zsLib
           
           struct ProviderInfo
           {
+            ProviderHandle mHandle {};
             ProviderPtr mExistingProvider;
-            UUID mProviderID;
+            UUID mProviderID {};
             String mProviderName;
             String mProviderUniqueHash;
             EventMap mEvents;

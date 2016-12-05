@@ -249,6 +249,13 @@ namespace zsLib
           mThisWeak.reset();
           
           for (auto iter = mCleanProviderInfos.begin(); iter != mCleanProviderInfos.end(); ++iter) {
+            auto info = (*iter);
+            
+            EventingAtomDataArray eventingArray = NULL;
+            if (Log::getEventingWriterInfo(info->mHandle, info->mProviderID, info->mProviderName, info->mProviderUniqueHash, &eventingArray)) {
+              eventingArray[mEventingAtom] = NULL;
+            }
+
             delete (*iter);
           }
           mCleanProviderInfos.clear();
@@ -463,6 +470,8 @@ namespace zsLib
             if (NULL == provider) {
               provider = new ProviderInfo;
               mCleanProviderInfos.insert(provider);
+
+              provider->mHandle = handle;
 
               eventingAtomDataArray[mEventingAtom] = reinterpret_cast<EventingAtomData>(provider);
 
