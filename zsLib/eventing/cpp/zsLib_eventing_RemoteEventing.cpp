@@ -351,7 +351,13 @@ namespace zsLib
           
           try {
             mAcceptedSocket = mBindSocket->accept(mRemoteIP);
-            ZS_LOG_DEBUG(log("incoming socket accepted"));
+            if (!mAcceptedSocket) {
+              ZS_LOG_WARNING(Debug, log("incoming socket rejected"));
+              return;
+            }
+            mAcceptedSocket->setBlocking(false);
+            mAcceptedSocket->setDelegate(mThisWeak.lock());
+            ZS_LOG_DEBUG(log("incoming socket accepted") + ZS_PARAM("ip", mRemoteIP.string()));
           } catch (const Socket::Exceptions::Unspecified &) {
             ZS_LOG_WARNING(Debug, log("incoming socket rejected"));
             return;
