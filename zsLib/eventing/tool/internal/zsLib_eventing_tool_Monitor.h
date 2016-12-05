@@ -41,6 +41,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/ITimer.h>
 #include <zsLib/Log.h>
 #include <zsLib/Singleton.h>
+#include <zsLib/IWakeDelegate.h>
 
 namespace zsLib
 {
@@ -63,7 +64,8 @@ namespace zsLib
                         public IRemoteEventingDelegate,
                         public ILogEventingDelegate,
                         public ILogEventingProviderDelegate,
-                        public ITimerDelegate
+                        public ITimerDelegate,
+                        public IWakeDelegate
         {
         protected:
           struct make_private {};
@@ -133,6 +135,13 @@ namespace zsLib
 
           //-------------------------------------------------------------------
           #pragma mark
+          #pragma mark Monitor::IWakeDelegate
+          #pragma mark
+
+          virtual void onWake() override;
+
+          //-------------------------------------------------------------------
+          #pragma mark
           #pragma mark Monitor::IRemoteEventingDelegate
           #pragma mark
 
@@ -197,6 +206,7 @@ namespace zsLib
 
           void internalInterrupt();
           void cancel();
+          void step();
           bool shouldQuit() const { return mShouldQuit; }
 
         protected:

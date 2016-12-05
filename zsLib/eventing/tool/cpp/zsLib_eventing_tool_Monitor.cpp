@@ -238,40 +238,6 @@ namespace zsLib
           mMonitorInfo(monitorInfo),
           mEventingAtom(zsLib::Log::registerEventingAtom("org.zsLib.eventing.tool.Monitor"))
         {
-          for (auto iter = monitorInfo.mJMANFiles.begin(); iter != monitorInfo.mJMANFiles.end(); ++iter) {
-            auto fileName = (*iter);
-            
-            ProviderPtr provider;
-            SecureByteBlockPtr jmanRaw;
-            
-            try {
-              jmanRaw = IHelper::loadFile(fileName);
-            } catch (const StdError &e) {
-              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_FILE_FAILED_TO_LOAD, String("Failed to load jman file: ") + fileName + ", error=" + string(e.result()) + ", reason=" + e.message());
-            }
-            if (!jmanRaw) {
-              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_FILE_FAILED_TO_LOAD, String("Failed to load jman file: ") + fileName);
-            }
-
-            auto rootEl = IHelper::read(jmanRaw);
-
-            try {
-              provider = Provider::create(rootEl);
-            } catch (const InvalidContent &e) {
-              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Failed to parse jman file: " + e.message());
-            }
-            if (!provider) {
-              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_FILE_FAILED_TO_LOAD, "Failed to parse jman file: " + fileName);
-            }
-            
-            auto found = mProviders.find(provider->mID);
-            if (found != mProviders.end()) {
-              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Duplicate provider found in jman file: " + fileName);
-            }
-
-            mProviders[provider->mID] = provider;
-          }
-          
           if (mMonitorInfo.mOutputJSON) {
             tool::output() << "{ \"events\": { \"event\": [\n";
           }
@@ -291,44 +257,7 @@ namespace zsLib
         //---------------------------------------------------------------------
         void Monitor::init()
         {
-          // set-up remote
-          {
-            AutoRecursiveLock lock(mLock);
-
-            if (Seconds() != mMonitorInfo.mTimeout) {
-              mAutoQuitTimer = ITimer::create(mThisWeak.lock(), zsLib::now() + mMonitorInfo.mTimeout);
-            }
-
-            if (mMonitorInfo.mIPAddress.isAddressEmpty()) {
-              mRemote = IRemoteEventing::listenForRemote(mThisWeak.lock(), mMonitorInfo.mPort, mMonitorInfo.mSecret);
-              if (!mMonitorInfo.mQuietMode) {
-                tool::output() << "[Info] Listening for remote connection: " << string(mMonitorInfo.mPort) << "\n";
-              }
-            } else {
-              mRemote = IRemoteEventing::connectToRemote(mThisWeak.lock(), mMonitorInfo.mIPAddress, mMonitorInfo.mSecret);
-              if (!mMonitorInfo.mQuietMode) {
-                tool::output() << "[Info] Connecting to remote process: " << mMonitorInfo.mIPAddress.string() << "\n";
-              }
-            }
-            
-            if (!mRemote) {
-              cancel();
-              return;
-            }
-            
-            for (auto iter = mProviders.begin(); iter != mProviders.end(); ++iter) {
-              auto provider = (*iter).second;
-              for (auto iterSubsystem = provider->mSubsystems.begin(); iterSubsystem != provider->mSubsystems.end(); ++iterSubsystem) {
-                auto subsystem = (*iterSubsystem).second;
-                mRemote->setRemoteLevel(subsystem->mName, subsystem->mLevel);
-              }
-            }
-          }
-
-          if (mMonitorInfo.mOutputJSON) {
-            Log::addEventingProviderListener(mThisWeak.lock());
-            Log::addEventingListener(mThisWeak.lock());
-          }
+          IWakeDelegateProxy::create(mThisWeak.lock())->onWake();
         }
 
         //---------------------------------------------------------------------
@@ -422,6 +351,28 @@ namespace zsLib
             }
             cancel();
             return;
+          }
+        }
+
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
+        #pragma mark Monitor::ITimerDelegate
+        #pragma mark
+
+        //---------------------------------------------------------------------
+        void Monitor::onWake()
+        {
+          {
+            AutoRecursiveLock lock(mLock);
+            step();
+          }
+
+          if (mMonitorInfo.mOutputJSON) {
+            Log::addEventingProviderListener(mThisWeak.lock());
+            Log::addEventingListener(mThisWeak.lock());
           }
         }
 
@@ -780,6 +731,74 @@ namespace zsLib
 
           mGracefulShutdownReference.reset();
         }
+
+        //---------------------------------------------------------------------
+        void Monitor::step()
+        {
+          for (auto iter = mMonitorInfo.mJMANFiles.begin(); iter != mMonitorInfo.mJMANFiles.end(); ++iter) {
+            auto fileName = (*iter);
+            
+            ProviderPtr provider;
+            SecureByteBlockPtr jmanRaw;
+            
+            try {
+              jmanRaw = IHelper::loadFile(fileName);
+            } catch (const StdError &e) {
+              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_FILE_FAILED_TO_LOAD, String("Failed to load jman file: ") + fileName + ", error=" + string(e.result()) + ", reason=" + e.message());
+            }
+            if (!jmanRaw) {
+              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_FILE_FAILED_TO_LOAD, String("Failed to load jman file: ") + fileName);
+            }
+            
+            auto rootEl = IHelper::read(jmanRaw);
+            
+            try {
+              provider = Provider::create(rootEl);
+            } catch (const InvalidContent &e) {
+              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Failed to parse jman file: " + e.message());
+            }
+            if (!provider) {
+              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_FILE_FAILED_TO_LOAD, "Failed to parse jman file: " + fileName);
+            }
+            
+            auto found = mProviders.find(provider->mID);
+            if (found != mProviders.end()) {
+              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Duplicate provider found in jman file: " + fileName);
+            }
+            
+            mProviders[provider->mID] = provider;
+          }
+          
+          if (Seconds() != mMonitorInfo.mTimeout) {
+            mAutoQuitTimer = ITimer::create(mThisWeak.lock(), zsLib::now() + mMonitorInfo.mTimeout);
+          }
+          
+          if (mMonitorInfo.mIPAddress.isAddressEmpty()) {
+            mRemote = IRemoteEventing::listenForRemote(mThisWeak.lock(), mMonitorInfo.mPort, mMonitorInfo.mSecret);
+            if (!mMonitorInfo.mQuietMode) {
+              tool::output() << "[Info] Listening for remote connection: " << string(mMonitorInfo.mPort) << "\n";
+            }
+          } else {
+            mRemote = IRemoteEventing::connectToRemote(mThisWeak.lock(), mMonitorInfo.mIPAddress, mMonitorInfo.mSecret);
+            if (!mMonitorInfo.mQuietMode) {
+              tool::output() << "[Info] Connecting to remote process: " << mMonitorInfo.mIPAddress.string() << "\n";
+            }
+          }
+          
+          if (!mRemote) {
+            cancel();
+            return;
+          }
+          
+          for (auto iter = mProviders.begin(); iter != mProviders.end(); ++iter) {
+            auto provider = (*iter).second;
+            for (auto iterSubsystem = provider->mSubsystems.begin(); iterSubsystem != provider->mSubsystems.end(); ++iterSubsystem) {
+              auto subsystem = (*iterSubsystem).second;
+              mRemote->setRemoteLevel(subsystem->mName, subsystem->mLevel);
+            }
+          }
+        }
+        
 
       }
     }

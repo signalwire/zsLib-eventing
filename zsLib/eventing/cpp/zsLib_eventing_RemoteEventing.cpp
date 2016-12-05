@@ -363,6 +363,12 @@ namespace zsLib
         
         auto activeSocket = getActiveSocket();
         if (socket == activeSocket) {
+          if (isConnectingMode()) {
+            if (!mConnected) {
+              ZS_LOG_WARNING(Trace, log("notified read ready before connected"));
+              return;
+            }
+          }
           try {
             BYTE buffer[4096];
 
@@ -1141,11 +1147,6 @@ namespace zsLib
       //-----------------------------------------------------------------------
       bool RemoteEventing::stepWaitConnected()
       {
-        if (mConnectSocket) {
-          ZS_LOG_TRACE(log("step - already have a socket connecting"));
-          return true;
-        }
-        
         if (!mConnected) {
           ZS_LOG_TRACE(log("step waiting to connect"));
           return false;
