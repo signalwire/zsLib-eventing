@@ -1734,8 +1734,7 @@ namespace zsLib
       //-----------------------------------------------------------------------
       void RemoteEventing::handleNotifyRemoteSubsystem(const ElementPtr &rootEl)
       {
-        String subsystemStr = IHelper::getElementText(rootEl->findFirstChildElement("subsystem"));
-        String levelStr = IHelper::getElementText(rootEl->findFirstChildElement("level"));
+        String subsystemStr = IHelper::getElementText(rootEl->findFirstChildElement("name"));
         
         auto found = mRemoteSubsystems.find(subsystemStr);
         if (found != mRemoteSubsystems.end()) {
