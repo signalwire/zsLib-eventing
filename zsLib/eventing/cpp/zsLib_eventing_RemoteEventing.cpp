@@ -257,7 +257,7 @@ namespace zsLib
       {
         ZS_LOG_DEBUG(log("shutdown called"));
 
-        AutoRecursiveLock lock(*this);
+        AutoRecursiveLock lock(mLock);
         cancel();
       }
 
@@ -301,7 +301,7 @@ namespace zsLib
       {
         ZS_LOG_DEBUG(log("on wake"));
 
-        AutoRecursiveLock lock(*this);
+        AutoRecursiveLock lock(mLock);
         step();
       }
 
@@ -318,7 +318,7 @@ namespace zsLib
       {
         ZS_LOG_DEBUG(log("on timer") + ZS_PARAM("timer id", timer->getID()));
         
-        AutoRecursiveLock lock(*this);
+        AutoRecursiveLock lock(mLock);
         if (timer == mNotifyTimer) {
           sendNotify();
           return;

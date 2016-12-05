@@ -122,8 +122,7 @@ namespace zsLib
       #pragma mark RemoteEventing
       #pragma mark
 
-      class RemoteEventing : public RecursiveLock,
-                             public MessageQueueAssociator,
+      class RemoteEventing : public MessageQueueAssociator,
                              public IRemoteEventing,
                              public IWakeDelegate,
                              public ITimerDelegate,

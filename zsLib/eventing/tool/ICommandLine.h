@@ -93,7 +93,7 @@ namespace zsLib
           bool mQuietMode {};
           IPAddress mIPAddress;
           WORD mPort {IRemoteEventingTypes::Port_Default};
-          Seconds mTimeout;
+          Seconds mTimeout {};
           StringList mJMANFiles;
           bool mOutputJSON {};
           String mSecret;
