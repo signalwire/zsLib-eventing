@@ -1888,7 +1888,7 @@ namespace zsLib
           int error = 0;
           String reason;
           try {
-            auto level = Log::toLevel(subsystemStr);
+            auto level = Log::toLevel(levelStr);
             Log::setEventingLevelByName(subsystemStr, level);
           } catch (const InvalidArgument &) {
             ZS_LOG_WARNING(Detail, log("remote set subsystem request is not understood (ignored)") + ZS_PARAMIZE(subsystemStr) + ZS_PARAMIZE(subsystemStr));
