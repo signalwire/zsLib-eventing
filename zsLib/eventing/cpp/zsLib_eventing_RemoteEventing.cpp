@@ -1338,6 +1338,7 @@ namespace zsLib
             BYTE buffer[4096];
 
             size_t availeable = mEventDataInOutgoingQueue;
+            if (availeable < 1) break;
 #ifdef _DEBUG
             ZS_THROW_BAD_STATE_IF(availeable != mOutgoingQueue.CurrentSize())
 #endif //_DEBUG
