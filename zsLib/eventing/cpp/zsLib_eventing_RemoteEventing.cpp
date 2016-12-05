@@ -2188,7 +2188,7 @@ namespace zsLib
         ElementPtr rootEl = Element::create("notify");
         
         rootEl->adoptAsLastChild(IHelper::createElementWithText("type", ZSLIB_EVENTING_REMOTE_EVENTING_NOTIFY_SUBSYSTEM));
-        rootEl->adoptAsLastChild(IHelper::createElementWithNumber("name", info->mName));
+        rootEl->adoptAsLastChild(IHelper::createElementWithText("name", info->mName));
         
         sendData(MessageType_Notify, rootEl);
       }
