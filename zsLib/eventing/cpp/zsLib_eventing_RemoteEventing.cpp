@@ -1293,9 +1293,9 @@ namespace zsLib
           }
 
           // message size does include the size of the message type
-          auto readSize = mIncomingQueue.PeekWord32(messageSize);
-          if (available < sizeof(messageSize) + readSize) {
-            ZS_LOG_INSANE(log("insufficient read size for next message") + ZS_PARAM("available", available) + ZS_PARAM("size", readSize));
+          mIncomingQueue.PeekWord32(messageSize);
+          if (available < sizeof(messageSize) + messageSize) {
+            ZS_LOG_INSANE(log("insufficient read size for next message") + ZS_PARAM("available", available) + ZS_PARAM("size", messageSize));
             break;
           }
 
