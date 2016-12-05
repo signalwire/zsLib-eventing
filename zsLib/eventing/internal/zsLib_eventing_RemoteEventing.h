@@ -178,6 +178,7 @@ namespace zsLib
         typedef std::map<UUID, ProviderInfo *> ProviderInfoUUIDMap;
         typedef std::map<ProviderHandle, ProviderInfo *> ProviderInfoHandleMap;
         typedef std::map<String, SubsystemInfoPtr> SubsystemMap;
+        typedef std::map<String, KeywordBitmaskType> KeywordLogLevelMap;
         
       public:
         RemoteEventing(
@@ -462,6 +463,8 @@ namespace zsLib
         ProviderInfoUUIDMap mLocalAnnouncedProviders;
         ProviderInfoUUIDMap mRemoteRegisteredProvidersByUUID;
         ProviderInfoHandleMap mRemoteRegisteredProvidersByRemoteHandle;
+        KeywordLogLevelMap mRequestRemoteProviderKeywordLevel;
+        ProviderInfoHandleMap mRequestedRemoteProviderKeywordLevel;
 
         ProviderInfoSet mCleanUpProviderInfos;
 

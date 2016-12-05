@@ -1901,6 +1901,12 @@ namespace zsLib
             for (auto iter = mLocalAnnouncedProviders.begin(); iter != mLocalAnnouncedProviders.end(); ++iter) {
               auto providerInfo = (*iter).second;
               if (providerInfo->mProviderName == providerStr) {
+                if (0 == bitmask) {
+                  auto found = mRequestedRemoteProviderKeywordLevel.find(providerInfo->mHandle);
+                  if (found != mRequestedRemoteProviderKeywordLevel.end()) mRequestedRemoteProviderKeywordLevel.erase(found);
+                } else {
+                  mRequestedRemoteProviderKeywordLevel[providerInfo->mHandle] = providerInfo;
+                }
                 Log::setEventingLogging(providerInfo->mHandle, mID, 0 != bitmask, bitmask);
               }
             }
