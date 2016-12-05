@@ -1593,7 +1593,7 @@ namespace zsLib
         ElementPtr challengeReplyEl = Element::create("challengeReply");
 
         mExpectingChallengeProofInReply = IHasher::hashAsString("challenge:expecting:" + mSharedSecret + ":" + mHelloSalt + ":" + mChallengeSalt, IHasher::sha256());
-        challengeReplyEl->adoptAsFirstChild(IHelper::createElementWithText("proof", mExpectingHelloProofInChallenge));
+        challengeReplyEl->adoptAsFirstChild(IHelper::createElementWithText("proof", mExpectingChallengeProofInReply));
 
         sendData(MessageType_ChallengeReply, challengeReplyEl);
         mHandshakeState = MessageType_ChallengeReply;
