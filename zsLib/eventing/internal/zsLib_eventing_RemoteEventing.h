@@ -336,6 +336,7 @@ namespace zsLib
         bool stepHello();
         
         bool stepNotifyTimer();
+        bool stepAuthorized();
         
         void setState(States state);
         void resetConnection();

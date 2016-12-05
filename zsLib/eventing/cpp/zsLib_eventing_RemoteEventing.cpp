@@ -1049,6 +1049,7 @@ namespace zsLib
             if (!stepHello()) return;
           }
           if (!stepNotifyTimer()) return;
+          if (!stepAuthorized()) return;
         }
 
         setState(State_Connected);
@@ -1080,6 +1081,7 @@ namespace zsLib
           mBindSocket->setBlocking(false);
           mBindSocket->setDelegate(mThisWeak.lock());
           mBindSocket->bind(bindIP);
+          mBindSocket->listen();
         } catch (const Socket::Exceptions::Unspecified &) {
           auto tick = zsLib::now();
           if (tick > mBindFailureTime) {
@@ -1193,6 +1195,18 @@ namespace zsLib
         }
 
         mNotifyTimer = ITimer::create(mThisWeak.lock(), notifyTimeout);
+        return true;
+      }
+
+      //-----------------------------------------------------------------------
+      bool RemoteEventing::stepAuthorized()
+      {
+        if (!isAuthorized()) {
+          ZS_LOG_TRACE(log("step - not authorized"));
+          return false;
+        }
+
+        ZS_LOG_TRACE(log("step - authorized"));
         return true;
       }
 
@@ -1653,6 +1667,7 @@ namespace zsLib
           return;
         }
 
+        IWakeDelegateProxy::create(mThisWeak.lock())->onWake();
         IRemoteEventingAsyncDelegateProxy::create(mThisWeak.lock())->onRemoteEventingSubscribeLogger();
       }
       
