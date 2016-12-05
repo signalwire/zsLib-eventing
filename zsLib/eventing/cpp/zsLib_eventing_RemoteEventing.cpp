@@ -53,7 +53,7 @@ namespace zsLib { namespace eventing { ZS_DECLARE_SUBSYSTEM(zsLib_eventing); } }
 #define ZSLIB_EVENTING_REMOTE_EVENTING_NOTIFY_GENERAL_INFO "info"
 
 #define ZSLIB_EVENTING_REMOTE_EVENTING_REQUEST_SET_SUBSYSTEM_LEVEL "setSubsystemLevel"
-
+#define ZSLIB_EVENTING_REMOTE_EVENTING_REQUEST_SET_EVENT_PROVIDER_LOGGING "setEventProviderLogging"
 
 namespace zsLib
 {
@@ -1873,14 +1873,14 @@ namespace zsLib
       //-----------------------------------------------------------------------
       void RemoteEventing::handleRequest(const ElementPtr &rootEl)
       {
+        int error = 0;
+        String reason;
         String requestID = IHelper::getElementText(rootEl->findFirstChildElement("id"));
         String typeStr = IHelper::getElementText(rootEl->findFirstChildElement("type"));
         if (ZSLIB_EVENTING_REMOTE_EVENTING_REQUEST_SET_SUBSYSTEM_LEVEL == typeStr) {
           String subsystemStr = IHelper::getElementText(rootEl->findFirstChildElement("subsystem"));
           String levelStr = IHelper::getElementText(rootEl->findFirstChildElement("level"));
 
-          int error = 0;
-          String reason;
           try {
             auto level = Log::toLevel(levelStr);
             Log::setEventingLevelByName(subsystemStr, level);
@@ -1888,6 +1888,26 @@ namespace zsLib
             ZS_LOG_WARNING(Detail, log("remote set subsystem request is not understood (ignored)") + ZS_PARAMIZE(subsystemStr) + ZS_PARAMIZE(subsystemStr));
             error = -1;
             reason = "Level was not understood: " + levelStr;
+          }
+          sendAck(requestID, error, reason);
+          return;
+        }
+        if (ZSLIB_EVENTING_REMOTE_EVENTING_REQUEST_SET_EVENT_PROVIDER_LOGGING == typeStr) {
+          String providerStr = IHelper::getElementText(rootEl->findFirstChildElement("provider"));
+          String keywordStr = IHelper::getElementText(rootEl->findFirstChildElement("keywords"));
+          KeywordBitmaskType bitmask = 0;
+          try {
+            bitmask = Numeric<KeywordBitmaskType>(bitmask);
+            for (auto iter = mLocalAnnouncedProviders.begin(); iter != mLocalAnnouncedProviders.end(); ++iter) {
+              auto providerInfo = (*iter).second;
+              if (providerInfo->mProviderName == providerStr) {
+                Log::setEventingLogging(providerInfo->mHandle, mID, 0 != bitmask, bitmask);
+              }
+            }
+          } catch (const Numeric<KeywordBitmaskType>::ValueOutOfRange &) {
+            ZS_LOG_WARNING(Detail, log("remote set event provider logging request is not understood (ignored)") + ZS_PARAMIZE(providerStr) + ZS_PARAMIZE(keywordStr));
+            error = -1;
+            reason = "Keywords value was not understood: " + keywordStr;
           }
           sendAck(requestID, error, reason);
           return;
