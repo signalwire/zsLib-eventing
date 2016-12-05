@@ -1284,13 +1284,22 @@ namespace zsLib
         while ((mIncomingQueue.AnyRetrievable()) &&
                (MessageType_Goodbye != mHandshakeState))
         {
-          // message size does include the size of the message type
-          CryptoPP::word32 messageSize {};
-          auto readSize = mIncomingQueue.PeekWord32(messageSize);
-          if (readSize < sizeof(messageSize)) {
-            ZS_LOG_INSANE(log("insufficient read size for next message") + ZS_PARAM("size", readSize));
+          auto available = mIncomingQueue.CurrentSize();
+
+          CryptoPP::word32 messageSize{};
+          if (available < sizeof(messageSize)) {
+            ZS_LOG_INSANE(log("insufficient read size for next message") + ZS_PARAM("size", available));
             break;
           }
+
+          // message size does include the size of the message type
+          auto readSize = mIncomingQueue.PeekWord32(messageSize);
+          if (available < sizeof(messageSize) + readSize) {
+            ZS_LOG_INSANE(log("insufficient read size for next message") + ZS_PARAM("available", available) + ZS_PARAM("size", readSize));
+            break;
+          }
+
+          mIncomingQueue.Skip(sizeof(messageSize));
 
           CryptoPP::word32 messageType {};
           if (messageSize < sizeof(messageType)) {
@@ -1299,19 +1308,12 @@ namespace zsLib
             return;
           }
 
-          auto available = mIncomingQueue.CurrentSize();
-          if (available < sizeof(messageSize) + messageSize) {
-            ZS_LOG_INSANE(log("insufficient read size for next message") + ZS_PARAM("available", available) + ZS_PARAM("message size", messageSize));
-            break;
-          }
-
-          mIncomingQueue.Skip(sizeof(messageSize));
-
           mIncomingQueue.GetWord32(messageType);
+          messageSize -= sizeof(messageType);
 
           SecureByteBlock buffer(messageSize);
           mIncomingQueue.Get(buffer, messageSize);
-          
+
           if (MessageType_Welcome == mHandshakeState) {
             handleAuthorizedMessage(static_cast<MessageTypes>(messageType), buffer);
           } else {
