@@ -1069,7 +1069,7 @@ namespace zsLib
         
         ZS_LOG_DEBUG(log("step - attempting to bind"));
         
-        IPAddress bindIP(mUseIPv6 ? IPAddress::anyV4() : IPAddress::anyV6(), mListenPort);
+        IPAddress bindIP(mUseIPv6 ? IPAddress::anyV6() : IPAddress::anyV4(), mListenPort);
 
         if (Time() == mBindFailureTime) {
           mBindFailureTime = zsLib::now() + mMaxWaitToBindTime;
