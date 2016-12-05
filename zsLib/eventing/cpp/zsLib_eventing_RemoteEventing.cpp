@@ -566,11 +566,6 @@ namespace zsLib
           return;
         }
 
-        if (info->mSelfRegistered) {
-          // ignore re-entrant self registered provider infos
-          return;
-        }
-
         {
           AutoRecursiveLock lock(mAsyncSelfLock);
           if (!mAsyncSelf) return;
