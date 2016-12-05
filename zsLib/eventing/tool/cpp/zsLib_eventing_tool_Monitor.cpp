@@ -490,8 +490,7 @@ namespace zsLib
                       auto event = (*iter).second;
                       provider->mEvents[event->mValue] = event;
                     }
-                  }
-                  else {
+                  } else {
                     if (!mMonitorInfo.mQuietMode) {
                       tool::output() << "[Warning] Provider \"" << provider->mProviderName << "\" hashes do not match: X=" << existingProvider->mUniqueHash << " Y=" << provider->mProviderUniqueHash << "\n";
                     }

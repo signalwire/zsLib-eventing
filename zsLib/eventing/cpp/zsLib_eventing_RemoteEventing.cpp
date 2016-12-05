@@ -1770,7 +1770,7 @@ namespace zsLib
           return;
         }
         
-        if (goneStr) {
+        if (goneStr.hasData()) {
           try {
             bool gone = Numeric<bool>(goneStr);
             if (gone) {
