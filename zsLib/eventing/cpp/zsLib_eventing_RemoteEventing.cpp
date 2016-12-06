@@ -1932,11 +1932,12 @@ namespace zsLib
         auto provider = (*found).second;
 
         try {
-          auto bitmask = Numeric<KeywordBitmaskType>(bitmaskStr);
+          KeywordBitmaskType bitmask = Numeric<KeywordBitmaskType>(bitmaskStr);
           if (mDelegate) {
             mDelegate->onRemoteEventingRemoteProviderStateChange(provider->mProviderName, bitmask);
           }
         } catch (const Numeric<KeywordBitmaskType>::ValueOutOfRange &) {
+          ZS_LOG_WARNING(Debug, log("remote bitmask is not valid"));
         } catch (const IRemoteEventingDelegateProxy::Exceptions::DelegateGone &) {
           ZS_LOG_WARNING(Debug, log("delegate gone (probably okay)"));
           mDelegate.reset();
