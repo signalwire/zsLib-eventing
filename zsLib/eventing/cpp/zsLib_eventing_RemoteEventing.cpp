@@ -870,7 +870,7 @@ namespace zsLib
         bool requested = false;
         for (auto iter = mRemoteRegisteredProvidersByUUID.begin(); iter != mRemoteRegisteredProvidersByUUID.end(); ++iter) {
           auto checkProvider = (*iter).second;
-          if (provider == checkProvider) {
+          if (provider->mProviderName == checkProvider->mProviderName) {
             requestSetRemoteEventProviderLogging(provider->mProviderName, keywords);
             requested = true;
           }
