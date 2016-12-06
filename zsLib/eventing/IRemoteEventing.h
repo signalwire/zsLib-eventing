@@ -119,18 +119,30 @@ namespace zsLib
     {
       typedef IRemoteEventingTypes::States States;
       typedef zsLib::Log::Level Level;
-
+      typedef zsLib::Log::KeywordBitmaskType KeywordBitmaskType;
+      
       virtual void onRemoteEventingStateChanged(
                                                 IRemoteEventingPtr connection,
                                                 States state
                                                 ) {};
       
-      virtual void onRemoteEventingAnnounceRemoteSubsystem(
-                                                           IRemoteEventingPtr connection,
-                                                           const char *subsystemName
-                                                           ) {};
+      virtual void onRemoteEventingRemoteSubsystem(
+                                                   IRemoteEventingPtr connection,
+                                                   const char *subsystemName
+                                                   ) {};
       
+      virtual void onRemoteEventingRemoteProvider(
+                                                  UUID providerID,
+                                                  const char *providerName,
+                                                  const char *providerUniqueHash
+                                                  ) {}
+      virtual void onRemoteEventingRemoteProviderGone(const char *providerName) {}
       
+      virtual void onRemoteEventingRemoteProviderStateChange(
+                                                             const char *providerName,
+                                                             KeywordBitmaskType keywords
+                                                             ) {}
+
       virtual void onRemoteEventingLocalDroppedEvents(
                                                       IRemoteEventingPtr connection,
                                                       size_t totalDropped
@@ -144,11 +156,15 @@ namespace zsLib
 }
 
 ZS_DECLARE_PROXY_BEGIN(zsLib::eventing::IRemoteEventingDelegate)
-ZS_DECLARE_TYPEDEF_PTR(zsLib::eventing::IRemoteEventingPtr, IRemoteEventingPtr)
-ZS_DECLARE_TYPEDEF_PTR(zsLib::eventing::IRemoteEventingTypes::States, States)
-ZS_DECLARE_TYPEDEF_PTR(std::size_t, size_t)
+ZS_DECLARE_PROXY_TYPEDEF(zsLib::eventing::IRemoteEventingPtr, IRemoteEventingPtr)
+ZS_DECLARE_PROXY_TYPEDEF(zsLib::eventing::IRemoteEventingTypes::States, States)
+ZS_DECLARE_PROXY_TYPEDEF(std::size_t, size_t)
+ZS_DECLARE_PROXY_TYPEDEF(zsLib::UUID, UUID)
 ZS_DECLARE_PROXY_METHOD_2(onRemoteEventingStateChanged, IRemoteEventingPtr, States)
-ZS_DECLARE_PROXY_METHOD_2(onRemoteEventingAnnounceRemoteSubsystem, IRemoteEventingPtr, const char *)
+ZS_DECLARE_PROXY_METHOD_2(onRemoteEventingRemoteSubsystem, IRemoteEventingPtr, const char *)
+ZS_DECLARE_PROXY_METHOD_3(onRemoteEventingRemoteProvider, UUID, const char *, const char *)
+ZS_DECLARE_PROXY_METHOD_1(onRemoteEventingRemoteProviderGone, const char *)
+ZS_DECLARE_PROXY_METHOD_2(onRemoteEventingRemoteProviderStateChange, const char *, KeywordBitmaskType)
 ZS_DECLARE_PROXY_METHOD_2(onRemoteEventingLocalDroppedEvents, IRemoteEventingPtr, size_t)
 ZS_DECLARE_PROXY_METHOD_2(onRemoteEventingRemoteDroppedEvents, IRemoteEventingPtr, size_t)
 ZS_DECLARE_PROXY_END()

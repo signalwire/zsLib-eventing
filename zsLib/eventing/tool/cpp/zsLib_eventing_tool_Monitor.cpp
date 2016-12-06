@@ -416,13 +416,44 @@ namespace zsLib
         }
         
         //---------------------------------------------------------------------
-        void Monitor::onRemoteEventingAnnounceRemoteSubsystem(
-                                                              IRemoteEventingPtr connection,
-                                                              const char *subsystemName
-                                                              )
+        void Monitor::onRemoteEventingRemoteSubsystem(
+                                                      IRemoteEventingPtr connection,
+                                                      const char *subsystemName
+                                                      )
         {
           if (!mMonitorInfo.mQuietMode) {
             tool::output() << "[Info] Remoting eventing subsystem: " << String(subsystemName) << "\n";
+          }
+        }
+        
+        //---------------------------------------------------------------------
+        void Monitor::onRemoteEventingRemoteProvider(
+                                                     UUID providerID,
+                                                     const char *providerName,
+                                                     const char *providerUniqueHash
+                                                     )
+        {
+          if (!mMonitorInfo.mQuietMode) {
+            tool::output() << "[Info] Remote provider \"" << String(providerName) << "\", \"" << string(providerID) << ", \"" << providerUniqueHash << "\" found.\n";
+          }
+        }
+        
+        //---------------------------------------------------------------------
+        void Monitor::onRemoteEventingRemoteProviderGone(const char *providerName)
+        {
+          if (!mMonitorInfo.mQuietMode) {
+            tool::output() << "[Info] Remote provider \"" << String(providerName) << " gone.\n";
+          }
+        }
+        
+        //---------------------------------------------------------------------
+        void Monitor::onRemoteEventingRemoteProviderStateChange(
+                                                                const char *providerName,
+                                                                KeywordBitmaskType keywords
+                                                                )
+        {
+          if (!mMonitorInfo.mQuietMode) {
+            tool::output() << "[Info] Remote provider \"" << String(providerName) << " logging state change with bitmask " << IHelper::convertToHex((BYTE *)(&keywords), sizeof(keywords)) << "\n";
           }
         }
         

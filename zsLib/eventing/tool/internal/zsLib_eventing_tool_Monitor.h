@@ -83,6 +83,7 @@ namespace zsLib
           typedef zsLib::Log::EventingAtomIndex EventingAtomIndex;
           typedef zsLib::Log::ProviderHandle ProviderHandle;
           typedef zsLib::Log::EventingAtomDataArray EventingAtomDataArray;
+          typedef zsLib::Log::KeywordBitmaskType KeywordBitmaskType;
 
           ZS_DECLARE_TYPEDEF_PTR(IEventingTypes::Provider, Provider);
           ZS_DECLARE_TYPEDEF_PTR(IEventingTypes::Event, Event);
@@ -151,12 +152,23 @@ namespace zsLib
                                                     States state
                                                     ) override;
           
-          virtual void onRemoteEventingAnnounceRemoteSubsystem(
-                                                               IRemoteEventingPtr connection,
-                                                               const char *subsystemName
-                                                               ) override;
+          virtual void onRemoteEventingRemoteSubsystem(
+                                                       IRemoteEventingPtr connection,
+                                                       const char *subsystemName
+                                                       ) override;
+
+          virtual void onRemoteEventingRemoteProvider(
+                                                      UUID providerID,
+                                                      const char *providerName,
+                                                      const char *providerUniqueHash
+                                                      ) override;
+          virtual void onRemoteEventingRemoteProviderGone(const char *providerName) override;
           
-          
+          virtual void onRemoteEventingRemoteProviderStateChange(
+                                                                 const char *providerName,
+                                                                 KeywordBitmaskType keywords
+                                                                 ) override;
+
           virtual void onRemoteEventingLocalDroppedEvents(
                                                           IRemoteEventingPtr connection,
                                                           size_t totalDropped

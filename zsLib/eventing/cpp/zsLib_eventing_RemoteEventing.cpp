@@ -849,17 +849,37 @@ namespace zsLib
       //-----------------------------------------------------------------------
       void RemoteEventing::onRemoteEventingProviderLoggingStateChanged(
                                                                        ProviderInfo *provider,
-                                                                       KeywordBitmaskType keyword
+                                                                       KeywordBitmaskType keywords
                                                                        )
       {
         AutoRecursiveLock lock(mLock);
+
         auto found = mLocalAnnouncedProviders.find(provider->mProviderID);
-        if (found == mLocalAnnouncedProviders.end()) {
-          ZS_LOG_DEBUG(log("local provider not announced") + ZS_PARAM("provider", provider->mProviderName));
+        if (found != mLocalAnnouncedProviders.end()) {
+          if (isAuthorized()) {
+            announceProviderLoggingStateChangedToRemote(provider, keywords);
+          }
           return;
         }
 
-        announceProviderLoggingStateChangedToRemote(provider, keyword);
+        if (!isAuthorized()) {
+          mRequestRemoteProviderKeywordLevel[provider->mProviderName] = keywords;
+          return;
+        }
+
+        bool requested = false;
+        for (auto iter = mRemoteRegisteredProvidersByUUID.begin(); iter != mRemoteRegisteredProvidersByUUID.end(); ++iter) {
+          auto checkProvider = (*iter).second;
+          if (provider == checkProvider) {
+            requestSetRemoteEventProviderLogging(provider->mProviderName, keywords);
+            requested = true;
+          }
+        }
+        
+        if (!requested) {
+          mRequestRemoteProviderKeywordLevel[provider->mProviderName] = keywords;
+          return;
+        }
       }
       
       //-----------------------------------------------------------------------
@@ -1240,6 +1260,14 @@ namespace zsLib
           mNotifyTimer->cancel();
           mNotifyTimer.reset();
         }
+        for (auto iter = mRequestedRemoteProviderKeywordLevel.begin(); iter != mRequestedRemoteProviderKeywordLevel.end(); ++iter)
+        {
+          auto provider = (*iter).second;
+          Log::setEventingLogging(provider->mHandle, mID, false);
+        }
+        mRequestedRemoteProviderKeywordLevel.clear();
+        mRequestRemoteProviderKeywordLevel.clear();
+
         mAnnouncedLocalDropped = 0;
         mAnnouncedRemoteDropped = 0;
         mTotalDroppedEvents = 0;
@@ -1743,7 +1771,7 @@ namespace zsLib
         
         if (mDelegate) {
           try {
-            mDelegate->onRemoteEventingAnnounceRemoteSubsystem(mThisWeak.lock(), info->mName);
+            mDelegate->onRemoteEventingRemoteSubsystem(mThisWeak.lock(), info->mName);
           } catch (const IRemoteEventingDelegateProxy::Exceptions::DelegateGone &) {
             ZS_LOG_WARNING(Detail, log("delegate gone (probably okay)"));
             mDelegate.reset();
@@ -1787,6 +1815,15 @@ namespace zsLib
               }
 
               Log::unregisterEventingWriter(provider->mHandle);
+              
+              if (mDelegate) {
+                try {
+                  mDelegate->onRemoteEventingRemoteProviderGone(provider->mProviderName);
+                } catch (const IRemoteEventingDelegateProxy::Exceptions::DelegateGone &) {
+                  ZS_LOG_WARNING(Debug, log("delegate gone (probably okay)"));
+                  mDelegate.reset();
+                }
+              }
               return;
             }
             
@@ -1835,6 +1872,7 @@ namespace zsLib
           ZS_LOG_WARNING(Detail, log("registered eventing writer but no information can be found") + ZS_PARAM("provider name", provider->mProviderName));
           return;
         }
+
         ProviderInfo *existingProvider = reinterpret_cast<ProviderInfo *>(atomArray[mEventingAtomIndex]);
         if (existingProvider) {
           if (mID != existingProvider->mRelatedToRemoteEventingObjectID) {
@@ -1845,12 +1883,36 @@ namespace zsLib
         } else {
           atomArray[mEventingAtomIndex] = reinterpret_cast<Log::EventingAtomData>(provider);
         }
+        
+        if (mDelegate) {
+          try {
+            mDelegate->onRemoteEventingRemoteProvider(provider->mProviderID, provider->mProviderName, provider->mProviderHash);
+          } catch (const IRemoteEventingDelegateProxy::Exceptions::DelegateGone &) {
+            ZS_LOG_WARNING(Debug, log("delegate gone (probably okay)"));
+            mDelegate.reset();
+          }
+        }
+
+        for (auto iter_doNotUse = mRequestRemoteProviderKeywordLevel.begin(); iter_doNotUse != mRequestRemoteProviderKeywordLevel.end(); )
+        {
+          auto current = iter_doNotUse;
+          ++iter_doNotUse;
+          
+          auto checkProviderName = (*current).first;
+          auto bitmask = (*current).second;
+
+          if (checkProviderName == providerNameStr) {
+            requestSetRemoteEventProviderLogging(checkProviderName, bitmask);
+            mRequestRemoteProviderKeywordLevel.erase(current);
+          }
+        }
       }
-      
+
       //-----------------------------------------------------------------------
       void RemoteEventing::handleNotifyRemoteProviderKeywordLogging(const ElementPtr &rootEl)
       {
         String remoteHandleStr = IHelper::getElementText(rootEl->findLastChildElement("handle"));
+        String bitmaskStr = IHelper::getElementText(rootEl->findLastChildElement("bitmask"));
         
         ProviderHandle remoteHandle = 0;
         try {
@@ -1865,9 +1927,19 @@ namespace zsLib
           ZS_LOG_WARNING(Debug, log("told keyword logging information about unknown provider") + ZS_PARAMIZE(remoteHandle));
           return;
         }
+        
+        auto provider = (*found).second;
 
-        auto info = (*found).second;
-        Log::setEventingLogging(info->mHandle, mID, 0 != info->mBitmask, info->mBitmask);
+        try {
+          auto bitmask = Numeric<KeywordBitmaskType>(bitmaskStr);
+          if (mDelegate) {
+            mDelegate->onRemoteEventingRemoteProviderStateChange(provider->mProviderName, bitmask);
+          }
+        } catch (const Numeric<KeywordBitmaskType>::ValueOutOfRange &) {
+        } catch (const IRemoteEventingDelegateProxy::Exceptions::DelegateGone &) {
+          ZS_LOG_WARNING(Debug, log("delegate gone (probably okay)"));
+          mDelegate.reset();
+        }
       }
       
       //-----------------------------------------------------------------------
@@ -2146,7 +2218,6 @@ namespace zsLib
               mDelegate.reset();
             }
           }
-
         }
       }
 
@@ -2162,6 +2233,21 @@ namespace zsLib
         sendData(MessageType_Request, rootEl);
       }
 
+      //-----------------------------------------------------------------------
+      void RemoteEventing::requestSetRemoteEventProviderLogging(
+                                                                const String &providerName,
+                                                                KeywordBitmaskType bitmask
+                                                                )
+      {
+        ElementPtr rootEl = Element::create("request");
+        
+        rootEl->adoptAsLastChild(IHelper::createElementWithText("type", ZSLIB_EVENTING_REMOTE_EVENTING_REQUEST_SET_EVENT_PROVIDER_LOGGING));
+        rootEl->adoptAsLastChild(IHelper::createElementWithText("provider", providerName));
+        rootEl->adoptAsLastChild(IHelper::createElementWithNumber("keywords", string(bitmask)));
+
+        sendData(MessageType_Request, rootEl);
+      }
+      
       //-----------------------------------------------------------------------
       void RemoteEventing::announceProviderToRemote(
                                                     ProviderInfo *provider,

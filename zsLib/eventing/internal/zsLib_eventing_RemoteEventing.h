@@ -390,6 +390,10 @@ namespace zsLib
         void sendWelcome();
         void sendNotify();
         void requestSetRemoteSubsystemLevel(SubsystemInfoPtr info);
+        void requestSetRemoteEventProviderLogging(
+                                                  const String &providerName,
+                                                  KeywordBitmaskType bitmask
+                                                  );
         void announceProviderToRemote(
                                       ProviderInfo *info,
                                       bool announceNew = true
