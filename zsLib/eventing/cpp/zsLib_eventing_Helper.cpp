@@ -145,6 +145,8 @@ namespace zsLib
     void IHelper::setup(Windows::UI::Core::CoreDispatcher ^dispatcher)
     {
       zsLib::IHelper::setup(dispatcher);
+      internal::CryptoPPHelper::singleton();
+      internal::installRemoteEventingSettingsDefaults();
     }
 #endif //WINRT
 
