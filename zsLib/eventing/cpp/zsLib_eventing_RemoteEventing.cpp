@@ -2007,7 +2007,8 @@ namespace zsLib
       {
         size_t expectingBasicSize = (sizeof(CryptoPP::word16)*5) +
                                     (sizeof(uint8_t)*4) +
-                                    (sizeof(uint64_t)*2);
+                                    (sizeof(uint64_t)*2) +
+                                    (sizeof(uint32_t)*1);
         
         if (buffer.SizeInBytes() < expectingBasicSize) {
           ZS_LOG_WARNING(Debug, log("event message did not contain enough header data") + ZS_PARAMIZE(expectingBasicSize) + ZS_PARAM("actual size", buffer.SizeInBytes()));
