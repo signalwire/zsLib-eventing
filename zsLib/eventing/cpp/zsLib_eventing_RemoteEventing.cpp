@@ -1864,6 +1864,7 @@ namespace zsLib
         }
 
         mRemoteRegisteredProvidersByUUID[provider->mProviderID] = provider;
+        mRemoteRegisteredProvidersByRemoteHandle[provider->mRemoteHandle] = provider;
 
         provider->mHandle = Log::registerEventingWriter(provider->mProviderID, provider->mProviderName, provider->mProviderHash);
 
