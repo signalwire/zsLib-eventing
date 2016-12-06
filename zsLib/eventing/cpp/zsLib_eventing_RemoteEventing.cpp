@@ -1970,7 +1970,7 @@ namespace zsLib
           String keywordStr = IHelper::getElementText(rootEl->findFirstChildElement("keywords"));
           KeywordBitmaskType bitmask = 0;
           try {
-            bitmask = Numeric<KeywordBitmaskType>(bitmask);
+            bitmask = Numeric<KeywordBitmaskType>(keywordStr);
             for (auto iter = mLocalAnnouncedProviders.begin(); iter != mLocalAnnouncedProviders.end(); ++iter) {
               auto providerInfo = (*iter).second;
               if (providerInfo->mProviderName == providerStr) {
