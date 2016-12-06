@@ -2112,9 +2112,6 @@ namespace zsLib
               dataDescriptors[index].Ptr = reinterpret_cast<uintptr_t>(pos);
             }
 
-            pos += dataTypeSize;
-            remaining -= dataTypeSize;
-
             if (endianFlip) {
               switch (dataTypeSize) {
                 case 2: {
@@ -2139,6 +2136,9 @@ namespace zsLib
               }
             }
 
+            pos += dataTypeSize;
+            remaining -= dataTypeSize;
+            
             continue;
           }
           
