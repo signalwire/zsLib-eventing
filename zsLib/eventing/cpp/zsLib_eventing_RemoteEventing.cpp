@@ -619,7 +619,7 @@ namespace zsLib
                             (sizeof(uint8_t)*4) +
                             (sizeof(uint64_t)*2) +
                             (sizeof(CryptoPP::word16)*dataDescriptorCount) +
-                            (sizeof(CryptoPP::word32)*dataDescriptorCount);
+                            (sizeof(CryptoPP::word32)*(1+dataDescriptorCount));
 
         for (size_t index = 0; index < dataDescriptorCount; ++index) {
           auto &data = dataDescriptor[index];
@@ -639,11 +639,11 @@ namespace zsLib
           return;
         }
 
-        size_t putSize = packedSize + (sizeof(CryptoPP::word32)*2); // message type and sizeof packed size not included in packedSize
+        size_t putSize = packedSize + (sizeof(CryptoPP::word32)); // message size not included in packedSize
         usePacked.CreatePutSpace(putSize);
         
-        usePacked.PutWord32(static_cast<CryptoPP::word32>(MessageType_TraceEvent));
         usePacked.PutWord32(static_cast<CryptoPP::word32>(packedSize));
+        usePacked.PutWord32(static_cast<CryptoPP::word32>(MessageType_TraceEvent));
 
         uint64_t data64 {};
         uint64_t eventingHandle {static_cast<uint64_t>(handle)};
