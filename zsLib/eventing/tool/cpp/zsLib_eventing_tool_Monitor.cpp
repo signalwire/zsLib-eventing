@@ -617,9 +617,18 @@ namespace zsLib
               }
 
               if (totalDataParams != dataDescriptorCount) {
-                if (!mMonitorInfo.mQuietMode) {
-                  tool::output() << "[Warning] Event \"" << event->mName << "\" parameter count does not match: X=" << string(totalDataParams) << " Y=" << string(dataDescriptorCount) << "\n";
-                  return;
+                // reduce total params by number of buffer sizes not included
+                for (auto iter = event->mDataTemplate->mDataTypes.begin(); iter != event->mDataTemplate->mDataTypes.end(); ++iter) {
+                  auto &dataType = (*iter);
+                  if (dataType->mType == IEventingTypes::PredefinedTypedef_size) {
+                    --totalDataParams;
+                  }
+                }
+                if (totalDataParams != dataDescriptorCount) {
+                  if (!mMonitorInfo.mQuietMode) {
+                    tool::output() << "[Warning] Event \"" << event->mName << "\" parameter count does not match: X=" << string(totalDataParams) << " Y=" << string(dataDescriptorCount) << "\n";
+                    return;
+                  }
                 }
               }
 
@@ -643,20 +652,30 @@ namespace zsLib
 
               if (event->mDataTemplate) {
                 auto iterDataType = event->mDataTemplate->mDataTypes.begin();
-                for (size_t index = ZS_EVENTING_TOTAL_BUILT_IN_EVENT_DATA; index < dataDescriptorCount; ++index, ++iterDataType)
+                for (size_t index = ZS_EVENTING_TOTAL_BUILT_IN_EVENT_DATA; index < dataDescriptorCount; ++iterDataType)
                 {
-                  if (iterDataType == event->mDataTemplate->mDataTypes.end()) break;
+                  {
+                    if (iterDataType == event->mDataTemplate->mDataTypes.end()) break;
+                    
+                    auto &dataType = (*iterDataType);
+                    
+                    // skip over buffer size as it's not sent on wire
+                    if (dataType->mType == IEventingTypes::PredefinedTypedef_size) continue;
+
+                    bool isNumber = false;
+                    String valueName = dataType->mValueName;
+                    String value = valueAsString(paramDescriptor[index], dataDescriptor[index], isNumber);
+
+                    if (isNumber) {
+                      valuesEl->adoptAsLastChild(IHelper::createElementWithNumber(valueName, value));
+                    } else {
+                      valuesEl->adoptAsLastChild(IHelper::createElementWithTextAndJSONEncode(valueName, value));
+                    }
+                  }
                   
-                  auto dataType = (*iterDataType);
-
-                  bool isNumber = false;
-                  String valueName = dataType->mValueName;
-                  String value = valueAsString(paramDescriptor[index], dataDescriptor[index], isNumber);
-
-                  if (isNumber) {
-                    valuesEl->adoptAsLastChild(IHelper::createElementWithNumber(valueName, value));
-                  } else {
-                    valuesEl->adoptAsLastChild(IHelper::createElementWithTextAndJSONEncode(valueName, value));
+                next_index:
+                  {
+                    ++index;
                   }
                 }
               }
