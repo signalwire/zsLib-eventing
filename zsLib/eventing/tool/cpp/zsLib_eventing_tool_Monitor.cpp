@@ -578,8 +578,13 @@ namespace zsLib
                                       size_t dataDescriptorCount
                                       )
         {
+          static const size_t skipStartLength = strlen("{\"event\":{");
+          static const size_t skipEndLength = strlen("}");
+          
           ProviderInfo *provider = reinterpret_cast<ProviderInfo *>(eventingAtomDataArray[mEventingAtom]);
           if (!provider) return;
+
+          ++mTotalEvents;
 
           String output;
 
@@ -708,7 +713,13 @@ namespace zsLib
 
           if (output.hasData()) {
             AutoRecursiveLock lock(mLock);
-            tool::output() << ",\n" << output;
+            if (!mFirstOutputEvent) {
+              tool::output() << ",";
+            } else {
+              mFirstOutputEvent = false;
+            }
+            tool::output().write(output.c_str(), output.length() - skipStartLength - skipEndLength);
+            tool::output() << "\n";
           }
         }
 

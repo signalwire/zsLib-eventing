@@ -243,6 +243,7 @@ namespace zsLib
           std::atomic<bool> mShouldQuit {false};
           std::atomic<size_t> mTotalEventsDropped {};
           std::atomic<size_t> mTotalEvents {};
+          bool mFirstOutputEvent {true};
 
           ITimerPtr mAutoQuitTimer;
 
