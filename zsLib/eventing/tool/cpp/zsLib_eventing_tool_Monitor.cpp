@@ -671,6 +671,7 @@ namespace zsLib
                     } else {
                       valuesEl->adoptAsLastChild(IHelper::createElementWithTextAndJSONEncode(valueName, value));
                     }
+                    goto next_index;
                   }
                   
                 next_index:
