@@ -578,7 +578,7 @@ namespace zsLib
                                       size_t dataDescriptorCount
                                       )
         {
-          static const size_t skipStartLength = strlen("{\"event\":{");
+          static const size_t skipStartLength = strlen("{\"event\":");
           static const size_t skipEndLength = strlen("}");
           
           ProviderInfo *provider = reinterpret_cast<ProviderInfo *>(eventingAtomDataArray[mEventingAtom]);
@@ -738,7 +738,7 @@ namespace zsLib
             } else {
               mFirstOutputEvent = false;
             }
-            tool::output().write(output.c_str(), output.length() - skipStartLength - skipEndLength);
+            tool::output().write(output.c_str() + skipStartLength, output.length() - skipStartLength - skipEndLength);
             tool::output() << "\n";
           }
         }
