@@ -2880,7 +2880,12 @@ namespace zsLib
                     case IEventingTypes::PredefinedTypedef_binary: {
                       isDataType = false;
                       
-                      ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_BUFFER(&(xxDescriptors[" << current << "]), " << originalValueStr << ", (xValue" << string(loop+1) << ")); \\\n";
+                      String newValueStrPlus1 = "xxVal" + string(current+1);
+                      String oldValueStrPlus1 = "(xValue" + string(loop+1) + ")";
+                      
+                      ss << "    auto " << newValueStr << " = " << originalValueStr << "; \\\n";
+                      ss << "    size_t " << newValueStrPlus1 << " {" << oldValueStrPlus1 << "}; \\\n";
+                      ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_BUFFER(&(xxDescriptors[" << current << "]), " << newValueStr << ", " << newValueStrPlus1 << "); \\\n";
 
                       if (loop + 1 > event->mDataTemplate->mDataTypes.size()) {
                         ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, String("Binary data missing size"));
@@ -2897,12 +2902,14 @@ namespace zsLib
                     case IEventingTypes::PredefinedTypedef_string:
                     case IEventingTypes::PredefinedTypedef_astring: {
                       isDataType = false;
-                      ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_ASTR(&(xxDescriptors[" << current << "]), " << originalValueStr << "); \\\n";
+                      ss << "    auto " << newValueStr << " = " << originalValueStr << "; \\\n";
+                      ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_ASTR(&(xxDescriptors[" << current << "]), " << newValueStr << "); \\\n";
                       break;
                     }
                     case IEventingTypes::PredefinedTypedef_wstring: {
                       isDataType = false;
-                      ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_WSTR(&(xxDescriptors[" << current << "]), " << originalValueStr << "); \\\n";
+                      ss << "    auto " << newValueStr << " = " << originalValueStr << "; \\\n";
+                      ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_WSTR(&(xxDescriptors[" << current << "]), " << newValueStr << "); \\\n";
                       break;
                     }
                   }
@@ -2911,7 +2918,6 @@ namespace zsLib
                     if (isDataType) {
                       ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_VALUE(&(xxDescriptors[" << current << "]), &(" << newValueStr << "), sizeof(" << newValueStr << ")); \\\n";
                     }
-                    ++current;
                     if (nextMustBeSize) {
                       ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, String("Binary data missing size"));
                     }
@@ -2919,6 +2925,7 @@ namespace zsLib
 
                 next_loop:
                   {
+                    ++current;
                   }
                 }
               }
