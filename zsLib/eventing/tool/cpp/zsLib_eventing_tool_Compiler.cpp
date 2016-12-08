@@ -2884,7 +2884,7 @@ namespace zsLib
                       String oldValueStrPlus1 = "(xValue" + string(loop+1) + ")";
                       
                       ss << "    auto " << newValueStr << " = " << originalValueStr << "; \\\n";
-                      ss << "    size_t " << newValueStrPlus1 << " {" << oldValueStrPlus1 << "}; \\\n";
+                      ss << "    size_t " << newValueStrPlus1 << " {static_cast<size_t>" << oldValueStrPlus1 << "}; \\\n";
                       ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_BUFFER(&(xxDescriptors[" << current << "]), " << newValueStr << ", " << newValueStrPlus1 << "); \\\n";
 
                       if (loop + 1 > event->mDataTemplate->mDataTypes.size()) {
