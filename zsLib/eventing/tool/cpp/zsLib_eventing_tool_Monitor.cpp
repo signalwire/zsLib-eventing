@@ -585,7 +585,7 @@ namespace zsLib
 
           if (provider->mEvents.size() > 0) {
             auto found = provider->mEvents.find(descriptor->Id);
-            if (found == provider->mEvents.end()) {
+            if (found != provider->mEvents.end()) {
               auto event = (*found).second;
 
               ElementPtr rootEl = Element::create("event");

@@ -1446,6 +1446,7 @@ namespace zsLib
       if (mDataTemplate) {
         eventEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("template", mDataTemplate->hash()));
       }
+      if (0 != mValue) eventEl->adoptAsLastChild(UseEventingHelper::createElementWithNumber("value", string(mValue)));
       return eventEl;
     }
 
