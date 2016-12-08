@@ -2576,9 +2576,9 @@ namespace zsLib
 
           ss <<
             "\n"
-            "    inline uintptr_t &" << getEventingHandleFunction << "\n"
+            "    inline zsLib::Log::ProviderHandle &" << getEventingHandleFunction << "\n"
             "    {\n"
-            "      static uintptr_t gHandle {};\n"
+            "      static zsLib::Log::ProviderHandle gHandle {};\n"
             "      return gHandle;\n"
             "    }\n\n";
 
