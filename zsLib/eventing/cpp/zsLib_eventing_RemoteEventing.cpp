@@ -713,8 +713,8 @@ namespace zsLib
                   break;
                 }
                 case 8:  {
-                  IHelper::setBE64(&data64, data64);
                   memcpy(&data64, (const void *)(data.Ptr), sizeof(data64));
+                  IHelper::setBE64(&data64, data64);
                   usePacked.Put((const BYTE *)(&data64), sizeof(data64));
                   break;
                 }
