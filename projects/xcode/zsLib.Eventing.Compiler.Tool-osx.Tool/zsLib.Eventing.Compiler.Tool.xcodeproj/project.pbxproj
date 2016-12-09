@@ -742,6 +742,7 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					ZSLIB_EVENTING_NOOP,
+					ZSLIB_LOGGING_NOOP,
 					"DEBUG=1",
 					"$(inherited)",
 				);
@@ -793,6 +794,7 @@
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					ZSLIB_EVENTING_NOOP,
+					ZSLIB_LOGGING_NOOP,
 					"NDEBUG=1",
 					"$(inherited)",
 				);
