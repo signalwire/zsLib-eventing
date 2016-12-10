@@ -2693,7 +2693,8 @@ namespace zsLib
                     nextMustBeSize = false;
                     continue;
                   }
-                  
+
+                  String sizeTypeStr;
                   String typeStr;
 
                   switch (IEventingTypes::getBaseType(dataType->mType))
@@ -2709,7 +2710,7 @@ namespace zsLib
                     }
                     case IEventingTypes::BaseType_Float:    typeStr = "FloatingPoint"; break;
                     case IEventingTypes::BaseType_Pointer:  typeStr = "Pointer"; break;
-                    case IEventingTypes::BaseType_Binary:   typeStr = "Binary"; nextMustBeSize = true; break;
+                    case IEventingTypes::BaseType_Binary:   typeStr = "Binary"; sizeTypeStr = "UnsignedInteger"; nextMustBeSize = true; break;
                     case IEventingTypes::BaseType_String:   {
                       if (IEventingTypes::isAString(dataType->mType)) {
                         typeStr = "AString";
@@ -2721,6 +2722,9 @@ namespace zsLib
                   }
 
                   ss << ",\n";
+                  if (sizeTypeStr.hasData()) {
+                    ss << "        {EventParameterType_" << sizeTypeStr << "},\n";
+                  }
                   ss << "        {EventParameterType_" << typeStr << "}";
                 }
               }
@@ -2764,21 +2768,16 @@ namespace zsLib
               size_t totalPointerTypes = 0;
               size_t totalStringTypes = 0;
 
-              bool nextMustBeSize = false;
               if (event->mDataTemplate) {
                 for (auto iterDataType = event->mDataTemplate->mDataTypes.begin(); iterDataType != event->mDataTemplate->mDataTypes.end(); ++iterDataType) {
                   auto dataType = (*iterDataType);
-                  if (nextMustBeSize) {
-                    nextMustBeSize = false;
-                    continue;
-                  }
                   switch (IEventingTypes::getBaseType(dataType->mType))
                   {
                     case IEventingTypes::BaseType_Boolean:
                     case IEventingTypes::BaseType_Integer:
                     case IEventingTypes::BaseType_Float:
                     case IEventingTypes::BaseType_Pointer:  ++totalDataTypes; break;
-                    case IEventingTypes::BaseType_Binary:   ++totalPointerTypes; nextMustBeSize = true; break;
+                    case IEventingTypes::BaseType_Binary:   ++totalPointerTypes; break;
                     case IEventingTypes::BaseType_String:   ++totalStringTypes; break;
                   }
                 }
@@ -2798,7 +2797,7 @@ namespace zsLib
               
               size_t current = ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES;
 
-              nextMustBeSize = false;
+              bool nextMustBeSize = false;
               size_t loop = 1;
               if (event->mDataTemplate) {
                 for (auto iterDataType = event->mDataTemplate->mDataTypes.begin(); iterDataType != event->mDataTemplate->mDataTypes.end(); ++iterDataType, ++loop) {
@@ -2885,7 +2884,8 @@ namespace zsLib
                       
                       ss << "    auto " << newValueStr << " = " << originalValueStr << "; \\\n";
                       ss << "    size_t " << newValueStrPlus1 << " {static_cast<size_t>" << oldValueStrPlus1 << "}; \\\n";
-                      ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_BUFFER(&(xxDescriptors[" << current << "]), " << newValueStr << ", " << newValueStrPlus1 << "); \\\n";
+                      ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_VALUE(&(xxDescriptors[" << current << "]), &(" << newValueStrPlus1 << "), sizeof(" << newValueStrPlus1 << ")); \\\n";
+                      ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_BUFFER(&(xxDescriptors[" << string(current+1) << "]), " << newValueStr << ", " << newValueStrPlus1 << "); \\\n";
 
                       if (loop + 1 > event->mDataTemplate->mDataTypes.size()) {
                         ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, String("Binary data missing size"));

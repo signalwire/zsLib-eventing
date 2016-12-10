@@ -652,19 +652,38 @@ namespace zsLib
 
               if (event->mDataTemplate) {
                 auto iterDataType = event->mDataTemplate->mDataTypes.begin();
-                for (size_t index = ZS_EVENTING_TOTAL_BUILT_IN_EVENT_DATA; index < dataDescriptorCount; ++iterDataType)
+                for (int index = ZS_EVENTING_TOTAL_BUILT_IN_EVENT_DATA; static_cast<size_t>(index) < dataDescriptorCount; ++iterDataType)
                 {
                   {
                     if (iterDataType == event->mDataTemplate->mDataTypes.end()) break;
                     
                     auto &dataType = (*iterDataType);
-                    
-                    // skip over buffer size as it's not sent on wire
-                    if (dataType->mType == IEventingTypes::PredefinedTypedef_size) continue;
 
                     bool isNumber = false;
                     String valueName = dataType->mValueName;
-                    String value = valueAsString(paramDescriptor[index], dataDescriptor[index], isNumber);
+
+                    int offset = 0;
+                    if (dataType->mType == IEventingTypes::PredefinedTypedef_binary) {
+                      if (static_cast<size_t>(index + 1) >= dataDescriptorCount) {
+                        if (!mMonitorInfo.mQuietMode) {
+                          tool::output() << "[Warning] Event \"" << event->mName << "\" parameter count buffer missing space for buffer: COUNT=" << string(dataDescriptorCount) << " INDEX=" << string(index) << "\n";
+                        }
+                        return;
+                      }
+
+                      // the actual type and value of the buffer is stored just after its size in the array
+                      offset = 1;
+                    } else if (dataType->mType == IEventingTypes::PredefinedTypedef_size) {
+                      if (index < 1) {
+                        if (!mMonitorInfo.mQuietMode) {
+                          tool::output() << "[Warning] Event \"" << event->mName << "\" parameter count buffer missing space for buffer size: COUNT=" << string(dataDescriptorCount) << " INDEX=" << string(index) << "\n";
+                        }
+                        return;
+                      }
+                      offset = -1;
+                    }
+
+                    String value = valueAsString(paramDescriptor[index + offset], dataDescriptor[index + offset], isNumber);
 
                     if (isNumber) {
                       valuesEl->adoptAsLastChild(IHelper::createElementWithNumber(valueName, value));
