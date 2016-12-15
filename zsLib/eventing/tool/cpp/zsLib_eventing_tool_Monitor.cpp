@@ -253,7 +253,7 @@ namespace zsLib
             
             EventingAtomDataArray eventingArray = NULL;
             if (Log::getEventingWriterInfo(info->mHandle, info->mProviderID, info->mProviderName, info->mProviderUniqueHash, &eventingArray)) {
-              eventingArray[mEventingAtom] = NULL;
+              eventingArray[mEventingAtom] = 0;
             }
 
             delete (*iter);

@@ -375,6 +375,8 @@ namespace zsLib
                               ULONG lineCount
                               ) throw (InvalidContentWithLine)
         {
+          ZS_DECLARE_TYPEDEF_PTR(std::stringstream, StringStream);
+          
           const char *startPos = p;
 
           while ('\0' != *p)
@@ -399,7 +401,7 @@ namespace zsLib
           bool done = false;
           size_t index = 0;
 
-          std::stringstream ss;
+          StringStreamUniPtr ss(new StringStream());
 
           while ('\0' != *p)
           {
@@ -428,7 +430,7 @@ namespace zsLib
                   foundBracket = true;
                   ++bracketDepth;
                   if (1 != bracketDepth) {
-                    ss << value;
+                    (*ss) << value;
                   }
                   break;
                 }
@@ -438,7 +440,7 @@ namespace zsLib
                     ZS_THROW_CUSTOM_PROPERTIES_1(InvalidContentWithLine, lineCount, String("Eventing mechanism closing bracket \')\' prematurely found"));
                   }
                   if (bracketDepth > 1) {
-                    ss << value;
+                    (*ss) << value;
                   }
                   --bracketDepth;
                   if (0 == bracketDepth) {
@@ -453,13 +455,13 @@ namespace zsLib
                     ZS_THROW_CUSTOM_PROPERTIES_1(InvalidContentWithLine, lineCount, String("Eventing mechanism found illegal comma \',\'"));
                   }
                   if (1 != bracketDepth) {
-                    ss << value;
+                    (*ss) << value;
                     break;
                   }
                   goto found_result;
                 }
                 default: {
-                  ss << value;
+                  (*ss) << value;
                   break;
                 }
               }
@@ -469,7 +471,7 @@ namespace zsLib
           found_space:
             {
               if (!lastWasSpace) {
-                ss << ' ';
+                (*ss) << ' ';
                 lastWasSpace = true;
               }
               continue;
@@ -477,14 +479,15 @@ namespace zsLib
 
           found_result:
             {
-              String result = ss.str();
+              String result = ss->str();
               result.trim();
 
               if (result.hasData()) {
                 outArguments[index] = result;
                 ++index;
               }
-              std::stringstream emptySS;
+              
+              StringStreamUniPtr emptySS(new StringStream());
               ss.swap(emptySS);
               lastWasSpace = true;
               if (!done) continue;
@@ -521,15 +524,12 @@ namespace zsLib
             ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, lineCount, "Failed to parse quoted string: " + str);
           }
 
-          bool wstr = false;
-
           std::stringstream ss;
 
           const char *pos = str.c_str()+1;
           if (('L' == *(str.c_str())) ||
               ('u' == *(str.c_str()))) {
             ++pos;
-            wstr = true;
           }
           const char *stopPos = str.c_str() + str.length() - 1;
 
@@ -676,6 +676,7 @@ namespace zsLib
           return false;
         }
 
+#if SIZE_MAX != UINT64_MAX
         //---------------------------------------------------------------------
         static bool insert(
                            Index64Set &indexes,
@@ -696,6 +697,7 @@ namespace zsLib
           }
           return false;
         }
+#endif //SIZE_MAX != UINT64_MAX
         
         //---------------------------------------------------------------------
         static String toSymbol(const String &str)

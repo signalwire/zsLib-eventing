@@ -37,7 +37,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/XML.h>
 #include <zsLib/Proxy.h>
 
-#include <cryptopp/AllocatorWithNul.h>
+#include <cryptopp/allocatorwithnul.h>
 
 #include <list>
 

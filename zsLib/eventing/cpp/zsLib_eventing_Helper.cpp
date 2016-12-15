@@ -181,7 +181,7 @@ namespace zsLib
 
       auto read = fread(buffer->BytePtr(), sizeof(BYTE), size, file);
 
-      if (read != size) {
+      if (read != static_cast<decltype(read)>(size)) {
         ZS_THROW_CUSTOM_PROPERTIES_1(StdError, ferror(file), String("Failed to read file: ") + pathStr + ", buffer size=" + string(buffer->SizeInBytes()));
       }
 
@@ -474,7 +474,7 @@ namespace zsLib
     {
       if (!arrayStr.get()) return convertToBuffer((const BYTE *)NULL, 0);
 
-      if (SIZE_T_MAX == lengthInChars) {
+      if (SIZE_MAX == lengthInChars) {
         lengthInChars = strlen(arrayStr.get());
       }
 

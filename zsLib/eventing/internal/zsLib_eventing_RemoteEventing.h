@@ -41,7 +41,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/Log.h>
 #include <zsLib/Socket.h>
 
-#include <CryptoPP/queue.h>
+#include <cryptopp/queue.h>
 
 #define ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_DATA_SIZE                                    "zsLib/eventing/remote-eventing/max-data-size-in-bytes"
 #define ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_PACKED_SIZE                                  "zsLib/eventing/remote-eventing/max-packed-data-size-in-bytes"
@@ -415,6 +415,8 @@ namespace zsLib
         AutoPUID mID;
         RemoteEventingWeakPtr mThisWeak;
         RemoteEventingPtr mGracefulShutdownReference;
+
+        IRemoteEventingDelegatePtr mDelegate;
         
         size_t mMaxDataSize {};
         size_t mMaxPackedSize {};
@@ -427,11 +429,10 @@ namespace zsLib
 
         States mState {State_Pending};
 
-        IRemoteEventingDelegatePtr mDelegate;
         IPAddress mServerIP;
         WORD mListenPort {};
         String mSharedSecret;
-        Seconds mMaxWaitToBindTime;
+        Seconds mMaxWaitToBindTime {};
         Time mBindFailureTime {};
         
         ITimerPtr mRebindTimer;

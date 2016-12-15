@@ -93,7 +93,7 @@ namespace zsLib
                                                );
       static SecureByteBlockPtr convertToBuffer(
                                                 const std::unique_ptr<char[]> &arrayStr,
-                                                size_t lengthInChars = SIZE_T_MAX,
+                                                size_t lengthInChars = SIZE_MAX,
                                                 bool wipeOriginal = true
                                                 );
 

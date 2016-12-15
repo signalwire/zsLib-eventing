@@ -175,16 +175,16 @@ namespace zsLib
                                      ) :
         MessageQueueAssociator(queue),
         mDelegate(IRemoteEventingDelegateProxy::createWeak(connectionDelegate)),
-        mServerIP(serverIP),
-        mListenPort(listenPort),
-        mMaxWaitToBindTime(maxWaitToBindTime),
-        mSharedSecret(connectionSharedSecret),
         mMaxDataSize(static_cast<decltype(mMaxDataSize)>(ISettings::getUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_DATA_SIZE))),
         mMaxPackedSize(static_cast<decltype(mMaxPackedSize)>(ISettings::getUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_PACKED_SIZE))),
         mMaxOutstandingEvents(static_cast<decltype(mMaxOutstandingEvents)>(ISettings::getUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_OUTSTANDING_EVENTS))),
         mMaxQueuedAsyncDataBeforeEventsDropped(static_cast<decltype(mMaxQueuedAsyncDataBeforeEventsDropped)>(ISettings::getUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_QUEUED_ASYNC_DATA_BEFORED_EVENTS_DROPPED))),
         mMaxQueuedOutgoingDataBeforeEventsDropped(static_cast<decltype(mMaxQueuedOutgoingDataBeforeEventsDropped)>(ISettings::getUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_QUEUED_OUTGOING_DATA_BEFORED_EVENTS_DROPPED))),
-        mUseIPv6(ISettings::getBool(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_USE_IPV6))
+        mUseIPv6(ISettings::getBool(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_USE_IPV6)),
+        mServerIP(serverIP),
+        mListenPort(listenPort),
+        mSharedSecret(connectionSharedSecret),
+        mMaxWaitToBindTime(maxWaitToBindTime)
       {
         ZS_LOG_DETAIL(log("Created"));
       }
@@ -201,7 +201,7 @@ namespace zsLib
           auto info = (*iter);
           Log::EventingAtomDataArray providerArray;
           if (Log::getEventingWriterInfo(info->mHandle, info->mProviderID, info->mProviderName, info->mProviderHash, &providerArray)) {
-            providerArray[mEventingAtomIndex] = NULL;
+            providerArray[mEventingAtomIndex] = 0;
           }
           delete info;
         }
