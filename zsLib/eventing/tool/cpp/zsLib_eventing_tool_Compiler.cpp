@@ -676,13 +676,12 @@ namespace zsLib
           return false;
         }
 
-#if SIZE_MAX != UINT64_MAX
         //---------------------------------------------------------------------
-        static bool insert(
-                           Index64Set &indexes,
-                           uint64_t index,
-                           bool throwIfFound = true
-                           ) throw (InvalidArgument)
+        static bool insert64(
+                             Index64Set &indexes,
+                             uint64_t index,
+                             bool throwIfFound = true
+                             ) throw (InvalidArgument)
         {
           if (0 == index) return false;
           
@@ -697,8 +696,7 @@ namespace zsLib
           }
           return false;
         }
-#endif //SIZE_MAX != UINT64_MAX
-        
+
         //---------------------------------------------------------------------
         static String toSymbol(const String &str)
         {
@@ -1731,7 +1729,7 @@ namespace zsLib
             {
               auto keyword = (*iter).second;
               if (0 == keyword->mMask) continue;
-              insert(consumedIndexes, keyword->mMask);
+              insert64(consumedIndexes, keyword->mMask);
             }
 
             uint64_t current = 1;
@@ -1743,7 +1741,7 @@ namespace zsLib
               bool foundKeywordBitmask {};
 
               do {
-                while (!insert(consumedIndexes, current, false))
+                while (!insert64(consumedIndexes, current, false))
                 {
                   current = current << 1;
                   if (0x8000000000000000ULL == current) {
