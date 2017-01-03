@@ -34,6 +34,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/tool/types.h>
 
 #include <zsLib/eventing/IEventingTypes.h>
+#include <zsLib/eventing/IWrapperTypes.h>
 
 namespace zsLib
 {
@@ -52,16 +53,47 @@ namespace zsLib
       interaction ICompilerTypes
       {
         ZS_DECLARE_TYPEDEF_PTR(IEventingTypes::Provider, Provider);
+        ZS_DECLARE_TYPEDEF_PTR(IWrapperTypes::Project, Project);
+
+        enum Modes
+        {
+          Mode_First,
+          
+          Mode_Eventing = Mode_First,
+          Mode_APIWrapper,
+          
+          Mode_Last = Mode_APIWrapper,
+        };
+
+        static const char *toString(Modes value);
+        static Modes toMode(const char *value) throw (InvalidArgument);
+
+        enum WrapperOutputs
+        {
+          WrapperOutput_First,
+
+          WrapperOutput_CX = WrapperOutput_First,
+          WrapperOutput_ObjectiveC,
+          WrapperOutput_JavaAndroid,
+          
+          WrapperOutput_Last = WrapperOutput_JavaAndroid,
+        };
+
+        static const char *toString(WrapperOutputs value);
+        static WrapperOutputs toWrapperOutput(const char *value) throw (InvalidArgument);
 
         struct Config
         {
-          String      mConfigFile;
+          Modes           mMode {Mode_First};
+          WrapperOutputs  mWrapperOutput {WrapperOutput_First};
+          String          mConfigFile;
 
-          StringList  mSourceFiles;
-          String      mOutputName;
-          String      mAuthor;
+          StringList      mSourceFiles;
+          String          mOutputName;
+          String          mAuthor;
 
-          ProviderPtr mProvider;
+          ProviderPtr     mProvider;
+          ProjectPtr      mProject;
         };
       };
 

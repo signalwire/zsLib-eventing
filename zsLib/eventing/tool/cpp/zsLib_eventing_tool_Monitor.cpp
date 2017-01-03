@@ -30,7 +30,6 @@ either expressed or implied, of the FreeBSD Project.
 */
 
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Monitor.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Compiler.h>
 
 #include <zsLib/eventing/tool/OutputStream.h>
 #include <zsLib/eventing/IHelper.h>
