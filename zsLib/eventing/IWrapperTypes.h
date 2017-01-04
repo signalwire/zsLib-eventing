@@ -329,6 +329,13 @@ namespace zsLib
              ) : Context(v, context) {}
 
         virtual TypePtr toType() const override {return ZS_DYNAMIC_PTR_CAST(Type, toContext());}
+
+        static TypePtr createReferencedType(
+                                            ContextPtr context,
+                                            ElementPtr parentEl
+                                            ) throw (InvalidContent);
+
+        ElementPtr createReferenceTypeElement() const;
       };
 
       //-----------------------------------------------------------------------
@@ -458,7 +465,7 @@ namespace zsLib
       struct Struct : public Type
       {
         StructModifiers mModifiers {};
-        TypeList mTemplateList;
+        TypeList mTemplates;
 
         String mTemplateID;
 
@@ -468,12 +475,11 @@ namespace zsLib
 
         EnumMap mEnums;
         StructMap mStructs;
+        TypedefTypeMap mTypedefs;
 
         PropertyList mProperties;
         MethodList mMethods;
 
-        TypedefTypeMap mTypedefs;
-        
         Struct(
                const make_private &v,
                ContextPtr context
@@ -524,7 +530,7 @@ namespace zsLib
 
       struct Property : public Context
       {
-        TypedefTypePtr mType;
+        TypePtr mType;
         String mDefaultValue;
         
         Property(
@@ -549,11 +555,11 @@ namespace zsLib
         virtual String hash() const override;
       };
 
-      static void createProperty(
-                                 ContextPtr context,
-                                 ElementPtr propertiesEl,
-                                 PropertyList &outProperties
-                                 ) throw (InvalidContent);
+      static void createProperties(
+                                   ContextPtr context,
+                                   ElementPtr propertiesEl,
+                                   PropertyList &outProperties
+                                   ) throw (InvalidContent);
 
       //-----------------------------------------------------------------------
       #pragma mark

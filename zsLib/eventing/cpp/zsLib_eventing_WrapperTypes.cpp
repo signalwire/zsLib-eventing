@@ -772,7 +772,7 @@ namespace zsLib
 
       ElementPtr rootEl = Element::create(objectName);
 
-      write(rootEl);
+      Context::write(rootEl);
 
       if (mNamespaces.size() > 0) {
         auto namespacesEl = Element::create("namespaces");
@@ -1007,6 +1007,120 @@ namespace zsLib
 
         namespaceEl = namespaceEl->findNextSiblingElement("namespace");
       }
+    }
+
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    #pragma mark
+    #pragma mark IWrapperTypes::Type
+    #pragma mark
+
+    //-------------------------------------------------------------------------
+    IWrapperTypes::TypePtr IWrapperTypes::Type::createReferencedType(
+                                                                     ContextPtr context,
+                                                                     ElementPtr parentEl
+                                                                     ) throw (InvalidContent)
+    {
+      FindTypeOptions options;
+
+      {
+        auto typedefEl = parentEl->findFirstChildElement("typedef");
+        if (typedefEl) {
+          auto typedefObj = TypedefType::createForwards(context, typedefEl);
+          typedefObj->parse(typedefEl);
+          return typedefObj;
+        }
+      }
+
+      {
+        auto basicEl = parentEl->findFirstChildElement("basic");
+        if (basicEl) {
+          auto baseStr = context->aliasLookup(UseHelper::getElementTextAndDecode(basicEl->findFirstChildElement("base")));
+          auto foundType = context->findType(String(), baseStr, options);
+          if (!foundType) {
+            ZS_THROW_CUSTOM(InvalidContent, String("Basic type was not found: ") + baseStr);
+          }
+          return foundType;
+        }
+      }
+
+      {
+        auto enumEl = parentEl->findFirstChildElement("enum");
+        if (enumEl) {
+          auto pathStr = context->aliasLookup(UseHelper::getElementTextAndDecode(enumEl->findFirstChildElement("path")));
+          auto baseStr = context->aliasLookup(UseHelper::getElementTextAndDecode(enumEl->findFirstChildElement("base")));
+
+          auto foundType = context->findType(pathStr, baseStr, options);
+          if (!foundType) {
+            ZS_THROW_CUSTOM(InvalidContent, String("Enum type was not found, path=") + pathStr + ", base=" + baseStr);
+          }
+          return foundType;
+        }
+      }
+
+      {
+        auto structEl = parentEl->findFirstChildElement("struct");
+        if (structEl) {
+          auto pathStr = context->aliasLookup(UseHelper::getElementTextAndDecode(structEl->findFirstChildElement("path")));
+          auto baseStr = context->aliasLookup(UseHelper::getElementTextAndDecode(structEl->findFirstChildElement("base")));
+
+          auto foundType = context->findType(pathStr, baseStr, options);
+          if (!foundType) {
+            ZS_THROW_CUSTOM(InvalidContent, String("Struct type was not found, path=") + pathStr + ", base=" + baseStr);
+          }
+          return foundType;
+        }
+      }
+
+      ZS_THROW_CUSTOM(InvalidContent, "Referenced type was not found for context, context=" + context->getMappingName());
+      return TypePtr();
+    }
+
+    //-------------------------------------------------------------------------
+    ElementPtr IWrapperTypes::Type::createReferenceTypeElement() const
+    {
+      {
+        auto typedefType = toTypedefType();
+        if (typedefType) return typedefType->createElement();
+      }
+
+      {
+        auto basicType = toBasicType();
+        if (basicType) {
+          auto typeEl = Element::create("basic");
+          typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("base", IEventingTypes::toString(basicType->mBaseType)));
+          return typeEl;
+        }
+      }
+
+      {
+        auto enumType = toEnumType();
+        if (enumType) {
+          auto typeEl = Element::create("enum");
+          auto pathStr = enumType->getPath();
+          typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("path", pathStr));
+          typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("base", enumType->getMappingName()));
+          return typeEl;
+        }
+      }
+
+      {
+        auto structType = toStruct();
+        if (structType) {
+          auto typeEl = Element::create("struct");
+
+          auto pathStr = structType->getPath();
+          typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("path", pathStr));
+          typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("base", structType->getMappingName()));
+          return typeEl;
+        }
+      }
+
+      ZS_THROW_INVALID_ASSUMPTION("Unexpected type reference found: " + getMappingName());
+      
+      return ElementPtr();
     }
 
     //-------------------------------------------------------------------------
@@ -1381,13 +1495,20 @@ namespace zsLib
           ZS_THROW_CUSTOM(InvalidContent, String("array size is not valid: ") + arrayStr);
         }
       }
-      
-      String pathStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findLastChildElement("path")));
-      String baseStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findLastChildElement("base")));
 
-#define TODO 1
-#define TODO 2
-      
+      if (!hasModifier(mModifiers, TypeModifier_Generic)) {
+        String pathStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findLastChildElement("path")));
+        String baseStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findLastChildElement("base")));
+        
+        FindTypeOptions options;
+        auto foundType = findType(pathStr, baseStr, options);
+
+        if (!foundType) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Type was not found, path=") + pathStr + ", base=" + baseStr);
+        }
+
+        mOriginalType = foundType;
+      }
     }
     
     //-------------------------------------------------------------------------
@@ -1397,9 +1518,24 @@ namespace zsLib
       
       hasher->update(Context::hash());
 
-#define TODO 1
-#define TODO 2
-      
+      hasher->update(":");
+      hasher->update(toString(mModifiers));
+      hasher->update(":");
+
+      auto original = mOriginalType.lock();
+      if (original) {
+        auto name = original->getMappingName();
+        auto path = original->getPath();
+
+        hasher->update(path);
+        hasher->update(":");
+        hasher->update(name);
+        hasher->update(":");
+      } else {
+        hasher->update("__generic__:");
+      }
+
+      hasher->update(mArraySize);
       hasher->update(":end");
       
       return hasher->finalizeAsString();
@@ -1472,9 +1608,14 @@ namespace zsLib
       Context::init(rootEl);
       
       if (!rootEl) return;
-      
-#define TODO 1
-#define TODO 2
+
+      mTemplateID = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("templateId")));
+
+      auto context = toContext();
+
+      createEnumForwards(context, rootEl->findFirstChildElement("enums"), mEnums);
+      createStructForwards(context, rootEl->findFirstChildElement("structs"), mStructs);
+      createTypedefForwards(context, rootEl->findFirstChildElement("typedefs"), mTypedefs);
     }
     
     //-------------------------------------------------------------------------
@@ -1504,10 +1645,120 @@ namespace zsLib
       if (NULL == objectName) objectName = "struct";
       
       ElementPtr rootEl = Element::create(objectName);
-      
-#define TODO 1
-#define TODO 2
-      
+
+      Context::write(rootEl);
+
+      String modifiersStr = toString(mModifiers);
+
+      if (modifiersStr.hasData()) {
+        rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("modifiers", modifiersStr));
+      }
+
+      String lastVisibilityStr = toString(mCurrentVisbility);
+      if (lastVisibilityStr.hasData()) {
+        rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("visibility", lastVisibilityStr));
+      }
+
+      if (mTemplateID.hasData()) {
+        rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("templateId", mTemplateID));
+      }
+
+      if (mTemplates.size() > 0) {
+        ElementPtr templatesEl = Element::create("templates");
+
+        for (auto iter = mTemplates.begin(); iter != mTemplates.end(); ++iter) {
+          auto templateType = (*iter);
+
+          ElementPtr templateEl = Element::create("template");
+
+          templateEl->adoptAsLastChild(templateType->createReferenceTypeElement());
+          templatesEl->adoptAsLastChild(templateEl);
+        }
+      }
+
+      if (mIsARelationships.size() > 0) {
+        ElementPtr relationshipsEl = Element::create("relationships");
+        for (auto iter = mIsARelationships.begin(); iter != mIsARelationships.end(); ++iter) {
+          auto visibility = (*iter).second.first;
+          auto structType = (*iter).second.second;
+
+          auto relationshipEl = Element::create("relationsip");
+
+          String visibilityStr = toString(visibility);
+          if (visibilityStr.hasData()) {
+            relationshipEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("visibility", visibilityStr));
+          }
+
+          auto pathStr = structType->getPath();
+          if (pathStr.hasData()) {
+            relationshipEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("path", pathStr));
+          }
+
+          auto nameStr = structType->getMappingName();
+          if (nameStr.hasData()) {
+            relationshipEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("base", nameStr));
+          }
+
+          relationshipsEl->adoptAsLastChild(relationshipEl);
+        }
+        rootEl->adoptAsLastChild(relationshipsEl);
+      }
+
+      if (mEnums.size() > 0) {
+        auto enumsEl = Element::create("enums");
+
+        for (auto iter = mEnums.begin(); iter != mEnums.end(); ++iter)
+        {
+          auto enumObj = (*iter).second;
+          enumsEl->adoptAsLastChild(enumObj->createElement());
+        }
+        rootEl->adoptAsLastChild(enumsEl);
+      }
+
+      if (mStructs.size() > 0) {
+        auto structsEl = Element::create("structs");
+
+        for (auto iter = mStructs.begin(); iter != mStructs.end(); ++iter)
+        {
+          auto structObj = (*iter).second;
+          structsEl->adoptAsLastChild(structObj->createElement());
+        }
+        rootEl->adoptAsLastChild(structsEl);
+      }
+
+      if (mTypedefs.size() > 0) {
+        auto typedefsEl = Element::create("typedefs");
+
+        for (auto iter = mTypedefs.begin(); iter != mTypedefs.end(); ++iter)
+        {
+          auto typedefObj = (*iter).second;
+          typedefsEl->adoptAsLastChild(typedefObj->createElement());
+        }
+        rootEl->adoptAsLastChild(typedefsEl);
+      }
+
+      if (mProperties.size() > 0) {
+        auto propertiesEl = Element::create("properties");
+
+        for (auto iter = mProperties.begin(); iter != mProperties.end(); ++iter)
+        {
+          auto propertyObj = (*iter);
+          propertiesEl->adoptAsLastChild(propertyObj->createElement());
+        }
+        rootEl->adoptAsLastChild(propertiesEl);
+      }
+
+      if (mMethods.size() > 0) {
+        auto methodsEl = Element::create("methods");
+
+        for (auto iter = mMethods.begin(); iter != mMethods.end(); ++iter)
+        {
+          auto methodObj = (*iter);
+          methodsEl->adoptAsLastChild(methodObj->createElement());
+        }
+        rootEl->adoptAsLastChild(methodsEl);
+      }
+
       return rootEl;
     }
     
@@ -1517,8 +1768,85 @@ namespace zsLib
       if (!rootEl) return;
 
       Context::parse(rootEl);
+
+      auto context = toContext();
+
+      {
+        auto modifiersStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("modifiers")));
+        if (modifiersStr.hasData()) {
+          mModifiers = toStructModifier(modifiersStr);
+        }
+      }
+
+      {
+        auto visibilityStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("visibility")));
+        if (visibilityStr.hasData()) {
+          mCurrentVisbility = toVisibility(visibilityStr);
+        }
+      }
+
+      mTemplateID = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("templateId")));
+
+      {
+        auto templatesEl = rootEl->findFirstChildElement("templates");
+        if (templatesEl) {
+          auto templateEl = templatesEl->findFirstChildElement("template");
+
+          mTemplates.push_back(createReferencedType(context, templateEl));
+          templateEl = templateEl->findNextSiblingElement("template");
+        }
+      }
+
+
+      {
+        auto relationshipsEl = rootEl->findFirstChildElement("relationships");
+        if (relationshipsEl) {
+
+          FindTypeOptions options;
+
+          auto relationshipEl = relationshipsEl->findFirstChildElement("relationship");
+          while (relationshipEl) {
+
+            Visibilities visible {Visibility_First};
+
+            {
+              auto visibiltyStr = aliasLookup(UseHelper::getElementTextAndDecode(relationshipEl->findFirstChildElement("visibility")));
+              if (visibiltyStr.hasData()) {
+                visible = toVisibility(visibiltyStr);
+              }
+            }
+
+            {
+              auto pathStr = aliasLookup(UseHelper::getElementTextAndDecode(relationshipEl->findFirstChildElement("path")));
+              auto baseStr = aliasLookup(UseHelper::getElementTextAndDecode(relationshipEl->findFirstChildElement("base")));
+
+              auto foundType = findType(pathStr, baseStr, options);
+              if (!foundType) {
+                ZS_THROW_CUSTOM(InvalidContent, String("Relationship struct type was not found, path=") + pathStr + ", base=" + baseStr);
+              }
+
+              auto structObj = foundType->toStruct();
+              if (!structObj) {
+                ZS_THROW_CUSTOM(InvalidContent, String("Relationship struct type was found but was not a struct, path=") + pathStr + ", base=" + baseStr);
+              }
+
+              mIsARelationships[structObj->getMappingName()] = IWrapperTypes::VisibleStructPair(visible, structObj);
+            }
+
+            relationshipEl = relationshipEl->findNextSiblingElement("relationship");
+          }
+        }
+      }
+
+      // scan for other nested namespaces, enums, structs and typedefs
+      parseEnums(context, rootEl->findFirstChildElement("enums"), mEnums);
+      parseStructs(context, rootEl->findFirstChildElement("structs"), mStructs);
+      parseTypedefs(context, rootEl->findFirstChildElement("typedefs"), mTypedefs);
+
+      createProperties(context, rootEl->findFirstChildElement("properties"), mProperties);
+      createMethods(context, rootEl->findFirstChildElement("properties"), mMethods);
     }
-    
+
     //-------------------------------------------------------------------------
     String IWrapperTypes::Struct::hash() const
     {
@@ -1526,9 +1854,66 @@ namespace zsLib
       
       hasher->update(Context::hash());
 
-#define TODO 1
-#define TODO 2
-      
+      hasher->update(":");
+      hasher->update(toString(mModifiers));
+      hasher->update(":");
+      hasher->update(toString(mCurrentVisbility));
+      hasher->update(":");
+      hasher->update(mTemplateID);
+
+      hasher->update(":templates:");
+      for (auto iter = mTemplates.begin(); iter != mTemplates.end(); ++iter) {
+        auto templateObj = (*iter);
+
+        String pathStr = templateObj->getPath();
+        String baseStr = templateObj->getMappingName();
+
+        hasher->update(pathStr);
+        hasher->update(":");
+        hasher->update(baseStr);
+        hasher->update(":next:");
+      }
+
+      hasher->update(":relationships:");
+      for (auto iter = mIsARelationships.begin(); iter != mIsARelationships.end(); ++iter) {
+        auto visibility = (*iter).second.first;
+        auto structObj = (*iter).second.second;
+
+        String pathStr = structObj->getPath();
+        String baseStr = structObj->getMappingName();
+
+        hasher->update(toString(visibility));
+        hasher->update(":");
+        hasher->update(pathStr);
+        hasher->update(":");
+        hasher->update(baseStr);
+        hasher->update(":next:");
+      }
+
+      hasher->update(":enums:");
+      for (auto iter = mEnums.begin(); iter != mEnums.end(); ++iter)
+      {
+        auto enumObj = (*iter).second;
+        hasher->update(enumObj->hash());
+        hasher->update(":next:");
+      }
+
+      hasher->update(":structs:");
+      for (auto iter = mStructs.begin(); iter != mStructs.end(); ++iter)
+      {
+        auto structObj = (*iter).second;
+        hasher->update(structObj->hash());
+        hasher->update(":next:");
+      }
+
+      hasher->update(":typedefs:");
+      for (auto iter = mTypedefs.begin(); iter != mTypedefs.end(); ++iter)
+      {
+        auto typedefObj = (*iter).second;
+        hasher->update(typedefObj->hash());
+        hasher->update(":next:");
+      }
+
       hasher->update(":end");
       
       return hasher->finalizeAsString();
@@ -1585,17 +1970,19 @@ namespace zsLib
           }
         }
 
-        for (auto iter = mIsARelationships.begin(); iter != mIsARelationships.end(); ++iter)
         {
-          auto checkName = (*iter).first;
-          auto baseType = (*iter).second.second;
-          
           FindTypeOptions baseOptions = options;
           baseOptions.mSearchParents = false;
 
-          baseType->findType(pathStr, typeName, baseOptions);
-          if (checkName == searchPath) {
-            baseType->findType(checkPath, typeName, baseOptions);
+          for (auto iter = mIsARelationships.begin(); iter != mIsARelationships.end(); ++iter)
+          {
+            auto checkName = (*iter).first;
+            auto baseType = (*iter).second.second;
+            
+            baseType->findType(pathStr, typeName, baseOptions);
+            if (checkName == searchPath) {
+              baseType->findType(checkPath, typeName, baseOptions);
+            }
           }
         }
 
@@ -1622,9 +2009,28 @@ namespace zsLib
         auto found = mTypedefs.find(typeName);
         if (found != mTypedefs.end()) return (*found).second;
       }
-      
-#define TODO_TEMPLATE_LIST 1
-#define TODO_TEMPLATE_LIST 2
+
+      {
+        for (auto iter = mTemplates.begin(); iter != mTemplates.end(); ++iter) {
+          auto type = (*iter);
+          auto name = type->getMappingName();
+
+          if (name == typeName) return type;
+        }
+      }
+
+      {
+        FindTypeOptions baseOptions = options;
+        baseOptions.mSearchParents = false;
+
+        for (auto iter = mIsARelationships.begin(); iter != mIsARelationships.end(); ++iter)
+        {
+          auto checkName = (*iter).first;
+          auto baseType = (*iter).second.second;
+
+          baseType->findType(String(), typeName, baseOptions);
+        }
+      }
 
       if (options.mSearchParents) {
         auto parent = getParent();
@@ -1641,8 +2047,16 @@ namespace zsLib
                                              StructMap &outStructs
                                              ) throw (InvalidContent)
     {
-#define TODO 1
-#define TODO 2
+      if (!structsEl) return;
+
+      auto structEl = structsEl->findFirstChildElement("struct");
+
+      while (structEl) {
+        auto structObj = Struct::createForwards(context, structEl);
+        outStructs[structObj->getMappingName()] = structObj;
+
+        structEl = structEl->findNextSiblingElement("struct");
+      }
     }
 
     //-------------------------------------------------------------------------
@@ -1652,10 +2066,27 @@ namespace zsLib
                                      StructMap &ioStructs
                                      ) throw (InvalidContent)
     {
-#define TODO 1
-#define TODO 2
+      if (!structsEl) return;
+
+      auto structEl = structsEl->findFirstChildElement("struct");
+
+      while (structEl) {
+        auto name = context->aliasLookup(UseHelper::getElementTextAndDecode(structEl->findFirstChildElement("name")));
+
+        StructPtr structObj;
+
+        auto found = ioStructs.find(name);
+        if (found == ioStructs.end()) {
+          structObj = Struct::createForwards(context, structEl);
+          ioStructs[structObj->getMappingName()] = structObj;
+        } else {
+          structObj = (*found).second;
+        }
+        structObj->parse(structEl);
+
+        structEl = structEl->findNextSiblingElement("struct");
+      }
     }
-    
 
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
@@ -1676,11 +2107,15 @@ namespace zsLib
     {
       Context::init(rootEl);
       Context::parse(rootEl);
-      
-#define TODO 1
-#define TODO 2
+
+      if (!rootEl) return;
+
+      mDefaultValue = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("default")));
+
+      auto context = toContext();
+      mType = Type::createReferencedType(context, rootEl);
     }
-    
+
     //-------------------------------------------------------------------------
     IWrapperTypes::PropertyPtr IWrapperTypes::Property::create(ContextPtr context)
     {
@@ -1705,13 +2140,18 @@ namespace zsLib
     //-------------------------------------------------------------------------
     ElementPtr IWrapperTypes::Property::createElement(const char *objectName) const
     {
-      if (NULL == objectName) objectName = "struct";
+      if (NULL == objectName) objectName = "property";
       
       ElementPtr rootEl = Element::create(objectName);
-      
-#define TODO 1
-#define TODO 2
-      
+
+      if (mDefaultValue.hasData()) {
+        rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("default", mDefaultValue));
+      }
+
+      if (mType) {
+        rootEl->adoptAsLastChild(mType->createReferenceTypeElement());
+      }
+
       return rootEl;
     }
     
@@ -1722,24 +2162,37 @@ namespace zsLib
       auto hasher = IHasher::sha256();
       
       hasher->update(Context::hash());
-
-#define TODO 1
-#define TODO 2
-      
+      hasher->update(":");
+      hasher->update(mDefaultValue);
+      if (mType) {
+        hasher->update(":");
+        hasher->update(mType->getPath());
+        hasher->update(":");
+        hasher->update(mType->getMappingName());
+      } else {
+        hasher->update(":__");
+      }
       hasher->update(":end");
-      
+
       return hasher->finalizeAsString();
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::createProperty(
-                                       ContextPtr context,
-                                       ElementPtr propertiesEl,
-                                       PropertyList &outProperties
-                                       ) throw (InvalidContent)
+    void IWrapperTypes::createProperties(
+                                         ContextPtr context,
+                                         ElementPtr propertiesEl,
+                                         PropertyList &outProperties
+                                         ) throw (InvalidContent)
     {
-#define TODO 1
-#define TODO 2
+      if (!propertiesEl) return;
+
+      auto propertyEl = propertiesEl->findFirstChildElement("property");
+
+      while (propertyEl) {
+        auto propertyObj = Property::create(context, propertyEl);
+        outProperties.push_back(propertyObj);
+        propertyEl = propertyEl->findNextSiblingElement("property");
+      }
     }
 
 
@@ -1762,9 +2215,40 @@ namespace zsLib
     {
       Context::init(rootEl);
       Context::parse(rootEl);
-      
-#define TODO 1
-#define TODO 2
+
+      auto context = toContext();
+
+      auto modifiersStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("modifiers")));
+      if (modifiersStr.hasData()) {
+        mModifiers = toMethodModifier(modifiersStr);
+      }
+
+      {
+        auto propertiesEl = rootEl->findFirstChildElement("arguments");
+        if (propertiesEl) {
+          auto propertyEl = propertiesEl->findFirstChildElement("argument");
+          while (propertyEl) {
+            auto propertyObj = Property::create(context, propertyEl);
+            mArguments.push_back(propertyObj);
+            propertyEl = propertyEl->findNextSiblingElement("argument");
+          }
+        }
+      }
+
+      {
+        auto throwsEl = rootEl->findFirstChildElement("throws");
+        if (throwsEl) {
+          auto throwEl = throwsEl->findFirstChildElement("throw");
+          while (throwEl) {
+            auto typeObj = Type::createReferencedType(context, throwEl);
+            if (!typeObj) {
+              ZS_THROW_CUSTOM(InvalidContent, String("Thrown object was not found for: ") + getMappingName());
+            }
+            mThrows.push_back(typeObj);
+            throwEl = throwEl->findNextSiblingElement("throw");
+          }
+        }
+      }
     }
     
     //-------------------------------------------------------------------------
@@ -1794,10 +2278,30 @@ namespace zsLib
       if (NULL == objectName) objectName = "method";
       
       ElementPtr rootEl = Element::create(objectName);
-      
-#define TODO 1
-#define TODO 2
-      
+
+      String modifieresStr = toString(mModifiers);
+      if (modifieresStr.hasData()) {
+        rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("modifiers", modifieresStr));
+      }
+
+      if (mArguments.size() > 0) {
+        auto argumentsEl = Element::create("arguments");
+        for (auto iter = mArguments.begin(); iter != mArguments.end(); ++iter) {
+          auto propertyObj = (*iter);
+          argumentsEl->adoptAsLastChild(propertyObj->createElement("argument"));
+        }
+      }
+
+      if (mThrows.size() > 0) {
+        auto throwsEl = Element::create("throws");
+        for (auto iter = mThrows.begin(); iter != mThrows.end(); ++iter) {
+          auto throwObj = (*iter);
+          auto throwEl = Element::create("throw");
+          throwEl->adoptAsLastChild(throwObj->createReferenceTypeElement());
+          throwsEl->adoptAsLastChild(throwEl);
+        }
+      }
+
       return rootEl;
     }
     
@@ -1808,15 +2312,32 @@ namespace zsLib
       auto hasher = IHasher::sha256();
       
       hasher->update(Context::hash());
+      hasher->update(":");
+      hasher->update(toString(mModifiers));
 
-#define TODO 1
-#define TODO 2
-      
+      hasher->update(":arguments:");
+      for (auto iter = mArguments.begin(); iter != mArguments.end(); ++iter) {
+        auto propertyObj = (*iter);
+        hasher->update(propertyObj->getPath());
+        hasher->update(":");
+        hasher->update(propertyObj->getMappingName());
+        hasher->update(":next:");
+      }
+
+      hasher->update(":throws:");
+      for (auto iter = mThrows.begin(); iter != mThrows.end(); ++iter) {
+        auto throwObj = (*iter);
+        hasher->update(throwObj->getPath());
+        hasher->update(":");
+        hasher->update(throwObj->getMappingName());
+        hasher->update(":next:");
+      }
+
       hasher->update(":end");
       
       return hasher->finalizeAsString();
     }
-    
+
     //-------------------------------------------------------------------------
     void IWrapperTypes::createMethods(
                                       ContextPtr context,
@@ -1824,8 +2345,15 @@ namespace zsLib
                                       MethodList &outMethods
                                       ) throw (InvalidContent)
     {
-#define TODO 1
-#define TODO 2
+      if (!methodsEl) return;
+
+      auto methodEl = methodsEl->findFirstChildElement("method");
+
+      while (methodEl) {
+        auto methodObj = Method::create(context, methodEl);
+        outMethods.push_back(methodObj);
+        methodEl = methodEl->findNextSiblingElement("method");
+      }
     }
 
   } // namespace eventing
