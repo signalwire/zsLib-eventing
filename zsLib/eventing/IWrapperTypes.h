@@ -163,6 +163,7 @@ namespace zsLib
       typedef std::list<TypePtr> TypeList;
       typedef std::map<Name, TypePtr> TypeMap;
       typedef std::map<Name, BasicTypePtr> BasicTypeMap;
+      typedef std::set<TypedefTypePtr> TypedefTypeSet;
       typedef std::list<TypedefTypePtr> TypedefTypeList;
       typedef std::map<Name, TypedefTypePtr> TypedefTypeMap;
       typedef std::map<Name, StructPtr> StructMap;

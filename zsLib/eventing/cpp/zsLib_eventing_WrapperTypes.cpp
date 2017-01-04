@@ -1636,10 +1636,16 @@ namespace zsLib
 
       TypePtr baseType;
       TypedefTypeList linkedTypedefs;
+      TypedefTypeSet typedefsSet;
 
       while (originalType) {
         auto typedefType = originalType->toTypedefType();
         if (typedefType) {
+          if (typedefsSet.find(typedefType) != typedefsSet.end()) {
+            ZS_THROW_CUSTOM(InvalidContent, String("Typedef is circular: ") + typedefType->getMappingName());
+          }
+
+          typedefsSet.insert(typedefType);
           linkedTypedefs.push_front(typedefType);
           continue;
         }
