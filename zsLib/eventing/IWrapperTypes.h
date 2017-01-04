@@ -95,6 +95,14 @@ namespace zsLib
                               TypeModifiers value,
                               TypeModifiers checkFor
                               );
+      static TypeModifiers addModifiers(
+                                        TypeModifiers value,
+                                        TypeModifiers addModifiers
+                                        );
+      static TypeModifiers removeModifiers(
+                                           TypeModifiers value,
+                                           TypeModifiers addModifiers
+                                           );
 
       enum StructModifiers : ULONG
       {
@@ -110,6 +118,14 @@ namespace zsLib
                               StructModifiers value,
                               StructModifiers checkFor
                               );
+      static StructModifiers addModifiers(
+                                          StructModifiers value,
+                                          StructModifiers addModifiers
+                                          );
+      static StructModifiers removeModifiers(
+                                             StructModifiers value,
+                                             StructModifiers addModifiers
+                                             );
 
       enum MethodModifiers : ULONG
       {
@@ -128,6 +144,14 @@ namespace zsLib
                               MethodModifiers value,
                               MethodModifiers checkFor
                               );
+      static MethodModifiers addModifiers(
+                                          MethodModifiers value,
+                                          MethodModifiers addModifiers
+                                          );
+      static MethodModifiers removeModifiers(
+                                             MethodModifiers value,
+                                             MethodModifiers addModifiers
+                                             );
 
       typedef String Name;
       typedef String Value;
@@ -139,6 +163,7 @@ namespace zsLib
       typedef std::list<TypePtr> TypeList;
       typedef std::map<Name, TypePtr> TypeMap;
       typedef std::map<Name, BasicTypePtr> BasicTypeMap;
+      typedef std::list<TypedefTypePtr> TypedefTypeList;
       typedef std::map<Name, TypedefTypePtr> TypedefTypeMap;
       typedef std::map<Name, StructPtr> StructMap;
       typedef std::map<Name, EnumTypePtr> EnumMap;
@@ -205,6 +230,8 @@ namespace zsLib
                                  const FindTypeOptions &options
                                  ) const;
 
+        virtual void resolveTypedefs() throw (InvalidContent) {}
+
         virtual String aliasLookup(const String &value);
         
       protected:
@@ -254,6 +281,7 @@ namespace zsLib
                                  const String &typeName,
                                  const FindTypeOptions &options
                                  ) const override;
+        virtual void resolveTypedefs() throw (InvalidContent) override;
         virtual String aliasLookup(const String &value) override;
 
         BasicTypePtr findBasicType(IEventingTypes::PredefinedTypedefs basicType) const;
@@ -302,6 +330,7 @@ namespace zsLib
                                  const String &typeName,
                                  const FindTypeOptions &options
                                  ) const override;
+        virtual void resolveTypedefs() throw (InvalidContent) override;
       };
 
       static void createNamespaceForwards(
@@ -334,6 +363,8 @@ namespace zsLib
                                             ContextPtr context,
                                             ElementPtr parentEl
                                             ) throw (InvalidContent);
+
+        virtual TypePtr getTypeBypassingTypedefIfNoop() const {return toType();}
 
         ElementPtr createReferenceTypeElement() const;
       };
@@ -443,6 +474,10 @@ namespace zsLib
         virtual ElementPtr createElement(const char *objectName = NULL) const override;
         virtual void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
         virtual String hash() const override;
+
+        virtual void resolveTypedefs() throw (InvalidContent) override;
+
+        virtual TypePtr getTypeBypassingTypedefIfNoop() const override;
       };
 
       static void createTypedefForwards(
@@ -450,7 +485,7 @@ namespace zsLib
                                         ElementPtr typedefsEl,
                                         TypedefTypeMap &outTypedefs
                                         ) throw (InvalidContent);
-      
+
       static void parseTypedefs(
                                 ContextPtr context,
                                 ElementPtr typedefsEl,
@@ -507,6 +542,7 @@ namespace zsLib
                                  const String &typeName,
                                  const FindTypeOptions &options
                                  ) const override;
+        virtual void resolveTypedefs() throw (InvalidContent) override;
 
         virtual StructPtr toStruct() const override {return ZS_DYNAMIC_PTR_CAST(Struct, toContext());}
       };
@@ -553,6 +589,8 @@ namespace zsLib
         
         virtual ElementPtr createElement(const char *objectName = NULL) const override;
         virtual String hash() const override;
+
+        virtual void resolveTypedefs() throw (InvalidContent) override;
       };
 
       static void createProperties(
@@ -593,6 +631,8 @@ namespace zsLib
         
         virtual ElementPtr createElement(const char *objectName = NULL) const override;
         virtual String hash() const override;
+
+        virtual void resolveTypedefs() throw (InvalidContent) override;
       };
 
       static void createMethods(

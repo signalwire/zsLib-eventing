@@ -161,7 +161,7 @@ namespace zsLib
         for (int loop = 0; TypeModifier_None != modifierList[loop]; ++loop)
         {
           if (0 == check.compareNoCase(toStringValue(modifierList[loop]))) {
-            result = static_cast<TypeModifiers>(result | modifierList[loop]);
+            result = addModifiers(result, modifierList[loop]);
             break;
           }
         }
@@ -177,6 +177,24 @@ namespace zsLib
                                     )
     {
       return 0 != (value & checkFor);
+    }
+
+    //-------------------------------------------------------------------------
+    IWrapperTypes::TypeModifiers IWrapperTypes::addModifiers(
+                                                             TypeModifiers value,
+                                                             TypeModifiers addModifiers
+                                                             )
+    {
+      return static_cast<TypeModifiers>(value | addModifiers);
+    }
+
+    //-------------------------------------------------------------------------
+    IWrapperTypes::TypeModifiers IWrapperTypes::removeModifiers(
+                                                                TypeModifiers value,
+                                                                TypeModifiers addModifiers
+                                                                )
+    {
+      return static_cast<TypeModifiers>((0xFFFFFFFF ^ addModifiers) & value);
     }
 
     //-------------------------------------------------------------------------
@@ -244,7 +262,7 @@ namespace zsLib
         for (int loop = 0; StructModifier_None != modifierList[loop]; ++loop)
         {
           if (0 == check.compareNoCase(toStringValue(modifierList[loop]))) {
-            result = static_cast<StructModifiers>(result | modifierList[loop]);
+            result = addModifiers(result, modifierList[loop]);
             break;
           }
         }
@@ -260,6 +278,24 @@ namespace zsLib
                                     )
     {
       return 0 != (value & checkFor);
+    }
+
+    //-------------------------------------------------------------------------
+    IWrapperTypes::StructModifiers IWrapperTypes::addModifiers(
+                                                               StructModifiers value,
+                                                               StructModifiers addModifiers
+                                                               )
+    {
+      return static_cast<StructModifiers>(value | addModifiers);
+    }
+
+    //-------------------------------------------------------------------------
+    IWrapperTypes::StructModifiers IWrapperTypes::removeModifiers(
+                                                                  StructModifiers value,
+                                                                  StructModifiers addModifiers
+                                                                  )
+    {
+      return static_cast<StructModifiers>((0xFFFFFFFF ^ addModifiers) & value);
     }
 
     //-------------------------------------------------------------------------
@@ -344,6 +380,24 @@ namespace zsLib
                                     )
     {
       return 0 != (value & checkFor);
+    }
+
+    //-------------------------------------------------------------------------
+    IWrapperTypes::MethodModifiers IWrapperTypes::addModifiers(
+                                                               MethodModifiers value,
+                                                               MethodModifiers addModifiers
+                                                               )
+    {
+      return static_cast<MethodModifiers>(value | addModifiers);
+    }
+
+    //-------------------------------------------------------------------------
+    IWrapperTypes::MethodModifiers IWrapperTypes::removeModifiers(
+                                                                  MethodModifiers value,
+                                                                  MethodModifiers addModifiers
+                                                                  )
+    {
+      return static_cast<MethodModifiers>((0xFFFFFFFF ^ addModifiers) & value);
     }
 
     //-------------------------------------------------------------------------
@@ -685,6 +739,19 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
+    void IWrapperTypes::Project::resolveTypedefs() throw (InvalidContent)
+    {
+      if (mGlobal) {
+        mGlobal->resolveTypedefs();
+      }
+
+      for (auto iter = mBasicTypes.begin(); iter != mBasicTypes.end(); ++iter) {
+        auto basicType = (*iter).second;
+        basicType->resolveTypedefs();
+      }
+    }
+
+    //-------------------------------------------------------------------------
     String IWrapperTypes::Project::aliasLookup(const String &value)
     {
       return IWrapperTypes::aliasLookup(mAliases, value);
@@ -959,6 +1026,27 @@ namespace zsLib
       }
 
       return TypePtr();
+    }
+
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::Namespace::resolveTypedefs() throw (InvalidContent)
+    {
+      for (auto iter = mTypedefs.begin(); iter != mTypedefs.end(); ++iter) {
+        auto obj = (*iter).second;
+        obj->resolveTypedefs();
+      }
+      for (auto iter = mNamespaces.begin(); iter != mNamespaces.end(); ++iter) {
+        auto obj = (*iter).second;
+        obj->resolveTypedefs();
+      }
+      for (auto iter = mEnums.begin(); iter != mEnums.end(); ++iter) {
+        auto obj = (*iter).second;
+        obj->resolveTypedefs();
+      }
+      for (auto iter = mStructs.begin(); iter != mStructs.end(); ++iter) {
+        auto obj = (*iter).second;
+        obj->resolveTypedefs();
+      }
     }
 
     //-------------------------------------------------------------------------
@@ -1540,7 +1628,94 @@ namespace zsLib
       
       return hasher->finalizeAsString();
     }
-    
+
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::TypedefType::resolveTypedefs() throw (InvalidContent)
+    {
+      auto originalType = mOriginalType.lock();
+
+      TypePtr baseType;
+      TypedefTypeList linkedTypedefs;
+
+      while (originalType) {
+        auto typedefType = originalType->toTypedefType();
+        if (typedefType) {
+          linkedTypedefs.push_front(typedefType);
+          continue;
+        }
+        baseType = originalType;
+        break;
+      }
+
+      if (linkedTypedefs.size() < 1) return;  // nothing to do
+
+      if (!baseType) {
+        ZS_THROW_CUSTOM(InvalidContent, String("No linked base typedef found: ") + getMappingName());
+      }
+
+      for (auto iter = linkedTypedefs.begin(); iter != linkedTypedefs.end(); ++iter) {
+        auto typedefObj = (*iter);
+
+        if (0 != typedefObj->mArraySize) {
+          if (0 != mArraySize) {
+            ZS_THROW_CUSTOM(InvalidContent, String("Multi-dimensional array not support: ") + getMappingName());
+          }
+          mArraySize = typedefObj->mArraySize;
+        }
+
+        TypeModifiers originalModifiers = typedefObj->mModifiers;
+
+        // process safe to combine modifiers
+        {
+          if (hasModifier(typedefObj->mModifiers, TypeModifier_Generic)) {
+            mModifiers = addModifiers(mModifiers, TypeModifier_Generic);
+            originalModifiers = removeModifiers(originalModifiers, TypeModifier_Generic);
+          }
+          if (hasModifier(typedefObj->mModifiers, TypeModifier_Const)) {
+            mModifiers = addModifiers(mModifiers, TypeModifier_Const);
+            originalModifiers = removeModifiers(originalModifiers, TypeModifier_Const);
+          }
+          if (hasModifier(typedefObj->mModifiers, TypeModifier_Ptr)) {
+            mModifiers = addModifiers(mModifiers, TypeModifier_Ptr);
+            originalModifiers = removeModifiers(originalModifiers, TypeModifier_Ptr);
+          }
+        }
+
+        if (hasModifier(mModifiers, typedefObj->mModifiers)) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers) + ", linked modifiers=" + toString(originalModifiers));
+        }
+      }
+
+      if (hasModifier(mModifiers, TypeModifier_SharedPtr)) {
+        if (hasModifier(mModifiers, TypeModifier_WeakPtr)) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
+        }
+        if (hasModifier(mModifiers, TypeModifier_UniPtr)) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
+        }
+      }
+      if (hasModifier(mModifiers, TypeModifier_UniPtr)) {
+        if (hasModifier(mModifiers, TypeModifier_WeakPtr)) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
+        }
+      }
+
+      mOriginalType = baseType;
+    }
+
+    //-------------------------------------------------------------------------
+    IWrapperTypes::TypePtr IWrapperTypes::TypedefType::getTypeBypassingTypedefIfNoop() const
+    {
+      if (0 != mArraySize) return toType();
+
+      if (TypeModifier_None == mModifiers) {
+        auto originalType = mOriginalType.lock();
+        if (originalType) return originalType;
+      }
+
+      return toType();
+    }
+
     //-------------------------------------------------------------------------
     void IWrapperTypes::createTypedefForwards(
                                               ContextPtr context,
@@ -2041,6 +2216,47 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
+    void IWrapperTypes::Struct::resolveTypedefs() throw (InvalidContent)
+    {
+      for (auto iter = mTypedefs.begin(); iter != mTypedefs.end(); ++iter) {
+        auto obj = (*iter).second;
+        obj->resolveTypedefs();
+      }
+
+      for (auto iter = mEnums.begin(); iter != mEnums.end(); ++iter) {
+        auto obj = (*iter).second;
+        obj->resolveTypedefs();
+      }
+      for (auto iter = mStructs.begin(); iter != mStructs.end(); ++iter) {
+        auto obj = (*iter).second;
+        obj->resolveTypedefs();
+      }
+
+      for (auto iter = mProperties.begin(); iter != mProperties.end(); ++iter) {
+        auto obj = (*iter);
+        obj->resolveTypedefs();
+      }
+      for (auto iter = mMethods.begin(); iter != mMethods.end(); ++iter) {
+        auto obj = (*iter);
+        obj->resolveTypedefs();
+      }
+
+      for (auto iter_doNotUse = mTemplates.begin(); iter_doNotUse != mTemplates.end(); ) {
+        auto current = iter_doNotUse;
+        ++iter_doNotUse;
+
+        TypePtr obj = (*current);
+        if (!obj) continue;
+
+        TypePtr bypassType = obj->getTypeBypassingTypedefIfNoop();
+        if (bypassType == obj) continue;
+
+        mTemplates.insert(current, bypassType);
+        mTemplates.erase(current);
+      }
+    }
+
+    //-------------------------------------------------------------------------
     void IWrapperTypes::createStructForwards(
                                              ContextPtr context,
                                              ElementPtr structsEl,
@@ -2177,6 +2393,14 @@ namespace zsLib
       return hasher->finalizeAsString();
     }
     
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::Property::resolveTypedefs() throw (InvalidContent)
+    {
+      if (mType) {
+        mType = mType->getTypeBypassingTypedefIfNoop();
+      }
+    }
+
     //-------------------------------------------------------------------------
     void IWrapperTypes::createProperties(
                                          ContextPtr context,
@@ -2336,6 +2560,30 @@ namespace zsLib
       hasher->update(":end");
       
       return hasher->finalizeAsString();
+    }
+
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::Method::resolveTypedefs() throw (InvalidContent)
+    {
+      for (auto iter = mArguments.begin(); iter != mArguments.end(); ++iter) {
+        auto obj = (*iter);
+        obj->resolveTypedefs();
+      }
+
+      for (auto iter_doNotUse = mThrows.begin(); iter_doNotUse != mThrows.end(); )
+      {
+        auto current = iter_doNotUse;
+        ++iter_doNotUse;
+
+        TypePtr type = (*current);
+        if (!type) continue;
+
+        TypePtr bypassType = type->getTypeBypassingTypedefIfNoop();
+        if (type == bypassType) continue;
+
+        mThrows.insert(current, bypassType);
+        mThrows.erase(current);
+      }
     }
 
     //-------------------------------------------------------------------------
