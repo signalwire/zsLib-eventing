@@ -50,6 +50,49 @@ namespace zsLib
 
     namespace internal
     {
+      //-----------------------------------------------------------------------
+      //-----------------------------------------------------------------------
+      //-----------------------------------------------------------------------
+      //-----------------------------------------------------------------------
+      #pragma mark
+      #pragma mark (helpers)
+      #pragma mark
+      
+      //-----------------------------------------------------------------------
+      bool splitToNamePath(
+                           const String &typeNameWithPath,
+                           String &outPath,
+                           String &outName
+                           )
+      {
+        outPath = String();
+        outName = String();
+        
+        UseHelper::SplitMap splits;
+        UseHelper::split(typeNameWithPath, splits, "::");
+        UseHelper::splitTrim(splits);
+        UseHelper::splitPruneEmpty(splits);
+        
+        if (splits.size() < 1) return false;
+        
+        {
+          auto found = splits.find(splits.size()-1);
+          ZS_THROW_INVALID_ASSUMPTION_IF(found == splits.end());
+          
+          outName = (*found).second;
+          
+          splits.erase(found);
+        }
+
+        outPath = UseHelper::combine(splits, "::");
+
+        // put back global prefix if has global prefix
+        if ("::" == typeNameWithPath.substr(0, 2)) {
+          outPath = "::" + outPath;
+        }
+
+        return true;
+      }
     } // namespace internal
 
     //-------------------------------------------------------------------------
@@ -98,6 +141,7 @@ namespace zsLib
         IWrapperTypes::TypeModifier_SharedPtr,
         IWrapperTypes::TypeModifier_WeakPtr,
         IWrapperTypes::TypeModifier_UniPtr,
+        IWrapperTypes::TypeModifier_CollectionPtr,
         IWrapperTypes::TypeModifier_None
       };
       return &(modifierList[0]);
@@ -108,16 +152,17 @@ namespace zsLib
     {
       switch (value)
       {
-        case IWrapperTypes::TypeModifier_None:       return "none";
-        case IWrapperTypes::TypeModifier_Generic:    return "generic";
-        case IWrapperTypes::TypeModifier_Const:      return "const";
-        case IWrapperTypes::TypeModifier_Reference:  return "reference";
-        case IWrapperTypes::TypeModifier_Array:      return "array";
-        case IWrapperTypes::TypeModifier_Ptr:        return "ptr";
-        case IWrapperTypes::TypeModifier_RawPtr:     return "raw";
-        case IWrapperTypes::TypeModifier_SharedPtr:  return "shared";
-        case IWrapperTypes::TypeModifier_WeakPtr:    return "weak";
-        case IWrapperTypes::TypeModifier_UniPtr:     return "uni";
+        case IWrapperTypes::TypeModifier_None:          return "none";
+        case IWrapperTypes::TypeModifier_Generic:       return "generic";
+        case IWrapperTypes::TypeModifier_Const:         return "const";
+        case IWrapperTypes::TypeModifier_Reference:     return "reference";
+        case IWrapperTypes::TypeModifier_Array:         return "array";
+        case IWrapperTypes::TypeModifier_Ptr:           return "ptr";
+        case IWrapperTypes::TypeModifier_RawPtr:        return "raw";
+        case IWrapperTypes::TypeModifier_SharedPtr:     return "shared";
+        case IWrapperTypes::TypeModifier_WeakPtr:       return "weak";
+        case IWrapperTypes::TypeModifier_UniPtr:        return "uni";
+        case IWrapperTypes::TypeModifier_CollectionPtr: return "collection";
       }
 
       return "unknown";
@@ -511,32 +556,12 @@ namespace zsLib
       FindTypeOptions defaultOptions;
       if (!options) options = &defaultOptions;
       
-      UseHelper::SplitMap splits;
-      UseHelper::split(typeNameWithPath, splits, "::");
-      UseHelper::splitTrim(splits);
-      UseHelper::splitPruneEmpty(splits);
-      
-      if (splits.size() < 1) return TypePtr();
-      
-      String typeName;
-      
-      {
-        auto found = splits.find(splits.size()-1);
-        ZS_THROW_INVALID_ASSUMPTION_IF(found == splits.end());
-        
-        typeName = (*found).second;
-        
-        splits.erase(found);
-      }
-      
-      String newPathStr = UseHelper::combine(splits, "::");
-      
-      // put back global prefix if has global prefix
-      if ("::" == typeNameWithPath.substr(0, 2)) {
-        newPathStr = "::" + newPathStr;
-      }
+      String path;
+      String name;
 
-      return findType(newPathStr, typeName, *options);
+      if (!internal::splitToNamePath(typeNameWithPath, path, name)) return TypePtr();
+
+      return findType(path, name, *options);
     }
     
     //-------------------------------------------------------------------------
@@ -652,15 +677,23 @@ namespace zsLib
       rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("name", mName));
 
       if (mAliases.size() > 0) {
-        ElementPtr aliasesEl = Element::create("aliases");
+        auto aliasesEl = Element::create("aliases");
         for (auto iter = mAliases.begin(); iter != mAliases.end(); ++iter) {
-          ElementPtr aliasEl = Element::create("alias");
+          auto aliasEl = Element::create("alias");
           aliasEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("in", (*iter).first));
           aliasEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("out", (*iter).second));
           aliasesEl->adoptAsLastChild(aliasEl);
         }
       }
       
+      if (mDefinedExclusives.size() > 0) {
+        auto exclusivesEl = Element::create("exclusives");
+        for (auto iter = mDefinedExclusives.begin(); iter != mDefinedExclusives.end(); ++iter) {
+          auto exclusiveStr = (*iter);
+          exclusivesEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("exclusive", exclusiveStr));
+        }
+      }
+
       if (mGlobal) {
         rootEl->adoptAsLastChild(mGlobal->createElement());
       }
@@ -676,6 +709,16 @@ namespace zsLib
       Context::parse(rootEl);
 
       createAliases(rootEl->findFirstChildElement("aliases"), mAliases);
+      
+      auto exclusivesEl = rootEl->findFirstChildElement("exclusives");
+      if (exclusivesEl) {
+        auto exclusiveEl = exclusivesEl->findFirstChildElement("exclusive");
+        while (exclusiveEl) {
+          auto exclusiveStr = UseHelper::getElementTextAndDecode(exclusiveEl);
+          mDefinedExclusives.insert(exclusiveStr);
+          exclusiveEl = exclusiveEl->findNextSiblingElement("exclusive");
+        }
+      }
 
       auto context = toContext();
       
@@ -709,6 +752,14 @@ namespace zsLib
         hasher->update(aliasOut);
       }
       
+      hasher->update(":list:exclusives");
+      for (auto iter = mDefinedExclusives.begin(); iter != mDefinedExclusives.end(); ++iter)
+      {
+        auto exclusiveStr = (*iter);
+        hasher->update(":next:");
+        hasher->update(exclusiveStr);
+      }
+
       hasher->update(":global:");
       
       if (mGlobal) {
@@ -749,6 +800,18 @@ namespace zsLib
         auto basicType = (*iter).second;
         basicType->resolveTypedefs();
       }
+    }
+
+    //-------------------------------------------------------------------------
+    bool IWrapperTypes::Project::fixTemplateHashMapping()
+    {
+      bool didFix = false;
+      if (mGlobal) {
+        do {
+          didFix = mGlobal->fixTemplateHashMapping();
+        } while (didFix);
+      }
+      return didFix;
     }
 
     //-------------------------------------------------------------------------
@@ -1004,7 +1067,7 @@ namespace zsLib
         // type not found
         return TypePtr();
       }
-      
+
       {
         auto found = mEnums.find(typeName);
         if (found != mEnums.end()) return (*found).second;
@@ -1047,6 +1110,102 @@ namespace zsLib
         auto obj = (*iter).second;
         obj->resolveTypedefs();
       }
+    }
+
+    //-------------------------------------------------------------------------
+    bool IWrapperTypes::Namespace::fixTemplateHashMapping()
+    {
+      bool didFix = false;
+      for (auto iter = mNamespaces.begin(); iter != mNamespaces.end(); ++iter) {
+        auto obj = (*iter).second;
+        if (obj->fixTemplateHashMapping()) didFix = true;
+      }
+      for (auto iter = mStructs.begin(); iter != mStructs.end(); ++iter) {
+        auto obj = (*iter).second;
+        if (obj->fixTemplateHashMapping()) didFix = true;
+      }
+      return didFix;
+    }
+
+    //-------------------------------------------------------------------------
+    IWrapperTypes::NamespacePtr IWrapperTypes::Namespace::findNamespace(const String &nameWithPath) const
+    {
+      String path;
+      String name;
+      
+      if (!internal::splitToNamePath(nameWithPath, path, name)) return NamespacePtr();
+
+      return findNamespace(path, name);
+    }
+
+    //-------------------------------------------------------------------------
+    IWrapperTypes::NamespacePtr IWrapperTypes::Namespace::findNamespace(
+                                                                        const String &pathStr,
+                                                                        const String &name
+                                                                        ) const
+    {
+      NamespacePtr parentNamespace;
+      
+      String checkPath = pathStr;
+      
+      if ("::" == checkPath.substr(0, 2)) {
+        auto parent = getParent();
+        if (!parent) return NamespacePtr();
+        
+        parentNamespace = parent->toNamespace();
+
+        if (parentNamespace) {
+          return parentNamespace->findNamespace(pathStr, name);
+        }
+
+        // strip the global namespace if at the global namespace
+        checkPath = pathStr.substr(2);
+      }
+      
+      if (pathStr.hasData()) {
+        UseHelper::SplitMap splitPaths;
+        UseHelper::split(pathStr, splitPaths, "::");
+
+        if (splitPaths.size() < 1) return NamespacePtr();
+        
+        String searchPath = splitPaths[0];
+        
+        splitPaths.erase(splitPaths.begin());
+        
+        checkPath = UseHelper::combine(splitPaths, "::");
+        
+        {
+          auto found = mNamespaces.find(searchPath);
+          if (found != mNamespaces.end()) {
+            auto namespaceObj = (*found).second;
+            return namespaceObj->findNamespace(checkPath, name);
+          }
+        }
+
+        auto parent = getParent();
+        if (!parent) return NamespacePtr();
+        
+        parentNamespace = parent->toNamespace();
+        if (!parentNamespace) NamespacePtr();
+
+        return parentNamespace->findNamespace(pathStr, name);
+      }
+      
+      {
+        auto found = mNamespaces.find(name);
+        if (found != mNamespaces.end()) return (*found).second;
+      }
+
+      {
+        auto parent = getParent();
+        if (!parent) return NamespacePtr();
+        
+        parentNamespace = parent->toNamespace();
+        if (!parentNamespace) NamespacePtr();
+
+      }
+
+      return parentNamespace->findNamespace(pathStr, name);
     }
 
     //-------------------------------------------------------------------------
@@ -1699,9 +1858,40 @@ namespace zsLib
         if (hasModifier(mModifiers, TypeModifier_UniPtr)) {
           ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
         }
+        if (hasModifier(mModifiers, TypeModifier_CollectionPtr)) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
+        }
+      }
+      if (hasModifier(mModifiers, TypeModifier_WeakPtr)) {
+        if (hasModifier(mModifiers, TypeModifier_SharedPtr)) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
+        }
+        if (hasModifier(mModifiers, TypeModifier_UniPtr)) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
+        }
+        if (hasModifier(mModifiers, TypeModifier_CollectionPtr)) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
+        }
       }
       if (hasModifier(mModifiers, TypeModifier_UniPtr)) {
+        if (hasModifier(mModifiers, TypeModifier_SharedPtr)) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
+        }
         if (hasModifier(mModifiers, TypeModifier_WeakPtr)) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
+        }
+        if (hasModifier(mModifiers, TypeModifier_CollectionPtr)) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
+        }
+      }
+      if (hasModifier(mModifiers, TypeModifier_CollectionPtr)) {
+        if (hasModifier(mModifiers, TypeModifier_SharedPtr)) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
+        }
+        if (hasModifier(mModifiers, TypeModifier_WeakPtr)) {
+          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
+        }
+        if (hasModifier(mModifiers, TypeModifier_UniPtr)) {
           ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
         }
       }
@@ -2262,6 +2452,28 @@ namespace zsLib
       }
     }
 
+    //-------------------------------------------------------------------------
+    bool IWrapperTypes::Struct::fixTemplateHashMapping()
+    {
+      bool didFix = false;
+      for (auto iter = mStructs.begin(); iter != mStructs.end(); ++iter) {
+        auto obj = (*iter).second;
+        if (obj->fixTemplateHashMapping()) didFix = true;
+      }
+      
+      for (auto iter_doNotUse = mStructs.begin(); iter_doNotUse != mStructs.end(); ) {
+        
+        auto current = iter_doNotUse;
+        ++iter_doNotUse;
+        
+#error HERE
+
+        auto obj = (*current).second;
+      }
+      
+      return didFix;
+    }
+    
     //-------------------------------------------------------------------------
     void IWrapperTypes::createStructForwards(
                                              ContextPtr context,

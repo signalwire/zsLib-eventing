@@ -34,6 +34,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/tool/internal/types.h>
 
 #include <zsLib/eventing/tool/ICompiler.h>
+#include <zsLib/eventing/IWrapperTypes.h>
 
 namespace zsLib
 {
@@ -51,10 +52,59 @@ namespace zsLib
         #pragma mark WrapperCompiler
         #pragma mark
 
-        class WrapperCompiler : public ICompiler
+        class WrapperCompiler : public ICompiler,
+                                public IWrapperTypes
         {
           struct make_private {};
 
+        public:
+          ZS_DECLARE_TYPEDEF_PTR(IWrapperTypes::Project, Project);
+
+          ZS_DECLARE_STRUCT_PTR(Token);
+          typedef std::list<TokenPtr> TokenList;
+          
+          enum TokenTypes
+          {
+            TokenType_First,
+            
+            TokenType_Unknown = TokenType_First,
+            
+            TokenType_Documentation,
+            TokenType_Char,
+            TokenType_Quote,
+
+            TokenType_Number,
+            TokenType_Identifier,
+
+            TokenType_SemiColon,
+            
+            TokenType_Brace,
+            TokenType_CurlyBrace,
+            TokenType_SquareBrace,
+            
+            TokenType_Operator,
+            TokenType_ScopeOperator,
+            TokenType_CommaOperator,
+            TokenType_ColonOperator,
+            TokenType_EqualsOperator,
+            
+            TokenType_PointerOperator,
+            TokenType_AddressOperator,
+            TokenType_CarotOperator,
+            
+            TokenType_Last = TokenType_CarotOperator,
+          };
+
+          struct Token
+          {
+            TokenTypes mTokenType {TokenType_First};
+            String mToken;
+            ULONG mLineCount {1};
+            
+            bool isOpenBrace() const;
+            bool isCloseBrace() const;
+          };
+          
         public:
           //-------------------------------------------------------------------
           WrapperCompiler(
@@ -81,6 +131,30 @@ namespace zsLib
           void outputSkeleton();
           void read() throw (Failure, FailureWithLine);
           void validate() throw (Failure);
+          
+          bool parseNamespace(NamespacePtr parent) throw (FailureWithLine);
+          void parseNamespaceContents(NamespacePtr namespaceObj) throw (FailureWithLine);
+          
+          bool parseUsing(NamespacePtr namespaceObj) throw (FailureWithLine);
+
+          bool parseDocumentation();
+          bool parseSemiColon();
+          bool parseMacroExclusive() throw (FailureWithLine);
+
+          ElementPtr getDocumentation();
+          void mergeDocumentation(ElementPtr &existingDocumentation);
+
+          TokenPtr peekNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine);
+          TokenPtr extractNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine);
+          
+          void processUsingNamespace(
+                                     NamespacePtr currentNamespace,
+                                     NamespacePtr usingNamespace
+                                     );
+          void processUsingType(
+                                NamespacePtr currentNamespace,
+                                TypePtr usingType
+                                );
 
           void writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure);
           void writeJSON(const String &outputName, const DocumentPtr &doc) const throw (Failure);
@@ -95,6 +169,10 @@ namespace zsLib
           WrapperCompilerWeakPtr mThisWeak;
 
           Config mConfig;
+          TokenList mPendingDocumentation;
+
+          TokenList mTokens;
+          TokenPtr mLastToken;
         };
 
       } // namespace internal

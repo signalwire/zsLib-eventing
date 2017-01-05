@@ -77,16 +77,17 @@ namespace zsLib
 
       enum TypeModifiers : ULONG
       {
-        TypeModifier_None =       0,
-        TypeModifier_Generic =    (1 << 0),
-        TypeModifier_Const =      (1 << 1),
-        TypeModifier_Reference =  (1 << 2),
-        TypeModifier_Array =      (1 << 3),
-        TypeModifier_Ptr =        (1 << 8),
-        TypeModifier_RawPtr =     (1 << 9),
-        TypeModifier_SharedPtr =  (1 << 10),
-        TypeModifier_WeakPtr =    (1 << 11),
-        TypeModifier_UniPtr =     (1 << 12),
+        TypeModifier_None =           0,
+        TypeModifier_Generic =        (1 << 0),
+        TypeModifier_Const =          (1 << 1),
+        TypeModifier_Reference =      (1 << 2),
+        TypeModifier_Array =          (1 << 3),
+        TypeModifier_Ptr =            (1 << 8),
+        TypeModifier_RawPtr =         (1 << 9),
+        TypeModifier_SharedPtr =      (1 << 10),
+        TypeModifier_WeakPtr =        (1 << 11),
+        TypeModifier_UniPtr =         (1 << 12),
+        TypeModifier_CollectionPtr =  (1 << 13),
       };
 
       static String toString(TypeModifiers value);
@@ -174,6 +175,7 @@ namespace zsLib
       typedef std::map<Name, MethodPtr> MethodMap;
       typedef std::pair<Name, Value> NameValuePair;
       typedef std::list<NameValuePair> NameValueList;
+      typedef std::set<Value> ValueSet;
 
       //-----------------------------------------------------------------------
       #pragma mark
@@ -184,7 +186,7 @@ namespace zsLib
       {
       protected:
         struct make_private {};
-        
+
       public:
         struct FindTypeOptions
         {
@@ -232,6 +234,7 @@ namespace zsLib
                                  ) const;
 
         virtual void resolveTypedefs() throw (InvalidContent) {}
+        virtual bool fixTemplateHashMapping() {}
 
         virtual String aliasLookup(const String &value);
         
@@ -262,6 +265,8 @@ namespace zsLib
 
         NamespacePtr mGlobal;
         BasicTypeMap mBasicTypes;
+        
+        ValueSet mDefinedExclusives;
 
         Project(const make_private &v) : Context(v, ContextPtr()) {}
         
@@ -283,6 +288,7 @@ namespace zsLib
                                  const FindTypeOptions &options
                                  ) const override;
         virtual void resolveTypedefs() throw (InvalidContent) override;
+        virtual bool fixTemplateHashMapping() override;
         virtual String aliasLookup(const String &value) override;
 
         BasicTypePtr findBasicType(IEventingTypes::PredefinedTypedefs basicType) const;
@@ -332,6 +338,13 @@ namespace zsLib
                                  const FindTypeOptions &options
                                  ) const override;
         virtual void resolveTypedefs() throw (InvalidContent) override;
+        virtual bool fixTemplateHashMapping() override;
+
+        virtual NamespacePtr findNamespace(const String &nameWithPath) const;
+        virtual NamespacePtr findNamespace(
+                                           const String &pathStr,
+                                           const String &name
+                                           ) const;
       };
 
       static void createNamespaceForwards(
@@ -544,6 +557,7 @@ namespace zsLib
                                  const FindTypeOptions &options
                                  ) const override;
         virtual void resolveTypedefs() throw (InvalidContent) override;
+        virtual bool fixTemplateHashMapping() override;
 
         virtual StructPtr toStruct() const override {return ZS_DYNAMIC_PTR_CAST(Struct, toContext());}
       };

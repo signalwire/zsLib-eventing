@@ -45,6 +45,8 @@ either expressed or implied, of the FreeBSD Project.
 #include <list>
 #include <set>
 
+#define ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE "ZS_WRAPPER_EXCLUSIVE"
+
 namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zsLib_eventing_tool) } } }
 
 namespace zsLib
@@ -61,40 +63,9 @@ namespace zsLib
 
       namespace internal
       {
-        ZS_DECLARE_STRUCT_PTR(Token);
-        typedef std::list<TokenPtr> TokenList;
-        
-        enum TokenTypes
-        {
-          TokenType_First,
-          
-          TokenType_Unknown = TokenType_First,
-          
-          TokenType_Documentation,
-          TokenType_Char,
-          TokenType_Quote,
-          
-          TokenType_Number,
-          TokenType_Identifier,
-          
-          TokenType_SemiColon,
-          
-          TokenType_Brace,
-          TokenType_CurlyBrace,
-          TokenType_SquareBrace,
-          
-          TokenType_Operator,
-          TokenType_ScopeOperator,
-          TokenType_CommaOperator,
-          TokenType_ColonOperator,
-          TokenType_EqualsOperator,
-          
-          TokenType_PointerOperator,
-          TokenType_AddressOperator,
+        ZS_DECLARE_TYPEDEF_PTR(WrapperCompiler::Token, Token);
+        typedef WrapperCompiler::TokenList TokenList;
 
-          TokenType_Last = TokenType_AddressOperator,
-        };
-        
         //-----------------------------------------------------------------------
         //-----------------------------------------------------------------------
         //-----------------------------------------------------------------------
@@ -103,13 +74,6 @@ namespace zsLib
         #pragma mark Helpers
         #pragma mark
 
-        struct Token
-        {
-          TokenTypes mTokenType {TokenType_First};
-          String mToken;
-          ULONG mLineCount {1};
-        };
-        
         //---------------------------------------------------------------------
         static void skipPreprocessor(
                                      const char * &p,
@@ -166,7 +130,7 @@ namespace zsLib
           String str(p, static_cast<size_t>(endPos - p));
           
           auto result = make_shared<Token>();
-          result->mTokenType = TokenType_Documentation;
+          result->mTokenType = WrapperCompiler::TokenType_Documentation;
           result->mToken = str;
           result->mLineCount = ioLineCount;
 
@@ -187,7 +151,7 @@ namespace zsLib
           if (!Helper::skipQuote(p, &ioLineCount)) return TokenPtr();
 
           auto result = make_shared<Token>();
-          result->mTokenType = TokenType_Quote;
+          result->mTokenType = WrapperCompiler::TokenType_Quote;
           result->mToken = String(start, static_cast<size_t>(p - start));
           result->mLineCount = currentLine;
           return result;
@@ -214,7 +178,7 @@ namespace zsLib
           ++p;
 
           auto result = make_shared<Token>();
-          result->mTokenType = TokenType_Char;
+          result->mTokenType = WrapperCompiler::TokenType_Char;
           result->mToken = String(start, static_cast<size_t>(p - start));
           result->mLineCount = currentLine;
           return result;
@@ -433,7 +397,7 @@ namespace zsLib
           }
           
           auto result = make_shared<Token>();
-          result->mTokenType = TokenType_Number;
+          result->mTokenType = WrapperCompiler::TokenType_Number;
           result->mToken = String(start, static_cast<size_t>(p - start));
           if (foundNegative) {
             result->mToken = String("-") + result->mToken;
@@ -459,7 +423,7 @@ namespace zsLib
           }
           
           auto result = make_shared<Token>();
-          result->mTokenType = TokenType_Identifier;
+          result->mTokenType = WrapperCompiler::TokenType_Identifier;
           result->mToken = String(start, static_cast<size_t>(p - start));
           result->mLineCount = lineCount;
           return result;
@@ -471,15 +435,15 @@ namespace zsLib
                                       ULONG lineCount
                                       )
         {
-          TokenTypes type {TokenType_First};
+          WrapperCompiler::TokenTypes type {WrapperCompiler::TokenType_First};
           
           switch (*p) {
             case '{':
-            case '}': type = TokenType_CurlyBrace; break;
+            case '}': type = WrapperCompiler::TokenType_CurlyBrace; break;
             case '(':
-            case ')': type = TokenType_Brace; break;
+            case ')': type = WrapperCompiler::TokenType_Brace; break;
             case '[':
-            case ']': type = TokenType_SquareBrace; break;
+            case ']': type = WrapperCompiler::TokenType_SquareBrace; break;
             default:  return TokenPtr();
           }
           
@@ -572,21 +536,21 @@ namespace zsLib
           }
           
           auto result = make_shared<Token>();
-          result->mTokenType = TokenType_Operator;
+          result->mTokenType = WrapperCompiler::TokenType_Operator;
           if (";" == valid) {
-            result->mTokenType = TokenType_SemiColon;
+            result->mTokenType = WrapperCompiler::TokenType_SemiColon;
           } else if ("::" == valid) {
-            result->mTokenType = TokenType_ScopeOperator;
+            result->mTokenType = WrapperCompiler::TokenType_ScopeOperator;
           } else if ("," == valid) {
-            result->mTokenType = TokenType_CommaOperator;
+            result->mTokenType = WrapperCompiler::TokenType_CommaOperator;
           } else if (":" == valid) {
-            result->mTokenType = TokenType_ColonOperator;
+            result->mTokenType = WrapperCompiler::TokenType_ColonOperator;
           } else if ("=" == valid) {
-            result->mTokenType = TokenType_EqualsOperator;
+            result->mTokenType = WrapperCompiler::TokenType_EqualsOperator;
           } else if ("*" == valid) {
-            result->mTokenType = TokenType_PointerOperator;
+            result->mTokenType = WrapperCompiler::TokenType_PointerOperator;
           } else if ("&" == valid) {
-            result->mTokenType = TokenType_AddressOperator;
+            result->mTokenType = WrapperCompiler::TokenType_AddressOperator;
           }
 
           result->mToken = valid;
@@ -605,7 +569,7 @@ namespace zsLib
           if ('\0' == *p) return TokenPtr();
           
           auto result = make_shared<Token>();
-          result->mTokenType = TokenType_Unknown;
+          result->mTokenType = WrapperCompiler::TokenType_Unknown;
           result->mToken = String(p, static_cast<size_t>(1));
           result->mLineCount = lineCount;
           ++p;
@@ -755,6 +719,38 @@ namespace zsLib
 
             ioTokens.erase(current);
           }
+        }
+
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
+        #pragma mark WrapperCompiler
+        #pragma mark
+
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::Token::isOpenBrace() const
+        {
+          switch (mTokenType) {
+            case TokenType_Brace:         return "(" == mToken;
+            case TokenType_CurlyBrace:    return "{" == mToken;
+            case TokenType_SquareBrace:   return "[" == mToken;
+            default:                      break;
+          }
+          return false;
+        }
+
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::Token::isCloseBrace() const
+        {
+          switch (mTokenType) {
+            case TokenType_Brace:         return ")" == mToken;
+            case TokenType_CurlyBrace:    return "}" == mToken;
+            case TokenType_SquareBrace:   return "]" == mToken;
+            default:                      break;
+          }
+          return false;
         }
 
         //---------------------------------------------------------------------
@@ -920,15 +916,25 @@ namespace zsLib
               continue;
             }
 
+            if (!project) {
+              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Project configuration is missing!");
+            }
+
             tool::output() << "\n[Info] Reading C/C++ source file: " << fileName << "\n\n";
 
             try {
               const char *pos = reinterpret_cast<const char *>(file->BytePtr());
-              
-              TokenList tokens;
-              tokenize(pos, tokens);
-              
-              replaceAliases(tokens, project->mAliases);
+
+              mTokens.clear();
+              tokenize(pos, mTokens);
+
+              replaceAliases(mTokens, project->mAliases);
+
+              if (!project->mGlobal) {
+                project->mGlobal = Namespace::create(project);
+              }
+
+              parseNamespaceContents(project->mGlobal);
 
             } catch (const InvalidContent &e) {
               ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Invalid content found: " + e.message());
@@ -947,6 +953,324 @@ namespace zsLib
 //          if (project->mUniqueHash.isEmpty()) {
 //            project->mUniqueHash = project->uniqueEventingHash();
 //          }
+        }
+
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::parseNamespace(NamespacePtr parent) throw (FailureWithLine)
+        {
+          auto token = peekNextToken("namespace");
+          if (TokenType_Identifier != token->mTokenType) return false;
+          if ("namespace" != token->mToken) return false;
+
+          extractNextToken("namespace");  // skip "namespace"
+
+          token = extractNextToken("namespace");
+          
+          if (TokenType_Identifier != token->mTokenType) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String("namespace missing identifier"));
+          }
+          
+          String namespaceStr = token->mToken;
+
+          token = extractNextToken("namespace");
+
+          if ((TokenType_CurlyBrace != token->mTokenType) ||
+              (token->isOpenBrace())) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String("namespace expecting \"{\""));
+          }
+
+          NamespacePtr namespaceObj;
+
+          {
+            auto found = parent->mNamespaces.find(namespaceStr);
+            if (found == parent->mNamespaces.end()) {
+              namespaceObj = Namespace::create(parent);
+              namespaceObj->mName = namespaceStr;
+              namespaceObj->mDocumentation = getDocumentation();
+              parent->mNamespaces[namespaceStr] = namespaceObj;
+            } else {
+              namespaceObj = (*found).second;
+              mergeDocumentation(namespaceObj->mDocumentation);
+            }
+          }
+
+          parseNamespaceContents(namespaceObj);
+
+          token = extractNextToken("namespace");
+
+          if ((TokenType_CurlyBrace != token->mTokenType) ||
+              (token->isCloseBrace())) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String("namespace expecting \"}\""));
+          }
+
+          return true;
+        }
+        
+        //---------------------------------------------------------------------
+        void WrapperCompiler::parseNamespaceContents(NamespacePtr namespaceObj) throw (FailureWithLine)
+        {
+          while (mTokens.size() > 0) {
+            if (parseDocumentation()) continue;
+            if (parseSemiColon()) continue;
+            if (parseMacroExclusive()) continue;
+            if (parseNamespace(namespaceObj)) continue;
+            if (parseUsing(namespaceObj)) continue;
+          }
+        }
+
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::parseUsing(NamespacePtr namespaceObj) throw (FailureWithLine)
+        {
+          auto token = peekNextToken("using");
+          if (TokenType_Identifier != token->mTokenType) return false;
+
+          if ("using" != token->mToken) return false;
+
+          extractNextToken("using");  // skip "using"
+
+          token = peekNextToken("using");
+          if (TokenType_Identifier == token->mTokenType) {
+            if ("namespace" == token->mToken) {
+              extractNextToken("using");  // skip "namespace"
+
+              // extract until ";" found
+              String namespacePathStr;
+              
+              token = peekNextToken("using");
+              while (TokenType_SemiColon != token->mTokenType) {
+                extractNextToken("using"); // skip it
+                namespacePathStr += token->mToken;
+              }
+              
+              auto foundNamespace = namespaceObj->findNamespace(namespacePathStr);
+              if (!foundNamespace) {
+                ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String("using namespace was not found:") + namespacePathStr);
+              }
+
+              processUsingNamespace(namespaceObj, foundNamespace);
+              return true;
+            }
+          }
+
+          // extract until ";" found
+          String typePathStr;
+
+          token = peekNextToken("using");
+          while (TokenType_SemiColon != token->mTokenType) {
+            extractNextToken("using"); // skip it
+            typePathStr += token->mToken;
+          }
+
+          auto foundType = namespaceObj->toContext()->findType(typePathStr);
+          if (!foundType) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String("using type was not found:") + typePathStr);
+          }
+          
+          processUsingType(namespaceObj, foundType);
+          return true;
+        }
+
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::parseDocumentation()
+        {
+          bool found = false;
+          
+          while (mTokens.size() > 0) {
+            auto token = peekNextToken("documentation");
+            if (TokenType_Documentation != token->mTokenType) return found;
+
+            found = true;
+            mPendingDocumentation.push_back(extractNextToken("documentation"));
+          }
+
+          return found;
+        }
+
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::parseSemiColon()
+        {
+          auto token = peekNextToken(";");
+
+          if (TokenType_SemiColon != token->mTokenType) return false;
+          extractNextToken(";");
+          return true;
+        }
+
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::parseMacroExclusive() throw (FailureWithLine)
+        {
+          auto token = peekNextToken("Macro " ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE);
+
+          if (TokenType_Identifier != token->mTokenType) return false;
+          if (ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE != token->mToken) return false;
+
+          extractNextToken("Macro " ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE);
+          
+          token = extractNextToken("Macro " ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE);
+          if ((!token->isOpenBrace()) ||
+              (TokenType_Brace != token->mTokenType)) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String("Macro ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE missing \"(\""));
+          }
+
+          token = extractNextToken("Macro " ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE);
+          if (TokenType_Identifier != token->mTokenType) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String("Macro ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE expecting identifier"));
+          }
+
+          String exclusiveId = token->mToken;
+
+          token = extractNextToken("Macro " ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE);
+          if ((!token->isCloseBrace()) ||
+              (TokenType_Brace != token->mTokenType)) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String("Macro ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE missing \")\""));
+          }
+
+          if ((0 == exclusiveId.compareNoCase("x")) ||
+              (mConfig.mProject->mDefinedExclusives.end() != mConfig.mProject->mDefinedExclusives.find(exclusiveId)))
+          {
+            // exclusive is defined or no longer exclusive
+            return true;
+          }
+
+          // recursively search for end of exclusive token
+          while (mTokens.size() > 0) {
+            if (parseMacroExclusive()) return true;
+
+            // ignore token as it's excluded
+            extractNextToken("Macro " ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE);
+          }
+          return true;
+        }
+
+        //---------------------------------------------------------------------
+        ElementPtr WrapperCompiler::getDocumentation()
+        {
+          if (mPendingDocumentation.size() < 1) return ElementPtr();
+
+          String resultStr = "<doc>";
+          bool first = true;
+          while (mPendingDocumentation.size() > 0) {
+            auto token = mPendingDocumentation.front();
+            if (!first) {
+              resultStr += " ";
+            }
+
+            resultStr += token->mToken;
+            first = false;
+
+            mPendingDocumentation.pop_front();
+          }
+
+          resultStr += "</doc>";
+          return UseHelper::toXML(resultStr);
+        }
+
+        //---------------------------------------------------------------------
+        void WrapperCompiler::mergeDocumentation(ElementPtr &existingDocumentation)
+        {
+          auto rootEl = getDocumentation();
+          if (!rootEl) return;
+
+          if (!existingDocumentation) {
+            existingDocumentation = rootEl;
+            return;
+          }
+          
+          auto childEl = rootEl->getFirstChild();
+          while (childEl) {
+            auto nextEl = childEl->getNextSibling();
+            childEl->orphan();
+            existingDocumentation->adoptAsLastChild(childEl);
+            childEl = nextEl;
+          }
+        }
+        
+        //---------------------------------------------------------------------
+        TokenPtr WrapperCompiler::peekNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine)
+        {
+          if (mTokens.size() > 0) return mTokens.front();
+          ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_UNEXPECTED_EOF, mLastToken->mLineCount, String(whatExpectingMoreTokens) + " unexpectedly reached EOF");
+          return TokenPtr();
+        }
+
+        //---------------------------------------------------------------------
+        TokenPtr WrapperCompiler::extractNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine)
+        {
+          if (mTokens.size() > 0) {
+            mLastToken = mTokens.front();
+            mTokens.pop_front();
+            return mLastToken;
+          }
+          ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_UNEXPECTED_EOF, mLastToken->mLineCount, String(whatExpectingMoreTokens) + " unexpectedly reached EOF");
+          return TokenPtr();
+        }
+
+        //---------------------------------------------------------------------
+        void WrapperCompiler::processUsingNamespace(
+                                                    NamespacePtr currentNamespace,
+                                                    NamespacePtr usingNamespace
+                                                    )
+        {
+          if (currentNamespace == usingNamespace) return;
+
+          for (auto iter = usingNamespace->mEnums.begin(); iter != usingNamespace->mEnums.end(); ++iter)
+          {
+            auto name = (*iter).first;
+            auto type = (*iter).second;
+            
+            auto found = currentNamespace->mTypedefs.find(name);
+            if (found != currentNamespace->mTypedefs.end()) continue;
+            
+            auto newTypedef = TypedefType::create(currentNamespace);
+            newTypedef->mName = name;
+            newTypedef->mOriginalType = type;
+            currentNamespace->mTypedefs[name] = newTypedef;
+          }
+
+          for (auto iter = usingNamespace->mStructs.begin(); iter != usingNamespace->mStructs.end(); ++iter)
+          {
+            auto name = (*iter).first;
+            auto type = (*iter).second;
+            
+            auto found = currentNamespace->mTypedefs.find(name);
+            if (found != currentNamespace->mTypedefs.end()) continue;
+
+            auto newTypedef = TypedefType::create(currentNamespace);
+            newTypedef->mName = name;
+            newTypedef->mOriginalType = type;
+            currentNamespace->mTypedefs[name] = newTypedef;
+          }
+
+          for (auto iter = usingNamespace->mTypedefs.begin(); iter != usingNamespace->mTypedefs.end(); ++iter)
+          {
+            auto name = (*iter).first;
+            auto type = (*iter).second;
+
+            auto found = currentNamespace->mTypedefs.find(name);
+            if (found != currentNamespace->mTypedefs.end()) continue;
+
+            auto newTypedef = TypedefType::create(currentNamespace);
+            newTypedef->mName = name;
+            newTypedef->mOriginalType = type;
+            currentNamespace->mTypedefs[name] = newTypedef;
+          }
+        }
+
+        //---------------------------------------------------------------------
+        void WrapperCompiler::processUsingType(
+                                               NamespacePtr currentNamespace,
+                                               TypePtr usingType
+                                               )
+        {
+          auto name = usingType->getMappingName();
+          
+          auto found = currentNamespace->mTypedefs.find(name);
+          if (found != currentNamespace->mTypedefs.end()) return;
+
+          auto newTypedef = TypedefType::create(currentNamespace);
+          newTypedef->mName = name;
+          newTypedef->mOriginalType = usingType;
+          currentNamespace->mTypedefs[name] = newTypedef;
         }
 
         //---------------------------------------------------------------------
