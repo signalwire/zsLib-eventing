@@ -234,7 +234,7 @@ namespace zsLib
                                  ) const;
 
         virtual void resolveTypedefs() throw (InvalidContent) {}
-        virtual bool fixTemplateHashMapping() {}
+        virtual bool fixTemplateHashMapping() {return false;}
 
         virtual String aliasLookup(const String &value);
         
@@ -560,6 +560,8 @@ namespace zsLib
         virtual bool fixTemplateHashMapping() override;
 
         virtual StructPtr toStruct() const override {return ZS_DYNAMIC_PTR_CAST(Struct, toContext());}
+
+        String calculateTemplateID() const;
       };
 
       static void createStructForwards(

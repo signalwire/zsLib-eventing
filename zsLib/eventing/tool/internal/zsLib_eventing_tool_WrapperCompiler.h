@@ -36,6 +36,8 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/tool/ICompiler.h>
 #include <zsLib/eventing/IWrapperTypes.h>
 
+#include <stack>
+
 namespace zsLib
 {
   namespace eventing
@@ -62,13 +64,18 @@ namespace zsLib
 
           ZS_DECLARE_STRUCT_PTR(Token);
           typedef std::list<TokenPtr> TokenList;
-          
+          ZS_DECLARE_PTR(TokenList);
+
+          typedef std::stack<TokenPtr> TokenStack;
+          typedef std::stack<TokenListPtr> TokenListStack;
+
           enum TokenTypes
           {
             TokenType_First,
             
             TokenType_Unknown = TokenType_First,
-            
+
+            TokenType_Directive,
             TokenType_Documentation,
             TokenType_Char,
             TokenType_Quote,
@@ -81,7 +88,8 @@ namespace zsLib
             TokenType_Brace,
             TokenType_CurlyBrace,
             TokenType_SquareBrace,
-            
+            TokenType_AngleBrace,
+
             TokenType_Operator,
             TokenType_ScopeOperator,
             TokenType_CommaOperator,
@@ -139,14 +147,24 @@ namespace zsLib
 
           bool parseDocumentation();
           bool parseSemiColon();
-          bool parseMacroExclusive() throw (FailureWithLine);
+          bool parseDirective() throw (FailureWithLine);
+          bool pushDirectiveTokens(TokenPtr token) throw (FailureWithLine);
+          bool parseDirectiveExclusive(bool &outIgnoreMode) throw (FailureWithLine);
 
           ElementPtr getDocumentation();
           void mergeDocumentation(ElementPtr &existingDocumentation);
 
+          void pushTokens(const TokenList &tokens);
+          void pushTokens(TokenListPtr tokens);
+          TokenListPtr getTokens() const;
+          TokenListPtr popTokens();
+
+          bool hasMoreTokens() const;
           TokenPtr peekNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine);
           TokenPtr extractNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine);
-          
+          void putBackToken(TokenPtr token);
+          void putBackTokens(const TokenList &tokens);
+
           void processUsingNamespace(
                                      NamespacePtr currentNamespace,
                                      NamespacePtr usingNamespace
@@ -155,6 +173,11 @@ namespace zsLib
                                 NamespacePtr currentNamespace,
                                 TypePtr usingType
                                 );
+
+          TypePtr findTypeOrCreateTypedef(
+                                          const TokenList &tokens,
+                                          TypedefPtr &outCreatedTypedef
+                                          );
 
           void writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure);
           void writeJSON(const String &outputName, const DocumentPtr &doc) const throw (Failure);
@@ -171,7 +194,8 @@ namespace zsLib
           Config mConfig;
           TokenList mPendingDocumentation;
 
-          TokenList mTokens;
+          TokenListStack mTokenListStack;
+          TokenStack mLastTokenStack;
           TokenPtr mLastToken;
         };
 

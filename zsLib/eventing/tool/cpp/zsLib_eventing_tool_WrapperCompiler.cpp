@@ -45,7 +45,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <list>
 #include <set>
 
-#define ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE "ZS_WRAPPER_EXCLUSIVE"
+#define ZS_WRAPPER_COMPILER_DIRECTIVE_EXCLUSIZE "EXCLUSIVE"
 
 namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zsLib_eventing_tool) } } }
 
@@ -113,6 +113,33 @@ namespace zsLib
         }
         
         //---------------------------------------------------------------------
+        static TokenPtr getCPPDirectiveToken(
+                                             const char *p,
+                                             ULONG &ioLineCount
+                                             )
+        {
+          if ('/' != *p) return TokenPtr();
+          if ('/' != *(p+1)) return TokenPtr();
+          if ('!' != *(p+2)) return TokenPtr();
+
+          p += 3;
+
+          const char *start = p;
+          Helper::skipToEOL(p);
+
+          String str(p, static_cast<size_t>(p - start));
+
+          auto result = make_shared<Token>();
+          result->mTokenType = WrapperCompiler::TokenType_Directive;
+          result->mToken = str;
+          result->mLineCount = ioLineCount;
+
+          Helper::skipEOL(p, &ioLineCount);
+
+          return result;
+        }
+        
+        //---------------------------------------------------------------------
         static TokenPtr getCPPDocToken(
                                        const char *p,
                                        ULONG &ioLineCount
@@ -124,10 +151,10 @@ namespace zsLib
           
           p += 3;
 
-          const char *endPos = p;
-          Helper::skipToEOL(endPos);
+          const char *start = p;
+          Helper::skipToEOL(p);
           
-          String str(p, static_cast<size_t>(endPos - p));
+          String str(p, static_cast<size_t>(p - start));
           
           auto result = make_shared<Token>();
           result->mTokenType = WrapperCompiler::TokenType_Documentation;
@@ -444,9 +471,11 @@ namespace zsLib
             case ')': type = WrapperCompiler::TokenType_Brace; break;
             case '[':
             case ']': type = WrapperCompiler::TokenType_SquareBrace; break;
+            case '<':
+            case '>': type = WrapperCompiler::TokenType_AngleBrace; break;
             default:  return TokenPtr();
           }
-          
+
           auto result = make_shared<Token>();
           result->mTokenType = type;
           result->mToken = String(p, static_cast<size_t>(1));
@@ -609,6 +638,14 @@ namespace zsLib
             }
 
             {
+              auto result = getCPPDirectiveToken(p, ioLineCount);
+              if (result) {
+                ioStartOfLine = true;
+                return result;
+              }
+            }
+
+            {
               auto result = getCPPDocToken(p, ioLineCount);
               if (result) {
                 ioStartOfLine = true;
@@ -736,6 +773,7 @@ namespace zsLib
             case TokenType_Brace:         return "(" == mToken;
             case TokenType_CurlyBrace:    return "{" == mToken;
             case TokenType_SquareBrace:   return "[" == mToken;
+            case TokenType_AngleBrace:    return "<" == mToken;
             default:                      break;
           }
           return false;
@@ -748,6 +786,7 @@ namespace zsLib
             case TokenType_Brace:         return ")" == mToken;
             case TokenType_CurlyBrace:    return "}" == mToken;
             case TokenType_SquareBrace:   return "]" == mToken;
+            case TokenType_AngleBrace:    return ">" == mToken;
             default:                      break;
           }
           return false;
@@ -925,10 +964,13 @@ namespace zsLib
             try {
               const char *pos = reinterpret_cast<const char *>(file->BytePtr());
 
-              mTokens.clear();
-              tokenize(pos, mTokens);
+              mTokenListStack = TokenListStack();
 
-              replaceAliases(mTokens, project->mAliases);
+              pushTokens(make_shared<TokenList>());
+
+              tokenize(pos, *getTokens());
+
+              replaceAliases(*getTokens(), project->mAliases);
 
               if (!project->mGlobal) {
                 project->mGlobal = Namespace::create(project);
@@ -1009,10 +1051,10 @@ namespace zsLib
         //---------------------------------------------------------------------
         void WrapperCompiler::parseNamespaceContents(NamespacePtr namespaceObj) throw (FailureWithLine)
         {
-          while (mTokens.size() > 0) {
+          while (hasMoreTokens()) {
             if (parseDocumentation()) continue;
             if (parseSemiColon()) continue;
-            if (parseMacroExclusive()) continue;
+            if (parseDirective()) continue;
             if (parseNamespace(namespaceObj)) continue;
             if (parseUsing(namespaceObj)) continue;
           }
@@ -1074,8 +1116,8 @@ namespace zsLib
         bool WrapperCompiler::parseDocumentation()
         {
           bool found = false;
-          
-          while (mTokens.size() > 0) {
+
+          while (hasMoreTokens()) {
             auto token = peekNextToken("documentation");
             if (TokenType_Documentation != token->mTokenType) return found;
 
@@ -1097,47 +1139,81 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::parseMacroExclusive() throw (FailureWithLine)
+        bool WrapperCompiler::parseDirective() throw (FailureWithLine)
         {
-          auto token = peekNextToken("Macro " ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE);
+          auto token = peekNextToken("directive");
 
-          if (TokenType_Identifier != token->mTokenType) return false;
-          if (ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE != token->mToken) return false;
+          if (TokenType_Directive != token->mTokenType) return false;
+          extractNextToken("directive");
 
-          extractNextToken("Macro " ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE);
-          
-          token = extractNextToken("Macro " ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE);
-          if ((!token->isOpenBrace()) ||
-              (TokenType_Brace != token->mTokenType)) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String("Macro ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE missing \"(\""));
+          pushDirectiveTokens(token);
+
+          {
+            bool ignoreMode = false;
+            do {
+              if (!parseDirectiveExclusive(ignoreMode)) goto done;
+
+              if (!ignoreMode) goto done;
+              popTokens();
+
+              while (hasMoreTokens()) {
+                token = extractNextToken("directive");
+                if (pushDirectiveTokens(token)) goto check_exclusive_again;
+              }
+              break;
+
+            check_exclusive_again:
+              {
+              }
+
+            } while (ignoreMode);
           }
 
-          token = extractNextToken("Macro " ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE);
+        done:
+          {
+          }
+
+          popTokens();
+
+          return true;
+        }
+
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::pushDirectiveTokens(TokenPtr token) throw (FailureWithLine)
+        {
+          if (!token) return false;
+          if (TokenType_Directive != token->mTokenType) return false;
+
+          TokenList tokens;
+          tokenize(token->mToken.c_str(), tokens, token->mLineCount);
+
+          pushTokens(tokens);
+          return false;
+        }
+
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::parseDirectiveExclusive(bool &outIgnoreMode) throw (FailureWithLine)
+        {
+          auto token = peekNextToken("Directive " ZS_WRAPPER_COMPILER_DIRECTIVE_EXCLUSIZE);
+
+          if (TokenType_Identifier != token->mTokenType) return false;
+          if (ZS_WRAPPER_COMPILER_DIRECTIVE_EXCLUSIZE != token->mToken) return false;
+
+          outIgnoreMode = true;
+
+          extractNextToken("Directive " ZS_WRAPPER_COMPILER_DIRECTIVE_EXCLUSIZE);
+
+          token = extractNextToken("Directive " ZS_WRAPPER_COMPILER_DIRECTIVE_EXCLUSIZE);
           if (TokenType_Identifier != token->mTokenType) {
             ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String("Macro ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE expecting identifier"));
           }
 
           String exclusiveId = token->mToken;
 
-          token = extractNextToken("Macro " ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE);
-          if ((!token->isCloseBrace()) ||
-              (TokenType_Brace != token->mTokenType)) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String("Macro ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE missing \")\""));
-          }
-
           if ((0 == exclusiveId.compareNoCase("x")) ||
               (mConfig.mProject->mDefinedExclusives.end() != mConfig.mProject->mDefinedExclusives.find(exclusiveId)))
           {
-            // exclusive is defined or no longer exclusive
-            return true;
-          }
-
-          // recursively search for end of exclusive token
-          while (mTokens.size() > 0) {
-            if (parseMacroExclusive()) return true;
-
-            // ignore token as it's excluded
-            extractNextToken("Macro " ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE);
+            outIgnoreMode = false;
           }
           return true;
         }
@@ -1184,25 +1260,130 @@ namespace zsLib
             childEl = nextEl;
           }
         }
-        
+
+        //---------------------------------------------------------------------
+        void WrapperCompiler::pushTokens(const TokenList &tokens)
+        {
+          mTokenListStack.push(make_shared<TokenList>(tokens));
+          if (tokens.size() > 0) {
+            mLastTokenStack.push(tokens.front());
+          } else {
+            mLastTokenStack.push(TokenPtr());
+          }
+        }
+        //---------------------------------------------------------------------
+        void WrapperCompiler::pushTokens(TokenListPtr tokens)
+        {
+          mTokenListStack.push(tokens);
+          if (tokens->size() > 0) {
+            mLastTokenStack.push(tokens->front());
+          } else {
+            mLastTokenStack.push(TokenPtr());
+          }
+        }
+
+        //---------------------------------------------------------------------
+        WrapperCompiler::TokenListPtr WrapperCompiler::getTokens() const
+        {
+          if (mTokenListStack.size() < 1) return TokenListPtr();
+          return mTokenListStack.top();
+        }
+
+        //---------------------------------------------------------------------
+        WrapperCompiler::TokenListPtr WrapperCompiler::popTokens()
+        {
+          TokenListPtr result = mTokenListStack.top();
+
+          mTokenListStack.pop();
+          mLastTokenStack.pop();
+
+          return result;
+        }
+
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::hasMoreTokens() const
+        {
+          if (mTokenListStack.size() < 1) return false;
+          if (getTokens()->size() < 1) return false;
+          return true;
+        }
+
         //---------------------------------------------------------------------
         TokenPtr WrapperCompiler::peekNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine)
         {
-          if (mTokens.size() > 0) return mTokens.front();
-          ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_UNEXPECTED_EOF, mLastToken->mLineCount, String(whatExpectingMoreTokens) + " unexpectedly reached EOF");
+          if (mTokenListStack.size() > 0) {
+            if (getTokens()->size() > 0) return getTokens()->front();
+          }
+
+          TokenPtr lastToken;
+          if (mLastTokenStack.size() > 0) {
+            mLastTokenStack.top();
+          } else {
+            lastToken = mLastToken;
+          }
+
+          ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_UNEXPECTED_EOF, lastToken ? lastToken->mLineCount : 0, String(whatExpectingMoreTokens) + " unexpectedly reached EOF");
           return TokenPtr();
         }
 
         //---------------------------------------------------------------------
         TokenPtr WrapperCompiler::extractNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine)
         {
-          if (mTokens.size() > 0) {
-            mLastToken = mTokens.front();
-            mTokens.pop_front();
-            return mLastToken;
+          if (mTokenListStack.size() > 0) {
+            if (getTokens()->size() > 0) {
+              mLastToken = getTokens()->front();
+              mLastTokenStack.pop();
+              mLastTokenStack.push(mLastToken);
+              getTokens()->pop_front();
+              return mLastToken;
+            }
           }
-          ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_UNEXPECTED_EOF, mLastToken->mLineCount, String(whatExpectingMoreTokens) + " unexpectedly reached EOF");
+
+          TokenPtr lastToken;
+          if (mLastTokenStack.size() > 0) {
+            mLastTokenStack.top();
+          } else {
+            lastToken = mLastToken;
+          }
+
+          ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_UNEXPECTED_EOF, lastToken ? lastToken->mLineCount : 0, String(whatExpectingMoreTokens) + " unexpectedly reached EOF");
           return TokenPtr();
+        }
+
+        //---------------------------------------------------------------------
+        void WrapperCompiler::putBackToken(TokenPtr token)
+        {
+          if (mTokenListStack.size() < 1) {
+            ZS_THROW_INVALID_USAGE("must have active stack of tokens");
+          }
+
+          auto tokens = getTokens();
+          tokens->push_front(token);
+
+          mLastToken = token;
+          mLastTokenStack.pop();
+          mLastTokenStack.push(token);
+        }
+
+        //---------------------------------------------------------------------
+        void WrapperCompiler::putBackTokens(const TokenList &tokens)
+        {
+          if (mTokenListStack.size() < 1) {
+            ZS_THROW_INVALID_USAGE("must have active stack of tokens");
+          }
+
+          auto existingTokens = getTokens();
+
+          TokenPtr lastToken;
+          for (auto riter = tokens.rbegin(); riter != tokens.rend(); ++riter)
+          {
+            lastToken = (*riter);
+            existingTokens->push_front(lastToken);
+          }
+
+          mLastToken = lastToken;
+          mLastTokenStack.pop();
+          mLastTokenStack.push(lastToken);
         }
 
         //---------------------------------------------------------------------
@@ -1271,6 +1452,21 @@ namespace zsLib
           newTypedef->mName = name;
           newTypedef->mOriginalType = usingType;
           currentNamespace->mTypedefs[name] = newTypedef;
+        }
+
+        //---------------------------------------------------------------------
+        WrapperCompiler::TypePtr WrapperCompiler::findTypeOrCreateTypedef(
+                                                                          const TokenList &inTokens,
+                                                                          TypedefPtr &outCreatedTypedef
+                                                                          )
+        {
+          pushTokens(make_shared<TokenList>(inTokens));
+
+#define TODO 1
+#define TODO 2
+
+          popTokens();
+          return TypePtr();
         }
 
         //---------------------------------------------------------------------

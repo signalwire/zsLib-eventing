@@ -1116,12 +1116,17 @@ namespace zsLib
     bool IWrapperTypes::Namespace::fixTemplateHashMapping()
     {
       bool didFix = false;
-      for (auto iter = mNamespaces.begin(); iter != mNamespaces.end(); ++iter) {
-        auto obj = (*iter).second;
+      for (auto iter_doNotUse = mNamespaces.begin(); iter_doNotUse != mNamespaces.end(); ) {
+        auto current = iter_doNotUse;
+
+        auto obj = (*current).second;
         if (obj->fixTemplateHashMapping()) didFix = true;
       }
-      for (auto iter = mStructs.begin(); iter != mStructs.end(); ++iter) {
-        auto obj = (*iter).second;
+      for (auto iter_doNotUse = mStructs.begin(); iter_doNotUse != mStructs.end(); ) {
+        auto current = iter_doNotUse;
+        ++iter_doNotUse;
+
+        auto obj = (*current).second;
         if (obj->fixTemplateHashMapping()) didFix = true;
       }
       return didFix;
@@ -2456,24 +2461,78 @@ namespace zsLib
     bool IWrapperTypes::Struct::fixTemplateHashMapping()
     {
       bool didFix = false;
-      for (auto iter = mStructs.begin(); iter != mStructs.end(); ++iter) {
-        auto obj = (*iter).second;
+      for (auto iter_doNotUse = mStructs.begin(); iter_doNotUse != mStructs.end(); ) {
+
+        auto current = iter_doNotUse;
+        ++iter_doNotUse;
+
+        auto obj = (*current).second;
         if (obj->fixTemplateHashMapping()) didFix = true;
       }
-      
+
       for (auto iter_doNotUse = mStructs.begin(); iter_doNotUse != mStructs.end(); ) {
         
         auto current = iter_doNotUse;
         ++iter_doNotUse;
-        
-#error HERE
 
         auto obj = (*current).second;
+
+        String calculatedID = calculateTemplateID();
+
+        if (mTemplateID == calculatedID) continue;
+
+        auto parent = mContext.lock();
+        if (!parent) continue;
+
+        {
+          auto parentNamespace = parent->toNamespace();
+          if (parentNamespace) {
+            auto found = parentNamespace->mStructs.find(getMappingName());
+            if (found != parentNamespace->mStructs.end()) {
+              parentNamespace->mStructs.erase(found);
+            }
+            mTemplateID = calculatedID;
+            parentNamespace->mStructs[getMappingName()] = toStruct();
+            return true;
+          }
+        }
+
+        {
+          auto parentStruct = parent->toStruct();
+          if (parentStruct) {
+            auto found = parentStruct->mStructs.find(getMappingName());
+            if (found != parentStruct->mStructs.end()) {
+              parentStruct->mStructs.erase(found);
+            }
+            mTemplateID = calculatedID;
+            parentStruct->mStructs[getMappingName()] = toStruct();
+            return true;
+          }
+        }
       }
-      
+
       return didFix;
     }
-    
+
+    //-------------------------------------------------------------------------
+    String IWrapperTypes::Struct::calculateTemplateID() const
+    {
+      if (hasModifier(mModifiers, StructModifier_Generic)) return String();
+      if (mTemplates.size() < 1) return String();
+
+      auto hasher = IHasher::sha256();
+
+      for (auto iter = mTemplates.begin(); iter != mTemplates.end(); ++iter)
+      {
+        auto obj = (*iter);
+
+        hasher->update(obj->hash());
+        hasher->update(":");
+      }
+
+      return hasher->finalizeAsString();
+    }
+
     //-------------------------------------------------------------------------
     void IWrapperTypes::createStructForwards(
                                              ContextPtr context,
