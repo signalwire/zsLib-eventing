@@ -85,10 +85,10 @@ namespace zsLib
 
             TokenType_SemiColon,
             
-            TokenType_Brace,
-            TokenType_CurlyBrace,
-            TokenType_SquareBrace,
-            TokenType_AngleBrace,
+            TokenType_Brace,        // (
+            TokenType_CurlyBrace,   // {
+            TokenType_SquareBrace,  // [
+            TokenType_AngleBrace,   // <
 
             TokenType_Operator,
             TokenType_ScopeOperator,
@@ -99,7 +99,7 @@ namespace zsLib
             TokenType_PointerOperator,
             TokenType_AddressOperator,
             TokenType_CarotOperator,
-            
+
             TokenType_Last = TokenType_CarotOperator,
           };
 
@@ -108,7 +108,8 @@ namespace zsLib
             TokenTypes mTokenType {TokenType_First};
             String mToken;
             ULONG mLineCount {1};
-            
+
+            bool isBrace() const;
             bool isOpenBrace() const;
             bool isCloseBrace() const;
           };
@@ -165,6 +166,17 @@ namespace zsLib
           void putBackToken(TokenPtr token);
           void putBackTokens(const TokenList &tokens);
 
+          bool extractToClosingBraceToken(
+                                          const char *whatExpectingClosingToken,
+                                          TokenList &outTokens,
+                                          bool includeOuterBrace = false
+                                          ) throw (FailureWithLine);
+
+          bool extractToComma(
+                              const char *whatExpectingComma,
+                              TokenList &outTokens
+                              ) throw (FailureWithLine);
+
           void processUsingNamespace(
                                      NamespacePtr currentNamespace,
                                      NamespacePtr usingNamespace
@@ -175,9 +187,10 @@ namespace zsLib
                                 );
 
           TypePtr findTypeOrCreateTypedef(
+                                          ContextPtr context,
                                           const TokenList &tokens,
                                           TypedefPtr &outCreatedTypedef
-                                          );
+                                          ) throw (FailureWithLine);
 
           void writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure);
           void writeJSON(const String &outputName, const DocumentPtr &doc) const throw (Failure);

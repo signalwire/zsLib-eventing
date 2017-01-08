@@ -471,8 +471,6 @@ namespace zsLib
             case ')': type = WrapperCompiler::TokenType_Brace; break;
             case '[':
             case ']': type = WrapperCompiler::TokenType_SquareBrace; break;
-            case '<':
-            case '>': type = WrapperCompiler::TokenType_AngleBrace; break;
             default:  return TokenPtr();
           }
 
@@ -580,6 +578,10 @@ namespace zsLib
             result->mTokenType = WrapperCompiler::TokenType_PointerOperator;
           } else if ("&" == valid) {
             result->mTokenType = WrapperCompiler::TokenType_AddressOperator;
+          } else if ("<" == valid) {
+            result->mTokenType = WrapperCompiler::TokenType_AngleBrace;
+          } else if (">" == valid) {
+            result->mTokenType = WrapperCompiler::TokenType_AngleBrace;
           }
 
           result->mToken = valid;
@@ -765,6 +767,19 @@ namespace zsLib
         #pragma mark
         #pragma mark WrapperCompiler
         #pragma mark
+
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::Token::isBrace() const
+        {
+          switch (mTokenType) {
+            case TokenType_Brace:
+            case TokenType_CurlyBrace:
+            case TokenType_SquareBrace:
+            case TokenType_AngleBrace:    return true;
+            default:                      break;
+          }
+          return false;
+        }
 
         //---------------------------------------------------------------------
         bool WrapperCompiler::Token::isOpenBrace() const
@@ -1297,6 +1312,11 @@ namespace zsLib
           mTokenListStack.pop();
           mLastTokenStack.pop();
 
+          if (mLastTokenStack.size() > 0) {
+            auto token = mLastTokenStack.top();
+            if (token) mLastToken = token;
+          }
+
           return result;
         }
 
@@ -1387,6 +1407,99 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
+        bool WrapperCompiler::extractToClosingBraceToken(
+                                                         const char *whatExpectingClosingToken,
+                                                         TokenList &outTokens,
+                                                         bool includeOuterBrace
+                                                         ) throw (FailureWithLine)
+        {
+          auto token = peekNextToken(whatExpectingClosingToken);
+          if (!token->isBrace()) return false;
+          if (!token->isOpenBrace()) return false;
+
+
+          size_t countBrace = 0;
+          size_t countCurly = 0;
+          size_t countSquare = 0;
+          size_t countAngle = 0;
+
+          do {
+            token = extractNextToken(whatExpectingClosingToken);
+            outTokens.push_back(token);
+
+            if (token->isBrace()) {
+              if (token->isOpenBrace()) {
+                switch (token->mTokenType) {
+                  case TokenType_Brace:       ++countBrace; break;
+                  case TokenType_CurlyBrace:  ++countCurly; break;
+                  case TokenType_SquareBrace: ++countSquare; break;
+                  case TokenType_AngleBrace:  ++countAngle; break;
+                  default:                    break;
+                }
+              } else {
+                switch (token->mTokenType) {
+                  case TokenType_Brace:       if (countBrace < 1) goto brace_mismatch; --countBrace; break;
+                  case TokenType_CurlyBrace:  if (countCurly < 1) goto brace_mismatch; --countCurly; break;
+                  case TokenType_SquareBrace: if (countSquare < 1) goto brace_mismatch; --countSquare; break;
+                  case TokenType_AngleBrace:  if (countAngle < 1) goto brace_mismatch; --countAngle; break;
+                  default:                    break;
+                }
+              }
+            }
+          } while ((countBrace > 0) ||
+                   (countCurly > 0) ||
+                   (countSquare > 0) ||
+                   (countAngle > 0));
+
+          {
+            goto done;
+          }
+
+        brace_mismatch:
+          {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, mLastToken ? mLastToken->mLineCount : 0, String(whatExpectingClosingToken) + " brace mismatch");
+          }
+
+        done:
+          {
+            if (!includeOuterBrace) {
+              if (outTokens.size() > 1) {
+                outTokens.pop_front();
+                outTokens.pop_back();
+              }
+            }
+          }
+
+          return true;
+        }
+
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::extractToComma(
+                                             const char *whatExpectingComma,
+                                             TokenList &outTokens
+                                             ) throw (FailureWithLine)
+        {
+          while (hasMoreTokens()) {
+            auto token = extractNextToken(whatExpectingComma);
+            if (TokenType_CommaOperator == token->mTokenType) break;
+
+            if (token->isBrace()) {
+              putBackToken(token);
+              if (token->isCloseBrace()) return true;
+
+              TokenList braceTokens;
+              extractToClosingBraceToken(whatExpectingComma, braceTokens, true);
+              for (auto iter = braceTokens.begin(); iter != braceTokens.end(); ++iter) {
+                outTokens.push_back(*iter);
+              }
+              continue;
+            }
+            outTokens.push_back(token);
+          }
+          return true;
+        }
+
+        //---------------------------------------------------------------------
         void WrapperCompiler::processUsingNamespace(
                                                     NamespacePtr currentNamespace,
                                                     NamespacePtr usingNamespace
@@ -1456,16 +1569,228 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         WrapperCompiler::TypePtr WrapperCompiler::findTypeOrCreateTypedef(
+                                                                          ContextPtr context,
                                                                           const TokenList &inTokens,
                                                                           TypedefPtr &outCreatedTypedef
-                                                                          )
+                                                                          ) throw (FailureWithLine)
         {
-          pushTokens(make_shared<TokenList>(inTokens));
+          const char *what = "Type search";
+
+          TokenList pretemplateTokens;
+
+          {
+            // search for template parameters
+            pushTokens(inTokens);
+
+            TypeList templateTypes;
+
+            while (hasMoreTokens()) {
+              auto token = extractNextToken(what);
+              pretemplateTokens.push_back(token);
+
+              if (TokenType_AngleBrace == token->mTokenType) {
+                putBackToken(token);
+                TokenList templateContents;
+                extractToClosingBraceToken(what, templateContents);
+
+                pushTokens(templateContents);
+
+                while (hasMoreTokens()) {
+                  TokenList templateTypeTokens;
+                  extractToComma(what, templateTypeTokens);
+
+                  TypedefPtr typedefObj;
+                  auto foundType = findTypeOrCreateTypedef(context, templateTypeTokens, typedefObj);
+                  templateTypes.push_back(foundType);
+                }
+
+                popTokens();
+                break;
+              }
+            }
+
+            popTokens();
+          }
+
+          {
+            pushTokens(pretemplateTokens);
+
+            bool foundAnyBasicTypeModifiers = false;
+            bool foundAnyOtherModifier = false;
+
+            bool foundSigned = false;
+            bool foundUnsigned = false;
+            bool foundChar = false;
+            bool foundShort = false;
+            bool foundInt = false;
+            size_t totalLongsFound = false;
+            bool foundFloat = false;
+            bool foundDouble = false;
+
+            bool foundConst = false;
+            bool foundPointer = false;
+            bool foundAddress = false;
+            bool foundCarot = false;
+
+            String typeName;
+
+            while (hasMoreTokens()) {
+              auto token = extractNextToken(what);
+              switch (token->mTokenType) {
+                case TokenType_Identifier: {
+                  if ("signed" == token->mToken) {
+                    if (foundUnsigned || foundSigned || foundFloat || foundDouble) goto found_incompatible_modifier;
+                    foundSigned = true;
+                    goto found_basic_type_modifier;
+                  }
+                  if ("unsigned" == token->mToken) {
+                    if (foundUnsigned || foundSigned || foundFloat || foundDouble) goto found_incompatible_modifier;
+                    foundUnsigned = true;
+                    goto found_basic_type_modifier;
+                  }
+                  if ("long" == token->mToken) {
+                    if ((totalLongsFound > 1) || foundChar || foundShort || foundFloat) goto found_incompatible_modifier;
+                    if ((totalLongsFound > 1) && (foundDouble)) goto found_incompatible_modifier;
+                    ++totalLongsFound;
+                    goto found_basic_type_modifier;
+                  }
+                  if ("char" == token->mToken) {
+                    if ((totalLongsFound > 0) || foundChar || foundShort || foundInt || foundFloat || foundDouble) goto found_incompatible_modifier;
+                    foundChar = true;
+                    goto found_basic_type_modifier;
+                  }
+                  if ("short" == token->mToken) {
+                    if ((totalLongsFound > 0) || foundChar || foundShort || foundFloat || foundDouble) goto found_incompatible_modifier;
+                    foundShort = true;
+                    goto found_basic_type_modifier;
+                  }
+                  if ("int" == token->mToken) {
+                    if (foundChar || foundInt || foundFloat || foundDouble) goto found_incompatible_modifier;
+                    foundInt = true;
+                    goto found_basic_type_modifier;
+                  }
+                  if ("long" == token->mToken) {
+                    if ((totalLongsFound > 1) || foundChar || foundShort || foundFloat) goto found_incompatible_modifier;
+                    if ((totalLongsFound > 0) && foundDouble) goto found_incompatible_modifier;
+                    ++totalLongsFound;
+                    goto found_basic_type_modifier;
+                  }
+                  if ("float" == token->mToken) {
+                    if (foundSigned || foundUnsigned || (totalLongsFound > 0) || foundChar || foundInt || foundFloat || foundDouble) goto found_incompatible_modifier;
+                    foundFloat = true;
+                    goto found_basic_type_modifier;
+                  }
+                  if ("double" == token->mToken) {
+                    if (foundSigned || foundUnsigned || (totalLongsFound > 1) || foundChar || foundInt || foundFloat || foundDouble) goto found_incompatible_modifier;
+                    foundDouble = true;
+                    goto found_basic_type_modifier;
+                  }
+                  if ("const" == token->mToken) {
+                    if (foundConst) goto found_incompatible_modifier;
+                    foundConst = true;
+                    goto found_other_modifier;
+                  }
+
+                  if (typeName.hasData()) {
+                    ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, mLastToken ? mLastToken->mLineCount : 0, String(what) + " has type name redeclared");
+                  }
+                  typeName = token->mToken;
+                  goto found_name;
+                }
+                case TokenType_PointerOperator: {
+                  if (foundCarot || foundPointer) goto found_incompatible_modifier; // carot or double pointer not supported, use address operator by reference
+                  foundPointer = true;
+                  break;
+                }
+                case TokenType_AddressOperator: {
+                  if (foundAddress) goto found_incompatible_modifier;
+                  foundPointer = true;
+                  break;
+                }
+                case TokenType_CarotOperator: {
+                  if (foundAnyBasicTypeModifiers || foundAddress) goto found_incompatible_modifier;
+                  foundCarot = true;
+                  break;
+                }
+                default:
+                {
+                  ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, mLastToken ? mLastToken->mLineCount : 0, String(what) + " has not legal type modifier");
+                  break;
+                }
+              }
+
+            found_other_modifier:
+              {
+                foundAnyOtherModifier = true;
+                continue;
+              }
+
+            found_basic_type_modifier:
+              {
+                if (foundCarot) goto found_incompatible_modifier;
+                foundAnyBasicTypeModifiers = true;
+                continue;
+              }
+
+            found_name:
+              {
+                continue;
+              }
+            }
+
+            goto process_type;
 
 #define TODO 1
 #define TODO 2
 
-          popTokens();
+          process_type:
+            {
+              if ((foundShort) && (foundInt)) foundInt = false; // strip redundant information
+
+              IEventingTypes::PredefinedTypedefs predefinedType {IEventingTypes::PredefinedTypedef_First};
+
+              // scope: check type information
+              {
+                if (typeName.hasData()) {
+                  if (foundAnyBasicTypeModifiers) goto found_incompatible_modifier;
+
+                  try {
+                    auto foundBasicType = IEventingTypes::toPredefinedTypedef(typeName);
+                    switch (foundBasicType) {
+                      case IEventingTypes::PredefinedTypedef_pointer:
+
+                      case IEventingTypes::PredefinedTypedef_binary:
+                      case IEventingTypes::PredefinedTypedef_size:
+
+                      case IEventingTypes::PredefinedTypedef_string:
+                      case IEventingTypes::PredefinedTypedef_astring:
+                      case IEventingTypes::PredefinedTypedef_wstring:   goto found_incompatible_modifier;
+                    }
+
+                    predefinedType = foundBasicType;
+                    goto found_basic_type;
+                  } catch (const InvalidArgument &) {
+                    // not a basic type
+                  }
+                }
+
+                if (foundAnyBasicTypeModifiers) {
+                }
+              }
+
+            found_basic_type:
+              {
+              }
+
+              popTokens();
+            }
+            
+          found_incompatible_modifier:
+            {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, mLastToken ? mLastToken->mLineCount : 0, String(what) + " has invalid type modifier");
+            }
+
+          }
           return TypePtr();
         }
 
