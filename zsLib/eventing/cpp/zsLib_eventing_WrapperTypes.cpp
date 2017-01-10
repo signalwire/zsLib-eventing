@@ -464,6 +464,9 @@ namespace zsLib
       if (mDocumentation) {
         hasher->update(UseHelper::toString(mDocumentation));
       }
+      if (mDirectives) {
+        hasher->update(UseHelper::toString(mDirectives));
+      }
 
       hasher->update(":end");
 
@@ -611,6 +614,9 @@ namespace zsLib
       if (mDocumentation) {
         rootEl->adoptAsLastChild(mDocumentation->clone());
       }
+      if (mDirectives) {
+        rootEl->adoptAsLastChild(mDirectives->clone());
+      }
     }
 
     //-------------------------------------------------------------------------
@@ -621,6 +627,10 @@ namespace zsLib
       auto docEl = rootEl->findFirstChildElement("documentation");
       if (docEl) {
         mDocumentation = docEl->clone()->toElement();
+      }
+      auto directivesEl = rootEl->findFirstChildElement("directives");
+      if (directivesEl) {
+        mDirectives = directivesEl->clone()->toElement();
       }
     }
 

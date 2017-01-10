@@ -198,7 +198,8 @@ namespace zsLib
         String mName;
         
         ElementPtr mDocumentation;
-        
+        ElementPtr mDirectives;
+
       public:
         virtual ~Context() {mThisWeak.reset();}
         

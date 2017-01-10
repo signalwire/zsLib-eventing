@@ -61,6 +61,8 @@ namespace zsLib
 
         public:
           ZS_DECLARE_TYPEDEF_PTR(IWrapperTypes::Project, Project);
+          
+          typedef std::list<ElementPtr> ElementList;
 
           ZS_DECLARE_STRUCT_PTR(Token);
           typedef std::list<TokenPtr> TokenList;
@@ -140,20 +142,32 @@ namespace zsLib
           void outputSkeleton();
           void read() throw (Failure, FailureWithLine);
           void validate() throw (Failure);
-          
+
           bool parseNamespace(NamespacePtr parent) throw (FailureWithLine);
           void parseNamespaceContents(NamespacePtr namespaceObj) throw (FailureWithLine);
-          
+
           bool parseUsing(NamespacePtr namespaceObj) throw (FailureWithLine);
+          bool parseTypedef(ContextPtr context) throw (FailureWithLine);
+          bool parseStructForward(ContextPtr context) throw (FailureWithLine);
+          bool parseMacroTypedefs(ContextPtr context) throw (FailureWithLine);
+          bool parseMacroUsing(ContextPtr context) throw (FailureWithLine);
+          bool parseMacroForwards(ContextPtr context) throw (FailureWithLine);
+          bool parseIgnoredMacros() throw (FailureWithLine);
 
           bool parseDocumentation();
           bool parseSemiColon();
+          bool parseComma();
           bool parseDirective() throw (FailureWithLine);
           bool pushDirectiveTokens(TokenPtr token) throw (FailureWithLine);
           bool parseDirectiveExclusive(bool &outIgnoreMode) throw (FailureWithLine);
 
           ElementPtr getDocumentation();
+          ElementPtr getDirectives();
           void mergeDocumentation(ElementPtr &existingDocumentation);
+          void mergeDirectives(ElementPtr &existingDocumentation);
+          void fillDocumentationAndDirectives(ContextPtr context);
+
+          static String makeTypenameFromTokens(const TokenList &tokens) throw (InvalidContent);
 
           void pushTokens(const TokenList &tokens);
           void pushTokens(TokenListPtr tokens);
@@ -165,6 +179,16 @@ namespace zsLib
           TokenPtr extractNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine);
           void putBackToken(TokenPtr token);
           void putBackTokens(const TokenList &tokens);
+          ULONG getLastLineNumber() const;
+          
+          static void insertBefore(
+                                   TokenList &tokens,
+                                   const TokenList &insertTheseTokens
+                                   );
+          static void insertAfter(
+                                  TokenList &tokens,
+                                  const TokenList &insertTheseTokens
+                                  );
 
           bool extractToClosingBraceToken(
                                           const char *whatExpectingClosingToken,
@@ -185,11 +209,28 @@ namespace zsLib
                                 NamespacePtr currentNamespace,
                                 TypePtr usingType
                                 );
+          void processTypedef(
+                              ContextPtr context,
+                              const TokenList &typeTokens,
+                              const String &typeName
+                              ) throw (FailureWithLine);
+
+          StructPtr processStructForward(
+                                         ContextPtr context,
+                                         const String &typeName,
+                                         IWrapperTypes::Visibilities defaultVisbility
+                                         ) throw (FailureWithLine);
+          
+          void createTypedefPtrs(
+                                 ContextPtr context,
+                                 TypePtr existingType,
+                                 const String &baseTypeName
+                                 );
 
           TypePtr findTypeOrCreateTypedef(
                                           ContextPtr context,
                                           const TokenList &tokens,
-                                          TypedefPtr &outCreatedTypedef
+                                          TypedefTypePtr &outCreatedTypedef
                                           ) throw (FailureWithLine);
 
           void writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure);
@@ -206,6 +247,7 @@ namespace zsLib
 
           Config mConfig;
           TokenList mPendingDocumentation;
+          ElementList mPendingDirectives;
 
           TokenListStack mTokenListStack;
           TokenStack mLastTokenStack;

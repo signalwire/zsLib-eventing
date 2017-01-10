@@ -359,8 +359,8 @@ namespace zsLib
           {
             const char *postFixStart = p;
             
-            bool foundUnsigned = false;
-            bool foundFloat = false;
+            bool mUnsigned = false;
+            bool mFloat = false;
             size_t foundLongs = 0;
             bool lastWasLong = false;
             
@@ -370,16 +370,16 @@ namespace zsLib
                 case 'u':
                 case 'U':
                 {
-                  if (foundUnsigned) goto invalid_postfix;
-                  if (foundFloat) goto invalid_postfix;
-                  foundUnsigned = true;
+                  if (mUnsigned) goto invalid_postfix;
+                  if (mFloat) goto invalid_postfix;
+                  mUnsigned = true;
                   goto not_long;
                 }
                 case 'l':
                 case 'L':
                 {
                   if (foundLongs > 0) {
-                    if (foundFloat) goto invalid_postfix;
+                    if (mFloat) goto invalid_postfix;
                     if (!lastWasLong) goto invalid_postfix;
                   }
                   ++foundLongs;
@@ -392,10 +392,10 @@ namespace zsLib
                 case 'F':
                 {
                   if (10 != base) goto invalid_postfix;
-                  if (foundUnsigned) goto invalid_postfix;
+                  if (mUnsigned) goto invalid_postfix;
                   if (foundLongs > 1) goto invalid_postfix;
-                  if (foundFloat) goto invalid_postfix;
-                  foundFloat = true;
+                  if (mFloat) goto invalid_postfix;
+                  mFloat = true;
                   goto not_long;
                 }
                 default:
@@ -1043,13 +1043,13 @@ namespace zsLib
             if (found == parent->mNamespaces.end()) {
               namespaceObj = Namespace::create(parent);
               namespaceObj->mName = namespaceStr;
-              namespaceObj->mDocumentation = getDocumentation();
               parent->mNamespaces[namespaceStr] = namespaceObj;
             } else {
               namespaceObj = (*found).second;
-              mergeDocumentation(namespaceObj->mDocumentation);
             }
           }
+
+          fillDocumentationAndDirectives(namespaceObj);
 
           parseNamespaceContents(namespaceObj);
 
@@ -1062,7 +1062,7 @@ namespace zsLib
 
           return true;
         }
-        
+
         //---------------------------------------------------------------------
         void WrapperCompiler::parseNamespaceContents(NamespacePtr namespaceObj) throw (FailureWithLine)
         {
@@ -1072,30 +1072,38 @@ namespace zsLib
             if (parseDirective()) continue;
             if (parseNamespace(namespaceObj)) continue;
             if (parseUsing(namespaceObj)) continue;
+            if (parseTypedef(namespaceObj)) continue;
+            if (parseStructForward(namespaceObj)) continue;
+            
+            // macros
+            if (parseMacroTypedefs(namespaceObj)) continue;
+            if (parseMacroUsing(namespaceObj)) continue;
+            if (parseIgnoredMacros()) continue;
           }
         }
 
         //---------------------------------------------------------------------
         bool WrapperCompiler::parseUsing(NamespacePtr namespaceObj) throw (FailureWithLine)
         {
-          auto token = peekNextToken("using");
+          const char *what = "using";
+          auto token = peekNextToken(what);
           if (TokenType_Identifier != token->mTokenType) return false;
 
           if ("using" != token->mToken) return false;
 
-          extractNextToken("using");  // skip "using"
+          extractNextToken(what);  // skip "using"
 
-          token = peekNextToken("using");
+          token = peekNextToken(what);
           if (TokenType_Identifier == token->mTokenType) {
             if ("namespace" == token->mToken) {
-              extractNextToken("using");  // skip "namespace"
+              extractNextToken(what);  // skip "namespace"
 
               // extract until ";" found
               String namespacePathStr;
               
-              token = peekNextToken("using");
+              token = peekNextToken(what);
               while (TokenType_SemiColon != token->mTokenType) {
-                extractNextToken("using"); // skip it
+                extractNextToken(what); // skip it
                 namespacePathStr += token->mToken;
               }
               
@@ -1112,9 +1120,9 @@ namespace zsLib
           // extract until ";" found
           String typePathStr;
 
-          token = peekNextToken("using");
+          token = peekNextToken(what);
           while (TokenType_SemiColon != token->mTokenType) {
-            extractNextToken("using"); // skip it
+            extractNextToken(what); // skip it
             typePathStr += token->mToken;
           }
 
@@ -1122,11 +1130,457 @@ namespace zsLib
           if (!foundType) {
             ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String("using type was not found:") + typePathStr);
           }
-          
+
           processUsingType(namespaceObj, foundType);
           return true;
         }
 
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::parseTypedef(ContextPtr context) throw (FailureWithLine)
+        {
+          const char *what = "typedef";
+          auto token = peekNextToken(what);
+          if (TokenType_Identifier != token->mTokenType) return false;
+          
+          if ("typedef" != token->mToken) return false;
+
+          extractNextToken(what);  // skip "typedef"
+          
+          TokenList typeTokens;
+
+          token = peekNextToken(what);
+          while (TokenType_SemiColon != token->mTokenType) {
+            typeTokens.push_back(extractNextToken(what));
+          }
+
+          if (typeTokens.size() < 2) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String("typedef typename was not found"));
+          }
+
+          TokenPtr lastToken = typeTokens.back();
+          typeTokens.pop_back();
+          
+          if (TokenType_Identifier != lastToken->mTokenType) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, lastToken->mLineCount, String("typedef identifier was not found"));
+          }
+          
+          String typeName = lastToken->mToken;
+          processTypedef(context, typeTokens, typeName);
+          return true;
+        }
+
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::parseStructForward(ContextPtr context) throw (FailureWithLine)
+        {
+          const char *what = "class/struct forward";
+          
+          TokenList tokensToPutBack;
+          
+          auto token = peekNextToken(what);
+          if (TokenType_Identifier != token->mTokenType) return false;
+          
+          if (("class" != token->mToken) &&
+              ("struct" != token->mToken)) return false;
+          
+          IWrapperTypes::Visibilities visibility {IWrapperTypes::Visibility_First};
+          
+          if ("struct" == token->mToken) {
+            visibility = IWrapperTypes::Visibility_Public;
+          } else {
+            visibility = IWrapperTypes::Visibility_Private;
+          }
+
+          extractNextToken(what);  // skip "class"
+          tokensToPutBack.push_back(token);
+          
+          token = extractNextToken(what);
+          tokensToPutBack.push_back(token);
+          
+          String typeName = token->mToken;
+          
+          if (TokenType_Identifier != token->mTokenType) {
+            putBackTokens(tokensToPutBack);
+            return false;
+          }
+
+          token = extractNextToken(what);
+          tokensToPutBack.push_back(token);
+
+          if (TokenType_SemiColon != token->mTokenType) {
+            putBackTokens(tokensToPutBack);
+            return false;
+          }
+
+          TokenList typeTokens;
+          
+          token = peekNextToken(what);
+          while (TokenType_SemiColon != token->mTokenType) {
+            typeTokens.push_back(extractNextToken(what));
+          }
+
+          processStructForward(context, typeName, visibility);
+          return true;
+        }
+        
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::parseMacroTypedefs(ContextPtr context) throw (FailureWithLine)
+        {
+          const char *what = "macro typedef";
+          auto token = peekNextToken(what);
+          if (TokenType_Identifier != token->mTokenType) return false;
+          
+          String macroName = token->mToken;
+
+          if (("ZS_DECLARE_PTR" != macroName) &&
+              ("ZS_DECLARE_TYPEDEF_PTR" != macroName)) {
+            return false;
+          }
+          
+          extractNextToken(what);  // skip macro name
+          
+          token = extractNextToken(what);
+          if ((TokenType_Brace != token->mTokenType) ||
+              (token->isOpenBrace())) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro typedef expecting \"(\""));
+          }
+          
+          TokenList typeTokens;
+          extractToComma(what, typeTokens);
+          if (!parseComma()) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro typedef expecting comma"));
+          }
+
+          token = extractNextToken(what);
+          if (TokenType_Identifier == token->mTokenType) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro typedef expecting typedef name"));
+          }
+          
+          String typeName = token->mToken;
+
+          token = extractNextToken(what);
+          if ((TokenType_Brace != token->mTokenType) ||
+              (token->isCloseBrace())) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro typedef expecting \")\""));
+          }
+
+          if ("ZS_DECLARE_TYPEDEF_PTR" == macroName) {
+            processTypedef(context, typeTokens, typeName);
+          }
+          
+          TypePtr existingType = context->findType(typeName);
+          if (!existingType) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("existing typename was not found: ") + typeName);
+          }
+
+          createTypedefPtrs(context, existingType, typeName);
+          return true;
+        }
+
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::parseMacroUsing(ContextPtr context) throw (FailureWithLine)
+        {
+          const char *what = "macro ZS_DECLARE_USING_PTR";
+          auto token = peekNextToken(what);
+          if (TokenType_Identifier != token->mTokenType) return false;
+
+          String macroName = token->mToken;
+
+          if ("ZS_DECLARE_USING_PTR" != macroName) return false;
+
+          extractNextToken(what);  // skip macro name
+
+          token = extractNextToken(what);
+          if ((TokenType_Brace != token->mTokenType) ||
+              (token->isOpenBrace())) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro using expecting \"(\""));
+          }
+          
+          TokenList namespaceTokens;
+          extractToComma(what, namespaceTokens);
+          if (!parseComma()) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro using expecting comma"));
+          }
+          
+          token = extractNextToken(what);
+          if (TokenType_Identifier == token->mTokenType) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro using expecting typedef name"));
+          }
+          
+          String typeName = token->mToken;
+          
+          token = extractNextToken(what);
+          if ((TokenType_Brace != token->mTokenType) ||
+              (token->isCloseBrace())) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro using expecting \")\""));
+          }
+          
+          String namespaceName;
+          
+          try {
+            namespaceName = makeTypenameFromTokens(namespaceTokens);
+          } catch (const InvalidContent &e) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro using ") + e.message());
+          }
+
+          IWrapperTypes::Context::FindTypeOptions options;
+          TypePtr existingType = context->findType(namespaceName, typeName, options);
+          if (!existingType) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("existing typename was not found: ") + typeName);
+          }
+
+          createTypedefPtrs(context, existingType, typeName);
+          return true;
+        }
+        
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::parseMacroForwards(ContextPtr context) throw (FailureWithLine)
+        {
+          const char *what = "macro struct/class forward";
+          auto token = peekNextToken(what);
+          if (TokenType_Identifier != token->mTokenType) return false;
+
+          String macroName = token->mToken;
+          if (("ZS_DECLARE_CLASS_PTR" != macroName) &&
+              ("ZS_DECLARE_STRUCT_PTR" != macroName) &&
+              ("ZS_DECLARE_INTERACTION_PTR" != macroName) &&
+              ("ZS_DECLARE_INTERACTION_PROXY" != macroName) &&
+              ("ZS_DECLARE_INTERACTION_PROXY_SUBSCRIPTION" != macroName) &&
+              ("ZS_DECLARE_TYPEDEF_PROXY" != macroName) &&
+              ("ZS_DECLARE_USING_PROXY" != macroName) &&
+              ("ZS_DECLARE_PROXY_BEGIN" != macroName) &&
+              ("ZS_DECLARE_PROXY_SUBSCRIPTIONS_BEGIN")) return false;
+          
+          bool requiresSecondParam = false;
+          if (("ZS_DECLARE_INTERACTION_PROXY_SUBSCRIPTION" == macroName) ||
+              ("ZS_DECLARE_TYPEDEF_PROXY" == macroName) ||
+              ("ZS_DECLARE_USING_PROXY" == macroName) ||
+              ("ZS_DECLARE_PROXY_SUBSCRIPTIONS_BEGIN" == macroName)) {
+            requiresSecondParam = true;
+          }
+
+          extractNextToken(what);  // skip macro name
+
+          token = extractNextToken(what);
+          if (TokenType_Identifier != token->mTokenType) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro expecting identifier"));
+          }
+          
+          TokenList tokens1;
+          TokenList tokens2;
+          
+          String param1;
+          String param2;
+
+          token = peekNextToken(what);
+          if ((TokenType_Brace != token->mTokenType) ||
+              (token->isOpenBrace())) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macros expecting \"(\""));
+          }
+          
+          try {
+            if (requiresSecondParam) {
+              token = extractNextToken(what); // skip open brace
+              {
+                extractToComma(what, tokens1);
+                param1 = makeTypenameFromTokens(tokens1);
+              }
+              parseComma();
+              {
+                extractToComma(what, tokens2);
+                param2 = makeTypenameFromTokens(tokens2);
+              }
+
+              token = extractNextToken(what);
+              if ((TokenType_Brace != token->mTokenType) ||
+                  (token->isCloseBrace())) {
+                ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro using expecting \")\""));
+              }
+            } else {
+              TokenList tokens;
+              extractToClosingBraceToken(what, tokens1, false);
+              param1 = makeTypenameFromTokens(tokens1);
+            }
+          } catch (const InvalidContent &e) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro forwards ") + e.message());
+          }
+          
+          String namespaceName;
+          
+          if ("ZS_DECLARE_CLASS_PTR" == macroName) {
+            auto structObj = processStructForward(context, param1, Visibility_Private);
+            createTypedefPtrs(context, structObj, param1);
+            return true;
+          }
+
+          if (("ZS_DECLARE_STRUCT_PTR" == macroName) ||
+              ("ZS_DECLARE_INTERACTION_PTR" == macroName)) {
+            auto structObj = processStructForward(context, param1, Visibility_Public);
+            createTypedefPtrs(context, structObj, param1);
+            return true;
+          }
+
+          if (("ZS_DECLARE_INTERACTION_PROXY" == macroName) ||
+              ("ZS_DECLARE_INTERACTION_PROXY_SUBSCRIPTION" == macroName)) {
+            {
+              auto structObj = processStructForward(context, param1, Visibility_Public);
+              createTypedefPtrs(context, structObj, param1);
+            }
+            {
+              auto structObj = processStructForward(context, param1, Visibility_Public);
+              structObj->mModifiers = static_cast<StructModifiers>(structObj->mModifiers | StructModifier_Delegate);
+              createTypedefPtrs(context, structObj, param1);
+            }
+            if ("ZS_DECLARE_INTERACTION_PROXY_SUBSCRIPTION" == macroName) {
+              auto structObj = processStructForward(context, param2, Visibility_Public);
+              structObj->mModifiers = static_cast<StructModifiers>(structObj->mModifiers | StructModifier_Delegate);
+              createTypedefPtrs(context, structObj, param1);
+            }
+            return true;
+          }
+          
+          if ("ZS_DECLARE_TYPEDEF_PROXY" == macroName) {
+            TypedefTypePtr createdTypedef;
+            auto foundType = findTypeOrCreateTypedef(context, tokens1, createdTypedef);
+            if (createdTypedef) {
+              createdTypedef->mName = param2;
+              
+              bool addedTypedef = false;
+
+              {
+                auto namespaceObj = context->toNamespace();
+                if (namespaceObj) {
+                  addedTypedef = true;
+                  auto foundExisting = namespaceObj->mTypedefs.find(createdTypedef->getMappingName());
+                  if (foundExisting == namespaceObj->mTypedefs.end()) {
+                    namespaceObj->mTypedefs[createdTypedef->getMappingName()] = createdTypedef;
+                  }
+                }
+              }
+              {
+                auto structObj = context->toStruct();
+                if (structObj) {
+                  addedTypedef = true;
+                  auto foundExisting = structObj->mTypedefs.find(createdTypedef->getMappingName());
+                  if (foundExisting == structObj->mTypedefs.end()) {
+                    structObj->mTypedefs[createdTypedef->getMappingName()] = createdTypedef;
+                  }
+                }
+              }
+              if (!addedTypedef) {
+                ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro forwards could not create typedef: ") + param2);
+              }
+            }
+            
+            {
+              auto structObj = foundType->toStruct();
+              if (structObj) {
+                structObj->mModifiers = static_cast<StructModifiers>(structObj->mModifiers | StructModifier_Delegate);
+              }
+            }
+
+            createTypedefPtrs(context, foundType, param2);
+            return true;
+          }
+
+          if ("ZS_DECLARE_USING_PROXY" == macroName) {
+            IWrapperTypes::Context::FindTypeOptions options;
+            TypePtr foundType = context->findType(param1, param2, options);
+            if (!foundType) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro forwads did not find: ") + param1 + "::" + param2);
+            }
+            
+            auto namespaceObj = context->toNamespace();
+            if (!namespaceObj) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro forwads is not in the context of a namespace: ") + param1 + "::" + param2);
+            }
+
+            {
+              auto structObj = foundType->toStruct();
+              if (structObj) {
+                structObj->mModifiers = static_cast<StructModifiers>(structObj->mModifiers | StructModifier_Delegate);
+              }
+            }
+
+            processUsingType(namespaceObj, foundType);
+            createTypedefPtrs(context, foundType, param2);
+            return true;
+          }
+          
+          if ("ZS_DECLARE_PROXY_BEGIN" == macroName) {
+            TypePtr foundType = context->findType(param1);
+            if (!foundType) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro forwads did not find: ") + param1 + "::" + param2);
+            }
+
+            {
+              auto structObj = foundType->toStruct();
+              if (structObj) {
+                structObj->mModifiers = static_cast<StructModifiers>(structObj->mModifiers | StructModifier_Delegate);
+              }
+            }
+            return true;
+          }
+
+          if ("ZS_DECLARE_PROXY_SUBSCRIPTIONS_BEGIN" == macroName) {
+            // process delegate
+            {
+              TypePtr foundType = context->findType(param1);
+              if (!foundType) {
+                ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro forwads did not find: ") + param1);
+              }
+              
+              {
+                auto structObj = foundType->toStruct();
+                if (structObj) {
+                  structObj->mModifiers = static_cast<StructModifiers>(structObj->mModifiers | StructModifier_Delegate);
+                }
+              }
+            }
+           
+            // process subscription
+            {
+              TypePtr foundType = context->findType(param2);
+              if (!foundType) {
+                ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro forwads did not find: ") + param2);
+              }
+
+              {
+                auto structObj = foundType->toStruct();
+                if (structObj) {
+                  structObj->mModifiers = static_cast<StructModifiers>(structObj->mModifiers | StructModifier_Subscription);
+                }
+              }
+            }
+            return true;
+          }
+
+          ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro forwads did not process macro: ") + macroName);
+          return true;
+        }
+        
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::parseIgnoredMacros() throw (FailureWithLine)
+        {
+          const char *what = "ignored macro";
+          auto token = peekNextToken(what);
+          if (TokenType_Identifier != token->mTokenType) return false;
+          
+          String macroName = token->mToken;
+          
+          const char *ignorePrefix = "ZS_DECLARE_";
+          
+          if (ignorePrefix != macroName.substr(0, strlen(ignorePrefix))) return false;
+
+          extractNextToken(what);  // skip macro name
+
+          token = peekNextToken(what);
+          
+          TokenList ignoredTokens;
+          extractToClosingBraceToken(what, ignoredTokens);
+
+          return true;
+        }
+        
         //---------------------------------------------------------------------
         bool WrapperCompiler::parseDocumentation()
         {
@@ -1150,6 +1604,16 @@ namespace zsLib
 
           if (TokenType_SemiColon != token->mTokenType) return false;
           extractNextToken(";");
+          return true;
+        }
+
+        //---------------------------------------------------------------------
+        bool WrapperCompiler::parseComma()
+        {
+          auto token = peekNextToken(",");
+
+          if (TokenType_CommaOperator != token->mTokenType) return false;
+          extractNextToken(",");
           return true;
         }
 
@@ -1238,7 +1702,7 @@ namespace zsLib
         {
           if (mPendingDocumentation.size() < 1) return ElementPtr();
 
-          String resultStr = "<doc>";
+          String resultStr = "<documentation>";
           bool first = true;
           while (mPendingDocumentation.size() > 0) {
             auto token = mPendingDocumentation.front();
@@ -1252,14 +1716,30 @@ namespace zsLib
             mPendingDocumentation.pop_front();
           }
 
-          resultStr += "</doc>";
+          resultStr += "</documentation>";
           return UseHelper::toXML(resultStr);
+        }
+
+        //---------------------------------------------------------------------
+        ElementPtr WrapperCompiler::getDirectives()
+        {
+          if (mPendingDirectives.size() < 1) return ElementPtr();
+          
+          ElementPtr rootEl = Element::create("directives");
+
+          while (mPendingDirectives.size() > 0) {
+            auto el = mPendingDirectives.front();
+            rootEl->adoptAsLastChild(el);
+            mPendingDirectives.pop_front();
+          }
+
+          return rootEl;
         }
 
         //---------------------------------------------------------------------
         void WrapperCompiler::mergeDocumentation(ElementPtr &existingDocumentation)
         {
-          auto rootEl = getDocumentation();
+          auto rootEl = getDirectives();
           if (!rootEl) return;
 
           if (!existingDocumentation) {
@@ -1277,6 +1757,62 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
+        void WrapperCompiler::mergeDirectives(ElementPtr &existingDirectives)
+        {
+          if (mPendingDirectives.size() < 1) return;
+          
+          if (!existingDirectives) {
+            existingDirectives = getDirectives();
+            return;
+          }
+
+          while (mPendingDirectives.size() > 0) {
+            auto el = mPendingDirectives.front();
+            existingDirectives->adoptAsLastChild(el);
+            mPendingDirectives.pop_front();
+          }
+        }
+
+        //---------------------------------------------------------------------
+        void WrapperCompiler::fillDocumentationAndDirectives(ContextPtr context)
+        {
+          if (!context) return;
+          mergeDocumentation(context->mDocumentation);
+          mergeDirectives(context->mDocumentation);
+        }
+
+        //---------------------------------------------------------------------
+        String WrapperCompiler::makeTypenameFromTokens(const TokenList &tokens) throw (InvalidContent)
+        {
+          String result;
+          
+          bool lastWasIdentifier = false;
+          bool lastWasScope = false;
+          
+          for (auto iter = tokens.begin(); iter != tokens.end(); ++iter)
+          {
+            auto token = (*iter);
+            if (TokenType_Identifier == token->mTokenType) {
+              if (lastWasIdentifier) {
+                ZS_THROW_CUSTOM(InvalidContent, "two identifiers found");
+              }
+              result += token->mToken;
+              lastWasIdentifier = true;
+              lastWasScope = false;
+            } else if (TokenType_ScopeOperator == token->mTokenType) {
+              if (lastWasScope) {
+                ZS_THROW_CUSTOM(InvalidContent, "two scopes found");
+              }
+              result += token->mToken;
+              lastWasIdentifier = false;
+              lastWasScope = true;
+            }
+          }
+          
+          return result;
+        }
+
+        //---------------------------------------------------------------------
         void WrapperCompiler::pushTokens(const TokenList &tokens)
         {
           mTokenListStack.push(make_shared<TokenList>(tokens));
@@ -1286,6 +1822,7 @@ namespace zsLib
             mLastTokenStack.push(TokenPtr());
           }
         }
+
         //---------------------------------------------------------------------
         void WrapperCompiler::pushTokens(TokenListPtr tokens)
         {
@@ -1393,17 +1930,58 @@ namespace zsLib
           }
 
           auto existingTokens = getTokens();
-
-          TokenPtr lastToken;
-          for (auto riter = tokens.rbegin(); riter != tokens.rend(); ++riter)
-          {
-            lastToken = (*riter);
-            existingTokens->push_front(lastToken);
+          
+          insertBefore(*existingTokens, tokens);
+          
+          TokenPtr firstToken;
+          if (existingTokens->size() > 0) {
+            firstToken = existingTokens->front();
+            mLastToken = firstToken;
           }
 
-          mLastToken = lastToken;
           mLastTokenStack.pop();
-          mLastTokenStack.push(lastToken);
+          mLastTokenStack.push(firstToken);
+        }
+
+        //---------------------------------------------------------------------
+        ULONG WrapperCompiler::getLastLineNumber() const
+        {
+          if (!mLastToken) return 1;
+          return mLastToken->mLineCount;
+        }
+
+        //---------------------------------------------------------------------
+        void WrapperCompiler::insertBefore(
+                                           TokenList &tokens,
+                                           const TokenList &insertTheseTokens
+                                           )
+        {
+          if (tokens.size() < 1) {
+            tokens = insertTheseTokens;
+            return;
+          }
+          
+          for (auto iter = insertTheseTokens.rbegin(); iter != insertTheseTokens.rend(); ++iter)
+          {
+            tokens.push_front(*iter);
+          }
+        }
+        
+        //---------------------------------------------------------------------
+        void WrapperCompiler::insertAfter(
+                                          TokenList &tokens,
+                                          const TokenList &insertTheseTokens
+                                          )
+        {
+          if (tokens.size() < 1) {
+            tokens = insertTheseTokens;
+            return;
+          }
+          
+          for (auto iter = insertTheseTokens.begin(); iter != insertTheseTokens.end(); ++iter)
+          {
+            tokens.push_back(*iter);
+          }
         }
 
         //---------------------------------------------------------------------
@@ -1457,7 +2035,7 @@ namespace zsLib
 
         brace_mismatch:
           {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, mLastToken ? mLastToken->mLineCount : 0, String(whatExpectingClosingToken) + " brace mismatch");
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(whatExpectingClosingToken) + " brace mismatch");
           }
 
         done:
@@ -1481,7 +2059,10 @@ namespace zsLib
         {
           while (hasMoreTokens()) {
             auto token = extractNextToken(whatExpectingComma);
-            if (TokenType_CommaOperator == token->mTokenType) break;
+            if (TokenType_CommaOperator == token->mTokenType) {
+              putBackToken(token);
+              break;
+            }
 
             if (token->isBrace()) {
               putBackToken(token);
@@ -1568,12 +2149,682 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
+        void WrapperCompiler::processTypedef(
+                                             ContextPtr context,
+                                             const TokenList &typeTokens,
+                                             const String &typeName
+                                             ) throw (FailureWithLine)
+        {
+          TypedefTypePtr createdTypedef;
+          auto type = findTypeOrCreateTypedef(context, typeTokens, createdTypedef);
+          
+          TypePtr originalType = type;
+          
+          if (!createdTypedef) {
+            createdTypedef = TypedefType::create(context);
+            createdTypedef->mOriginalType = type;
+            type = createdTypedef;
+          } else {
+            originalType = createdTypedef->mOriginalType.lock();
+          }
+          
+          if (!originalType) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("typedef original type was not found"));
+          }
+          
+          createdTypedef->mName = typeName;
+          fillDocumentationAndDirectives(createdTypedef);
+          
+          {
+            auto namespaceObj = context->toNamespace();
+            if (namespaceObj) {
+              
+              auto found = namespaceObj->mTypedefs.find(typeName);
+              if (found != namespaceObj->mTypedefs.end()) return;  // assume types are the same
+              namespaceObj->mTypedefs[createdTypedef->getMappingName()] = createdTypedef;
+              return;
+            }
+          }
+          
+          {
+            auto structObj = context->toStruct();
+            if (structObj) {
+              auto found = structObj->mTypedefs.find(typeName);
+              if (found != structObj->mTypedefs.end()) return; // asumme types are the same
+              structObj->mTypedefs[createdTypedef->getMappingName()] = createdTypedef;
+              return;
+            }
+          }
+          
+          ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("typedef found in context that does not allow typedefs"));
+        }
+
+        //---------------------------------------------------------------------
+        WrapperCompiler::StructPtr WrapperCompiler::processStructForward(
+                                                                         ContextPtr context,
+                                                                         const String &typeName,
+                                                                         IWrapperTypes::Visibilities defaultVisbility
+                                                                         ) throw (FailureWithLine)
+        {
+          {
+            auto namespaceObj = context->toNamespace();
+            if (namespaceObj) {
+              auto found = namespaceObj->mStructs.find(typeName);
+              if (found != namespaceObj->mStructs.end()) return (*found).second;
+              
+              StructPtr structObj = Struct::create(context);
+              structObj->mName = typeName;
+              structObj->mCurrentVisbility = defaultVisbility;              
+              
+              namespaceObj->mStructs[structObj->getMappingName()] = structObj;
+              return structObj;
+            }
+          }
+          
+          {
+            auto outerStructObj = context->toStruct();
+            if (outerStructObj) {
+              auto found = outerStructObj->mStructs.find(typeName);
+              if (found != outerStructObj->mStructs.end()) return (*found).second;
+              
+              StructPtr structObj = Struct::create(context);
+              structObj->mName = typeName;
+              structObj->mCurrentVisbility = defaultVisbility;
+
+              outerStructObj->mStructs[structObj->getMappingName()] = structObj;
+              return structObj;
+            }
+          }
+
+          ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("struct/class forward not attached to namespace or struct context"));
+          return StructPtr();
+        }
+        
+        //---------------------------------------------------------------------
+        void WrapperCompiler::createTypedefPtrs(
+                                                ContextPtr context,
+                                                TypePtr existingType,
+                                                const String &baseTypeName
+                                                )
+        {
+          TypedefTypePtr typeWithPtr = TypedefType::create(context);
+          typeWithPtr->mModifiers = static_cast<TypeModifiers>(TypeModifier_Ptr | TypeModifier_SharedPtr);
+          typeWithPtr->mOriginalType = existingType;
+          typeWithPtr->mName = baseTypeName + "Ptr";
+          
+          TypedefTypePtr typeWithWeakPtr = TypedefType::create(context);
+          typeWithWeakPtr->mModifiers = static_cast<TypeModifiers>(TypeModifier_Ptr | TypeModifier_WeakPtr);
+          typeWithWeakPtr->mOriginalType = existingType;
+          typeWithWeakPtr->mName = baseTypeName + "WeakPtr";
+          
+          TypedefTypePtr typeWithUniPtr = TypedefType::create(context);
+          typeWithUniPtr->mModifiers = static_cast<TypeModifiers>(TypeModifier_Ptr | TypeModifier_UniPtr);
+          typeWithUniPtr->mOriginalType = existingType;
+          typeWithUniPtr->mName = baseTypeName + "UniPtr";
+          
+          {
+            auto namespaceObj = context->toNamespace();
+            if (namespaceObj) {
+              {
+                auto found = namespaceObj->mTypedefs.find(typeWithPtr->mName);
+                if (found == namespaceObj->mTypedefs.end()) {
+                  namespaceObj->mTypedefs[typeWithPtr->getMappingName()] = typeWithPtr;
+                }
+              }
+              {
+                auto found = namespaceObj->mTypedefs.find(typeWithWeakPtr->mName);
+                if (found == namespaceObj->mTypedefs.end()) {
+                  namespaceObj->mTypedefs[typeWithWeakPtr->getMappingName()] = typeWithWeakPtr;
+                }
+              }
+              {
+                auto found = namespaceObj->mTypedefs.find(typeWithUniPtr->mName);
+                if (found == namespaceObj->mTypedefs.end()) {
+                  namespaceObj->mTypedefs[typeWithUniPtr->getMappingName()] = typeWithUniPtr;
+                }
+              }
+              return;
+            }
+          }
+          
+          {
+            auto structObj = context->toStruct();
+            if (structObj) {
+              {
+                auto found = structObj->mTypedefs.find(typeWithPtr->mName);
+                if (found == structObj->mTypedefs.end()) {
+                  structObj->mTypedefs[typeWithPtr->getMappingName()] = typeWithPtr;
+                }
+              }
+              {
+                auto found = structObj->mTypedefs.find(typeWithWeakPtr->mName);
+                if (found == structObj->mTypedefs.end()) {
+                  structObj->mTypedefs[typeWithWeakPtr->getMappingName()] = typeWithWeakPtr;
+                }
+              }
+              {
+                auto found = structObj->mTypedefs.find(typeWithUniPtr->mName);
+                if (found == structObj->mTypedefs.end()) {
+                  structObj->mTypedefs[typeWithUniPtr->getMappingName()] = typeWithUniPtr;
+                }
+              }
+              return;
+            }
+          }
+        }
+
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
+        #pragma mark WrapperCompilerHelper
+        #pragma mark
+        
+        class WrapperCompilerHelper : protected WrapperCompiler
+        {
+        public:
+          struct FoundBasicTypeModifiers
+          {
+            bool mAnyBasicTypeModifiers {false};
+            bool mAnyOtherModifier {false};
+            
+            bool mSigned {false};
+            bool mUnsigned {false};
+            bool mChar {false};
+            bool mShort {false};
+            bool mInt {false};
+            size_t mTotalLongs {false};
+            bool mFloat {false};
+            bool mDouble {false};
+            
+            bool mConst {false};
+            bool mPointer {false};
+            bool mReference {false};
+            bool mCarot {false};
+            
+            bool mLastWasTypename {false};
+            bool mLastWasScope {false};
+            
+            String mTypeName;
+            
+            //-----------------------------------------------------------------
+            void throwInvalidModifier() throw (InvalidContent)
+            {
+              ZS_THROW_CUSTOM(InvalidContent, "has invalid type modifier");
+            }
+            
+            //-----------------------------------------------------------------
+            void insert(const String &modifierStr) throw (InvalidContent)
+            {
+              if ("signed" == modifierStr) {
+                if (mUnsigned || mSigned || mFloat || mDouble) throwInvalidModifier();
+                mSigned = true;
+                mAnyBasicTypeModifiers = true;
+                return;
+              }
+              if ("unsigned" == modifierStr) {
+                if (mUnsigned || mSigned || mFloat || mDouble) throwInvalidModifier();
+                mUnsigned = true;
+                mAnyBasicTypeModifiers = true;
+                return;
+              }
+              if ("long" == modifierStr) {
+                if ((mTotalLongs > 1) || mChar || mShort || mFloat) throwInvalidModifier();
+                if ((mTotalLongs > 1) && (mDouble)) throwInvalidModifier();
+                ++mTotalLongs;
+                mAnyBasicTypeModifiers = true;
+                return;
+              }
+              if ("char" == modifierStr) {
+                if ((mTotalLongs > 0) || mChar || mShort || mInt || mFloat || mDouble) throwInvalidModifier();
+                mChar = true;
+                mAnyBasicTypeModifiers = true;
+                return;
+              }
+              if ("short" == modifierStr) {
+                if ((mTotalLongs > 0) || mChar || mShort || mFloat || mDouble) throwInvalidModifier();
+                mShort = true;
+                mAnyBasicTypeModifiers = true;
+                return;
+              }
+              if ("int" == modifierStr) {
+                if (mChar || mInt || mFloat || mDouble) throwInvalidModifier();
+                mInt = true;
+                mAnyBasicTypeModifiers = true;
+                return;
+              }
+              if ("long" == modifierStr) {
+                if ((mTotalLongs > 1) || mChar || mShort || mFloat) throwInvalidModifier();
+                if ((mTotalLongs > 0) && mDouble) throwInvalidModifier();
+                ++mTotalLongs;
+                mAnyBasicTypeModifiers = true;
+                return;
+              }
+              if ("float" == modifierStr) {
+                if (mSigned || mUnsigned || (mTotalLongs > 0) || mChar || mInt || mFloat || mDouble) throwInvalidModifier();
+                mFloat = true;
+                mAnyBasicTypeModifiers = true;
+                return;
+              }
+              if ("double" == modifierStr) {
+                if (mSigned || mUnsigned || (mTotalLongs > 1) || mChar || mInt || mFloat || mDouble) throwInvalidModifier();
+                mDouble = true;
+                mAnyBasicTypeModifiers = true;
+                return;
+              }
+              if ("const" == modifierStr) {
+                if (mConst) throwInvalidModifier();
+                mConst = true;
+                mAnyOtherModifier = true;
+                return;
+              }
+
+              if (mTypeName.hasData()) {
+                ZS_THROW_CUSTOM(InvalidContent, "has type name redeclared");
+              }
+              if (mLastWasTypename) throwInvalidModifier();
+              mLastWasTypename = true;
+              mLastWasScope = false;
+              mTypeName += modifierStr;
+            }
+            
+            //-----------------------------------------------------------------
+            void insertScope() throw (InvalidContent)
+            {
+              if (mLastWasScope) throwInvalidModifier();
+              mLastWasTypename = false;
+              mLastWasScope = true;
+              mTypeName += "::";
+            }
+            
+            //-----------------------------------------------------------------
+            void insertPointer() throw (InvalidContent)
+            {
+              if (mCarot || mPointer) throwInvalidModifier();
+              mPointer = true;
+              mAnyOtherModifier = true;
+            }
+            
+            //-----------------------------------------------------------------
+            void insertReference() throw (InvalidContent)
+            {
+              if (mCarot || mReference) throwInvalidModifier();
+              mReference = true;
+              mAnyOtherModifier = true;
+            }
+
+            //-----------------------------------------------------------------
+            void insertCarot() throw (InvalidContent)
+            {
+              if (mAnyBasicTypeModifiers || mPointer || mReference) throwInvalidModifier();
+              mCarot = true;
+              mAnyOtherModifier = true;
+            }
+            
+            //-----------------------------------------------------------------
+            PredefinedTypedefs mergePredefined(PredefinedTypedefs existingBasicType) throw (InvalidContent)
+            {
+              PredefinedTypedefs &newBasicType = existingBasicType;
+              
+              switch (existingBasicType) {
+                case PredefinedTypedef_void:
+                {
+                  if (mAnyBasicTypeModifiers || mCarot || mReference) throwInvalidModifier();
+                  break;
+                }
+                case PredefinedTypedef_bool:
+                {
+                  if (mAnyBasicTypeModifiers || mCarot) throwInvalidModifier();
+                  break;
+                }
+                  
+                case PredefinedTypedef_uchar: {
+                  if (mSigned || mChar || mShort || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  break;
+                }
+                case PredefinedTypedef_char: {
+                  if (mChar || mShort || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  if (mSigned) newBasicType = PredefinedTypedef_schar;
+                  if (mUnsigned) newBasicType = PredefinedTypedef_uchar;
+                  break;
+                }
+                case PredefinedTypedef_schar:
+                {
+                  if (mUnsigned || mChar || mShort || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  break;
+                }
+                case PredefinedTypedef_ushort:
+                {
+                  if (mSigned || mChar || mShort || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  mInt = false;
+                  break;
+                }
+                case PredefinedTypedef_short: {
+                  if (mChar || mShort || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  mInt = false;
+                  if (mSigned) newBasicType = PredefinedTypedef_sshort;
+                  if (mUnsigned) newBasicType = PredefinedTypedef_ushort;
+                  break;
+                }
+                case PredefinedTypedef_sshort:
+                {
+                  if (mUnsigned || mChar || mShort || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  mInt = false;
+                  break;
+                }
+                case PredefinedTypedef_uint:
+                {
+                  if (mSigned || mChar || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  if (mShort) newBasicType = PredefinedTypedef_ushort;
+                  break;
+                }
+                case PredefinedTypedef_int:
+                {
+                  if (mChar || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  if (mShort) {
+                    if (mSigned)
+                      newBasicType = PredefinedTypedef_sshort;
+                    else if (mUnsigned)
+                      newBasicType = PredefinedTypedef_ushort;
+                    else
+                      newBasicType = PredefinedTypedef_short;
+                  } else {
+                    if (mSigned) newBasicType = PredefinedTypedef_sint;
+                    if (mUnsigned) newBasicType = PredefinedTypedef_uint;
+                  }
+                  break;
+                }
+                case PredefinedTypedef_sint:
+                {
+                  if (mUnsigned || mChar || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  if (mShort) newBasicType = PredefinedTypedef_sshort;
+                  break;
+                }
+                case PredefinedTypedef_ulong:
+                {
+                  if (mSigned || mChar || mShort || (mTotalLongs > 1) || mFloat || mDouble) throwInvalidModifier();
+                  mInt = false;
+                  if (mTotalLongs > 0) newBasicType = PredefinedTypedef_ulonglong;
+                  break;
+                }
+                case PredefinedTypedef_long:
+                {
+                  if (mChar || mShort || (mTotalLongs > 1) || mFloat || mDouble) throwInvalidModifier();
+                  mInt = false;
+                  if (mTotalLongs > 0) {
+                    if (mSigned)
+                      newBasicType = PredefinedTypedef_slonglong;
+                    else if (mUnsigned)
+                      newBasicType = PredefinedTypedef_ulonglong;
+                    else
+                      newBasicType = PredefinedTypedef_longlong;
+                  } else {
+                    if (mSigned) newBasicType = PredefinedTypedef_slong;
+                    if (mUnsigned) newBasicType = PredefinedTypedef_ulong;
+                  }
+                  break;
+                }
+                case PredefinedTypedef_slong:
+                {
+                  if (mUnsigned || mChar || mShort || (mTotalLongs > 1) || mFloat || mDouble) throwInvalidModifier();
+                  mInt = false;
+                  if (mTotalLongs > 0) newBasicType = PredefinedTypedef_slonglong;
+                  break;
+                }
+                case PredefinedTypedef_ulonglong:
+                {
+                  if (mSigned || mChar || mShort || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  mInt = false;
+                  break;
+                }
+                case PredefinedTypedef_longlong:
+                {
+                  if (mChar || mShort || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  mInt = false;
+                  if (mSigned) newBasicType = PredefinedTypedef_slonglong;
+                  if (mUnsigned) newBasicType = PredefinedTypedef_ulonglong;
+                  break;
+                }
+                case PredefinedTypedef_slonglong:
+                {
+                  if (mUnsigned || mChar || mShort || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  mInt = false;
+                  break;
+                }
+                case PredefinedTypedef_uint8:
+                case PredefinedTypedef_uint16:
+                case PredefinedTypedef_uint32:
+                case PredefinedTypedef_uint64:
+                case PredefinedTypedef_byte:
+                case PredefinedTypedef_word:
+                case PredefinedTypedef_dword:
+                case PredefinedTypedef_qword:
+                {
+                  if (mSigned || mChar || mShort || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  break;
+                }
+                case PredefinedTypedef_int8:
+                {
+                  if (mChar || mShort || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  if (mSigned) newBasicType = PredefinedTypedef_sint8;
+                  if (mUnsigned) newBasicType = PredefinedTypedef_uint8;
+                  break;
+                }
+                case PredefinedTypedef_sint8:
+                case PredefinedTypedef_sint16:
+                case PredefinedTypedef_sint32:
+                case PredefinedTypedef_sint64:
+                {
+                  if (mUnsigned || mChar || mShort || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  break;
+                }
+                case PredefinedTypedef_int16:
+                {
+                  if (mChar || mShort || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  if (mSigned) newBasicType = PredefinedTypedef_sint16;
+                  if (mUnsigned) newBasicType = PredefinedTypedef_uint16;
+                  break;
+                }
+                case PredefinedTypedef_int32:
+                {
+                  if (mChar || mShort || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  if (mSigned) newBasicType = PredefinedTypedef_sint32;
+                  if (mUnsigned) newBasicType = PredefinedTypedef_uint32;
+                  break;
+                }
+                case PredefinedTypedef_int64:
+                {
+                  if (mChar || mShort || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  if (mSigned) newBasicType = PredefinedTypedef_sint64;
+                  if (mUnsigned) newBasicType = PredefinedTypedef_uint64;
+                  break;
+                }
+                  
+                case PredefinedTypedef_float:
+                case PredefinedTypedef_float32:
+                case PredefinedTypedef_float64:
+                {
+                  if (mSigned || mUnsigned || mChar || mShort || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  break;
+                }
+                case PredefinedTypedef_double:
+                {
+                  if (mSigned || mUnsigned || mChar || mShort || mInt || (mTotalLongs > 1) || mFloat || mDouble) throwInvalidModifier();
+                  if (mTotalLongs > 0) newBasicType = PredefinedTypedef_ldouble;
+                  break;
+                }
+                case PredefinedTypedef_ldouble:
+                {
+                  if (mSigned || mUnsigned || mChar || mShort || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  break;
+                }
+                case PredefinedTypedef_pointer:
+                case PredefinedTypedef_binary:
+                case PredefinedTypedef_size:
+                case PredefinedTypedef_string:
+                case PredefinedTypedef_astring:
+                case PredefinedTypedef_wstring: throwInvalidModifier();
+              }
+              return newBasicType;
+            }
+
+            //-----------------------------------------------------------------
+            void applyTypedefModifiers(TypedefTypePtr obj)
+            {
+              if (mCarot) {
+                obj->mModifiers = static_cast<TypeModifiers>(obj->mModifiers | TypeModifier_Ptr | TypeModifier_CollectionPtr);
+              }
+              if (mPointer) {
+                obj->mModifiers = static_cast<TypeModifiers>(obj->mModifiers | TypeModifier_Ptr | TypeModifier_RawPtr);
+              }
+              if (mReference) {
+                obj->mModifiers = static_cast<TypeModifiers>(obj->mModifiers | TypeModifier_Reference);
+              }
+            }
+            
+            //-----------------------------------------------------------------
+            PredefinedTypedefs getBasicType()
+            {
+              if (mChar) {
+                if (mUnsigned) return PredefinedTypedef_uchar;
+                if (mSigned) return PredefinedTypedef_schar;
+                return PredefinedTypedef_char;
+              }
+              if (mShort) {
+                if (mUnsigned) return PredefinedTypedef_ushort;
+                if (mSigned) return PredefinedTypedef_sshort;
+                return PredefinedTypedef_short;
+              }
+              if (mFloat) return PredefinedTypedef_float;
+              if (mDouble) {
+                if (mTotalLongs > 0) return PredefinedTypedef_ldouble;
+                return PredefinedTypedef_double;
+              }
+              
+              if (mTotalLongs > 1) {
+                if (mUnsigned) return PredefinedTypedef_ulonglong;
+                if (mSigned) return PredefinedTypedef_slonglong;
+                return PredefinedTypedef_longlong;
+              }
+
+              if (mTotalLongs > 0) {
+                if (mUnsigned) return PredefinedTypedef_ulong;
+                if (mSigned) return PredefinedTypedef_slong;
+                return PredefinedTypedef_long;
+              }
+              
+              if (mInt) {
+                if (mUnsigned) return PredefinedTypedef_uint;
+                if (mSigned) return PredefinedTypedef_sint;
+                return PredefinedTypedef_int;
+              }
+              ZS_THROW_CUSTOM(InvalidContent, "is not a basic type");
+              return PredefinedTypedef_int;
+            }
+
+            //-----------------------------------------------------------------
+            TypePtr processType(
+                                ContextPtr context,
+                                TypedefTypePtr &outCreatedTypedef
+                                ) throw (InvalidContent)
+            {
+              if ((mShort) && (mInt)) mInt = false; // strip redundant information
+
+              if (mTypeName.hasData()) {
+                auto existingType = context->findType(mTypeName);
+                if (!existingType) throwInvalidModifier();
+
+                BasicTypePtr basicType;
+                TypedefTypePtr typedefObj = existingType ? existingType->toTypedefType() : TypedefTypePtr();
+                
+                if (typedefObj) {
+                  typedefObj->resolveTypedefs();
+                }
+
+                while (typedefObj) {
+                  TypePtr foundType = typedefObj->mOriginalType.lock();
+                  
+                  if (foundType) {
+                    basicType = foundType->toBasicType();
+                    typedefObj = foundType->toTypedefType();
+                  }
+                }
+
+                if (typedefObj) {
+                  if (mCarot) {
+                    if (typedefObj->mArraySize > 0) throwInvalidModifier();
+                    if (hasModifier(typedefObj->mModifiers, static_cast<TypeModifiers>(TypeModifier_Reference | TypeModifier_Array | TypeModifier_RawPtr | TypeModifier_CollectionPtr))) throwInvalidModifier();
+                  }
+                  if (mPointer) {
+                    if (typedefObj->mArraySize > 0) throwInvalidModifier();
+                    if (hasModifier(typedefObj->mModifiers, static_cast<TypeModifiers>(TypeModifier_Array | TypeModifier_RawPtr | TypeModifier_CollectionPtr))) throwInvalidModifier();
+                  }
+                  if (mReference) {
+                    if (typedefObj->mArraySize > 0) throwInvalidModifier();
+                    if (hasModifier(typedefObj->mModifiers, static_cast<TypeModifiers>(TypeModifier_Reference | TypeModifier_Array | TypeModifier_CollectionPtr))) throwInvalidModifier();
+                  }
+                }
+
+                
+                if (basicType) {
+                  outCreatedTypedef = TypedefType::create(context);
+                  applyTypedefModifiers(outCreatedTypedef);
+
+                  if (typedefObj) {
+                    outCreatedTypedef->mModifiers = typedefObj->mModifiers;
+                  }
+
+                  if (hasModifier(outCreatedTypedef->mModifiers, TypeModifier_CollectionPtr)) throwInvalidModifier();
+
+                  PredefinedTypedefs newBasicType = mergePredefined(basicType->mBaseType);
+                  auto foundNewBasicType = context->findType(IEventingTypes::toString(newBasicType));
+                  if (!foundNewBasicType) {
+                    ZS_THROW_CUSTOM(InvalidContent, "did not find new basic type");
+                  }
+                  outCreatedTypedef->mOriginalType = foundNewBasicType;
+                  return outCreatedTypedef;
+                }
+
+                if (mAnyBasicTypeModifiers) throwInvalidModifier();
+                if (!mAnyOtherModifier) return existingType;
+                
+                outCreatedTypedef = TypedefType::create(context);
+                applyTypedefModifiers(outCreatedTypedef);
+                outCreatedTypedef->mOriginalType = existingType;
+                outCreatedTypedef->resolveTypedefs();
+                return outCreatedTypedef;
+              }
+
+              if (!mAnyBasicTypeModifiers) throwInvalidModifier();
+
+              auto predefinedType = getBasicType();
+              auto existingBasicType = context->findType(IEventingTypes::toString(predefinedType));
+              if (!existingBasicType) {
+                ZS_THROW_CUSTOM(InvalidContent, "did not find basic type");
+              }
+
+              if (mAnyOtherModifier) {
+                outCreatedTypedef = TypedefType::create(context);
+                applyTypedefModifiers(outCreatedTypedef);
+                outCreatedTypedef->mOriginalType = existingBasicType;
+                return outCreatedTypedef;
+              }
+              return existingBasicType;
+            }
+            
+          };
+        };
+
+        //---------------------------------------------------------------------
         WrapperCompiler::TypePtr WrapperCompiler::findTypeOrCreateTypedef(
                                                                           ContextPtr context,
                                                                           const TokenList &inTokens,
-                                                                          TypedefPtr &outCreatedTypedef
+                                                                          TypedefTypePtr &outCreatedTypedef
                                                                           ) throw (FailureWithLine)
         {
+          TypePtr result;
+          
           const char *what = "Type search";
 
           TokenList pretemplateTokens;
@@ -1596,10 +2847,12 @@ namespace zsLib
                 pushTokens(templateContents);
 
                 while (hasMoreTokens()) {
+                  parseComma(); // skip over a comma
+
                   TokenList templateTypeTokens;
                   extractToComma(what, templateTypeTokens);
 
-                  TypedefPtr typedefObj;
+                  TypedefTypePtr typedefObj;
                   auto foundType = findTypeOrCreateTypedef(context, templateTypeTokens, typedefObj);
                   templateTypes.push_back(foundType);
                 }
@@ -1612,186 +2865,50 @@ namespace zsLib
             popTokens();
           }
 
+          try
           {
             pushTokens(pretemplateTokens);
-
-            bool foundAnyBasicTypeModifiers = false;
-            bool foundAnyOtherModifier = false;
-
-            bool foundSigned = false;
-            bool foundUnsigned = false;
-            bool foundChar = false;
-            bool foundShort = false;
-            bool foundInt = false;
-            size_t totalLongsFound = false;
-            bool foundFloat = false;
-            bool foundDouble = false;
-
-            bool foundConst = false;
-            bool foundPointer = false;
-            bool foundAddress = false;
-            bool foundCarot = false;
-
-            String typeName;
+            
+            WrapperCompilerHelper::FoundBasicTypeModifiers modifiers;
 
             while (hasMoreTokens()) {
               auto token = extractNextToken(what);
               switch (token->mTokenType) {
                 case TokenType_Identifier: {
-                  if ("signed" == token->mToken) {
-                    if (foundUnsigned || foundSigned || foundFloat || foundDouble) goto found_incompatible_modifier;
-                    foundSigned = true;
-                    goto found_basic_type_modifier;
-                  }
-                  if ("unsigned" == token->mToken) {
-                    if (foundUnsigned || foundSigned || foundFloat || foundDouble) goto found_incompatible_modifier;
-                    foundUnsigned = true;
-                    goto found_basic_type_modifier;
-                  }
-                  if ("long" == token->mToken) {
-                    if ((totalLongsFound > 1) || foundChar || foundShort || foundFloat) goto found_incompatible_modifier;
-                    if ((totalLongsFound > 1) && (foundDouble)) goto found_incompatible_modifier;
-                    ++totalLongsFound;
-                    goto found_basic_type_modifier;
-                  }
-                  if ("char" == token->mToken) {
-                    if ((totalLongsFound > 0) || foundChar || foundShort || foundInt || foundFloat || foundDouble) goto found_incompatible_modifier;
-                    foundChar = true;
-                    goto found_basic_type_modifier;
-                  }
-                  if ("short" == token->mToken) {
-                    if ((totalLongsFound > 0) || foundChar || foundShort || foundFloat || foundDouble) goto found_incompatible_modifier;
-                    foundShort = true;
-                    goto found_basic_type_modifier;
-                  }
-                  if ("int" == token->mToken) {
-                    if (foundChar || foundInt || foundFloat || foundDouble) goto found_incompatible_modifier;
-                    foundInt = true;
-                    goto found_basic_type_modifier;
-                  }
-                  if ("long" == token->mToken) {
-                    if ((totalLongsFound > 1) || foundChar || foundShort || foundFloat) goto found_incompatible_modifier;
-                    if ((totalLongsFound > 0) && foundDouble) goto found_incompatible_modifier;
-                    ++totalLongsFound;
-                    goto found_basic_type_modifier;
-                  }
-                  if ("float" == token->mToken) {
-                    if (foundSigned || foundUnsigned || (totalLongsFound > 0) || foundChar || foundInt || foundFloat || foundDouble) goto found_incompatible_modifier;
-                    foundFloat = true;
-                    goto found_basic_type_modifier;
-                  }
-                  if ("double" == token->mToken) {
-                    if (foundSigned || foundUnsigned || (totalLongsFound > 1) || foundChar || foundInt || foundFloat || foundDouble) goto found_incompatible_modifier;
-                    foundDouble = true;
-                    goto found_basic_type_modifier;
-                  }
-                  if ("const" == token->mToken) {
-                    if (foundConst) goto found_incompatible_modifier;
-                    foundConst = true;
-                    goto found_other_modifier;
-                  }
-
-                  if (typeName.hasData()) {
-                    ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, mLastToken ? mLastToken->mLineCount : 0, String(what) + " has type name redeclared");
-                  }
-                  typeName = token->mToken;
-                  goto found_name;
+                  modifiers.insert(token->mToken);
+                  continue;
+                }
+                case TokenType_ScopeOperator: {
+                  modifiers.insertScope();
+                  continue;
                 }
                 case TokenType_PointerOperator: {
-                  if (foundCarot || foundPointer) goto found_incompatible_modifier; // carot or double pointer not supported, use address operator by reference
-                  foundPointer = true;
-                  break;
+                  modifiers.insertPointer();
+                  continue;
                 }
                 case TokenType_AddressOperator: {
-                  if (foundAddress) goto found_incompatible_modifier;
-                  foundPointer = true;
-                  break;
+                  modifiers.insertReference();
+                  continue;
                 }
                 case TokenType_CarotOperator: {
-                  if (foundAnyBasicTypeModifiers || foundAddress) goto found_incompatible_modifier;
-                  foundCarot = true;
-                  break;
+                  modifiers.insertCarot();
+                  continue;
                 }
                 default:
                 {
-                  ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, mLastToken ? mLastToken->mLineCount : 0, String(what) + " has not legal type modifier");
+                  ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " has not legal type modifier");
                   break;
                 }
               }
-
-            found_other_modifier:
-              {
-                foundAnyOtherModifier = true;
-                continue;
-              }
-
-            found_basic_type_modifier:
-              {
-                if (foundCarot) goto found_incompatible_modifier;
-                foundAnyBasicTypeModifiers = true;
-                continue;
-              }
-
-            found_name:
-              {
-                continue;
-              }
             }
+            popTokens();
 
-            goto process_type;
-
-#define TODO 1
-#define TODO 2
-
-          process_type:
-            {
-              if ((foundShort) && (foundInt)) foundInt = false; // strip redundant information
-
-              IEventingTypes::PredefinedTypedefs predefinedType {IEventingTypes::PredefinedTypedef_First};
-
-              // scope: check type information
-              {
-                if (typeName.hasData()) {
-                  if (foundAnyBasicTypeModifiers) goto found_incompatible_modifier;
-
-                  try {
-                    auto foundBasicType = IEventingTypes::toPredefinedTypedef(typeName);
-                    switch (foundBasicType) {
-                      case IEventingTypes::PredefinedTypedef_pointer:
-
-                      case IEventingTypes::PredefinedTypedef_binary:
-                      case IEventingTypes::PredefinedTypedef_size:
-
-                      case IEventingTypes::PredefinedTypedef_string:
-                      case IEventingTypes::PredefinedTypedef_astring:
-                      case IEventingTypes::PredefinedTypedef_wstring:   goto found_incompatible_modifier;
-                    }
-
-                    predefinedType = foundBasicType;
-                    goto found_basic_type;
-                  } catch (const InvalidArgument &) {
-                    // not a basic type
-                  }
-                }
-
-                if (foundAnyBasicTypeModifiers) {
-                }
-              }
-
-            found_basic_type:
-              {
-              }
-
-              popTokens();
-            }
-            
-          found_incompatible_modifier:
-            {
-              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, mLastToken ? mLastToken->mLineCount : 0, String(what) + " has invalid type modifier");
-            }
-
+            result = modifiers.processType(context, outCreatedTypedef);
+          } catch (const InvalidContent &e) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " " + e.message());
           }
-          return TypePtr();
+
+          return result;
         }
 
         //---------------------------------------------------------------------
