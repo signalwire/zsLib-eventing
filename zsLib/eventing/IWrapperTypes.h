@@ -58,59 +58,14 @@ namespace zsLib
       ZS_DECLARE_STRUCT_PTR(EnumType);
       ZS_DECLARE_STRUCT_PTR(TypedefType);
       ZS_DECLARE_STRUCT_PTR(Struct);
+      ZS_DECLARE_STRUCT_PTR(GenericType);
       ZS_DECLARE_STRUCT_PTR(Property);
       ZS_DECLARE_STRUCT_PTR(Method);
-
-      enum Visibilities
-      {
-        Visibility_First,
-        
-        Visibility_Public = Visibility_First,
-        Visibility_Protected,
-        Visibility_Private,
-        
-        Visibility_Last = Visibility_Private,
-      };
-      
-      static const char *toString(Visibilities value);
-      static Visibilities toVisibility(const char *value) throw (InvalidArgument);
-
-      enum TypeModifiers : ULONG
-      {
-        TypeModifier_None =           0,
-        TypeModifier_Generic =        (1 << 0),
-        TypeModifier_Const =          (1 << 1),
-        TypeModifier_Reference =      (1 << 2),
-        TypeModifier_Array =          (1 << 3),
-        TypeModifier_Ptr =            (1 << 8),
-        TypeModifier_RawPtr =         (1 << 9),
-        TypeModifier_SharedPtr =      (1 << 10),
-        TypeModifier_WeakPtr =        (1 << 11),
-        TypeModifier_UniPtr =         (1 << 12),
-        TypeModifier_CollectionPtr =  (1 << 13),
-      };
-
-      static String toString(TypeModifiers value);
-      static TypeModifiers toTypeModifier(const char *value) throw (InvalidArgument);
-      static bool hasModifier(
-                              TypeModifiers value,
-                              TypeModifiers checkFor
-                              );
-      static TypeModifiers addModifiers(
-                                        TypeModifiers value,
-                                        TypeModifiers addModifiers
-                                        );
-      static TypeModifiers removeModifiers(
-                                           TypeModifiers value,
-                                           TypeModifiers addModifiers
-                                           );
 
       enum StructModifiers : ULONG
       {
         StructModifier_None =           0,
         StructModifier_Generic =        (1 << 0),
-        StructModifier_Delegate =       (1 << 4),
-        StructModifier_Subscription =   (1 << 5),
       };
 
       static String toString(StructModifiers value);
@@ -135,8 +90,6 @@ namespace zsLib
 
         MethodModifier_Static =   (1 << 1),
         MethodModifier_Dynamic =  (1 << 2),
-
-        MethodModifier_Const =    (1 << 4),
       };
 
       static String toString(MethodModifiers value);
@@ -159,14 +112,15 @@ namespace zsLib
       typedef std::list<ContextPtr> ContextList;
       typedef std::list<NamespacePtr> NamespaceList;
       typedef std::map<Name, NamespacePtr> NamespaceMap;
-      typedef std::pair<Visibilities, StructPtr> VisibleStructPair;
-      typedef std::map<Name, VisibleStructPair> RelatedStructMap;
+      typedef std::map<Name, TypePtr> RelatedStructMap;
       typedef std::list<TypePtr> TypeList;
       typedef std::map<Name, TypePtr> TypeMap;
       typedef std::map<Name, BasicTypePtr> BasicTypeMap;
       typedef std::set<TypedefTypePtr> TypedefTypeSet;
       typedef std::list<TypedefTypePtr> TypedefTypeList;
       typedef std::map<Name, TypedefTypePtr> TypedefTypeMap;
+      typedef std::list<GenericTypePtr> GenericTypeList;
+      typedef std::map<Name, GenericTypePtr> GenericTypeMap;
       typedef std::map<Name, StructPtr> StructMap;
       typedef std::map<Name, EnumTypePtr> EnumMap;
       typedef std::list<PropertyPtr> PropertyList;
@@ -210,10 +164,11 @@ namespace zsLib
         virtual BasicTypePtr toBasicType() const      {return BasicTypePtr();}
         virtual EnumTypePtr toEnumType() const        {return EnumTypePtr();}
         virtual TypedefTypePtr toTypedefType() const  {return TypedefTypePtr();}
+        virtual GenericTypePtr toGenericType() const  {return GenericTypePtr();}
         virtual StructPtr toStruct() const            {return StructPtr();}
         virtual PropertyPtr toProperty() const        {return PropertyPtr();}
         virtual MethodPtr toMethod() const            {return MethodPtr();}
-        
+
         virtual ElementPtr createElement(const char *objectName = NULL) const = 0;
         virtual String hash() const;
         
@@ -236,6 +191,11 @@ namespace zsLib
 
         virtual void resolveTypedefs() throw (InvalidContent) {}
         virtual bool fixTemplateHashMapping() {return false;}
+
+        virtual void cloneContentsFromOriginalTemplateAndResolve(
+                                                                 ContextPtr originalObj,
+                                                                 const TypeMap &templateTypes
+                                                                 ) throw (InvalidContent) {}
 
         virtual String aliasLookup(const String &value);
         
@@ -464,8 +424,8 @@ namespace zsLib
 
       struct TypedefType : public Type
       {
-        TypeModifiers mModifiers {};
-        TypeWeakPtr mOriginalType;    // not set if generic
+        TypeWeakPtr mOriginalType;
+        GenericTypePtr mOriginalGenericReferenceHolder;
         size_t mArraySize {};         // allow for one dimensional array
 
         TypedefType(
@@ -516,12 +476,11 @@ namespace zsLib
       {
         StructModifiers mModifiers {};
         TypeList mTemplates;
+        TypeList mTemplateDefaultTypes;
 
         String mTemplateID;
 
         RelatedStructMap mIsARelationships;
-
-        Visibilities mCurrentVisbility {Visibility_First};
 
         EnumMap mEnums;
         StructMap mStructs;
@@ -545,7 +504,12 @@ namespace zsLib
                                         ContextPtr context,
                                         const ElementPtr &el
                                         ) throw (InvalidContent);
-        
+
+        static StructPtr createFromTemplate(
+                                            StructPtr structObj,
+                                            const TypeList &templateTypes
+                                            ) throw (InvalidContent);
+
         virtual ElementPtr createElement(const char *objectName = NULL) const override;
         virtual void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
         virtual String hash() const override;
@@ -560,6 +524,11 @@ namespace zsLib
         virtual void resolveTypedefs() throw (InvalidContent) override;
         virtual bool fixTemplateHashMapping() override;
 
+        virtual void cloneContentsFromOriginalTemplateAndResolve(
+                                                                 ContextPtr originalObj,
+                                                                 const TypeMap &templateTypes
+                                                                 ) throw (InvalidContent) override;
+        
         virtual StructPtr toStruct() const override {return ZS_DYNAMIC_PTR_CAST(Struct, toContext());}
 
         String calculateTemplateID() const;
@@ -576,6 +545,38 @@ namespace zsLib
                                ElementPtr structsEl,
                                StructMap &ioStructs
                                ) throw (InvalidContent);
+      
+      //-----------------------------------------------------------------------
+      #pragma mark
+      #pragma mark IWrapperTypes::TypedefType
+      #pragma mark
+      
+      struct GenericType : public Type
+      {
+        TypeList mTemplates;
+
+      public:
+        GenericType(
+                    const make_private &v,
+                    ContextPtr context
+                    ) : Type(v, context) {}
+
+      protected:
+        void init();
+        void init(const ElementPtr &rootEl) throw (InvalidContent);
+        
+      public:
+        static GenericTypePtr create(ContextPtr context);
+        static GenericTypePtr create(
+                                     ContextPtr context,
+                                     const ElementPtr &el
+                                     ) throw (InvalidContent);
+
+        virtual GenericTypePtr toGenericType() const override {return ZS_DYNAMIC_PTR_CAST(GenericType, toContext());}
+        
+        virtual ElementPtr createElement(const char *objectName = NULL) const override;
+        virtual String hash() const override;
+      };
 
       //-----------------------------------------------------------------------
       #pragma mark

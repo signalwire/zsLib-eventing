@@ -70,6 +70,7 @@ namespace zsLib
 
           typedef std::stack<TokenPtr> TokenStack;
           typedef std::stack<TokenListPtr> TokenListStack;
+          typedef std::list<TokenListPtr> TokenListList;
 
           enum TokenTypes
           {
@@ -86,7 +87,7 @@ namespace zsLib
             TokenType_Identifier,
 
             TokenType_SemiColon,
-            
+
             TokenType_Brace,        // (
             TokenType_CurlyBrace,   // {
             TokenType_SquareBrace,  // [
@@ -148,12 +149,12 @@ namespace zsLib
 
           bool parseUsing(NamespacePtr namespaceObj) throw (FailureWithLine);
           bool parseTypedef(ContextPtr context) throw (FailureWithLine);
-          bool parseStructForward(ContextPtr context) throw (FailureWithLine);
+          bool parseStruct(ContextPtr context) throw (FailureWithLine);
           bool parseMacroTypedefs(ContextPtr context) throw (FailureWithLine);
           bool parseMacroUsing(ContextPtr context) throw (FailureWithLine);
           bool parseMacroForwards(ContextPtr context) throw (FailureWithLine);
           bool parseIgnoredMacros() throw (FailureWithLine);
-
+          
           bool parseDocumentation();
           bool parseSemiColon();
           bool parseComma();
@@ -200,6 +201,19 @@ namespace zsLib
                               const char *whatExpectingComma,
                               TokenList &outTokens
                               ) throw (FailureWithLine);
+          
+          bool extractToEquals(
+                               const char *whatExpectingComma,
+                               TokenList &outTokens
+                               ) throw (FailureWithLine);
+          
+          bool extractToTokenType(
+                                  const char *whatExpectingComma,
+                                  TokenTypes searchTokenType,
+                                  TokenList &outTokens,
+                                  bool includeFoundToken = false,
+                                  bool processBrackets = true
+                                  ) throw (FailureWithLine);
 
           void processUsingNamespace(
                                      NamespacePtr currentNamespace,
@@ -220,7 +234,7 @@ namespace zsLib
                                          const String &typeName,
                                          IWrapperTypes::Visibilities defaultVisbility
                                          ) throw (FailureWithLine);
-          
+
           void createTypedefPtrs(
                                  ContextPtr context,
                                  TypePtr existingType,
@@ -232,6 +246,11 @@ namespace zsLib
                                           const TokenList &tokens,
                                           TypedefTypePtr &outCreatedTypedef
                                           ) throw (FailureWithLine);
+
+          TypedefTypePtr createTypedefToNewTemplateFromExistingTypedef(
+                                                                       TypedefTypePtr existingTypedefObj,
+                                                                       StructPtr newTemplate
+                                                                       ) throw (InvalidContent);
 
           void writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure);
           void writeJSON(const String &outputName, const DocumentPtr &doc) const throw (Failure);
