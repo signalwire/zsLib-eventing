@@ -64,48 +64,74 @@ namespace zsLib
 
       enum StructModifiers : ULONG
       {
-        StructModifier_None =           0,
-        StructModifier_Generic =        (1 << 0),
+        StructModifier_First,
+
+        StructModifier_Generic = StructModifier_First,
+        StructModifier_AltName,
+
+        StructModifier_Last = StructModifier_AltName,
       };
 
-      static String toString(StructModifiers value);
+      static const char *toString(StructModifiers value);
       static StructModifiers toStructModifier(const char *value) throw (InvalidArgument);
-      static bool hasModifier(
-                              StructModifiers value,
-                              StructModifiers checkFor
-                              );
-      static StructModifiers addModifiers(
-                                          StructModifiers value,
-                                          StructModifiers addModifiers
-                                          );
-      static StructModifiers removeModifiers(
-                                             StructModifiers value,
-                                             StructModifiers addModifiers
-                                             );
+
+      enum TypeModifiers : ULONG
+      {
+        TypeModifier_First,
+
+        TypeModifier_ = TypeModifier_First,
+
+        TypeModifier_Last = TypeModifier_,
+      };
+
+      static const char *toString(TypeModifiers value);
+      static TypeModifiers toTypeModifier(const char *value) throw (InvalidArgument);
+
+      enum PropertyModifiers : ULONG
+      {
+        PropertyModifier_First,
+
+        PropertyModifier_ReadOnly = PropertyModifier_First,
+        PropertyModifier_WriteOnly,
+        PropertyModifier_Nullable,
+
+        PropertyModifier_Last = PropertyModifier_Nullable,
+      };
+
+      static const char *toString(PropertyModifiers value);
+      static PropertyModifiers toPropertyModifier(const char *value) throw (InvalidArgument);
 
       enum MethodModifiers : ULONG
       {
-        MethodModifier_None =     0,
-        MethodModifier_Ctor =     (1 << 0),
+        MethodModifier_First,
 
-        MethodModifier_Static =   (1 << 1),
-        MethodModifier_Dynamic =  (1 << 2),
+        MethodModifier_Ctor = MethodModifier_First,
+
+        MethodModifier_Static,
+        MethodModifier_Dynamic,
+
+        MethodModifier_AltName,
+
+        MethodModifier_EventHandler,
+
+        MethodModifier_Last = MethodModifier_Dynamic,
       };
 
-      static String toString(MethodModifiers value);
+      static const char *toString(MethodModifiers value);
       static MethodModifiers toMethodModifier(const char *value) throw (InvalidArgument);
-      static bool hasModifier(
-                              MethodModifiers value,
-                              MethodModifiers checkFor
-                              );
-      static MethodModifiers addModifiers(
-                                          MethodModifiers value,
-                                          MethodModifiers addModifiers
-                                          );
-      static MethodModifiers removeModifiers(
-                                             MethodModifiers value,
-                                             MethodModifiers addModifiers
-                                             );
+
+      enum MethodArgumentModifiers : ULONG
+      {
+        MethodArgumentModifier_First,
+
+        MethodArgumentModifier_In = MethodArgumentModifier_First,
+        MethodArgumentModifier_Out,
+
+        MethodArgumentModifier_Last = MethodArgumentModifier_Out,
+      };
+
+      static const char *toString(MethodArgumentModifiers value);
+      static MethodArgumentModifiers toMethodArgumentModifier(const char *value) throw (InvalidArgument);
 
       typedef String Name;
       typedef String Value;
@@ -130,6 +156,7 @@ namespace zsLib
       typedef std::pair<Name, Value> NameValuePair;
       typedef std::list<NameValuePair> NameValueList;
       typedef std::set<Value> ValueSet;
+      typedef std::map<Name, ElementPtr> ElementMap;
 
       //-----------------------------------------------------------------------
       #pragma mark
@@ -152,7 +179,7 @@ namespace zsLib
         String mName;
         
         ElementPtr mDocumentation;
-        ElementPtr mDirectives;
+        ElementMap mModifiers;
 
       public:
         virtual ~Context() {mThisWeak.reset();}
@@ -210,6 +237,7 @@ namespace zsLib
 
         virtual void write(ElementPtr &rootEl) const;
         virtual void parse(const ElementPtr &rootEl) throw (InvalidContent);
+        virtual void copyContentsFrom(ContextPtr originalContext);
 
       protected:
         ContextWeakPtr mThisWeak;

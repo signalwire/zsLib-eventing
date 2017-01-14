@@ -104,345 +104,123 @@ namespace zsLib
     #pragma mark
 
     //-------------------------------------------------------------------------
-    const char *IWrapperTypes::toString(Visibilities value)
+    const char *IWrapperTypes::toString(StructModifiers value)
     {
       switch (value)
       {
-        case Visibility_Public:     return "public";
-        case Visibility_Protected:  return "protected";
-        case Visibility_Private:    return "private";
-      }
-      return "unknown";
-    }
-
-    //-------------------------------------------------------------------------
-    IWrapperTypes::Visibilities IWrapperTypes::toVisibility(const char *value) throw (InvalidArgument)
-    {
-      String str(value);
-      for (IWrapperTypes::Visibilities index = IWrapperTypes::Visibility_First; index <= IWrapperTypes::Visibility_Last; index = static_cast<IWrapperTypes::Visibilities>(static_cast<std::underlying_type<IWrapperTypes::Visibilities>::type>(index) + 1)) {
-        if (0 == str.compareNoCase(IWrapperTypes::toString(index))) return index;
-      }
-      
-      ZS_THROW_INVALID_ARGUMENT(String("Not a visible type: ") + str);
-      return Visibility_First;
-    }
-    
-    //-------------------------------------------------------------------------
-    static IWrapperTypes::TypeModifiers *getTypeModifiers()
-    {
-      static IWrapperTypes::TypeModifiers modifierList[] =
-      {
-        IWrapperTypes::TypeModifier_Const,
-        IWrapperTypes::TypeModifier_Reference,
-        IWrapperTypes::TypeModifier_Array,
-        IWrapperTypes::TypeModifier_Ptr,
-        IWrapperTypes::TypeModifier_RawPtr,
-        IWrapperTypes::TypeModifier_SharedPtr,
-        IWrapperTypes::TypeModifier_WeakPtr,
-        IWrapperTypes::TypeModifier_UniPtr,
-        IWrapperTypes::TypeModifier_CollectionPtr,
-        IWrapperTypes::TypeModifier_None
-      };
-      return &(modifierList[0]);
-    }
-
-    //-------------------------------------------------------------------------
-    static const char *toStringValue(IWrapperTypes::TypeModifiers value)
-    {
-      switch (value)
-      {
-        case IWrapperTypes::TypeModifier_None:          return "none";
-        case IWrapperTypes::TypeModifier_Const:         return "const";
-        case IWrapperTypes::TypeModifier_Reference:     return "reference";
-        case IWrapperTypes::TypeModifier_Array:         return "array";
-        case IWrapperTypes::TypeModifier_Ptr:           return "ptr";
-        case IWrapperTypes::TypeModifier_RawPtr:        return "raw";
-        case IWrapperTypes::TypeModifier_SharedPtr:     return "shared";
-        case IWrapperTypes::TypeModifier_WeakPtr:       return "weak";
-        case IWrapperTypes::TypeModifier_UniPtr:        return "uni";
-        case IWrapperTypes::TypeModifier_CollectionPtr: return "collection";
-      }
-
-      return "unknown";
-    }
-
-    //-------------------------------------------------------------------------
-    String IWrapperTypes::toString(TypeModifiers value)
-    {
-      auto modifierList = getTypeModifiers();
-      
-      String result;
-
-      for (int loop = 0; TypeModifier_None != modifierList[loop]; ++loop)
-      {
-        if (0 != (value & modifierList[loop])) {
-          if (result.hasData()) result += ",";
-          result += toStringValue(modifierList[loop]);
-        }
-      }
-
-      return result;
-    }
-    
-    //-------------------------------------------------------------------------
-    IWrapperTypes::TypeModifiers IWrapperTypes::toTypeModifier(const char *value) throw (InvalidArgument)
-    {
-      TypeModifiers result {TypeModifier_None};
-      
-      String str(value);
-      
-      UseHelper::SplitMap splits;
-      UseHelper::split(str, splits, ",");
-      UseHelper::splitTrim(splits);
-      UseHelper::splitPruneEmpty(splits);
-      
-      auto modifierList = getTypeModifiers();
-
-      for (auto iter = splits.begin(); iter != splits.end(); ++iter) {
-        auto &check = (*iter).second;
-        
-        for (int loop = 0; TypeModifier_None != modifierList[loop]; ++loop)
-        {
-          if (0 == check.compareNoCase(toStringValue(modifierList[loop]))) {
-            result = addModifiers(result, modifierList[loop]);
-            break;
-          }
-        }
-      }
-
-      return result;
-    }
-    
-    //-------------------------------------------------------------------------
-    bool IWrapperTypes::hasModifier(
-                                    TypeModifiers value,
-                                    TypeModifiers checkFor
-                                    )
-    {
-      return 0 != (value & checkFor);
-    }
-
-    //-------------------------------------------------------------------------
-    IWrapperTypes::TypeModifiers IWrapperTypes::addModifiers(
-                                                             TypeModifiers value,
-                                                             TypeModifiers addModifiers
-                                                             )
-    {
-      return static_cast<TypeModifiers>(value | addModifiers);
-    }
-
-    //-------------------------------------------------------------------------
-    IWrapperTypes::TypeModifiers IWrapperTypes::removeModifiers(
-                                                                TypeModifiers value,
-                                                                TypeModifiers addModifiers
-                                                                )
-    {
-      return static_cast<TypeModifiers>((0xFFFFFFFF ^ addModifiers) & value);
-    }
-
-    //-------------------------------------------------------------------------
-    static IWrapperTypes::StructModifiers *getStructModifiers()
-    {
-      static IWrapperTypes::StructModifiers modifierList[] =
-      {
-        IWrapperTypes::StructModifier_Generic,
-        IWrapperTypes::StructModifier_Delegate,
-        IWrapperTypes::StructModifier_Subscription,
-        IWrapperTypes::StructModifier_None
-      };
-      return &(modifierList[0]);
-    }
-    
-    //-------------------------------------------------------------------------
-    static const char *toStringValue(IWrapperTypes::StructModifiers value)
-    {
-      switch (value)
-      {
-        case IWrapperTypes::StructModifier_None:          return "none";
         case IWrapperTypes::StructModifier_Generic:       return "generic";
-        case IWrapperTypes::StructModifier_Delegate:      return "delegate";
-        case IWrapperTypes::StructModifier_Subscription:  return "subscription";
+        case IWrapperTypes::StructModifier_AltName:       return "altname";
       }
 
       return "unknown";
-    }
-    
-    //-------------------------------------------------------------------------
-    String IWrapperTypes::toString(StructModifiers value)
-    {
-      auto modifierList = getStructModifiers();
-      
-      String result;
-      
-      for (int loop = 0; StructModifier_None != modifierList[loop]; ++loop)
-      {
-        if (0 != (value & modifierList[loop])) {
-          if (result.hasData()) result += ",";
-          result += toStringValue(modifierList[loop]);
-        }
-      }
-      
-      return result;
     }
     
     //-------------------------------------------------------------------------
     IWrapperTypes::StructModifiers IWrapperTypes::toStructModifier(const char *value) throw (InvalidArgument)
     {
-      StructModifiers result {StructModifier_None};
-      
       String str(value);
-      
-      UseHelper::SplitMap splits;
-      UseHelper::split(str, splits, ",");
-      UseHelper::splitTrim(splits);
-      UseHelper::splitPruneEmpty(splits);
-      
-      auto modifierList = getStructModifiers();
-      
-      for (auto iter = splits.begin(); iter != splits.end(); ++iter) {
-        auto &check = (*iter).second;
-
-        for (int loop = 0; StructModifier_None != modifierList[loop]; ++loop)
-        {
-          if (0 == check.compareNoCase(toStringValue(modifierList[loop]))) {
-            result = addModifiers(result, modifierList[loop]);
-            break;
-          }
-        }
+      for (IWrapperTypes::StructModifiers index = IWrapperTypes::StructModifier_First; index <= IWrapperTypes::StructModifier_Last; index = static_cast<IWrapperTypes::StructModifiers>(static_cast<std::underlying_type<IWrapperTypes::StructModifiers>::type>(index) + 1)) {
+        if (0 == str.compareNoCase(IWrapperTypes::toString(index))) return index;
       }
-      
-      return result;
+
+      ZS_THROW_INVALID_ARGUMENT(String("Not a valid modifier: ") + str);
     }
 
     //-------------------------------------------------------------------------
-    bool IWrapperTypes::hasModifier(
-                                    StructModifiers value,
-                                    StructModifiers checkFor
-                                    )
-    {
-      return 0 != (value & checkFor);
-    }
-
-    //-------------------------------------------------------------------------
-    IWrapperTypes::StructModifiers IWrapperTypes::addModifiers(
-                                                               StructModifiers value,
-                                                               StructModifiers addModifiers
-                                                               )
-    {
-      return static_cast<StructModifiers>(value | addModifiers);
-    }
-
-    //-------------------------------------------------------------------------
-    IWrapperTypes::StructModifiers IWrapperTypes::removeModifiers(
-                                                                  StructModifiers value,
-                                                                  StructModifiers addModifiers
-                                                                  )
-    {
-      return static_cast<StructModifiers>((0xFFFFFFFF ^ addModifiers) & value);
-    }
-
-    //-------------------------------------------------------------------------
-    static IWrapperTypes::MethodModifiers *getMethodModifiers()
-    {
-      static IWrapperTypes::MethodModifiers modifierList[] =
-      {
-        IWrapperTypes::MethodModifier_Ctor,
-        IWrapperTypes::MethodModifier_Static,
-        IWrapperTypes::MethodModifier_Dynamic,
-        IWrapperTypes::MethodModifier_Const,
-        IWrapperTypes::MethodModifier_None
-      };
-      return &(modifierList[0]);
-    }
-    
-    //-------------------------------------------------------------------------
-    static const char *toStringValue(IWrapperTypes::MethodModifiers value)
+    const char *IWrapperTypes::toString(TypeModifiers value)
     {
       switch (value)
       {
-        case IWrapperTypes::MethodModifier_None:      return "none";
-        case IWrapperTypes::MethodModifier_Ctor:      return "ctor";
-        case IWrapperTypes::MethodModifier_Static:    return "static";
-        case IWrapperTypes::MethodModifier_Dynamic:   return "dynamic";
-        case IWrapperTypes::MethodModifier_Const:     return "const";
+        case IWrapperTypes::TypeModifier_:       return "_";
       }
 
       return "unknown";
     }
-    
-    //-------------------------------------------------------------------------
-    String IWrapperTypes::toString(MethodModifiers value)
-    {
-      auto modifierList = getMethodModifiers();
 
-      String result;
-      for (int loop = 0; MethodModifier_None != modifierList[loop]; ++loop)
-      {
-        if (0 != (value & modifierList[loop])) {
-          if (result.hasData()) result += ",";
-          result += toStringValue(modifierList[loop]);
-        }
+    //-------------------------------------------------------------------------
+    IWrapperTypes::TypeModifiers IWrapperTypes::toTypeModifier(const char *value) throw (InvalidArgument)
+    {
+      String str(value);
+      for (IWrapperTypes::TypeModifiers index = IWrapperTypes::TypeModifier_First; index <= IWrapperTypes::TypeModifier_Last; index = static_cast<IWrapperTypes::TypeModifiers>(static_cast<std::underlying_type<IWrapperTypes::TypeModifiers>::type>(index) + 1)) {
+        if (0 == str.compareNoCase(IWrapperTypes::toString(index))) return index;
       }
-      
-      return result;
+
+      ZS_THROW_INVALID_ARGUMENT(String("Not a valid modifier: ") + str);
+    }
+
+    //-------------------------------------------------------------------------
+    const char *IWrapperTypes::toString(PropertyModifiers value)
+    {
+      switch (value)
+      {
+        case IWrapperTypes::PropertyModifier_ReadOnly:        return "readonly";
+        case IWrapperTypes::PropertyModifier_WriteOnly:       return "writeonly";
+        case IWrapperTypes::PropertyModifier_Nullable:        return "nullable";
+      }
+
+      return "unknown";
+    }
+
+    //-------------------------------------------------------------------------
+    IWrapperTypes::PropertyModifiers IWrapperTypes::toPropertyModifier(const char *value) throw (InvalidArgument)
+    {
+      String str(value);
+      for (IWrapperTypes::PropertyModifiers index = IWrapperTypes::PropertyModifier_First; index <= IWrapperTypes::PropertyModifier_Last; index = static_cast<IWrapperTypes::PropertyModifiers>(static_cast<std::underlying_type<IWrapperTypes::PropertyModifiers>::type>(index) + 1)) {
+        if (0 == str.compareNoCase(IWrapperTypes::toString(index))) return index;
+      }
+
+      ZS_THROW_INVALID_ARGUMENT(String("Not a valid modifier: ") + str);
+    }
+
+    //-------------------------------------------------------------------------
+    const char *IWrapperTypes::toString(MethodModifiers value)
+    {
+      switch (value)
+      {
+        case IWrapperTypes::MethodModifier_Ctor:          return "ctor";
+        case IWrapperTypes::MethodModifier_Static:        return "static";
+        case IWrapperTypes::MethodModifier_Dynamic:       return "dynamic";
+        case IWrapperTypes::MethodModifier_AltName:       return "altname";
+        case IWrapperTypes::MethodModifier_EventHandler:  return "eventhandler";
+      }
+
+      return "unknown";
     }
 
     //-------------------------------------------------------------------------
     IWrapperTypes::MethodModifiers IWrapperTypes::toMethodModifier(const char *value) throw (InvalidArgument)
     {
-      MethodModifiers result {MethodModifier_None};
-
       String str(value);
-
-      UseHelper::SplitMap splits;
-      UseHelper::split(str, splits, ",");
-      UseHelper::splitTrim(splits);
-      UseHelper::splitPruneEmpty(splits);
-      
-      auto modifierList = getMethodModifiers();
-      
-      for (auto iter = splits.begin(); iter != splits.end(); ++iter) {
-        auto &check = (*iter).second;
-
-        for (int loop = 0; MethodModifier_None != modifierList[loop]; ++loop)
-        {
-          if (0 == check.compareNoCase(toStringValue(modifierList[loop]))) {
-            result = addModifiers(result, modifierList[loop]);
-            break;
-          }
-        }
+      for (IWrapperTypes::MethodModifiers index = IWrapperTypes::MethodModifier_First; index <= IWrapperTypes::MethodModifier_Last; index = static_cast<IWrapperTypes::MethodModifiers>(static_cast<std::underlying_type<IWrapperTypes::MethodModifiers>::type>(index) + 1)) {
+        if (0 == str.compareNoCase(IWrapperTypes::toString(index))) return index;
       }
 
-      return result;
+      ZS_THROW_INVALID_ARGUMENT(String("Not a valid modifier: ") + str);
     }
 
     //-------------------------------------------------------------------------
-    bool IWrapperTypes::hasModifier(
-                                    MethodModifiers value,
-                                    MethodModifiers checkFor
-                                    )
+    const char *IWrapperTypes::toString(MethodArgumentModifiers value)
     {
-      return 0 != (value & checkFor);
+      switch (value)
+      {
+        case IWrapperTypes::MethodArgumentModifier_In:         return "in";
+        case IWrapperTypes::MethodArgumentModifier_Out:        return "out";
+      }
+
+      return "unknown";
     }
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::MethodModifiers IWrapperTypes::addModifiers(
-                                                               MethodModifiers value,
-                                                               MethodModifiers addModifiers
-                                                               )
+    IWrapperTypes::MethodArgumentModifiers IWrapperTypes::toMethodArgumentModifier(const char *value) throw (InvalidArgument)
     {
-      return static_cast<MethodModifiers>(value | addModifiers);
-    }
+      String str(value);
+      for (IWrapperTypes::MethodArgumentModifiers index = IWrapperTypes::MethodArgumentModifier_First; index <= IWrapperTypes::MethodArgumentModifier_Last; index = static_cast<IWrapperTypes::MethodArgumentModifiers>(static_cast<std::underlying_type<IWrapperTypes::MethodArgumentModifiers>::type>(index) + 1)) {
+        if (0 == str.compareNoCase(IWrapperTypes::toString(index))) return index;
+      }
 
-    //-------------------------------------------------------------------------
-    IWrapperTypes::MethodModifiers IWrapperTypes::removeModifiers(
-                                                                  MethodModifiers value,
-                                                                  MethodModifiers addModifiers
-                                                                  )
-    {
-      return static_cast<MethodModifiers>((0xFFFFFFFF ^ addModifiers) & value);
+      ZS_THROW_INVALID_ARGUMENT(String("Not a valid modifier: ") + str);
     }
-
+    
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
@@ -462,7 +240,8 @@ namespace zsLib
       if (mDocumentation) {
         hasher->update(UseHelper::toString(mDocumentation));
       }
-      if (mDirectives) {
+      if (mModifiers.size() > 0) {
+        
         hasher->update(UseHelper::toString(mDirectives));
       }
 
