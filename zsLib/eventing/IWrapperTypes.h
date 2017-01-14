@@ -62,76 +62,40 @@ namespace zsLib
       ZS_DECLARE_STRUCT_PTR(Property);
       ZS_DECLARE_STRUCT_PTR(Method);
 
-      enum StructModifiers : ULONG
+      enum Modifiers : ULONG
       {
-        StructModifier_First,
+        Modifier_First,
 
-        StructModifier_Generic = StructModifier_First,
-        StructModifier_AltName,
+        Modifier_Common_AltName = Modifier_First,
+        
+        Modifier_Struct_Generic,
 
-        StructModifier_Last = StructModifier_AltName,
+        Modifier_Method_Ctor,
+        Modifier_Method_Static,
+        Modifier_Method_Dynamic,
+        Modifier_Method_EventHandler,
+
+        Modifier_Method_ArgumentIn,
+        Modifier_Method_ArgumentOut,
+
+        Modifier_Property_ReadOnly,
+        Modifier_Property_WriteOnly,
+        Modifier_Property_Nullable,
+
+        Modifier_,
+
+        Modifier_Last = Modifier_,
       };
 
-      static const char *toString(StructModifiers value);
-      static StructModifiers toStructModifier(const char *value) throw (InvalidArgument);
+      static const char *toString(Modifiers value);
+      static int getTotalParams(Modifiers value);
+      static Modifiers toModifier(const char *value) throw (InvalidArgument);
 
-      enum TypeModifiers : ULONG
-      {
-        TypeModifier_First,
-
-        TypeModifier_ = TypeModifier_First,
-
-        TypeModifier_Last = TypeModifier_,
-      };
-
-      static const char *toString(TypeModifiers value);
-      static TypeModifiers toTypeModifier(const char *value) throw (InvalidArgument);
-
-      enum PropertyModifiers : ULONG
-      {
-        PropertyModifier_First,
-
-        PropertyModifier_ReadOnly = PropertyModifier_First,
-        PropertyModifier_WriteOnly,
-        PropertyModifier_Nullable,
-
-        PropertyModifier_Last = PropertyModifier_Nullable,
-      };
-
-      static const char *toString(PropertyModifiers value);
-      static PropertyModifiers toPropertyModifier(const char *value) throw (InvalidArgument);
-
-      enum MethodModifiers : ULONG
-      {
-        MethodModifier_First,
-
-        MethodModifier_Ctor = MethodModifier_First,
-
-        MethodModifier_Static,
-        MethodModifier_Dynamic,
-
-        MethodModifier_AltName,
-
-        MethodModifier_EventHandler,
-
-        MethodModifier_Last = MethodModifier_Dynamic,
-      };
-
-      static const char *toString(MethodModifiers value);
-      static MethodModifiers toMethodModifier(const char *value) throw (InvalidArgument);
-
-      enum MethodArgumentModifiers : ULONG
-      {
-        MethodArgumentModifier_First,
-
-        MethodArgumentModifier_In = MethodArgumentModifier_First,
-        MethodArgumentModifier_Out,
-
-        MethodArgumentModifier_Last = MethodArgumentModifier_Out,
-      };
-
-      static const char *toString(MethodArgumentModifiers value);
-      static MethodArgumentModifiers toMethodArgumentModifier(const char *value) throw (InvalidArgument);
+      static bool isValidForAll(Modifiers value);
+      static bool isValidForStruct(Modifiers value);
+      static bool isValidForMethod(Modifiers value);
+      static bool isValidForMethodArgument(Modifiers value);
+      static bool isValidForProperty(Modifiers value);
 
       typedef String Name;
       typedef String Value;
@@ -215,6 +179,28 @@ namespace zsLib
                                  const String &typeName,
                                  const FindTypeOptions &options
                                  ) const;
+        
+        virtual bool hasModifier(Modifiers modifier) const;
+        virtual String getModifierValue(
+                                        Modifiers modifier,
+                                        size_t index = 0
+                                        ) const;
+        virtual void getModifierValues(
+                                       Modifiers modifier,
+                                       StringList &outValues
+                                       ) const;
+        virtual ElementPtr getModifierRawValue(Modifiers modifier) const;
+        
+        virtual void clearModifier(Modifiers modifier);
+        virtual void setModifier(Modifiers modifier);
+        virtual void setModifier(
+                                 Modifiers modifier,
+                                 const String &value
+                                 );
+        virtual void setModifier(
+                                 Modifiers modifier,
+                                 const StringList &values
+                                 );
 
         virtual void resolveTypedefs() throw (InvalidContent) {}
         virtual bool fixTemplateHashMapping() {return false;}

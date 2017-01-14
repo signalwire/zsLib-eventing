@@ -104,123 +104,145 @@ namespace zsLib
     #pragma mark
 
     //-------------------------------------------------------------------------
-    const char *IWrapperTypes::toString(StructModifiers value)
+    const char *IWrapperTypes::toString(Modifiers value)
     {
       switch (value)
       {
-        case IWrapperTypes::StructModifier_Generic:       return "generic";
-        case IWrapperTypes::StructModifier_AltName:       return "altname";
+        case IWrapperTypes::Modifier_Common_AltName:      return "altname";
+          
+        case IWrapperTypes::Modifier_Struct_Generic:      return "generic";
+          
+        case IWrapperTypes::Modifier_Method_Ctor:         return "constructor";
+        case IWrapperTypes::Modifier_Method_Static:       return "static";
+        case IWrapperTypes::Modifier_Method_Dynamic:      return "dynamic";
+        case IWrapperTypes::Modifier_Method_EventHandler: return "eventhandler";
+          
+        case IWrapperTypes::Modifier_Method_ArgumentIn:   return "in";
+        case IWrapperTypes::Modifier_Method_ArgumentOut:  return "out";
+          
+        case IWrapperTypes::Modifier_Property_ReadOnly:   return "readonly";
+        case IWrapperTypes::Modifier_Property_WriteOnly:  return "writeonly";
+        case IWrapperTypes::Modifier_Property_Nullable:   return "nullable";
+
+        case IWrapperTypes::Modifier_:                    return "_";
+
       }
 
       return "unknown";
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::StructModifiers IWrapperTypes::toStructModifier(const char *value) throw (InvalidArgument)
-    {
-      String str(value);
-      for (IWrapperTypes::StructModifiers index = IWrapperTypes::StructModifier_First; index <= IWrapperTypes::StructModifier_Last; index = static_cast<IWrapperTypes::StructModifiers>(static_cast<std::underlying_type<IWrapperTypes::StructModifiers>::type>(index) + 1)) {
-        if (0 == str.compareNoCase(IWrapperTypes::toString(index))) return index;
-      }
-
-      ZS_THROW_INVALID_ARGUMENT(String("Not a valid modifier: ") + str);
-    }
-
-    //-------------------------------------------------------------------------
-    const char *IWrapperTypes::toString(TypeModifiers value)
+    int IWrapperTypes::getTotalParams(Modifiers value)
     {
       switch (value)
       {
-        case IWrapperTypes::TypeModifier_:       return "_";
+        case IWrapperTypes::Modifier_Common_AltName:      return 1;
+
+        case IWrapperTypes::Modifier_Struct_Generic:      return 0;
+
+        case IWrapperTypes::Modifier_Method_Ctor:         return 0;
+        case IWrapperTypes::Modifier_Method_Static:       return 0;
+        case IWrapperTypes::Modifier_Method_Dynamic:      return 0;
+        case IWrapperTypes::Modifier_Method_EventHandler: return 0;
+
+        case IWrapperTypes::Modifier_Method_ArgumentIn:   return 0;
+        case IWrapperTypes::Modifier_Method_ArgumentOut:  return 0;
+
+        case IWrapperTypes::Modifier_Property_ReadOnly:   return 0;
+        case IWrapperTypes::Modifier_Property_WriteOnly:  return 0;
+        case IWrapperTypes::Modifier_Property_Nullable:   return 0;
+
+        case IWrapperTypes::Modifier_:                    return 0;
       }
 
-      return "unknown";
+      return -1;
     }
-
+    
     //-------------------------------------------------------------------------
-    IWrapperTypes::TypeModifiers IWrapperTypes::toTypeModifier(const char *value) throw (InvalidArgument)
+    IWrapperTypes::Modifiers IWrapperTypes::toModifier(const char *value) throw (InvalidArgument)
     {
       String str(value);
-      for (IWrapperTypes::TypeModifiers index = IWrapperTypes::TypeModifier_First; index <= IWrapperTypes::TypeModifier_Last; index = static_cast<IWrapperTypes::TypeModifiers>(static_cast<std::underlying_type<IWrapperTypes::TypeModifiers>::type>(index) + 1)) {
-        if (0 == str.compareNoCase(IWrapperTypes::toString(index))) return index;
-      }
-
-      ZS_THROW_INVALID_ARGUMENT(String("Not a valid modifier: ") + str);
-    }
-
-    //-------------------------------------------------------------------------
-    const char *IWrapperTypes::toString(PropertyModifiers value)
-    {
-      switch (value)
-      {
-        case IWrapperTypes::PropertyModifier_ReadOnly:        return "readonly";
-        case IWrapperTypes::PropertyModifier_WriteOnly:       return "writeonly";
-        case IWrapperTypes::PropertyModifier_Nullable:        return "nullable";
-      }
-
-      return "unknown";
-    }
-
-    //-------------------------------------------------------------------------
-    IWrapperTypes::PropertyModifiers IWrapperTypes::toPropertyModifier(const char *value) throw (InvalidArgument)
-    {
-      String str(value);
-      for (IWrapperTypes::PropertyModifiers index = IWrapperTypes::PropertyModifier_First; index <= IWrapperTypes::PropertyModifier_Last; index = static_cast<IWrapperTypes::PropertyModifiers>(static_cast<std::underlying_type<IWrapperTypes::PropertyModifiers>::type>(index) + 1)) {
-        if (0 == str.compareNoCase(IWrapperTypes::toString(index))) return index;
-      }
-
-      ZS_THROW_INVALID_ARGUMENT(String("Not a valid modifier: ") + str);
-    }
-
-    //-------------------------------------------------------------------------
-    const char *IWrapperTypes::toString(MethodModifiers value)
-    {
-      switch (value)
-      {
-        case IWrapperTypes::MethodModifier_Ctor:          return "ctor";
-        case IWrapperTypes::MethodModifier_Static:        return "static";
-        case IWrapperTypes::MethodModifier_Dynamic:       return "dynamic";
-        case IWrapperTypes::MethodModifier_AltName:       return "altname";
-        case IWrapperTypes::MethodModifier_EventHandler:  return "eventhandler";
-      }
-
-      return "unknown";
-    }
-
-    //-------------------------------------------------------------------------
-    IWrapperTypes::MethodModifiers IWrapperTypes::toMethodModifier(const char *value) throw (InvalidArgument)
-    {
-      String str(value);
-      for (IWrapperTypes::MethodModifiers index = IWrapperTypes::MethodModifier_First; index <= IWrapperTypes::MethodModifier_Last; index = static_cast<IWrapperTypes::MethodModifiers>(static_cast<std::underlying_type<IWrapperTypes::MethodModifiers>::type>(index) + 1)) {
-        if (0 == str.compareNoCase(IWrapperTypes::toString(index))) return index;
-      }
-
-      ZS_THROW_INVALID_ARGUMENT(String("Not a valid modifier: ") + str);
-    }
-
-    //-------------------------------------------------------------------------
-    const char *IWrapperTypes::toString(MethodArgumentModifiers value)
-    {
-      switch (value)
-      {
-        case IWrapperTypes::MethodArgumentModifier_In:         return "in";
-        case IWrapperTypes::MethodArgumentModifier_Out:        return "out";
-      }
-
-      return "unknown";
-    }
-
-    //-------------------------------------------------------------------------
-    IWrapperTypes::MethodArgumentModifiers IWrapperTypes::toMethodArgumentModifier(const char *value) throw (InvalidArgument)
-    {
-      String str(value);
-      for (IWrapperTypes::MethodArgumentModifiers index = IWrapperTypes::MethodArgumentModifier_First; index <= IWrapperTypes::MethodArgumentModifier_Last; index = static_cast<IWrapperTypes::MethodArgumentModifiers>(static_cast<std::underlying_type<IWrapperTypes::MethodArgumentModifiers>::type>(index) + 1)) {
+      for (IWrapperTypes::Modifiers index = IWrapperTypes::Modifier_First; index <= IWrapperTypes::Modifier_Last; index = static_cast<IWrapperTypes::Modifiers>(static_cast<std::underlying_type<IWrapperTypes::Modifiers>::type>(index) + 1)) {
         if (0 == str.compareNoCase(IWrapperTypes::toString(index))) return index;
       }
 
       ZS_THROW_INVALID_ARGUMENT(String("Not a valid modifier: ") + str);
     }
     
+    //-------------------------------------------------------------------------
+    bool IWrapperTypes::isValidForAll(Modifiers value)
+    {
+      switch (value)
+      {
+        case IWrapperTypes::Modifier_Common_AltName:      return true;
+        default:                                          break;
+      }
+      return false;
+    }
+    
+    //-------------------------------------------------------------------------
+    bool IWrapperTypes::isValidForStruct(Modifiers value)
+    {
+      if (isValidForAll(value)) return true;
+      
+      switch (value)
+      {
+        case IWrapperTypes::Modifier_Struct_Generic:      return true;
+        default:                                          break;
+      }
+      
+      return false;
+    }
+    
+    //-------------------------------------------------------------------------
+    bool IWrapperTypes::isValidForMethod(Modifiers value)
+    {
+      if (isValidForAll(value)) return true;
+
+      switch (value)
+      {
+        case IWrapperTypes::Modifier_Method_Ctor:
+        case IWrapperTypes::Modifier_Method_Static:
+        case IWrapperTypes::Modifier_Method_Dynamic:
+        case IWrapperTypes::Modifier_Method_EventHandler: return true;
+        default:                                          break;
+      }
+      
+      return false;
+    }
+    
+    //-------------------------------------------------------------------------
+    bool IWrapperTypes::isValidForMethodArgument(Modifiers value)
+    {
+      if (isValidForAll(value)) return true;
+      
+      switch (value)
+      {
+        case IWrapperTypes::Modifier_Method_ArgumentIn:
+        case IWrapperTypes::Modifier_Method_ArgumentOut:  return true;
+        default:                                          break;
+      }
+      
+      return false;
+    }
+    
+    //-------------------------------------------------------------------------
+    bool IWrapperTypes::isValidForProperty(Modifiers value)
+    {
+      if (isValidForAll(value)) return true;
+      
+      switch (value)
+      {
+        case IWrapperTypes::Modifier_Property_ReadOnly:
+        case IWrapperTypes::Modifier_Property_WriteOnly:
+        case IWrapperTypes::Modifier_Property_Nullable:   return true;
+        default:                                          break;
+      }
+
+      return false;
+    }
+    
+
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
@@ -235,14 +257,24 @@ namespace zsLib
       auto hasher = IHasher::sha256();
       
       hasher->update(mName);
-      hasher->update(":");
 
       if (mDocumentation) {
+        hasher->update(":documentation:");
         hasher->update(UseHelper::toString(mDocumentation));
       }
+
       if (mModifiers.size() > 0) {
+        hasher->update(":modifiers:");
+        for (auto iter = mModifiers.begin(); iter != mModifiers.end(); ++iter) {
+          auto name = (*iter).first;
+          auto value = (*iter).second;
+          
+          hasher->update(name);
+          hasher->update(":");
+          hasher->update(UseHelper::toString(value));
+          hasher->update(":next:");
+        }
         
-        hasher->update(UseHelper::toString(mDirectives));
       }
 
       hasher->update(":end");
@@ -361,6 +393,116 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
+    bool IWrapperTypes::Context::hasModifier(Modifiers modifier) const
+    {
+      auto found = mModifiers.find(toString(modifier));
+      if (found == mModifiers.end()) return false;
+      return true;
+    }
+    
+    //-------------------------------------------------------------------------
+    String IWrapperTypes::Context::getModifierValue(
+                                                    Modifiers modifier,
+                                                    size_t index
+                                                    ) const
+    {
+      auto found = mModifiers.find(toString(modifier));
+      if (found == mModifiers.end()) return String();
+      
+      auto rootEl = (*found).second;
+      if (!rootEl) return String();
+      
+      auto childEl = rootEl->getFirstChildElement();
+      while (childEl)
+      {
+        if (index < 1) return UseHelper::getElementTextAndDecode(childEl);
+        --index;
+        childEl = childEl->getNextSiblingElement();
+      }
+      
+      return String();
+    }
+    
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::Context::getModifierValues(
+                                                   Modifiers modifier,
+                                                   StringList &outValues
+                                                   ) const
+    {
+      auto found = mModifiers.find(toString(modifier));
+      if (found == mModifiers.end()) return;
+      
+      auto rootEl = (*found).second;
+      if (!rootEl) return;
+      
+      auto childEl = rootEl->getFirstChildElement();
+      while (childEl)
+      {
+        outValues.push_back(UseHelper::getElementTextAndDecode(childEl));
+        childEl = childEl->getNextSiblingElement();
+      }
+    }
+    
+    //-------------------------------------------------------------------------
+    ElementPtr IWrapperTypes::Context::getModifierRawValue(Modifiers modifier) const
+    {
+      auto found = mModifiers.find(toString(modifier));
+      if (found == mModifiers.end()) return ElementPtr();
+
+      return (*found).second;
+    }
+    
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::Context::clearModifier(Modifiers modifier)
+    {
+      auto found = mModifiers.find(toString(modifier));
+      if (found == mModifiers.end()) return;
+
+      mModifiers.erase(found);
+    }
+    
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::Context::setModifier(Modifiers modifier)
+    {
+      StringList values;
+      setModifier(modifier, values);
+    }
+    
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::Context::setModifier(
+                                             Modifiers modifier,
+                                             const String &value
+                                             )
+    {
+      StringList values;
+      values.push_back(value);
+      setModifier(modifier, values);
+    }
+    
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::Context::setModifier(
+                                             Modifiers modifier,
+                                             const StringList &values
+                                             )
+    {
+      clearModifier(modifier);
+      
+      if (values.size() < 1) {
+        mModifiers[toString(modifier)] = ElementPtr();
+        return;
+      }
+
+      auto rootEl = Element::create("contents");
+      for (auto iter = values.begin(); iter != values.end(); ++iter)
+      {
+        auto value = (*iter);
+        rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("content", value));
+      }
+
+      mModifiers[toString(modifier)] = rootEl;
+    }
+
+    //-------------------------------------------------------------------------
     String IWrapperTypes::Context::aliasLookup(const String &value)
     {
       auto project = getProject();
@@ -391,8 +533,23 @@ namespace zsLib
       if (mDocumentation) {
         rootEl->adoptAsLastChild(mDocumentation->clone());
       }
-      if (mDirectives) {
-        rootEl->adoptAsLastChild(mDirectives->clone());
+      if (mModifiers.size() > 0) {
+        auto modifiersEl = Element::create("modifiers");
+        for (auto iter = mModifiers.begin(); iter != mModifiers.end(); ++iter) {
+          auto name = (*iter).first;
+          auto nameValueEl = (*iter).second;
+          auto modifierEl = Element::create("modifier");
+
+          modifierEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("name", name));
+          if (nameValueEl) {
+            auto valueEl = Element::create("value");
+            valueEl->adoptAsLastChild(nameValueEl->clone());
+            modifierEl->adoptAsLastChild(valueEl);
+          }
+
+          modifiersEl->adoptAsLastChild(modifierEl);
+        }
+        rootEl->adoptAsLastChild(modifiersEl);
       }
     }
 
@@ -405,9 +562,44 @@ namespace zsLib
       if (docEl) {
         mDocumentation = docEl->clone()->toElement();
       }
-      auto directivesEl = rootEl->findFirstChildElement("directives");
-      if (directivesEl) {
-        mDirectives = directivesEl->clone()->toElement();
+      auto modifiersEl = rootEl->findFirstChildElement("modifiers");
+      if (modifiersEl) {
+        auto modifierEl = modifiersEl->findFirstChildElement("modifier");
+        while (modifierEl) {
+          auto name = UseHelper::getElementTextAndDecode(modifierEl->findLastChildElement("name"));
+          auto valueEl = modifierEl->findFirstChildElement("value");
+          ElementPtr nameValueEl;
+          if (valueEl) {
+            auto firstChildEl = valueEl->getFirstChildElement();
+            if (firstChildEl) {
+              nameValueEl = firstChildEl->clone()->toElement();
+            }
+          }
+          mModifiers[name] = nameValueEl;
+          modifierEl = modifierEl->findNextSiblingElement("modifier");
+        }
+      }
+    }
+    
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::Context::copyContentsFrom(ContextPtr originalContext)
+    {
+      if (!originalContext) return;
+      
+      auto currentParent = mContext.lock();
+      if (!currentParent) {
+        mContext = originalContext->mContext.lock();
+      }
+
+      mName = originalContext->mName;
+      mDocumentation = originalContext->mDocumentation ? originalContext->mDocumentation->clone()->toElement() : ElementPtr();
+
+      mModifiers.clear();
+      for (auto iter = originalContext->mModifiers.begin(); iter != originalContext->mModifiers.end(); ++iter)
+      {
+        auto name = (*iter).first;
+        auto valueEl = (*iter).second;
+        mModifiers[name] = valueEl ? valueEl->clone()->toElement() : ElementPtr();
       }
     }
 
@@ -644,7 +836,7 @@ namespace zsLib
     {
       Context::init();
     }
-    
+
     //-------------------------------------------------------------------------
     void IWrapperTypes::Namespace::init(const ElementPtr &rootEl) throw (InvalidContent)
     {
@@ -1571,8 +1763,8 @@ namespace zsLib
         }
       }
 
-      String pathStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findLastChildElement("path")));
-      String baseStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findLastChildElement("base")));
+      String pathStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("path")));
+      String baseStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("base")));
       
       FindTypeOptions options;
       auto foundType = findType(pathStr, baseStr, options);
