@@ -36,5 +36,5 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/tool/internal/types.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_CommandLine.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_EventingCompiler.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_WrapperCompiler.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Monitor.h>

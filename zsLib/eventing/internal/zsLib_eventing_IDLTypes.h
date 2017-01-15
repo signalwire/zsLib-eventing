@@ -31,7 +31,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #pragma once
 
-#include <zsLib/eventing/IWrapperTypes.h>
+#include <zsLib/eventing/IIDLTypes.h>
 
 namespace zsLib
 {

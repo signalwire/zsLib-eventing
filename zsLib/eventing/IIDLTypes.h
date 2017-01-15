@@ -45,10 +45,10 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     #pragma mark
-    #pragma mark IWrapperTypes
+    #pragma mark IIDLTypes
     #pragma mark
 
-    interaction IWrapperTypes : public IEventingTypes
+    interaction IIDLTypes : public IEventingTypes
     {
       ZS_DECLARE_STRUCT_PTR(Project);
       ZS_DECLARE_STRUCT_PTR(Context);
@@ -68,20 +68,26 @@ namespace zsLib
         Modifier_First,
 
         Modifier_Common_AltName = Modifier_First,
-        
-        Modifier_Struct_Generic,
+
+        Modifier_Struct_StructuredData,   // struct is treated as simple structured data; properties default without getters/setters
+        Modifier_Struct_Interface,        // struct is treated as full interface; properties default with getters/setters
+        Modifier_Struct_Generic,          // struct is generic template
+        Modifier_Struct_Exception,        // struct is meant for throws declarations
 
         Modifier_Method_Ctor,
         Modifier_Method_Static,
         Modifier_Method_Dynamic,
         Modifier_Method_EventHandler,
 
-        Modifier_Method_ArgumentIn,
-        Modifier_Method_ArgumentOut,
+        Modifier_Method_Argument_In,
+        Modifier_Method_Argument_Out,
+        Modifier_Method_Argument_Grouping,  // grouped arguments for languages (e.g. objective-C) that allow "with" argument groupings
 
-        Modifier_Property_ReadOnly,
-        Modifier_Property_WriteOnly,
-        Modifier_Property_Nullable,
+        Modifier_Property_Nullable,         // value of null is legal
+        Modifier_Property_ReadOnly,         // value can be fetched but not set
+        Modifier_Property_WriteOnly,        // value can be set but not fetched
+        Modifier_Property_Getter,           // value is not stored in wrapper, fetched from code
+        Modifier_Property_Setter,           // value is not set in wrapper, set in code
 
         Modifier_,
 
@@ -127,7 +133,7 @@ namespace zsLib
 
       //-----------------------------------------------------------------------
       #pragma mark
-      #pragma mark IWrapperTypes::Context
+      #pragma mark IIDLTypes::Context
       #pragma mark
 
       struct Context
@@ -230,7 +236,7 @@ namespace zsLib
 
       //-----------------------------------------------------------------------
       #pragma mark
-      #pragma mark IWrapperTypes::Project
+      #pragma mark IIDLTypes::Project
       #pragma mark
 
       struct Project : public Context
@@ -275,7 +281,7 @@ namespace zsLib
 
       //-----------------------------------------------------------------------
       #pragma mark
-      #pragma mark IWrapperTypes::Namespace
+      #pragma mark IIDLTypes::Namespace
       #pragma mark
 
       struct Namespace : public Context
@@ -335,7 +341,7 @@ namespace zsLib
 
       //-----------------------------------------------------------------------
       #pragma mark
-      #pragma mark IWrapperTypes::Type
+      #pragma mark IIDLTypes::Type
       #pragma mark
 
       struct Type : public Context
@@ -359,7 +365,7 @@ namespace zsLib
 
       //-----------------------------------------------------------------------
       #pragma mark
-      #pragma mark IWrapperTypes::BasicType
+      #pragma mark IIDLTypes::BasicType
       #pragma mark
 
       struct BasicType : public Type
@@ -386,7 +392,7 @@ namespace zsLib
 
       //-----------------------------------------------------------------------
       #pragma mark
-      #pragma mark IWrapperTypes::EnumType
+      #pragma mark IIDLTypes::EnumType
       #pragma mark
 
       struct EnumType : public Type
@@ -432,7 +438,7 @@ namespace zsLib
       
       //-----------------------------------------------------------------------
       #pragma mark
-      #pragma mark IWrapperTypes::TypedefType
+      #pragma mark IIDLTypes::TypedefType
       #pragma mark
 
       struct TypedefType : public Type
@@ -480,7 +486,7 @@ namespace zsLib
 
       //-----------------------------------------------------------------------
       #pragma mark
-      #pragma mark IWrapperTypes::Struct
+      #pragma mark IIDLTypes::Struct
       #pragma mark
 
       struct Struct : public Type
@@ -544,7 +550,7 @@ namespace zsLib
 
       //-----------------------------------------------------------------------
       #pragma mark
-      #pragma mark IWrapperTypes::TypedefType
+      #pragma mark IIDLTypes::TypedefType
       #pragma mark
 
       struct GenericType : public Type
@@ -587,7 +593,7 @@ namespace zsLib
 
       //-----------------------------------------------------------------------
       #pragma mark
-      #pragma mark IWrapperTypes::TypedefType
+      #pragma mark IIDLTypes::TypedefType
       #pragma mark
 
       struct TemplatedStructType : public Type
@@ -636,7 +642,7 @@ namespace zsLib
 
       //-----------------------------------------------------------------------
       #pragma mark
-      #pragma mark IWrapperTypes::Property
+      #pragma mark IIDLTypes::Property
       #pragma mark
 
       struct Property : public Context
@@ -676,7 +682,7 @@ namespace zsLib
 
       //-----------------------------------------------------------------------
       #pragma mark
-      #pragma mark IWrapperTypes::Method
+      #pragma mark IIDLTypes::Method
       #pragma mark
 
       struct Method : public Context

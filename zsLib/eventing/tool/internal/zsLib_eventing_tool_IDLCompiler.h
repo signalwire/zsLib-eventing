@@ -34,7 +34,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/tool/internal/types.h>
 
 #include <zsLib/eventing/tool/ICompiler.h>
-#include <zsLib/eventing/IWrapperTypes.h>
+#include <zsLib/eventing/IIDLTypes.h>
 
 #include <stack>
 
@@ -51,16 +51,16 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         #pragma mark
-        #pragma mark WrapperCompiler
+        #pragma mark IDLCompiler
         #pragma mark
 
-        class WrapperCompiler : public ICompiler,
-                                public IWrapperTypes
+        class IDLCompiler : public ICompiler,
+                            public IIDLTypes
         {
           struct make_private {};
 
         public:
-          ZS_DECLARE_TYPEDEF_PTR(IWrapperTypes::Project, Project);
+          ZS_DECLARE_TYPEDEF_PTR(IIDLTypes::Project, Project);
           
           typedef std::list<ElementPtr> ElementList;
 
@@ -98,12 +98,8 @@ namespace zsLib
             TokenType_CommaOperator,
             TokenType_ColonOperator,
             TokenType_EqualsOperator,
-            
-            TokenType_PointerOperator,
-            TokenType_AddressOperator,
-            TokenType_CarotOperator,
 
-            TokenType_Last = TokenType_CarotOperator,
+            TokenType_Last = TokenType_EqualsOperator,
           };
 
           struct Token
@@ -119,25 +115,25 @@ namespace zsLib
           
         public:
           //-------------------------------------------------------------------
-          WrapperCompiler(
+          IDLCompiler(
                            const make_private &,
                            const Config &config
                            );
-          ~WrapperCompiler();
+          ~IDLCompiler();
 
           //-------------------------------------------------------------------
           #pragma mark
-          #pragma mark WrapperCompiler => ICompiler
+          #pragma mark IDLCompiler => ICompiler
           #pragma mark
 
-          static WrapperCompilerPtr create(const Config &config);
+          static IDLCompilerPtr create(const Config &config);
 
           virtual void process() throw (Failure, FailureWithLine);
 
         protected:
           //-------------------------------------------------------------------
           #pragma mark
-          #pragma mark WrapperCompiler => (internal)
+          #pragma mark IDLCompiler => (internal)
           #pragma mark
 
           void outputSkeleton();
@@ -150,14 +146,11 @@ namespace zsLib
           bool parseUsing(NamespacePtr namespaceObj) throw (FailureWithLine);
           bool parseTypedef(ContextPtr context) throw (FailureWithLine);
           bool parseStruct(ContextPtr context) throw (FailureWithLine);
-          bool parseMacroTypedefs(ContextPtr context) throw (FailureWithLine);
-          bool parseMacroUsing(ContextPtr context) throw (FailureWithLine);
-          bool parseMacroForwards(ContextPtr context) throw (FailureWithLine);
-          bool parseIgnoredMacros() throw (FailureWithLine);
-          
+
           bool parseDocumentation();
           bool parseSemiColon();
           bool parseComma();
+          bool parseModifiers() throw (FailureWithLine);
           bool parseDirective() throw (FailureWithLine);
           bool pushDirectiveTokens(TokenPtr token) throw (FailureWithLine);
           bool parseDirectiveExclusive(bool &outIgnoreMode) throw (FailureWithLine);
@@ -231,26 +224,14 @@ namespace zsLib
 
           StructPtr processStructForward(
                                          ContextPtr context,
-                                         const String &typeName,
-                                         IWrapperTypes::Visibilities defaultVisbility
+                                         const String &typeName
                                          ) throw (FailureWithLine);
-
-          void createTypedefPtrs(
-                                 ContextPtr context,
-                                 TypePtr existingType,
-                                 const String &baseTypeName
-                                 );
 
           TypePtr findTypeOrCreateTypedef(
                                           ContextPtr context,
                                           const TokenList &tokens,
                                           TypedefTypePtr &outCreatedTypedef
                                           ) throw (FailureWithLine);
-
-          TypedefTypePtr createTypedefToNewTemplateFromExistingTypedef(
-                                                                       TypedefTypePtr existingTypedefObj,
-                                                                       StructPtr newTemplate
-                                                                       ) throw (InvalidContent);
 
           void writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure);
           void writeJSON(const String &outputName, const DocumentPtr &doc) const throw (Failure);
@@ -259,10 +240,10 @@ namespace zsLib
         private:
           //-------------------------------------------------------------------
           #pragma mark
-          #pragma mark WrapperCompiler => (data)
+          #pragma mark IDLCompiler => (data)
           #pragma mark
 
-          WrapperCompilerWeakPtr mThisWeak;
+          IDLCompilerWeakPtr mThisWeak;
 
           Config mConfig;
           TokenList mPendingDocumentation;

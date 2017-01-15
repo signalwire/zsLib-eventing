@@ -29,7 +29,7 @@ either expressed or implied, of the FreeBSD Project.
 
 */
 
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_WrapperCompiler.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h>
 
 #include <zsLib/eventing/tool/OutputStream.h>
@@ -53,7 +53,7 @@ namespace zsLib
 {
   namespace eventing
   {
-    ZS_DECLARE_TYPEDEF_PTR(IWrapperTypes::Project, Project);
+    ZS_DECLARE_TYPEDEF_PTR(IIDLTypes::Project, Project);
 
     namespace tool
     {
@@ -63,8 +63,8 @@ namespace zsLib
 
       namespace internal
       {
-        ZS_DECLARE_TYPEDEF_PTR(WrapperCompiler::Token, Token);
-        typedef WrapperCompiler::TokenList TokenList;
+        ZS_DECLARE_TYPEDEF_PTR(IDLCompiler::Token, Token);
+        typedef IDLCompiler::TokenList TokenList;
 
         //-----------------------------------------------------------------------
         //-----------------------------------------------------------------------
@@ -130,7 +130,7 @@ namespace zsLib
           String str(p, static_cast<size_t>(p - start));
 
           auto result = make_shared<Token>();
-          result->mTokenType = WrapperCompiler::TokenType_Directive;
+          result->mTokenType = IDLCompiler::TokenType_Directive;
           result->mToken = str;
           result->mLineCount = ioLineCount;
 
@@ -157,7 +157,7 @@ namespace zsLib
           String str(p, static_cast<size_t>(p - start));
           
           auto result = make_shared<Token>();
-          result->mTokenType = WrapperCompiler::TokenType_Documentation;
+          result->mTokenType = IDLCompiler::TokenType_Documentation;
           result->mToken = str;
           result->mLineCount = ioLineCount;
 
@@ -178,7 +178,7 @@ namespace zsLib
           if (!Helper::skipQuote(p, &ioLineCount)) return TokenPtr();
 
           auto result = make_shared<Token>();
-          result->mTokenType = WrapperCompiler::TokenType_Quote;
+          result->mTokenType = IDLCompiler::TokenType_Quote;
           result->mToken = String(start, static_cast<size_t>(p - start));
           result->mLineCount = currentLine;
           return result;
@@ -205,7 +205,7 @@ namespace zsLib
           ++p;
 
           auto result = make_shared<Token>();
-          result->mTokenType = WrapperCompiler::TokenType_Char;
+          result->mTokenType = IDLCompiler::TokenType_Char;
           result->mToken = String(start, static_cast<size_t>(p - start));
           result->mLineCount = currentLine;
           return result;
@@ -424,7 +424,7 @@ namespace zsLib
           }
           
           auto result = make_shared<Token>();
-          result->mTokenType = WrapperCompiler::TokenType_Number;
+          result->mTokenType = IDLCompiler::TokenType_Number;
           result->mToken = String(start, static_cast<size_t>(p - start));
           if (foundNegative) {
             result->mToken = String("-") + result->mToken;
@@ -450,40 +450,12 @@ namespace zsLib
           }
           
           auto result = make_shared<Token>();
-          result->mTokenType = WrapperCompiler::TokenType_Identifier;
+          result->mTokenType = IDLCompiler::TokenType_Identifier;
           result->mToken = String(start, static_cast<size_t>(p - start));
           result->mLineCount = lineCount;
           return result;
         }
         
-        //---------------------------------------------------------------------
-        static TokenPtr getBraceToken(
-                                      const char * &p,
-                                      ULONG lineCount
-                                      )
-        {
-          WrapperCompiler::TokenTypes type {WrapperCompiler::TokenType_First};
-          
-          switch (*p) {
-            case '{':
-            case '}': type = WrapperCompiler::TokenType_CurlyBrace; break;
-            case '(':
-            case ')': type = WrapperCompiler::TokenType_Brace; break;
-            case '[':
-            case ']': type = WrapperCompiler::TokenType_SquareBrace; break;
-            default:  return TokenPtr();
-          }
-
-          auto result = make_shared<Token>();
-          result->mTokenType = type;
-          result->mToken = String(p, static_cast<size_t>(1));
-          result->mLineCount = lineCount;
-
-          ++p;
-
-          return result;
-        }
-
         //---------------------------------------------------------------------
         static TokenPtr getOperatorToken(
                                          const char * &p,
@@ -492,52 +464,58 @@ namespace zsLib
         {
           static const char *operators[] =
           {
+            "{",
+            "}",
+            "(",
+            ")",
+            "[",
+            "]",
             ";",
-            "::",
-            "++",
-            "--",
-            ".",
-            "->",
-            "~",
-            "!",
-            "+",
-            "-",
-            "&",
-            "*",
-            ".*",
-            "->*",
-            "*",
-            "/",
-            "%",
-            "<<",
-            ">>",
             "<",
             ">",
-            ">=",
-            "<=",
-            "==",
-            "!=",
-            "^",
-            "|",
-            "&&",
-            "||",
+            "::",
             "=",
-            "*=",
-            "/=",
-            "%=",
-            "+=",
-            "-=",
-            ">>=",
-            "<<=",
-            "&=",
-            "^=",
-            "|=",
-            "?",
             ":",
             ",",
+            "?",
+            //"++",
+            //"--",
+            //".",
+            //"->",
+            //"~",
+            //"!",
+            //"+",
+            //"-",
+            //"&",
+            //"*",
+            //".*",
+            //"->*",
+            //"*",
+            //"/",
+            //"%",
+            //"<<",
+            //">>",
+            //">=",
+            //"<=",
+            //"==",
+            //"!=",
+            //"^",
+            //"|",
+            //"&&",
+            //"||",
+            //"*=",
+            //"/=",
+            //"%=",
+            //"+=",
+            //"-=",
+            //">>=",
+            //"<<=",
+            //"&=",
+            //"^=",
+            //"|=",
             NULL
           };
-          
+
           String valid;
           String test;
 
@@ -563,25 +541,33 @@ namespace zsLib
           }
           
           auto result = make_shared<Token>();
-          result->mTokenType = WrapperCompiler::TokenType_Operator;
+          result->mTokenType = IDLCompiler::TokenType_Operator;
           if (";" == valid) {
-            result->mTokenType = WrapperCompiler::TokenType_SemiColon;
-          } else if ("::" == valid) {
-            result->mTokenType = WrapperCompiler::TokenType_ScopeOperator;
-          } else if ("," == valid) {
-            result->mTokenType = WrapperCompiler::TokenType_CommaOperator;
-          } else if (":" == valid) {
-            result->mTokenType = WrapperCompiler::TokenType_ColonOperator;
-          } else if ("=" == valid) {
-            result->mTokenType = WrapperCompiler::TokenType_EqualsOperator;
-          } else if ("*" == valid) {
-            result->mTokenType = WrapperCompiler::TokenType_PointerOperator;
-          } else if ("&" == valid) {
-            result->mTokenType = WrapperCompiler::TokenType_AddressOperator;
+            result->mTokenType = IDLCompiler::TokenType_SemiColon;
+          } else if ("(" == valid) {
+            result->mTokenType = IDLCompiler::TokenType_Brace;
+          } else if (")" == valid) {
+            result->mTokenType = IDLCompiler::TokenType_Brace;
+          } else if ("{" == valid) {
+            result->mTokenType = IDLCompiler::TokenType_CurlyBrace;
+          } else if ("}" == valid) {
+            result->mTokenType = IDLCompiler::TokenType_CurlyBrace;
+          } else if ("[" == valid) {
+            result->mTokenType = IDLCompiler::TokenType_SquareBrace;
+          } else if ("]" == valid) {
+            result->mTokenType = IDLCompiler::TokenType_SquareBrace;
           } else if ("<" == valid) {
-            result->mTokenType = WrapperCompiler::TokenType_AngleBrace;
+            result->mTokenType = IDLCompiler::TokenType_AngleBrace;
           } else if (">" == valid) {
-            result->mTokenType = WrapperCompiler::TokenType_AngleBrace;
+            result->mTokenType = IDLCompiler::TokenType_AngleBrace;
+          } else if ("::" == valid) {
+            result->mTokenType = IDLCompiler::TokenType_ScopeOperator;
+          } else if ("," == valid) {
+            result->mTokenType = IDLCompiler::TokenType_CommaOperator;
+          } else if (":" == valid) {
+            result->mTokenType = IDLCompiler::TokenType_ColonOperator;
+          } else if ("=" == valid) {
+            result->mTokenType = IDLCompiler::TokenType_EqualsOperator;
           }
 
           result->mToken = valid;
@@ -600,7 +586,7 @@ namespace zsLib
           if ('\0' == *p) return TokenPtr();
           
           auto result = make_shared<Token>();
-          result->mTokenType = WrapperCompiler::TokenType_Unknown;
+          result->mTokenType = IDLCompiler::TokenType_Unknown;
           result->mToken = String(p, static_cast<size_t>(1));
           result->mLineCount = lineCount;
           ++p;
@@ -686,14 +672,6 @@ namespace zsLib
             }
             
             {
-              auto result = getBraceToken(p, ioLineCount);
-              if (result) {
-                ioStartOfLine = false;
-                return result;
-              }
-            }
-
-            {
               auto result = getOperatorToken(p, ioLineCount);
               if (result) {
                 ioStartOfLine = false;
@@ -765,11 +743,11 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         #pragma mark
-        #pragma mark WrapperCompiler
+        #pragma mark IDLCompiler
         #pragma mark
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::Token::isBrace() const
+        bool IDLCompiler::Token::isBrace() const
         {
           switch (mTokenType) {
             case TokenType_Brace:
@@ -782,7 +760,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::Token::isOpenBrace() const
+        bool IDLCompiler::Token::isOpenBrace() const
         {
           switch (mTokenType) {
             case TokenType_Brace:         return "(" == mToken;
@@ -795,7 +773,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::Token::isCloseBrace() const
+        bool IDLCompiler::Token::isCloseBrace() const
         {
           switch (mTokenType) {
             case TokenType_Brace:         return ")" == mToken;
@@ -812,11 +790,11 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         #pragma mark
-        #pragma mark WrapperCompiler
+        #pragma mark IDLCompiler
         #pragma mark
 
         //---------------------------------------------------------------------
-        WrapperCompiler::WrapperCompiler(
+        IDLCompiler::IDLCompiler(
                                            const make_private &,
                                            const Config &config
                                            ) :
@@ -825,7 +803,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        WrapperCompiler::~WrapperCompiler()
+        IDLCompiler::~IDLCompiler()
         {
         }
 
@@ -834,19 +812,19 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         #pragma mark
-        #pragma mark WrapperCompiler => ICompiler
+        #pragma mark IDLCompiler => ICompiler
         #pragma mark
 
         //---------------------------------------------------------------------
-        WrapperCompilerPtr WrapperCompiler::create(const Config &config)
+        IDLCompilerPtr IDLCompiler::create(const Config &config)
         {
-          WrapperCompilerPtr pThis(std::make_shared<WrapperCompiler>(make_private{}, config));
+          IDLCompilerPtr pThis(std::make_shared<IDLCompiler>(make_private{}, config));
           pThis->mThisWeak = pThis;
           return pThis;
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::process() throw (Failure, FailureWithLine)
+        void IDLCompiler::process() throw (Failure, FailureWithLine)
         {
           outputSkeleton();
           read();
@@ -861,16 +839,16 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         #pragma mark
-        #pragma mark WrapperCompiler => (internal)
+        #pragma mark IDLCompiler => (internal)
         #pragma mark
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::outputSkeleton()
+        void IDLCompiler::outputSkeleton()
         {
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::read() throw (Failure, FailureWithLine)
+        void IDLCompiler::read() throw (Failure, FailureWithLine)
         {
           HashSet processedHashes;
 
@@ -1002,7 +980,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::validate() throw (Failure)
+        void IDLCompiler::validate() throw (Failure)
         {
           auto &project = mConfig.mProject;
           if (!project) return;
@@ -1013,7 +991,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::parseNamespace(NamespacePtr parent) throw (FailureWithLine)
+        bool IDLCompiler::parseNamespace(NamespacePtr parent) throw (FailureWithLine)
         {
           auto token = peekNextToken("namespace");
           if (TokenType_Identifier != token->mTokenType) return false;
@@ -1064,7 +1042,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::parseNamespaceContents(NamespacePtr namespaceObj) throw (FailureWithLine)
+        void IDLCompiler::parseNamespaceContents(NamespacePtr namespaceObj) throw (FailureWithLine)
         {
           while (hasMoreTokens()) {
             if (parseDocumentation()) continue;
@@ -1074,17 +1052,11 @@ namespace zsLib
             if (parseUsing(namespaceObj)) continue;
             if (parseTypedef(namespaceObj)) continue;
             if (parseStruct(namespaceObj)) continue;
-            
-            // macros
-            if (parseMacroTypedefs(namespaceObj)) continue;
-            if (parseMacroUsing(namespaceObj)) continue;
-            if (parseMacroForwards(namespaceObj)) continue;
-            if (parseIgnoredMacros()) continue;
           }
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::parseUsing(NamespacePtr namespaceObj) throw (FailureWithLine)
+        bool IDLCompiler::parseUsing(NamespacePtr namespaceObj) throw (FailureWithLine)
         {
           const char *what = "using";
           auto token = peekNextToken(what);
@@ -1137,7 +1109,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::parseTypedef(ContextPtr context) throw (FailureWithLine)
+        bool IDLCompiler::parseTypedef(ContextPtr context) throw (FailureWithLine)
         {
           const char *what = "typedef";
           auto token = peekNextToken(what);
@@ -1171,13 +1143,15 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::parseStruct(ContextPtr context) throw (FailureWithLine)
+        bool IDLCompiler::parseStruct(ContextPtr context) throw (FailureWithLine)
         {
-          const char *what = "class/struct forward";
+          const char *what = "interface/struct";
+          
+          bool isInterface {};
 
           auto token = peekNextToken(what);
           if (TokenType_Identifier != token->mTokenType) return false;
-          
+
           bool foundTemplate = false;
           
           TypeList templateParams;
@@ -1189,52 +1163,40 @@ namespace zsLib
 
             TokenList templateTokens;
             if (!extractToClosingBraceToken(what, templateTokens, false)) {
-              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("template expecting arguments"));
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " template expecting arguments");
             }
+
+            token = peekNextToken(what);
           }
 
           if (("class" != token->mToken) &&
+              ("interface" != token->mToken) &&
+              ("interaction" != token->mToken) &&
               ("struct" != token->mToken)) {
             if (foundTemplate) {
-              // skip until end of template function
-              while (hasMoreTokens()) {
-                token = extractNextToken(what);
-                if (!token->isBrace()) continue;
-
-                putBackToken(token);
-                TokenList ignoredTokens;
-                extractToClosingBraceToken(what, ignoredTokens);
-                return true;
-              }
-              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("template expecting struct or class or function (template functions are ignored)"));
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " template expecting keyword struct or interface");
             }
             return false;
           }
-
-          IWrapperTypes::Visibilities visibility {IWrapperTypes::Visibility_First};
           
-          if ("struct" == token->mToken) {
-            visibility = IWrapperTypes::Visibility_Public;
-          } else {
-            visibility = IWrapperTypes::Visibility_Private;
-          }
+          extractNextToken(what); // skip "struct/interface" keyword
 
-          extractNextToken(what);  // skip "struct/class"
+          isInterface = ("struct" == token->mToken ? false : true);
 
           token = extractNextToken(what);
-          
+
           String structName = token->mToken;
 
           if (TokenType_Identifier != token->mTokenType) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("struct/class expecting name identifier"));
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting name identifier");
           }
           
           token = extractNextToken(what);
           if (TokenType_SemiColon == token->mTokenType) {
             if (foundTemplate) {
-              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("template struct/class is missing template body"));
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " template is missing template body");
             }
-            processStructForward(context, structName, visibility);
+            processStructForward(context, structName);
             return true;
           }
 
@@ -1243,376 +1205,9 @@ namespace zsLib
 
           return true;
         }
-        
-        //---------------------------------------------------------------------
-        bool WrapperCompiler::parseMacroTypedefs(ContextPtr context) throw (FailureWithLine)
-        {
-          const char *what = "macro typedef";
-          auto token = peekNextToken(what);
-          if (TokenType_Identifier != token->mTokenType) return false;
-          
-          String macroName = token->mToken;
-
-          if (("ZS_DECLARE_PTR" != macroName) &&
-              ("ZS_DECLARE_TYPEDEF_PTR" != macroName)) {
-            return false;
-          }
-          
-          extractNextToken(what);  // skip macro name
-          
-          token = extractNextToken(what);
-          if ((TokenType_Brace != token->mTokenType) ||
-              (token->isOpenBrace())) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro typedef expecting \"(\""));
-          }
-          
-          TokenList typeTokens;
-          extractToComma(what, typeTokens);
-          if (!parseComma()) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro typedef expecting comma"));
-          }
-
-          token = extractNextToken(what);
-          if (TokenType_Identifier == token->mTokenType) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro typedef expecting typedef name"));
-          }
-          
-          String typeName = token->mToken;
-
-          token = extractNextToken(what);
-          if ((TokenType_Brace != token->mTokenType) ||
-              (token->isCloseBrace())) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro typedef expecting \")\""));
-          }
-
-          if ("ZS_DECLARE_TYPEDEF_PTR" == macroName) {
-            processTypedef(context, typeTokens, typeName);
-          }
-          
-          TypePtr existingType = context->findType(typeName);
-          if (!existingType) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("existing typename was not found: ") + typeName);
-          }
-
-          createTypedefPtrs(context, existingType, typeName);
-          return true;
-        }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::parseMacroUsing(ContextPtr context) throw (FailureWithLine)
-        {
-          const char *what = "macro ZS_DECLARE_USING_PTR";
-          auto token = peekNextToken(what);
-          if (TokenType_Identifier != token->mTokenType) return false;
-
-          String macroName = token->mToken;
-
-          if ("ZS_DECLARE_USING_PTR" != macroName) return false;
-
-          extractNextToken(what);  // skip macro name
-
-          token = extractNextToken(what);
-          if ((TokenType_Brace != token->mTokenType) ||
-              (token->isOpenBrace())) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro using expecting \"(\""));
-          }
-          
-          TokenList namespaceTokens;
-          extractToComma(what, namespaceTokens);
-          if (!parseComma()) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro using expecting comma"));
-          }
-          
-          token = extractNextToken(what);
-          if (TokenType_Identifier == token->mTokenType) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro using expecting typedef name"));
-          }
-          
-          String typeName = token->mToken;
-          
-          token = extractNextToken(what);
-          if ((TokenType_Brace != token->mTokenType) ||
-              (token->isCloseBrace())) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro using expecting \")\""));
-          }
-          
-          String namespaceName;
-          
-          try {
-            namespaceName = makeTypenameFromTokens(namespaceTokens);
-          } catch (const InvalidContent &e) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro using ") + e.message());
-          }
-
-          IWrapperTypes::Context::FindTypeOptions options;
-          TypePtr existingType = context->findType(namespaceName, typeName, options);
-          if (!existingType) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("existing typename was not found: ") + typeName);
-          }
-
-          createTypedefPtrs(context, existingType, typeName);
-          return true;
-        }
-        
-        //---------------------------------------------------------------------
-        bool WrapperCompiler::parseMacroForwards(ContextPtr context) throw (FailureWithLine)
-        {
-          const char *what = "macro struct/class forward";
-          auto token = peekNextToken(what);
-          if (TokenType_Identifier != token->mTokenType) return false;
-
-          String macroName = token->mToken;
-          if (("ZS_DECLARE_CLASS_PTR" != macroName) &&
-              ("ZS_DECLARE_STRUCT_PTR" != macroName) &&
-              ("ZS_DECLARE_INTERACTION_PTR" != macroName) &&
-              ("ZS_DECLARE_INTERACTION_PROXY" != macroName) &&
-              ("ZS_DECLARE_INTERACTION_PROXY_SUBSCRIPTION" != macroName) &&
-              ("ZS_DECLARE_TYPEDEF_PROXY" != macroName) &&
-              ("ZS_DECLARE_USING_PROXY" != macroName) &&
-              ("ZS_DECLARE_PROXY_BEGIN" != macroName) &&
-              ("ZS_DECLARE_PROXY_SUBSCRIPTIONS_BEGIN")) return false;
-          
-          bool requiresSecondParam = false;
-          if (("ZS_DECLARE_INTERACTION_PROXY_SUBSCRIPTION" == macroName) ||
-              ("ZS_DECLARE_TYPEDEF_PROXY" == macroName) ||
-              ("ZS_DECLARE_USING_PROXY" == macroName) ||
-              ("ZS_DECLARE_PROXY_SUBSCRIPTIONS_BEGIN" == macroName)) {
-            requiresSecondParam = true;
-          }
-
-          extractNextToken(what);  // skip macro name
-
-          token = extractNextToken(what);
-          if (TokenType_Identifier != token->mTokenType) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro expecting identifier"));
-          }
-          
-          TokenList tokens1;
-          TokenList tokens2;
-          
-          String param1;
-          String param2;
-
-          token = peekNextToken(what);
-          if ((TokenType_Brace != token->mTokenType) ||
-              (token->isOpenBrace())) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macros expecting \"(\""));
-          }
-          
-          try {
-            if (requiresSecondParam) {
-              token = extractNextToken(what); // skip open brace
-              {
-                extractToComma(what, tokens1);
-                param1 = makeTypenameFromTokens(tokens1);
-              }
-              parseComma();
-              {
-                extractToComma(what, tokens2);
-                param2 = makeTypenameFromTokens(tokens2);
-              }
-
-              token = extractNextToken(what);
-              if ((TokenType_Brace != token->mTokenType) ||
-                  (token->isCloseBrace())) {
-                ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro using expecting \")\""));
-              }
-            } else {
-              TokenList tokens;
-              extractToClosingBraceToken(what, tokens1, false);
-              param1 = makeTypenameFromTokens(tokens1);
-            }
-          } catch (const InvalidContent &e) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro forwards ") + e.message());
-          }
-          
-          String namespaceName;
-          
-          if ("ZS_DECLARE_CLASS_PTR" == macroName) {
-            auto structObj = processStructForward(context, param1, Visibility_Private);
-            createTypedefPtrs(context, structObj, param1);
-            return true;
-          }
-
-          if (("ZS_DECLARE_STRUCT_PTR" == macroName) ||
-              ("ZS_DECLARE_INTERACTION_PTR" == macroName)) {
-            auto structObj = processStructForward(context, param1, Visibility_Public);
-            createTypedefPtrs(context, structObj, param1);
-            return true;
-          }
-
-          if (("ZS_DECLARE_INTERACTION_PROXY" == macroName) ||
-              ("ZS_DECLARE_INTERACTION_PROXY_SUBSCRIPTION" == macroName)) {
-            {
-              auto structObj = processStructForward(context, param1, Visibility_Public);
-              createTypedefPtrs(context, structObj, param1);
-            }
-            {
-              auto structObj = processStructForward(context, param1, Visibility_Public);
-              structObj->mModifiers = addModifiers(structObj->mModifiers, StructModifier_Delegate);
-              createTypedefPtrs(context, structObj, param1);
-            }
-            if ("ZS_DECLARE_INTERACTION_PROXY_SUBSCRIPTION" == macroName) {
-              auto structObj = processStructForward(context, param2, Visibility_Public);
-              structObj->mModifiers = addModifiers(structObj->mModifiers, StructModifier_Delegate);
-              createTypedefPtrs(context, structObj, param1);
-            }
-            return true;
-          }
-          
-          if ("ZS_DECLARE_TYPEDEF_PROXY" == macroName) {
-            TypedefTypePtr createdTypedef;
-            auto foundType = findTypeOrCreateTypedef(context, tokens1, createdTypedef);
-            if (createdTypedef) {
-              createdTypedef->mName = param2;
-              
-              bool addedTypedef = false;
-
-              {
-                auto namespaceObj = context->toNamespace();
-                if (namespaceObj) {
-                  addedTypedef = true;
-                  auto foundExisting = namespaceObj->mTypedefs.find(createdTypedef->getMappingName());
-                  if (foundExisting == namespaceObj->mTypedefs.end()) {
-                    namespaceObj->mTypedefs[createdTypedef->getMappingName()] = createdTypedef;
-                  }
-                }
-              }
-              {
-                auto structObj = context->toStruct();
-                if (structObj) {
-                  addedTypedef = true;
-                  auto foundExisting = structObj->mTypedefs.find(createdTypedef->getMappingName());
-                  if (foundExisting == structObj->mTypedefs.end()) {
-                    structObj->mTypedefs[createdTypedef->getMappingName()] = createdTypedef;
-                  }
-                }
-              }
-              if (!addedTypedef) {
-                ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro forwards could not create typedef: ") + param2);
-              }
-            }
-
-            {
-              auto structObj = foundType->toStruct();
-              if (structObj) {
-                structObj->mModifiers = addModifiers(structObj->mModifiers, StructModifier_Delegate);
-              }
-            }
-
-            createTypedefPtrs(context, foundType, param2);
-            return true;
-          }
-
-          if ("ZS_DECLARE_USING_PROXY" == macroName) {
-            IWrapperTypes::Context::FindTypeOptions options;
-            TypePtr foundType = context->findType(param1, param2, options);
-            if (!foundType) {
-              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro forwads did not find: ") + param1 + "::" + param2);
-            }
-
-            foundType = foundType->getTypeBypassingTypedefIfNoop();
-            
-            auto namespaceObj = context->toNamespace();
-            if (!namespaceObj) {
-              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro forwads is not in the context of a namespace: ") + param1 + "::" + param2);
-            }
-
-            {
-              auto structObj = foundType->toStruct();
-              if (structObj) {
-                structObj->mModifiers = addModifiers(structObj->mModifiers, StructModifier_Delegate);
-              }
-            }
-
-            processUsingType(namespaceObj, foundType);
-            createTypedefPtrs(context, foundType, param2);
-            return true;
-          }
-          
-          if ("ZS_DECLARE_PROXY_BEGIN" == macroName) {
-            TypePtr foundType = context->findType(param1);
-            if (!foundType) {
-              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro forwads did not find: ") + param1 + "::" + param2);
-            }
-
-            foundType = foundType->getTypeBypassingTypedefIfNoop();
-
-            {
-              auto structObj = foundType->toStruct();
-              if (structObj) {
-                structObj->mModifiers = addModifiers(structObj->mModifiers, StructModifier_Delegate);
-              }
-            }
-            return true;
-          }
-
-          if ("ZS_DECLARE_PROXY_SUBSCRIPTIONS_BEGIN" == macroName) {
-            // process delegate
-            {
-              TypePtr foundType = context->findType(param1);
-              if (!foundType) {
-                ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro forwads did not find: ") + param1);
-              }
-
-              foundType = foundType->getTypeBypassingTypedefIfNoop();
-              
-              {
-                auto structObj = foundType->toStruct();
-                if (structObj) {
-                  structObj->mModifiers = addModifiers(structObj->mModifiers, StructModifier_Delegate);
-                }
-              }
-            }
-
-            // process subscription
-            {
-              TypePtr foundType = context->findType(param2);
-              if (!foundType) {
-                ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro forwads did not find: ") + param2);
-              }
-
-              foundType = foundType->getTypeBypassingTypedefIfNoop();
-
-              {
-                auto structObj = foundType->toStruct();
-                if (structObj) {
-                  structObj->mModifiers = addModifiers(structObj->mModifiers, StructModifier_Subscription);
-                }
-              }
-            }
-            return true;
-          }
-
-          ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("macro forwads did not process macro: ") + macroName);
-          return true;
-        }
-        
-        //---------------------------------------------------------------------
-        bool WrapperCompiler::parseIgnoredMacros() throw (FailureWithLine)
-        {
-          const char *what = "ignored macro";
-          auto token = peekNextToken(what);
-          if (TokenType_Identifier != token->mTokenType) return false;
-          
-          String macroName = token->mToken;
-          
-          const char *ignorePrefix = "ZS_DECLARE_";
-          
-          if (ignorePrefix != macroName.substr(0, strlen(ignorePrefix))) return false;
-
-          extractNextToken(what);  // skip macro name
-
-          token = peekNextToken(what);
-          
-          TokenList ignoredTokens;
-          extractToClosingBraceToken(what, ignoredTokens);
-
-          return true;
-        }
-        
-        //---------------------------------------------------------------------
-        bool WrapperCompiler::parseDocumentation()
+        bool IDLCompiler::parseDocumentation()
         {
           bool found = false;
 
@@ -1628,7 +1223,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::parseSemiColon()
+        bool IDLCompiler::parseSemiColon()
         {
           auto token = peekNextToken(";");
 
@@ -1638,22 +1233,66 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::parseComma()
+        bool IDLCompiler::parseComma()
         {
-          auto token = peekNextToken(",");
+          const char *what = ",";
+          auto token = peekNextToken(what);
 
           if (TokenType_CommaOperator != token->mTokenType) return false;
-          extractNextToken(",");
+          extractNextToken(what);
+          return true;
+        }
+        
+        //---------------------------------------------------------------------
+        bool IDLCompiler::parseModifiers() throw (FailureWithLine)
+        {
+          const char *what = "modifiers";
+          
+          auto token = peekNextToken(what);
+          if (TokenType_SquareBrace != token->mTokenType) return false;
+          
+          TokenList allModifierTokens;
+          extractToClosingBraceToken(what, allModifierTokens);
+
+          pushTokens(allModifierTokens);
+          
+          while (hasMoreTokens()) {
+            TokenList modifierTokens;
+            extractToComma(what, modifierTokens);
+            parseComma(); // skip over a comma
+            
+            pushTokens(modifierTokens);
+            
+            token = extractNextToken(what);
+            if (TokenType_Identifier != token->mTokenType) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String(what) + " expecting identifier");
+            }
+            
+            try {
+              auto modifier = toModifier(token->mToken);
+              
+#define TODO 1
+#define TODO 2
+
+            } catch (const InvalidArgument &) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String(what) + " modifier is not recognized:" + token->mToken);
+            }
+
+            popTokens();  // modifierTokens
+          }
+
+          popTokens();  // allModifierTokens
           return true;
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::parseDirective() throw (FailureWithLine)
+        bool IDLCompiler::parseDirective() throw (FailureWithLine)
         {
-          auto token = peekNextToken("directive");
+          const char *what = "directive";
+          auto token = peekNextToken(what);
 
           if (TokenType_Directive != token->mTokenType) return false;
-          extractNextToken("directive");
+          extractNextToken(what);
 
           pushDirectiveTokens(token);
 
@@ -1666,7 +1305,7 @@ namespace zsLib
               popTokens();
 
               while (hasMoreTokens()) {
-                token = extractNextToken("directive");
+                token = extractNextToken(what);
                 if (pushDirectiveTokens(token)) goto check_exclusive_again;
               }
               break;
@@ -1688,7 +1327,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::pushDirectiveTokens(TokenPtr token) throw (FailureWithLine)
+        bool IDLCompiler::pushDirectiveTokens(TokenPtr token) throw (FailureWithLine)
         {
           if (!token) return false;
           if (TokenType_Directive != token->mTokenType) return false;
@@ -1701,20 +1340,21 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::parseDirectiveExclusive(bool &outIgnoreMode) throw (FailureWithLine)
+        bool IDLCompiler::parseDirectiveExclusive(bool &outIgnoreMode) throw (FailureWithLine)
         {
-          auto token = peekNextToken("Directive " ZS_WRAPPER_COMPILER_DIRECTIVE_EXCLUSIZE);
+          const char *what = "Directive " ZS_WRAPPER_COMPILER_DIRECTIVE_EXCLUSIZE;
+          auto token = peekNextToken(what);
 
           if (TokenType_Identifier != token->mTokenType) return false;
           if (ZS_WRAPPER_COMPILER_DIRECTIVE_EXCLUSIZE != token->mToken) return false;
 
           outIgnoreMode = true;
 
-          extractNextToken("Directive " ZS_WRAPPER_COMPILER_DIRECTIVE_EXCLUSIZE);
+          extractNextToken(what);
 
-          token = extractNextToken("Directive " ZS_WRAPPER_COMPILER_DIRECTIVE_EXCLUSIZE);
+          token = extractNextToken(what);
           if (TokenType_Identifier != token->mTokenType) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String("Macro ZS_WRAPPER_COMPILER_MACRO_EXCLUSIZE expecting identifier"));
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, token->mLineCount, String(what) + " expecting identifier");
           }
 
           String exclusiveId = token->mToken;
@@ -1728,7 +1368,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        ElementPtr WrapperCompiler::getDocumentation()
+        ElementPtr IDLCompiler::getDocumentation()
         {
           if (mPendingDocumentation.size() < 1) return ElementPtr();
 
@@ -1751,7 +1391,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        ElementPtr WrapperCompiler::getDirectives()
+        ElementPtr IDLCompiler::getDirectives()
         {
           if (mPendingDirectives.size() < 1) return ElementPtr();
           
@@ -1767,7 +1407,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::mergeDocumentation(ElementPtr &existingDocumentation)
+        void IDLCompiler::mergeDocumentation(ElementPtr &existingDocumentation)
         {
           auto rootEl = getDirectives();
           if (!rootEl) return;
@@ -1787,7 +1427,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::mergeDirectives(ElementPtr &existingDirectives)
+        void IDLCompiler::mergeDirectives(ElementPtr &existingDirectives)
         {
           if (mPendingDirectives.size() < 1) return;
           
@@ -1804,7 +1444,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::fillDocumentationAndDirectives(ContextPtr context)
+        void IDLCompiler::fillDocumentationAndDirectives(ContextPtr context)
         {
           if (!context) return;
           mergeDocumentation(context->mDocumentation);
@@ -1812,7 +1452,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String WrapperCompiler::makeTypenameFromTokens(const TokenList &tokens) throw (InvalidContent)
+        String IDLCompiler::makeTypenameFromTokens(const TokenList &tokens) throw (InvalidContent)
         {
           String result;
           
@@ -1843,7 +1483,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::pushTokens(const TokenList &tokens)
+        void IDLCompiler::pushTokens(const TokenList &tokens)
         {
           mTokenListStack.push(make_shared<TokenList>(tokens));
           if (tokens.size() > 0) {
@@ -1854,7 +1494,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::pushTokens(TokenListPtr tokens)
+        void IDLCompiler::pushTokens(TokenListPtr tokens)
         {
           mTokenListStack.push(tokens);
           if (tokens->size() > 0) {
@@ -1865,14 +1505,14 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        WrapperCompiler::TokenListPtr WrapperCompiler::getTokens() const
+        IDLCompiler::TokenListPtr IDLCompiler::getTokens() const
         {
           if (mTokenListStack.size() < 1) return TokenListPtr();
           return mTokenListStack.top();
         }
 
         //---------------------------------------------------------------------
-        WrapperCompiler::TokenListPtr WrapperCompiler::popTokens()
+        IDLCompiler::TokenListPtr IDLCompiler::popTokens()
         {
           TokenListPtr result = mTokenListStack.top();
 
@@ -1888,7 +1528,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::hasMoreTokens() const
+        bool IDLCompiler::hasMoreTokens() const
         {
           if (mTokenListStack.size() < 1) return false;
           if (getTokens()->size() < 1) return false;
@@ -1896,7 +1536,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        TokenPtr WrapperCompiler::peekNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine)
+        TokenPtr IDLCompiler::peekNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine)
         {
           if (mTokenListStack.size() > 0) {
             if (getTokens()->size() > 0) return getTokens()->front();
@@ -1914,7 +1554,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        TokenPtr WrapperCompiler::extractNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine)
+        TokenPtr IDLCompiler::extractNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine)
         {
           if (mTokenListStack.size() > 0) {
             if (getTokens()->size() > 0) {
@@ -1938,7 +1578,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::putBackToken(TokenPtr token)
+        void IDLCompiler::putBackToken(TokenPtr token)
         {
           if (mTokenListStack.size() < 1) {
             ZS_THROW_INVALID_USAGE("must have active stack of tokens");
@@ -1953,7 +1593,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::putBackTokens(const TokenList &tokens)
+        void IDLCompiler::putBackTokens(const TokenList &tokens)
         {
           if (mTokenListStack.size() < 1) {
             ZS_THROW_INVALID_USAGE("must have active stack of tokens");
@@ -1974,14 +1614,14 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        ULONG WrapperCompiler::getLastLineNumber() const
+        ULONG IDLCompiler::getLastLineNumber() const
         {
           if (!mLastToken) return 1;
           return mLastToken->mLineCount;
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::insertBefore(
+        void IDLCompiler::insertBefore(
                                            TokenList &tokens,
                                            const TokenList &insertTheseTokens
                                            )
@@ -1998,7 +1638,7 @@ namespace zsLib
         }
         
         //---------------------------------------------------------------------
-        void WrapperCompiler::insertAfter(
+        void IDLCompiler::insertAfter(
                                           TokenList &tokens,
                                           const TokenList &insertTheseTokens
                                           )
@@ -2015,7 +1655,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::extractToClosingBraceToken(
+        bool IDLCompiler::extractToClosingBraceToken(
                                                          const char *whatExpectingClosingToken,
                                                          TokenList &outTokens,
                                                          bool includeOuterBrace
@@ -2082,7 +1722,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::extractToComma(
+        bool IDLCompiler::extractToComma(
                                              const char *whatExpectingComma,
                                              TokenList &outTokens
                                              ) throw (FailureWithLine)
@@ -2091,7 +1731,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::extractToEquals(
+        bool IDLCompiler::extractToEquals(
                                               const char *whatExpectingComma,
                                               TokenList &outTokens
                                               ) throw (FailureWithLine)
@@ -2100,7 +1740,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool WrapperCompiler::extractToTokenType(
+        bool IDLCompiler::extractToTokenType(
                                                  const char *whatExpectingComma,
                                                  TokenTypes searchTokenType,
                                                  TokenList &outTokens,
@@ -2135,7 +1775,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::processUsingNamespace(
+        void IDLCompiler::processUsingNamespace(
                                                     NamespacePtr currentNamespace,
                                                     NamespacePtr usingNamespace
                                                     )
@@ -2186,7 +1826,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::processUsingType(
+        void IDLCompiler::processUsingType(
                                                NamespacePtr currentNamespace,
                                                TypePtr usingType
                                                )
@@ -2205,7 +1845,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::processTypedef(
+        void IDLCompiler::processTypedef(
                                              ContextPtr context,
                                              const TokenList &typeTokens,
                                              const String &typeName
@@ -2256,10 +1896,9 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        WrapperCompiler::StructPtr WrapperCompiler::processStructForward(
+        IDLCompiler::StructPtr IDLCompiler::processStructForward(
                                                                          ContextPtr context,
-                                                                         const String &typeName,
-                                                                         IWrapperTypes::Visibilities defaultVisbility
+                                                                         const String &typeName
                                                                          ) throw (FailureWithLine)
         {
           {
@@ -2270,7 +1909,6 @@ namespace zsLib
               
               StructPtr structObj = Struct::create(context);
               structObj->mName = typeName;
-              structObj->mCurrentVisbility = defaultVisbility;              
               
               namespaceObj->mStructs[structObj->getMappingName()] = structObj;
               return structObj;
@@ -2285,7 +1923,6 @@ namespace zsLib
               
               StructPtr structObj = Struct::create(context);
               structObj->mName = typeName;
-              structObj->mCurrentVisbility = defaultVisbility;
 
               outerStructObj->mStructs[structObj->getMappingName()] = structObj;
               return structObj;
@@ -2295,91 +1932,16 @@ namespace zsLib
           ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("struct/class forward not attached to namespace or struct context"));
           return StructPtr();
         }
-        
-        //---------------------------------------------------------------------
-        void WrapperCompiler::createTypedefPtrs(
-                                                ContextPtr context,
-                                                TypePtr existingType,
-                                                const String &baseTypeName
-                                                )
-        {
-          existingType = existingType->getTypeBypassingTypedefIfNoop();
-
-          TypedefTypePtr typeWithPtr = TypedefType::create(context);
-          typeWithPtr->mModifiers = addModifiers(TypeModifier_Ptr, TypeModifier_SharedPtr);
-          typeWithPtr->mOriginalType = existingType;
-          typeWithPtr->mName = baseTypeName + "Ptr";
-          
-          TypedefTypePtr typeWithWeakPtr = TypedefType::create(context);
-          typeWithWeakPtr->mModifiers = addModifiers(TypeModifier_Ptr, TypeModifier_WeakPtr);
-          typeWithWeakPtr->mOriginalType = existingType;
-          typeWithWeakPtr->mName = baseTypeName + "WeakPtr";
-          
-          TypedefTypePtr typeWithUniPtr = TypedefType::create(context);
-          typeWithUniPtr->mModifiers = addModifiers(TypeModifier_Ptr, TypeModifier_UniPtr);
-          typeWithUniPtr->mOriginalType = existingType;
-          typeWithUniPtr->mName = baseTypeName + "UniPtr";
-          
-          {
-            auto namespaceObj = context->toNamespace();
-            if (namespaceObj) {
-              {
-                auto found = namespaceObj->mTypedefs.find(typeWithPtr->mName);
-                if (found == namespaceObj->mTypedefs.end()) {
-                  namespaceObj->mTypedefs[typeWithPtr->getMappingName()] = typeWithPtr;
-                }
-              }
-              {
-                auto found = namespaceObj->mTypedefs.find(typeWithWeakPtr->mName);
-                if (found == namespaceObj->mTypedefs.end()) {
-                  namespaceObj->mTypedefs[typeWithWeakPtr->getMappingName()] = typeWithWeakPtr;
-                }
-              }
-              {
-                auto found = namespaceObj->mTypedefs.find(typeWithUniPtr->mName);
-                if (found == namespaceObj->mTypedefs.end()) {
-                  namespaceObj->mTypedefs[typeWithUniPtr->getMappingName()] = typeWithUniPtr;
-                }
-              }
-              return;
-            }
-          }
-          
-          {
-            auto structObj = context->toStruct();
-            if (structObj) {
-              {
-                auto found = structObj->mTypedefs.find(typeWithPtr->mName);
-                if (found == structObj->mTypedefs.end()) {
-                  structObj->mTypedefs[typeWithPtr->getMappingName()] = typeWithPtr;
-                }
-              }
-              {
-                auto found = structObj->mTypedefs.find(typeWithWeakPtr->mName);
-                if (found == structObj->mTypedefs.end()) {
-                  structObj->mTypedefs[typeWithWeakPtr->getMappingName()] = typeWithWeakPtr;
-                }
-              }
-              {
-                auto found = structObj->mTypedefs.find(typeWithUniPtr->mName);
-                if (found == structObj->mTypedefs.end()) {
-                  structObj->mTypedefs[typeWithUniPtr->getMappingName()] = typeWithUniPtr;
-                }
-              }
-              return;
-            }
-          }
-        }
 
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         #pragma mark
-        #pragma mark WrapperCompilerHelper
+        #pragma mark IDLCompilerHelper
         #pragma mark
         
-        class WrapperCompilerHelper : protected WrapperCompiler
+        class IDLCompilerHelper : protected IDLCompiler
         {
         public:
           struct FoundBasicTypeModifiers
@@ -2395,12 +1957,9 @@ namespace zsLib
             size_t mTotalLongs {false};
             bool mFloat {false};
             bool mDouble {false};
-            
+
             bool mConst {false};
-            bool mPointer {false};
-            bool mReference {false};
-            bool mCarot {false};
-            
+
             bool mLastWasTypename {false};
             bool mLastWasScope {false};
             
@@ -2497,30 +2056,6 @@ namespace zsLib
             }
             
             //-----------------------------------------------------------------
-            void insertPointer() throw (InvalidContent)
-            {
-              if (mCarot || mPointer) throwInvalidModifier();
-              mPointer = true;
-              mAnyOtherModifier = true;
-            }
-            
-            //-----------------------------------------------------------------
-            void insertReference() throw (InvalidContent)
-            {
-              if (mCarot || mReference) throwInvalidModifier();
-              mReference = true;
-              mAnyOtherModifier = true;
-            }
-
-            //-----------------------------------------------------------------
-            void insertCarot() throw (InvalidContent)
-            {
-              if (mAnyBasicTypeModifiers || mPointer || mReference) throwInvalidModifier();
-              mCarot = true;
-              mAnyOtherModifier = true;
-            }
-            
-            //-----------------------------------------------------------------
             PredefinedTypedefs mergePredefined(PredefinedTypedefs existingBasicType) throw (InvalidContent)
             {
               PredefinedTypedefs &newBasicType = existingBasicType;
@@ -2528,15 +2063,15 @@ namespace zsLib
               switch (existingBasicType) {
                 case PredefinedTypedef_void:
                 {
-                  if (mAnyBasicTypeModifiers || mCarot || mReference) throwInvalidModifier();
+                  if (mAnyBasicTypeModifiers) throwInvalidModifier();
                   break;
                 }
                 case PredefinedTypedef_bool:
                 {
-                  if (mAnyBasicTypeModifiers || mCarot) throwInvalidModifier();
+                  if (mAnyBasicTypeModifiers) throwInvalidModifier();
                   break;
                 }
-                  
+
                 case PredefinedTypedef_uchar: {
                   if (mSigned || mChar || mShort || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
                   break;
@@ -2728,20 +2263,6 @@ namespace zsLib
             }
 
             //-----------------------------------------------------------------
-            void applyTypedefModifiers(TypedefTypePtr obj)
-            {
-              if (mCarot) {
-                obj->mModifiers = addModifiers(addModifiers(obj->mModifiers, TypeModifier_Ptr), TypeModifier_CollectionPtr);
-              }
-              if (mPointer) {
-                obj->mModifiers = addModifiers(addModifiers(obj->mModifiers, TypeModifier_Ptr), TypeModifier_RawPtr);
-              }
-              if (mReference) {
-                obj->mModifiers = addModifiers(obj->mModifiers, TypeModifier_Reference);
-              }
-            }
-            
-            //-----------------------------------------------------------------
             PredefinedTypedefs getBasicType()
             {
               if (mChar) {
@@ -2809,30 +2330,12 @@ namespace zsLib
                   }
                 }
 
-                if (typedefObj) {
-                  if (mCarot) {
-                    if (typedefObj->mArraySize > 0) throwInvalidModifier();
-                    if (hasModifier(typedefObj->mModifiers, static_cast<TypeModifiers>(TypeModifier_Reference | TypeModifier_Array | TypeModifier_RawPtr | TypeModifier_CollectionPtr))) throwInvalidModifier();
-                  }
-                  if (mPointer) {
-                    if (typedefObj->mArraySize > 0) throwInvalidModifier();
-                    if (hasModifier(typedefObj->mModifiers, static_cast<TypeModifiers>(TypeModifier_Array | TypeModifier_RawPtr | TypeModifier_CollectionPtr))) throwInvalidModifier();
-                  }
-                  if (mReference) {
-                    if (typedefObj->mArraySize > 0) throwInvalidModifier();
-                    if (hasModifier(typedefObj->mModifiers, static_cast<TypeModifiers>(TypeModifier_Reference | TypeModifier_Array | TypeModifier_CollectionPtr))) throwInvalidModifier();
-                  }
-                }
-
                 if (basicType) {
                   outCreatedTypedef = TypedefType::create(context);
-                  applyTypedefModifiers(outCreatedTypedef);
 
                   if (typedefObj) {
                     outCreatedTypedef->mModifiers = typedefObj->mModifiers;
                   }
-
-                  if (hasModifier(outCreatedTypedef->mModifiers, TypeModifier_CollectionPtr)) throwInvalidModifier();
 
                   PredefinedTypedefs newBasicType = mergePredefined(basicType->mBaseType);
                   auto foundNewBasicType = context->findType(IEventingTypes::toString(newBasicType));
@@ -2847,7 +2350,6 @@ namespace zsLib
                 if (!mAnyOtherModifier) return existingType;
 
                 outCreatedTypedef = TypedefType::create(context);
-                applyTypedefModifiers(outCreatedTypedef);
                 outCreatedTypedef->mOriginalType = existingType;
                 outCreatedTypedef->resolveTypedefs();
                 return outCreatedTypedef;
@@ -2863,7 +2365,6 @@ namespace zsLib
 
               if (mAnyOtherModifier) {
                 outCreatedTypedef = TypedefType::create(context);
-                applyTypedefModifiers(outCreatedTypedef);
                 outCreatedTypedef->mOriginalType = existingBasicType;
                 return outCreatedTypedef;
               }
@@ -2874,7 +2375,7 @@ namespace zsLib
         };
 
         //---------------------------------------------------------------------
-        WrapperCompiler::TypePtr WrapperCompiler::findTypeOrCreateTypedef(
+        IDLCompiler::TypePtr IDLCompiler::findTypeOrCreateTypedef(
                                                                           ContextPtr context,
                                                                           const TokenList &inTokens,
                                                                           TypedefTypePtr &outCreatedTypedef
@@ -2926,7 +2427,7 @@ namespace zsLib
           {
             pushTokens(pretemplateTokens);
             
-            WrapperCompilerHelper::FoundBasicTypeModifiers modifiers;
+            IDLCompilerHelper::FoundBasicTypeModifiers modifiers;
 
             while (hasMoreTokens()) {
               auto token = extractNextToken(what);
@@ -2937,18 +2438,6 @@ namespace zsLib
                 }
                 case TokenType_ScopeOperator: {
                   modifiers.insertScope();
-                  continue;
-                }
-                case TokenType_PointerOperator: {
-                  modifiers.insertPointer();
-                  continue;
-                }
-                case TokenType_AddressOperator: {
-                  modifiers.insertReference();
-                  continue;
-                }
-                case TokenType_CarotOperator: {
-                  modifiers.insertCarot();
                   continue;
                 }
                 default:
@@ -2972,6 +2461,9 @@ namespace zsLib
 
               auto structObj = originalType->toStruct();
               if (structObj) {
+#define TODO 1
+#define TODO 2
+#if 0
                 if (hasModifier(structObj->mModifiers, StructModifier_Generic)) {
                   auto newTemplateStruct = Struct::createFromTemplate(structObj, templateParams);
                   if (outCreatedTypedef) {
@@ -2988,6 +2480,7 @@ namespace zsLib
                     ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " has template parameters but type referenced isn't a generic template");
                   }
                 }
+#endif //0
               } else {
                 if (templateTypes.size() > 0) {
                   ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " has template parameters but type referenced isn't a struct or generic template");
@@ -3002,8 +2495,9 @@ namespace zsLib
           return result->getTypeBypassingTypedefIfNoop();
         }
 
+#if 0
         //---------------------------------------------------------------------
-        WrapperCompiler::TypedefTypePtr WrapperCompiler::createTypedefToNewTemplateFromExistingTypedef(
+        IDLCompiler::TypedefTypePtr IDLCompiler::createTypedefToNewTemplateFromExistingTypedef(
                                                                                                        TypedefTypePtr existingTypedefObj,
                                                                                                        StructPtr newTemplate
                                                                                                        ) throw (InvalidContent)
@@ -3023,9 +2517,10 @@ namespace zsLib
           newTypedefObj->mOriginalType = newTemplate;
           return newTypedefObj;
         }
+#endif //0
         
         //---------------------------------------------------------------------
-        void WrapperCompiler::writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure)
+        void IDLCompiler::writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure)
         {
           if (!doc) return;
           try {
@@ -3037,7 +2532,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::writeJSON(const String &outputName, const DocumentPtr &doc) const throw (Failure)
+        void IDLCompiler::writeJSON(const String &outputName, const DocumentPtr &doc) const throw (Failure)
         {
           if (!doc) return;
           try {
@@ -3049,7 +2544,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void WrapperCompiler::writeBinary(const String &outputName, const SecureByteBlockPtr &buffer) const throw (Failure)
+        void IDLCompiler::writeBinary(const String &outputName, const SecureByteBlockPtr &buffer) const throw (Failure)
         {
           if ((!buffer) ||
               (0 == buffer->SizeInBytes())) {

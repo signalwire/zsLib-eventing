@@ -84,7 +84,7 @@ namespace zsLib
           case Flag_Source:           return "s";
           case Flag_OutputName:       return "o";
           case Flag_Author:           return "author";
-          case Flag_Wrapper:          return "wrapper";
+          case Flag_IDL:              return "idl";
           case Flag_Monitor:          return "monitor";
           case Flag_MonitorPort:      return "port";
           case Flag_MonitorIP:        return "connect";
@@ -116,7 +116,7 @@ namespace zsLib
           " -c            config_file_name          - input event provider json configuration file.\n"
           " -s            source_file_name_1 ... n  - input C/C++ source file.\n"
           " -o            output_name ... n         - output name.\n"
-          " -wrapper      api_wrapper_target_output - one of the following values:\n"
+          " -idl          idl_target_output         - one of the following values:\n"
           "                                           cx - C++/CX UWP wrapper\n"
           "                                           objc - Objective-C\n"
           "                                           android - Java on Android\n"
@@ -290,7 +290,7 @@ namespace zsLib
               case ICommandLine::Flag_Source:           goto process_flag;
               case ICommandLine::Flag_OutputName:       goto process_flag;
               case ICommandLine::Flag_Author:           goto process_flag;
-              case ICommandLine::Flag_Wrapper:          goto process_flag;
+              case ICommandLine::Flag_IDL:          goto process_flag;
               case ICommandLine::Flag_Monitor:          {
                 monitorInfo.mMonitor = true;
                 goto processed_flag;
@@ -332,12 +332,12 @@ namespace zsLib
                 config.mAuthor = arg;
                 goto processed_flag;
               }
-              case ICommandLine::Flag_Wrapper: {
-                config.mMode = ICompilerTypes::Mode_APIWrapper;
+              case ICommandLine::Flag_IDL: {
+                config.mMode = ICompilerTypes::Mode_IDL;
                 try {
-                  config.mWrapperOutput = ICompilerTypes::toWrapperOutput(arg);
+                  config.mIDLOutput = ICompilerTypes::toIDLOutput(arg);
                 } catch (const InvalidArgument &) {
-                  ZS_THROW_INVALID_ARGUMENT(String("Wrapper mode is not understood: ") + arg);
+                  ZS_THROW_INVALID_ARGUMENT(String("IDL mode is not understood: ") + arg);
                 }
                 goto processed_flag;
               }

@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		0058FDD81E14AE9E007548F6 /* zsLib_eventing_tool_Helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0058FDD71E14AE9E007548F6 /* zsLib_eventing_tool_Helper.cpp */; };
-		0058FDE21E15578C007548F6 /* zsLib_eventing_tool_WrapperCompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0058FDE11E15578C007548F6 /* zsLib_eventing_tool_WrapperCompiler.cpp */; };
-		0058FDE51E15630C007548F6 /* zsLib_eventing_WrapperTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0058FDE41E15630C007548F6 /* zsLib_eventing_WrapperTypes.cpp */; };
+		0058FDE21E15578C007548F6 /* zsLib_eventing_tool_IDLCompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0058FDE11E15578C007548F6 /* zsLib_eventing_tool_IDLCompiler.cpp */; };
+		0058FDE51E15630C007548F6 /* zsLib_eventing_IDLTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0058FDE41E15630C007548F6 /* zsLib_eventing_IDLTypes.cpp */; };
 		0086662F1DEE6C2E00CBA4FD /* zsLib_Settings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0086662E1DEE6C2E00CBA4FD /* zsLib_Settings.cpp */; };
 		008666311DEE6C4900CBA4FD /* zsLib_Helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008666301DEE6C4900CBA4FD /* zsLib_Helper.cpp */; };
 		008666431DEE6E1D00CBA4FD /* zsLib_MessageQueueManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008666421DEE6E1D00CBA4FD /* zsLib_MessageQueueManager.cpp */; };
@@ -97,11 +97,11 @@
 /* Begin PBXFileReference section */
 		0058FDD71E14AE9E007548F6 /* zsLib_eventing_tool_Helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_eventing_tool_Helper.cpp; path = ../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_Helper.cpp; sourceTree = "<group>"; };
 		0058FDD91E14AEAD007548F6 /* zsLib_eventing_tool_Helper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_tool_Helper.h; path = ../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h; sourceTree = "<group>"; };
-		0058FDE01E155769007548F6 /* zsLib_eventing_tool_WrapperCompiler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_tool_WrapperCompiler.h; path = ../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_WrapperCompiler.h; sourceTree = "<group>"; };
-		0058FDE11E15578C007548F6 /* zsLib_eventing_tool_WrapperCompiler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_eventing_tool_WrapperCompiler.cpp; path = ../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_WrapperCompiler.cpp; sourceTree = "<group>"; };
-		0058FDE31E155C78007548F6 /* IWrapperTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = IWrapperTypes.h; path = ../../../zsLib/eventing/IWrapperTypes.h; sourceTree = "<group>"; };
-		0058FDE41E15630C007548F6 /* zsLib_eventing_WrapperTypes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_eventing_WrapperTypes.cpp; path = ../../../zsLib/eventing/cpp/zsLib_eventing_WrapperTypes.cpp; sourceTree = "<group>"; };
-		0058FDE61E156338007548F6 /* zsLib_eventing_WrapperTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_WrapperTypes.h; path = ../../../zsLib/eventing/internal/zsLib_eventing_WrapperTypes.h; sourceTree = "<group>"; };
+		0058FDE01E155769007548F6 /* zsLib_eventing_tool_IDLCompiler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_tool_IDLCompiler.h; path = ../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h; sourceTree = "<group>"; };
+		0058FDE11E15578C007548F6 /* zsLib_eventing_tool_IDLCompiler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_eventing_tool_IDLCompiler.cpp; path = ../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_IDLCompiler.cpp; sourceTree = "<group>"; };
+		0058FDE31E155C78007548F6 /* IIDLTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = IIDLTypes.h; path = ../../../zsLib/eventing/IIDLTypes.h; sourceTree = "<group>"; };
+		0058FDE41E15630C007548F6 /* zsLib_eventing_IDLTypes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_eventing_IDLTypes.cpp; path = ../../../zsLib/eventing/cpp/zsLib_eventing_IDLTypes.cpp; sourceTree = "<group>"; };
+		0058FDE61E156338007548F6 /* zsLib_eventing_IDLTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_IDLTypes.h; path = ../../../zsLib/eventing/internal/zsLib_eventing_IDLTypes.h; sourceTree = "<group>"; };
 		00836BBF1DF4A9E800E03A5A /* EventTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = EventTypes.h; path = ../../../../zsLib/zsLib/eventing/EventTypes.h; sourceTree = "<group>"; };
 		00836BC01DF4A9FD00E03A5A /* zsLib_eventing_EventTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_EventTypes.h; path = ../../../../zsLib/zsLib/eventing/internal/zsLib_eventing_EventTypes.h; sourceTree = "<group>"; };
 		008666241DEE6B4D00CBA4FD /* IFactory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = IFactory.h; path = ../../../../zsLib/zsLib/IFactory.h; sourceTree = "<group>"; };
@@ -371,7 +371,7 @@
 				00D865C21DE38A5100B7EB56 /* IHasher.h */,
 				00D865C31DE38A5100B7EB56 /* IHelper.h */,
 				009CEED21DF0AFEB000FF4D2 /* IRemoteEventing.h */,
-				0058FDE31E155C78007548F6 /* IWrapperTypes.h */,
+				0058FDE31E155C78007548F6 /* IIDLTypes.h */,
 				00D8660E1DE38BA000B7EB56 /* Log.h */,
 				00D8660F1DE38BA000B7EB56 /* noop.h */,
 				009CEED61DF11455000FF4D2 /* types.h */,
@@ -491,7 +491,7 @@
 				00D865C51DE38AB300B7EB56 /* zsLib_eventing_Hasher.cpp */,
 				00D865C61DE38AB300B7EB56 /* zsLib_eventing_Helper.cpp */,
 				009CEED41DF0B006000FF4D2 /* zsLib_eventing_RemoteEventing.cpp */,
-				0058FDE41E15630C007548F6 /* zsLib_eventing_WrapperTypes.cpp */,
+				0058FDE41E15630C007548F6 /* zsLib_eventing_IDLTypes.cpp */,
 				00D865C71DE38AB400B7EB56 /* zsLib_eventing.cpp */,
 			);
 			name = cpp;
@@ -506,7 +506,7 @@
 				00D865CE1DE38AE900B7EB56 /* zsLib_eventing_Hasher.h */,
 				00D865CF1DE38AE900B7EB56 /* zsLib_eventing_Helper.h */,
 				009CEED31DF0AFFA000FF4D2 /* zsLib_eventing_RemoteEventing.h */,
-				0058FDE61E156338007548F6 /* zsLib_eventing_WrapperTypes.h */,
+				0058FDE61E156338007548F6 /* zsLib_eventing_IDLTypes.h */,
 				00D866101DE38BB600B7EB56 /* zsLib_eventing_Log.h */,
 			);
 			name = internal;
@@ -519,7 +519,7 @@
 				00D865D61DE38B1200B7EB56 /* zsLib_eventing_tool_EventingCompiler.cpp */,
 				0058FDD71E14AE9E007548F6 /* zsLib_eventing_tool_Helper.cpp */,
 				009CEEE21DF341AB000FF4D2 /* zsLib_eventing_tool_Monitor.cpp */,
-				0058FDE11E15578C007548F6 /* zsLib_eventing_tool_WrapperCompiler.cpp */,
+				0058FDE11E15578C007548F6 /* zsLib_eventing_tool_IDLCompiler.cpp */,
 				00D865D71DE38B1200B7EB56 /* zsLib_eventing_tool.cpp */,
 			);
 			name = cpp;
@@ -533,7 +533,7 @@
 				00D865DD1DE38B1B00B7EB56 /* zsLib_eventing_tool_EventingCompiler.h */,
 				0058FDD91E14AEAD007548F6 /* zsLib_eventing_tool_Helper.h */,
 				009CEEE41DF341B7000FF4D2 /* zsLib_eventing_tool_Monitor.h */,
-				0058FDE01E155769007548F6 /* zsLib_eventing_tool_WrapperCompiler.h */,
+				0058FDE01E155769007548F6 /* zsLib_eventing_tool_IDLCompiler.h */,
 				00D865DE1DE38B1B00B7EB56 /* zsLib_eventing_tool.h */,
 			);
 			name = internal;
@@ -665,7 +665,7 @@
 				00D866441DE38BCC00B7EB56 /* zsLib_Numeric.cpp in Sources */,
 				0086662F1DEE6C2E00CBA4FD /* zsLib_Settings.cpp in Sources */,
 				00D866421DE38BCC00B7EB56 /* zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWinRT.cpp in Sources */,
-				0058FDE21E15578C007548F6 /* zsLib_eventing_tool_WrapperCompiler.cpp in Sources */,
+				0058FDE21E15578C007548F6 /* zsLib_eventing_tool_IDLCompiler.cpp in Sources */,
 				00D866571DE38BCC00B7EB56 /* zsLib_XMLParserPos.cpp in Sources */,
 				00D866531DE38BCC00B7EB56 /* zsLib_XMLElement.cpp in Sources */,
 				00D8664B1DE38BCC00B7EB56 /* zsLib_Stringize.cpp in Sources */,
@@ -698,7 +698,7 @@
 				00D865C91DE38AB400B7EB56 /* zsLib_eventing_Hasher.cpp in Sources */,
 				00D866411DE38BCC00B7EB56 /* zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWindows.cpp in Sources */,
 				00D8663E1DE38BCC00B7EB56 /* zsLib_MessageQueueThreadBasic.cpp in Sources */,
-				0058FDE51E15630C007548F6 /* zsLib_eventing_WrapperTypes.cpp in Sources */,
+				0058FDE51E15630C007548F6 /* zsLib_eventing_IDLTypes.cpp in Sources */,
 				00D865D81DE38B1200B7EB56 /* zsLib_eventing_tool_CommandLine.cpp in Sources */,
 				00D8665B1DE38BCC00B7EB56 /* zsLib.cpp in Sources */,
 				009CEED51DF0B006000FF4D2 /* zsLib_eventing_RemoteEventing.cpp in Sources */,

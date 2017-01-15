@@ -54,7 +54,7 @@ namespace zsLib
       {
         ZS_DECLARE_CLASS_PTR(CommandLine);
         ZS_DECLARE_CLASS_PTR(EventingCompiler);
-        ZS_DECLARE_CLASS_PTR(WrapperCompiler);
+        ZS_DECLARE_CLASS_PTR(IDLCompiler);
         ZS_DECLARE_CLASS_PTR(Monitor);
       }
     }

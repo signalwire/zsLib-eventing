@@ -34,7 +34,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/tool/types.h>
 
 #include <zsLib/eventing/IEventingTypes.h>
-#include <zsLib/eventing/IWrapperTypes.h>
+#include <zsLib/eventing/IIDLTypes.h>
 
 namespace zsLib
 {
@@ -53,39 +53,39 @@ namespace zsLib
       interaction ICompilerTypes
       {
         ZS_DECLARE_TYPEDEF_PTR(IEventingTypes::Provider, Provider);
-        ZS_DECLARE_TYPEDEF_PTR(IWrapperTypes::Project, Project);
+        ZS_DECLARE_TYPEDEF_PTR(IIDLTypes::Project, Project);
 
         enum Modes
         {
           Mode_First,
           
           Mode_Eventing = Mode_First,
-          Mode_APIWrapper,
+          Mode_IDL,
           
-          Mode_Last = Mode_APIWrapper,
+          Mode_Last = Mode_IDL,
         };
 
         static const char *toString(Modes value);
         static Modes toMode(const char *value) throw (InvalidArgument);
 
-        enum WrapperOutputs
+        enum IDLOutputs
         {
-          WrapperOutput_First,
+          IDLOutput_First,
 
-          WrapperOutput_CX = WrapperOutput_First,
-          WrapperOutput_ObjectiveC,
-          WrapperOutput_JavaAndroid,
+          IDLOutput_CX = IDLOutput_First,
+          IDLOutput_ObjectiveC,
+          IDLOutput_JavaAndroid,
           
-          WrapperOutput_Last = WrapperOutput_JavaAndroid,
+          IDLOutput_Last = IDLOutput_JavaAndroid,
         };
 
-        static const char *toString(WrapperOutputs value);
-        static WrapperOutputs toWrapperOutput(const char *value) throw (InvalidArgument);
+        static const char *toString(IDLOutputs value);
+        static IDLOutputs toIDLOutput(const char *value) throw (InvalidArgument);
 
         struct Config
         {
           Modes           mMode {Mode_First};
-          WrapperOutputs  mWrapperOutput {WrapperOutput_First};
+          IDLOutputs  mIDLOutput {IDLOutput_First};
           String          mConfigFile;
 
           StringList      mSourceFiles;

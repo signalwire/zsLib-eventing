@@ -30,7 +30,7 @@ either expressed or implied, of the FreeBSD Project.
 */
 
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_EventingCompiler.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_WrapperCompiler.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h>
 
 #include <zsLib/eventing/tool/OutputStream.h>
@@ -3018,31 +3018,31 @@ namespace zsLib
         switch (value)
         {
           case Mode_Eventing:         return "eventing";
-          case Mode_APIWrapper:       return "api";
+          case Mode_IDL:              return "idl";
         }
         return "unknown";
       }
 
       //-----------------------------------------------------------------------
-      ICompilerTypes::WrapperOutputs ICompilerTypes::toWrapperOutput(const char *value) throw (InvalidArgument)
+      ICompilerTypes::IDLOutputs ICompilerTypes::toIDLOutput(const char *value) throw (InvalidArgument)
       {
         String str(value);
-        for (ICompilerTypes::WrapperOutputs index = ICompilerTypes::WrapperOutput_First; index <= ICompilerTypes::WrapperOutput_Last; index = static_cast<ICompilerTypes::WrapperOutputs>(static_cast<std::underlying_type<ICompilerTypes::WrapperOutputs>::type>(index) + 1)) {
+        for (ICompilerTypes::IDLOutputs index = ICompilerTypes::IDLOutput_First; index <= ICompilerTypes::IDLOutput_Last; index = static_cast<ICompilerTypes::IDLOutputs>(static_cast<std::underlying_type<ICompilerTypes::IDLOutputs>::type>(index) + 1)) {
           if (0 == str.compareNoCase(ICompilerTypes::toString(index))) return index;
         }
         
-        ZS_THROW_INVALID_ARGUMENT(String("wrapper output is not understood:") + value);
-        return ICompilerTypes::WrapperOutput_First;
+        ZS_THROW_INVALID_ARGUMENT(String("idl output is not understood:") + value);
+        return ICompilerTypes::IDLOutput_First;
       }
 
       //-----------------------------------------------------------------------
-      const char *ICompilerTypes::toString(WrapperOutputs value)
+      const char *ICompilerTypes::toString(IDLOutputs value)
       {
         switch (value)
         {
-          case WrapperOutput_CX:          return "cx";
-          case WrapperOutput_ObjectiveC:  return "objc";
-          case WrapperOutput_JavaAndroid: return "android";
+          case IDLOutput_CX:          return "cx";
+          case IDLOutput_ObjectiveC:  return "objc";
+          case IDLOutput_JavaAndroid: return "android";
         }
         return "unknown";
       }
@@ -3060,7 +3060,7 @@ namespace zsLib
       {
         switch (config.mMode) {
           case ICompilerTypes::Mode_Eventing:   break;
-          case ICompilerTypes::Mode_APIWrapper: internal::WrapperCompiler::create(config);
+          case ICompilerTypes::Mode_IDL:        internal::IDLCompiler::create(config);
         }
         return internal::EventingCompiler::create(config);
       }

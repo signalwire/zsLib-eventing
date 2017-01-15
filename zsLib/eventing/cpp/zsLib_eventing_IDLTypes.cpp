@@ -29,7 +29,7 @@ either expressed or implied, of the FreeBSD Project.
 
 */
 
-#include <zsLib/eventing/internal/zsLib_eventing_WrapperTypes.h>
+#include <zsLib/eventing/internal/zsLib_eventing_IDLTypes.h>
 #include <zsLib/eventing/internal/zsLib_eventing_Helper.h>
 
 #include <zsLib/eventing/IHasher.h>
@@ -100,31 +100,37 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     #pragma mark
-    #pragma mark IWrapperTypes
+    #pragma mark IIDLTypes
     #pragma mark
 
     //-------------------------------------------------------------------------
-    const char *IWrapperTypes::toString(Modifiers value)
+    const char *IIDLTypes::toString(Modifiers value)
     {
       switch (value)
       {
-        case IWrapperTypes::Modifier_Common_AltName:      return "altname";
+        case IIDLTypes::Modifier_Common_AltName:            return "altname";
           
-        case IWrapperTypes::Modifier_Struct_Generic:      return "generic";
-          
-        case IWrapperTypes::Modifier_Method_Ctor:         return "constructor";
-        case IWrapperTypes::Modifier_Method_Static:       return "static";
-        case IWrapperTypes::Modifier_Method_Dynamic:      return "dynamic";
-        case IWrapperTypes::Modifier_Method_EventHandler: return "eventhandler";
-          
-        case IWrapperTypes::Modifier_Method_ArgumentIn:   return "in";
-        case IWrapperTypes::Modifier_Method_ArgumentOut:  return "out";
-          
-        case IWrapperTypes::Modifier_Property_ReadOnly:   return "readonly";
-        case IWrapperTypes::Modifier_Property_WriteOnly:  return "writeonly";
-        case IWrapperTypes::Modifier_Property_Nullable:   return "nullable";
+        case IIDLTypes::Modifier_Struct_StructuredData:     return "struct";
+        case IIDLTypes::Modifier_Struct_Interface:          return "class";
+        case IIDLTypes::Modifier_Struct_Generic:            return "generic";
+        case IIDLTypes::Modifier_Struct_Exception:          return "exception";
 
-        case IWrapperTypes::Modifier_:                    return "_";
+        case IIDLTypes::Modifier_Method_Ctor:               return "constructor";
+        case IIDLTypes::Modifier_Method_Static:             return "static";
+        case IIDLTypes::Modifier_Method_Dynamic:            return "dynamic";
+        case IIDLTypes::Modifier_Method_EventHandler:       return "eventhandler";
+
+        case IIDLTypes::Modifier_Method_Argument_In:        return "in";
+        case IIDLTypes::Modifier_Method_Argument_Out:       return "out";
+        case IIDLTypes::Modifier_Method_Argument_Grouping:  return "grouping";
+          
+        case IIDLTypes::Modifier_Property_Nullable:         return "nullable";
+        case IIDLTypes::Modifier_Property_ReadOnly:         return "readonly";
+        case IIDLTypes::Modifier_Property_WriteOnly:        return "writeonly";
+        case IIDLTypes::Modifier_Property_Getter:           return "getter";
+        case IIDLTypes::Modifier_Property_Setter:           return "setter";
+
+        case IIDLTypes::Modifier_:                          return "_";
 
       }
 
@@ -132,79 +138,97 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    int IWrapperTypes::getTotalParams(Modifiers value)
+    int IIDLTypes::getTotalParams(Modifiers value)
     {
       switch (value)
       {
-        case IWrapperTypes::Modifier_Common_AltName:      return 1;
+        case IIDLTypes::Modifier_Common_AltName:            return 1;
 
-        case IWrapperTypes::Modifier_Struct_Generic:      return 0;
+        case IIDLTypes::Modifier_Struct_StructuredData:     return 0;
+        case IIDLTypes::Modifier_Struct_Interface:          return 0;
+        case IIDLTypes::Modifier_Struct_Generic:            return 0;
+        case IIDLTypes::Modifier_Struct_Exception:          return 0;
 
-        case IWrapperTypes::Modifier_Method_Ctor:         return 0;
-        case IWrapperTypes::Modifier_Method_Static:       return 0;
-        case IWrapperTypes::Modifier_Method_Dynamic:      return 0;
-        case IWrapperTypes::Modifier_Method_EventHandler: return 0;
+        case IIDLTypes::Modifier_Method_Ctor:               return 0;
+        case IIDLTypes::Modifier_Method_Static:             return 0;
+        case IIDLTypes::Modifier_Method_Dynamic:            return 0;
+        case IIDLTypes::Modifier_Method_EventHandler:       return 0;
 
-        case IWrapperTypes::Modifier_Method_ArgumentIn:   return 0;
-        case IWrapperTypes::Modifier_Method_ArgumentOut:  return 0;
+        case IIDLTypes::Modifier_Method_Argument_In:        return 0;
+        case IIDLTypes::Modifier_Method_Argument_Out:       return 0;
+        case IIDLTypes::Modifier_Method_Argument_Grouping:  return 1;
 
-        case IWrapperTypes::Modifier_Property_ReadOnly:   return 0;
-        case IWrapperTypes::Modifier_Property_WriteOnly:  return 0;
-        case IWrapperTypes::Modifier_Property_Nullable:   return 0;
+        case IIDLTypes::Modifier_Property_Nullable:         return 0;
+        case IIDLTypes::Modifier_Property_ReadOnly:         return 0;
+        case IIDLTypes::Modifier_Property_WriteOnly:        return 0;
+        case IIDLTypes::Modifier_Property_Getter:           return 0;
+        case IIDLTypes::Modifier_Property_Setter:           return 0;
 
-        case IWrapperTypes::Modifier_:                    return 0;
+        case IIDLTypes::Modifier_:                          return 0;
       }
 
       return -1;
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::Modifiers IWrapperTypes::toModifier(const char *value) throw (InvalidArgument)
+    IIDLTypes::Modifiers IIDLTypes::toModifier(const char *value) throw (InvalidArgument)
     {
       String str(value);
-      for (IWrapperTypes::Modifiers index = IWrapperTypes::Modifier_First; index <= IWrapperTypes::Modifier_Last; index = static_cast<IWrapperTypes::Modifiers>(static_cast<std::underlying_type<IWrapperTypes::Modifiers>::type>(index) + 1)) {
-        if (0 == str.compareNoCase(IWrapperTypes::toString(index))) return index;
+      for (IIDLTypes::Modifiers index = IIDLTypes::Modifier_First; index <= IIDLTypes::Modifier_Last; index = static_cast<IIDLTypes::Modifiers>(static_cast<std::underlying_type<IIDLTypes::Modifiers>::type>(index) + 1)) {
+        if (0 == str.compareNoCase(IIDLTypes::toString(index))) return index;
       }
 
       ZS_THROW_INVALID_ARGUMENT(String("Not a valid modifier: ") + str);
     }
     
     //-------------------------------------------------------------------------
-    bool IWrapperTypes::isValidForAll(Modifiers value)
+    bool IIDLTypes::isValidForAll(Modifiers value)
     {
       switch (value)
       {
-        case IWrapperTypes::Modifier_Common_AltName:      return true;
+        case IIDLTypes::Modifier_Common_AltName:
+        {
+          return true;
+        }
         default:                                          break;
       }
       return false;
     }
     
     //-------------------------------------------------------------------------
-    bool IWrapperTypes::isValidForStruct(Modifiers value)
+    bool IIDLTypes::isValidForStruct(Modifiers value)
     {
       if (isValidForAll(value)) return true;
       
       switch (value)
       {
-        case IWrapperTypes::Modifier_Struct_Generic:      return true;
-        default:                                          break;
+        case IIDLTypes::Modifier_Struct_StructuredData:
+        case IIDLTypes::Modifier_Struct_Interface:
+        case IIDLTypes::Modifier_Struct_Generic:
+        case IIDLTypes::Modifier_Struct_Exception:
+        {
+          return true;
+        }
+        default:                                              break;
       }
       
       return false;
     }
     
     //-------------------------------------------------------------------------
-    bool IWrapperTypes::isValidForMethod(Modifiers value)
+    bool IIDLTypes::isValidForMethod(Modifiers value)
     {
       if (isValidForAll(value)) return true;
 
       switch (value)
       {
-        case IWrapperTypes::Modifier_Method_Ctor:
-        case IWrapperTypes::Modifier_Method_Static:
-        case IWrapperTypes::Modifier_Method_Dynamic:
-        case IWrapperTypes::Modifier_Method_EventHandler: return true;
+        case IIDLTypes::Modifier_Method_Ctor:
+        case IIDLTypes::Modifier_Method_Static:
+        case IIDLTypes::Modifier_Method_Dynamic:
+        case IIDLTypes::Modifier_Method_EventHandler:
+        {
+          return true;
+        }
         default:                                          break;
       }
       
@@ -212,30 +236,39 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    bool IWrapperTypes::isValidForMethodArgument(Modifiers value)
+    bool IIDLTypes::isValidForMethodArgument(Modifiers value)
     {
       if (isValidForAll(value)) return true;
       
       switch (value)
       {
-        case IWrapperTypes::Modifier_Method_ArgumentIn:
-        case IWrapperTypes::Modifier_Method_ArgumentOut:  return true;
-        default:                                          break;
+        case IIDLTypes::Modifier_Method_Argument_In:
+        case IIDLTypes::Modifier_Method_Argument_Out:
+        case IIDLTypes::Modifier_Method_Argument_Grouping:
+        {
+          return true;
+        }
+        default:                                                break;
       }
       
       return false;
     }
     
     //-------------------------------------------------------------------------
-    bool IWrapperTypes::isValidForProperty(Modifiers value)
+    bool IIDLTypes::isValidForProperty(Modifiers value)
     {
       if (isValidForAll(value)) return true;
       
       switch (value)
       {
-        case IWrapperTypes::Modifier_Property_ReadOnly:
-        case IWrapperTypes::Modifier_Property_WriteOnly:
-        case IWrapperTypes::Modifier_Property_Nullable:   return true;
+        case IIDLTypes::Modifier_Property_Nullable:
+        case IIDLTypes::Modifier_Property_ReadOnly:
+        case IIDLTypes::Modifier_Property_WriteOnly:
+        case IIDLTypes::Modifier_Property_Getter:
+        case IIDLTypes::Modifier_Property_Setter:
+        {
+          return true;
+        }
         default:                                          break;
       }
 
@@ -248,11 +281,11 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     #pragma mark
-    #pragma mark IWrapperTypes::Context
+    #pragma mark IIDLTypes::Context
     #pragma mark
 
     //-------------------------------------------------------------------------
-    String IWrapperTypes::Context::hash() const
+    String IIDLTypes::Context::hash() const
     {
       auto hasher = IHasher::sha256();
       
@@ -283,13 +316,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::ContextPtr IWrapperTypes::Context::getParent() const
+    IIDLTypes::ContextPtr IIDLTypes::Context::getParent() const
     {
       return mContext.lock();
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::ContextPtr IWrapperTypes::Context::getRoot() const
+    IIDLTypes::ContextPtr IIDLTypes::Context::getRoot() const
     {
       auto parent = getParent();
       if (!parent) return ContextPtr();
@@ -304,7 +337,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::ProjectPtr IWrapperTypes::Context::getProject() const
+    IIDLTypes::ProjectPtr IIDLTypes::Context::getProject() const
     {
       auto project = getRoot();
       if (!project) return ProjectPtr();
@@ -312,7 +345,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IWrapperTypes::Context::getPath() const
+    String IIDLTypes::Context::getPath() const
     {
       auto parent = getParent();
       if (!parent) return String();
@@ -360,7 +393,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::TypePtr IWrapperTypes::Context::findType(
+    IIDLTypes::TypePtr IIDLTypes::Context::findType(
                                                             const String &typeNameWithPath,
                                                             const FindTypeOptions *options
                                                             ) const
@@ -377,7 +410,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::TypePtr IWrapperTypes::Context::findType(
+    IIDLTypes::TypePtr IIDLTypes::Context::findType(
                                                             const String &pathStr,
                                                             const String &typeName,
                                                             const FindTypeOptions &options
@@ -393,7 +426,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    bool IWrapperTypes::Context::hasModifier(Modifiers modifier) const
+    bool IIDLTypes::Context::hasModifier(Modifiers modifier) const
     {
       auto found = mModifiers.find(toString(modifier));
       if (found == mModifiers.end()) return false;
@@ -401,7 +434,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    String IWrapperTypes::Context::getModifierValue(
+    String IIDLTypes::Context::getModifierValue(
                                                     Modifiers modifier,
                                                     size_t index
                                                     ) const
@@ -424,7 +457,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Context::getModifierValues(
+    void IIDLTypes::Context::getModifierValues(
                                                    Modifiers modifier,
                                                    StringList &outValues
                                                    ) const
@@ -444,7 +477,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    ElementPtr IWrapperTypes::Context::getModifierRawValue(Modifiers modifier) const
+    ElementPtr IIDLTypes::Context::getModifierRawValue(Modifiers modifier) const
     {
       auto found = mModifiers.find(toString(modifier));
       if (found == mModifiers.end()) return ElementPtr();
@@ -453,7 +486,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Context::clearModifier(Modifiers modifier)
+    void IIDLTypes::Context::clearModifier(Modifiers modifier)
     {
       auto found = mModifiers.find(toString(modifier));
       if (found == mModifiers.end()) return;
@@ -462,14 +495,14 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Context::setModifier(Modifiers modifier)
+    void IIDLTypes::Context::setModifier(Modifiers modifier)
     {
       StringList values;
       setModifier(modifier, values);
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Context::setModifier(
+    void IIDLTypes::Context::setModifier(
                                              Modifiers modifier,
                                              const String &value
                                              )
@@ -480,7 +513,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Context::setModifier(
+    void IIDLTypes::Context::setModifier(
                                              Modifiers modifier,
                                              const StringList &values
                                              )
@@ -503,7 +536,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IWrapperTypes::Context::aliasLookup(const String &value)
+    String IIDLTypes::Context::aliasLookup(const String &value)
     {
       auto project = getProject();
       if (!project) return value;
@@ -511,12 +544,12 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Context::init()
+    void IIDLTypes::Context::init()
     {
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Context::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Context::init(const ElementPtr &rootEl) throw (InvalidContent)
     {
       if (!rootEl) return;
 
@@ -524,7 +557,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Context::write(ElementPtr &rootEl) const
+    void IIDLTypes::Context::write(ElementPtr &rootEl) const
     {
       if (mName.hasData()) {
         rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("name", mName));
@@ -554,7 +587,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Context::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Context::parse(const ElementPtr &rootEl) throw (InvalidContent)
     {
       if (!rootEl) return;
       
@@ -582,7 +615,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Context::copyContentsFrom(ContextPtr originalContext)
+    void IIDLTypes::Context::copyContentsFrom(ContextPtr originalContext)
     {
       if (!originalContext) return;
       
@@ -608,18 +641,18 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     #pragma mark
-    #pragma mark IWrapperTypes::Project
+    #pragma mark IIDLTypes::Project
     #pragma mark
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Project::init()
+    void IIDLTypes::Project::init()
     {
       Context::init();
       createBaseTypes();
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Project::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Project::init(const ElementPtr &rootEl) throw (InvalidContent)
     {
       Context::init(rootEl);
       createBaseTypes();
@@ -627,7 +660,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::ProjectPtr IWrapperTypes::Project::create()
+    IIDLTypes::ProjectPtr IIDLTypes::Project::create()
     {
       auto pThis(make_shared<Project>(make_private{}));
       pThis->mThisWeak = pThis;
@@ -636,7 +669,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::ProjectPtr IWrapperTypes::Project::create(const ElementPtr &el) throw (InvalidContent)
+    IIDLTypes::ProjectPtr IIDLTypes::Project::create(const ElementPtr &el) throw (InvalidContent)
     {
       auto pThis(make_shared<Project>(make_private{}));
       pThis->mThisWeak = pThis;
@@ -645,7 +678,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    ElementPtr IWrapperTypes::Project::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::Project::createElement(const char *objectName) const
     {
       if (NULL == objectName) objectName = "project";
 
@@ -681,7 +714,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Project::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Project::parse(const ElementPtr &rootEl) throw (InvalidContent)
     {
       if (!rootEl) return;
       
@@ -713,7 +746,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IWrapperTypes::Project::hash() const
+    String IIDLTypes::Project::hash() const
     {
       auto hasher = IHasher::sha256();
 
@@ -752,7 +785,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::TypePtr IWrapperTypes::Project::findType(
+    IIDLTypes::TypePtr IIDLTypes::Project::findType(
                                                             const String &pathStr,
                                                             const String &typeName,
                                                             const FindTypeOptions &options
@@ -770,7 +803,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Project::resolveTypedefs() throw (InvalidContent)
+    void IIDLTypes::Project::resolveTypedefs() throw (InvalidContent)
     {
       if (mGlobal) {
         mGlobal->resolveTypedefs();
@@ -783,7 +816,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    bool IWrapperTypes::Project::fixTemplateHashMapping()
+    bool IIDLTypes::Project::fixTemplateHashMapping()
     {
       bool didFix = false;
       if (mGlobal) {
@@ -795,13 +828,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IWrapperTypes::Project::aliasLookup(const String &value)
+    String IIDLTypes::Project::aliasLookup(const String &value)
     {
-      return IWrapperTypes::aliasLookup(mAliases, value);
+      return IIDLTypes::aliasLookup(mAliases, value);
     }
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::BasicTypePtr IWrapperTypes::Project::findBasicType(IEventingTypes::PredefinedTypedefs findType) const
+    IIDLTypes::BasicTypePtr IIDLTypes::Project::findBasicType(IEventingTypes::PredefinedTypedefs findType) const
     {
       for (auto iter = mBasicTypes.begin(); iter != mBasicTypes.end(); ++iter)
       {
@@ -812,7 +845,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Project::createBaseTypes()
+    void IIDLTypes::Project::createBaseTypes()
     {
       auto context = toContext();
 
@@ -829,17 +862,17 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     #pragma mark
-    #pragma mark IWrapperTypes::Namespace
+    #pragma mark IIDLTypes::Namespace
     #pragma mark
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Namespace::init()
+    void IIDLTypes::Namespace::init()
     {
       Context::init();
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Namespace::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Namespace::init(const ElementPtr &rootEl) throw (InvalidContent)
     {
       Context::init(rootEl);
       
@@ -855,7 +888,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::NamespacePtr IWrapperTypes::Namespace::create(ContextPtr context)
+    IIDLTypes::NamespacePtr IIDLTypes::Namespace::create(ContextPtr context)
     {
       auto pThis(make_shared<Namespace>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -864,7 +897,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::NamespacePtr IWrapperTypes::Namespace::createForwards(
+    IIDLTypes::NamespacePtr IIDLTypes::Namespace::createForwards(
                                                                          ContextPtr context,
                                                                          const ElementPtr &el
                                                                          ) throw (InvalidContent)
@@ -876,7 +909,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    ElementPtr IWrapperTypes::Namespace::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::Namespace::createElement(const char *objectName) const
     {
       if (NULL == objectName) objectName = "namespace";
 
@@ -932,7 +965,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Namespace::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Namespace::parse(const ElementPtr &rootEl) throw (InvalidContent)
     {
       if (!rootEl) return;
       
@@ -948,7 +981,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    String IWrapperTypes::Namespace::hash() const
+    String IIDLTypes::Namespace::hash() const
     {
       auto hasher = IHasher::sha256();
       
@@ -993,7 +1026,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::TypePtr IWrapperTypes::Namespace::findType(
+    IIDLTypes::TypePtr IIDLTypes::Namespace::findType(
                                                               const String &pathStr,
                                                               const String &typeName,
                                                               const FindTypeOptions &options
@@ -1073,7 +1106,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Namespace::resolveTypedefs() throw (InvalidContent)
+    void IIDLTypes::Namespace::resolveTypedefs() throw (InvalidContent)
     {
       for (auto iter = mTypedefs.begin(); iter != mTypedefs.end(); ++iter) {
         auto obj = (*iter).second;
@@ -1094,7 +1127,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    bool IWrapperTypes::Namespace::fixTemplateHashMapping()
+    bool IIDLTypes::Namespace::fixTemplateHashMapping()
     {
       bool didFix = false;
       for (auto iter_doNotUse = mNamespaces.begin(); iter_doNotUse != mNamespaces.end(); ) {
@@ -1114,7 +1147,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::NamespacePtr IWrapperTypes::Namespace::findNamespace(const String &nameWithPath) const
+    IIDLTypes::NamespacePtr IIDLTypes::Namespace::findNamespace(const String &nameWithPath) const
     {
       String path;
       String name;
@@ -1125,7 +1158,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::NamespacePtr IWrapperTypes::Namespace::findNamespace(
+    IIDLTypes::NamespacePtr IIDLTypes::Namespace::findNamespace(
                                                                         const String &pathStr,
                                                                         const String &name
                                                                         ) const
@@ -1195,7 +1228,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::createNamespaceForwards(
+    void IIDLTypes::createNamespaceForwards(
                                                 ContextPtr context,
                                                 ElementPtr namespacesEl,
                                                 NamespaceMap &outNamespaces
@@ -1214,7 +1247,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::parseNamespaces(
+    void IIDLTypes::parseNamespaces(
                                         ContextPtr context,
                                         ElementPtr namespacesEl,
                                         NamespaceMap &ioNamespaces
@@ -1247,11 +1280,11 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     #pragma mark
-    #pragma mark IWrapperTypes::Type
+    #pragma mark IIDLTypes::Type
     #pragma mark
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::TypePtr IWrapperTypes::Type::createReferencedType(
+    IIDLTypes::TypePtr IIDLTypes::Type::createReferencedType(
                                                                      ContextPtr context,
                                                                      ElementPtr parentEl
                                                                      ) throw (InvalidContent)
@@ -1298,7 +1331,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IWrapperTypes::Type::createReferenceTypeElement() const
+    ElementPtr IIDLTypes::Type::createReferenceTypeElement() const
     {
       {
         auto typedefType = toTypedefType();
@@ -1332,17 +1365,17 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     #pragma mark
-    #pragma mark IWrapperTypes::BasicType
+    #pragma mark IIDLTypes::BasicType
     #pragma mark
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::BasicType::init()
+    void IIDLTypes::BasicType::init()
     {
       Context::init();
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::BasicType::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::BasicType::init(const ElementPtr &rootEl) throw (InvalidContent)
     {
       Context::init(rootEl);
       
@@ -1366,7 +1399,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::BasicTypePtr IWrapperTypes::BasicType::create(ContextPtr context)
+    IIDLTypes::BasicTypePtr IIDLTypes::BasicType::create(ContextPtr context)
     {
       auto pThis(make_shared<BasicType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -1375,7 +1408,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IWrapperTypes::BasicType::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::BasicType::createElement(const char *objectName) const
     {
       if (NULL == objectName) objectName = "basic";
 
@@ -1389,7 +1422,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IWrapperTypes::BasicType::hash() const
+    String IIDLTypes::BasicType::hash() const
     {
       auto hasher = IHasher::sha256();
       
@@ -1408,17 +1441,17 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     #pragma mark
-    #pragma mark IWrapperTypes::EnumType
+    #pragma mark IIDLTypes::EnumType
     #pragma mark
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::EnumType::init()
+    void IIDLTypes::EnumType::init()
     {
       Context::init();
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::EnumType::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::EnumType::init(const ElementPtr &rootEl) throw (InvalidContent)
     {
       Context::init(rootEl);
       
@@ -1426,7 +1459,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::EnumTypePtr IWrapperTypes::EnumType::create(ContextPtr context)
+    IIDLTypes::EnumTypePtr IIDLTypes::EnumType::create(ContextPtr context)
     {
       auto pThis(make_shared<EnumType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -1435,7 +1468,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::EnumTypePtr IWrapperTypes::EnumType::createForwards(
+    IIDLTypes::EnumTypePtr IIDLTypes::EnumType::createForwards(
                                                                        ContextPtr context,
                                                                        const ElementPtr &el
                                                                        ) throw (InvalidContent)
@@ -1447,7 +1480,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    ElementPtr IWrapperTypes::EnumType::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::EnumType::createElement(const char *objectName) const
     {
       if (NULL == objectName) objectName = "enum";
       
@@ -1477,7 +1510,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::EnumType::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::EnumType::parse(const ElementPtr &rootEl) throw (InvalidContent)
     {
       if (!rootEl) return;
 
@@ -1506,7 +1539,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    String IWrapperTypes::EnumType::hash() const
+    String IIDLTypes::EnumType::hash() const
     {
       auto hasher = IHasher::sha256();
 
@@ -1529,7 +1562,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::createEnumForwards(
+    void IIDLTypes::createEnumForwards(
                                            ContextPtr context,
                                            ElementPtr enumsEl,
                                            EnumMap &outEnums
@@ -1546,7 +1579,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::parseEnums(
+    void IIDLTypes::parseEnums(
                                    ContextPtr context,
                                    ElementPtr enumsEl,
                                    EnumMap &ioEnums
@@ -1578,17 +1611,17 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     #pragma mark
-    #pragma mark IWrapperTypes::TypedefType
+    #pragma mark IIDLTypes::TypedefType
     #pragma mark
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::TypedefType::init()
+    void IIDLTypes::TypedefType::init()
     {
       Context::init();
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::TypedefType::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::TypedefType::init(const ElementPtr &rootEl) throw (InvalidContent)
     {
       if (!rootEl) return;
 
@@ -1596,7 +1629,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::TypedefTypePtr IWrapperTypes::TypedefType::create(ContextPtr context)
+    IIDLTypes::TypedefTypePtr IIDLTypes::TypedefType::create(ContextPtr context)
     {
       auto pThis(make_shared<TypedefType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -1605,7 +1638,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::TypedefTypePtr IWrapperTypes::TypedefType::createForwards(
+    IIDLTypes::TypedefTypePtr IIDLTypes::TypedefType::createForwards(
                                                                              ContextPtr context,
                                                                              const ElementPtr &el
                                                                              ) throw (InvalidContent)
@@ -1617,7 +1650,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    ElementPtr IWrapperTypes::TypedefType::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::TypedefType::createElement(const char *objectName) const
     {
       if (NULL == objectName) objectName = "typedef";
       
@@ -1682,7 +1715,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::TypedefType::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::TypedefType::parse(const ElementPtr &rootEl) throw (InvalidContent)
     {
       if (!rootEl) return;
 
@@ -1702,7 +1735,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    String IWrapperTypes::TypedefType::hash() const
+    String IIDLTypes::TypedefType::hash() const
     {
       auto hasher = IHasher::sha256();
       
@@ -1724,7 +1757,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::TypedefType::resolveTypedefs() throw (InvalidContent)
+    void IIDLTypes::TypedefType::resolveTypedefs() throw (InvalidContent)
     {
       auto originalType = mOriginalType.lock();
 
@@ -1776,7 +1809,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::TypePtr IWrapperTypes::TypedefType::getTypeBypassingTypedefIfNoop() const
+    IIDLTypes::TypePtr IIDLTypes::TypedefType::getTypeBypassingTypedefIfNoop() const
     {
       if (mModifiers.size() < 1) {
         auto originalType = mOriginalType.lock();
@@ -1787,7 +1820,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::createTypedefForwards(
+    void IIDLTypes::createTypedefForwards(
                                               ContextPtr context,
                                               ElementPtr typedefsEl,
                                               TypedefTypeMap &outTypedefs
@@ -1804,7 +1837,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::parseTypedefs(
+    void IIDLTypes::parseTypedefs(
                                       ContextPtr context,
                                       ElementPtr typedefsEl,
                                       TypedefTypeMap &ioTypedefs
@@ -1838,17 +1871,17 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     #pragma mark
-    #pragma mark IWrapperTypes::Struct
+    #pragma mark IIDLTypes::Struct
     #pragma mark
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Struct::init()
+    void IIDLTypes::Struct::init()
     {
       Context::init();
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Struct::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Struct::init(const ElementPtr &rootEl) throw (InvalidContent)
     {
       Context::init(rootEl);
       
@@ -1864,7 +1897,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::StructPtr IWrapperTypes::Struct::create(ContextPtr context)
+    IIDLTypes::StructPtr IIDLTypes::Struct::create(ContextPtr context)
     {
       auto pThis(make_shared<Struct>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -1873,7 +1906,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::StructPtr IWrapperTypes::Struct::createForwards(
+    IIDLTypes::StructPtr IIDLTypes::Struct::createForwards(
                                                                    ContextPtr context,
                                                                    const ElementPtr &el
                                                                    ) throw (InvalidContent)
@@ -1885,7 +1918,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IWrapperTypes::Struct::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::Struct::createElement(const char *objectName) const
     {
       if (NULL == objectName) objectName = "struct";
       
@@ -2010,7 +2043,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Struct::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Struct::parse(const ElementPtr &rootEl) throw (InvalidContent)
     {
       if (!rootEl) return;
 
@@ -2078,7 +2111,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IWrapperTypes::Struct::hash() const
+    String IIDLTypes::Struct::hash() const
     {
       auto hasher = IHasher::sha256();
       
@@ -2157,7 +2190,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::TypePtr IWrapperTypes::Struct::findType(
+    IIDLTypes::TypePtr IIDLTypes::Struct::findType(
                                                            const String &pathStr,
                                                            const String &typeName,
                                                            const FindTypeOptions &options
@@ -2274,7 +2307,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Struct::resolveTypedefs() throw (InvalidContent)
+    void IIDLTypes::Struct::resolveTypedefs() throw (InvalidContent)
     {
       for (auto iter = mTypedefs.begin(); iter != mTypedefs.end(); ++iter) {
         auto obj = (*iter).second;
@@ -2325,7 +2358,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    bool IWrapperTypes::Struct::fixTemplateHashMapping()
+    bool IIDLTypes::Struct::fixTemplateHashMapping()
     {
       bool didFix = false;
       for (auto iter_doNotUse = mStructs.begin(); iter_doNotUse != mStructs.end(); ) {
@@ -2360,7 +2393,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::createStructForwards(
+    void IIDLTypes::createStructForwards(
                                              ContextPtr context,
                                              ElementPtr structsEl,
                                              StructMap &outStructs
@@ -2379,7 +2412,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::parseStructs(
+    void IIDLTypes::parseStructs(
                                      ContextPtr context,
                                      ElementPtr structsEl,
                                      StructMap &ioStructs
@@ -2412,17 +2445,17 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     #pragma mark
-    #pragma mark IWrapperTypes::GenericType
+    #pragma mark IIDLTypes::GenericType
     #pragma mark
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::GenericType::init()
+    void IIDLTypes::GenericType::init()
     {
       Context::init();
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::GenericType::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::GenericType::init(const ElementPtr &rootEl) throw (InvalidContent)
     {
       Context::init(rootEl);
 
@@ -2430,7 +2463,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::GenericTypePtr IWrapperTypes::GenericType::create(ContextPtr context)
+    IIDLTypes::GenericTypePtr IIDLTypes::GenericType::create(ContextPtr context)
     {
       auto pThis(make_shared<GenericType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2439,7 +2472,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::GenericTypePtr IWrapperTypes::GenericType::createForward(
+    IIDLTypes::GenericTypePtr IIDLTypes::GenericType::createForward(
                                                                             ContextPtr context,
                                                                             const ElementPtr &el
                                                                             ) throw (InvalidContent)
@@ -2451,7 +2484,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IWrapperTypes::GenericType::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::GenericType::createElement(const char *objectName) const
     {
       if (NULL == objectName) objectName = "generic";
 
@@ -2463,7 +2496,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::GenericType::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::GenericType::parse(const ElementPtr &rootEl) throw (InvalidContent)
     {
       if (!rootEl) return;
       
@@ -2471,7 +2504,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    String IWrapperTypes::GenericType::hash() const
+    String IIDLTypes::GenericType::hash() const
     {
       auto hasher = IHasher::sha256();
       
@@ -2483,7 +2516,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::createGenericForwards(
+    void IIDLTypes::createGenericForwards(
                                              ContextPtr context,
                                              ElementPtr genericsEl,
                                              GenericTypeList &outGenerics
@@ -2502,7 +2535,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::parseGenerics(
+    void IIDLTypes::parseGenerics(
                                      ContextPtr context,
                                      ElementPtr genericsEl,
                                      GenericTypeList &ioGenerics
@@ -2528,17 +2561,17 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     #pragma mark
-    #pragma mark IWrapperTypes::TemplatedStructType
+    #pragma mark IIDLTypes::TemplatedStructType
     #pragma mark
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::TemplatedStructType::init()
+    void IIDLTypes::TemplatedStructType::init()
     {
       Context::init();
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::TemplatedStructType::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::TemplatedStructType::init(const ElementPtr &rootEl) throw (InvalidContent)
     {
       Context::init(rootEl);
       
@@ -2546,7 +2579,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::TemplatedStructTypePtr IWrapperTypes::TemplatedStructType::create(ContextPtr context)
+    IIDLTypes::TemplatedStructTypePtr IIDLTypes::TemplatedStructType::create(ContextPtr context)
     {
       auto pThis(make_shared<TemplatedStructType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2555,7 +2588,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::TemplatedStructTypePtr IWrapperTypes::TemplatedStructType::createForwards(
+    IIDLTypes::TemplatedStructTypePtr IIDLTypes::TemplatedStructType::createForwards(
                                                                                              ContextPtr context,
                                                                                              const ElementPtr &el
                                                                                              ) throw (InvalidContent)
@@ -2567,7 +2600,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    ElementPtr IWrapperTypes::TemplatedStructType::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::TemplatedStructType::createElement(const char *objectName) const
     {
       if (NULL == objectName) objectName = "templatedStruct";
       
@@ -2594,7 +2627,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::TemplatedStructType::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::TemplatedStructType::parse(const ElementPtr &rootEl) throw (InvalidContent)
     {
       if (!rootEl) return;
       
@@ -2625,7 +2658,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    String IWrapperTypes::TemplatedStructType::hash() const
+    String IIDLTypes::TemplatedStructType::hash() const
     {
       auto hasher = IHasher::sha256();
       
@@ -2651,13 +2684,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IWrapperTypes::TemplatedStructType::calculateTemplateID() const
+    String IIDLTypes::TemplatedStructType::calculateTemplateID() const
     {
       return hash();
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::createTemplatedStructTypeForwards(
+    void IIDLTypes::createTemplatedStructTypeForwards(
                                                           ContextPtr context,
                                                           ElementPtr templatedStructsEl,
                                                           TemplatedStructTypeMap &outTemplatedStruct
@@ -2676,7 +2709,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::parseTemplatedStructTypes(
+    void IIDLTypes::parseTemplatedStructTypes(
                                                   ContextPtr context,
                                                   ElementPtr templatedStructsEl,
                                                   TemplatedStructTypeMap &ioTemplatedStruct
@@ -2709,17 +2742,17 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     #pragma mark
-    #pragma mark IWrapperTypes::Property
+    #pragma mark IIDLTypes::Property
     #pragma mark
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Property::init()
+    void IIDLTypes::Property::init()
     {
       Context::init();
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Property::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Property::init(const ElementPtr &rootEl) throw (InvalidContent)
     {
       Context::init(rootEl);
       Context::parse(rootEl);
@@ -2733,7 +2766,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::PropertyPtr IWrapperTypes::Property::create(ContextPtr context)
+    IIDLTypes::PropertyPtr IIDLTypes::Property::create(ContextPtr context)
     {
       auto pThis(make_shared<Property>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2742,7 +2775,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::PropertyPtr IWrapperTypes::Property::create(
+    IIDLTypes::PropertyPtr IIDLTypes::Property::create(
                                                                ContextPtr context,
                                                                const ElementPtr &el
                                                                ) throw (InvalidContent)
@@ -2754,7 +2787,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    ElementPtr IWrapperTypes::Property::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::Property::createElement(const char *objectName) const
     {
       if (NULL == objectName) objectName = "property";
       
@@ -2773,7 +2806,7 @@ namespace zsLib
     
     
     //-------------------------------------------------------------------------
-    String IWrapperTypes::Property::hash() const
+    String IIDLTypes::Property::hash() const
     {
       auto hasher = IHasher::sha256();
       
@@ -2795,7 +2828,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Property::resolveTypedefs() throw (InvalidContent)
+    void IIDLTypes::Property::resolveTypedefs() throw (InvalidContent)
     {
       if (mType) {
         mType = mType->getTypeBypassingTypedefIfNoop();
@@ -2803,7 +2836,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::createProperties(
+    void IIDLTypes::createProperties(
                                          ContextPtr context,
                                          ElementPtr propertiesEl,
                                          PropertyList &outProperties
@@ -2826,17 +2859,17 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     #pragma mark
-    #pragma mark IWrapperTypes::Method
+    #pragma mark IIDLTypes::Method
     #pragma mark
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Method::init()
+    void IIDLTypes::Method::init()
     {
       Context::init();
     }
     
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Method::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Method::init(const ElementPtr &rootEl) throw (InvalidContent)
     {
       Context::init(rootEl);
       Context::parse(rootEl);
@@ -2872,7 +2905,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::MethodPtr IWrapperTypes::Method::create(ContextPtr context)
+    IIDLTypes::MethodPtr IIDLTypes::Method::create(ContextPtr context)
     {
       auto pThis(make_shared<Method>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2881,7 +2914,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IWrapperTypes::MethodPtr IWrapperTypes::Method::create(
+    IIDLTypes::MethodPtr IIDLTypes::Method::create(
                                                            ContextPtr context,
                                                            const ElementPtr &el
                                                            ) throw (InvalidContent)
@@ -2893,7 +2926,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    ElementPtr IWrapperTypes::Method::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::Method::createElement(const char *objectName) const
     {
       if (NULL == objectName) objectName = "method";
       
@@ -2922,7 +2955,7 @@ namespace zsLib
     
     
     //-------------------------------------------------------------------------
-    String IWrapperTypes::Method::hash() const
+    String IIDLTypes::Method::hash() const
     {
       auto hasher = IHasher::sha256();
       
@@ -2953,7 +2986,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::Method::resolveTypedefs() throw (InvalidContent)
+    void IIDLTypes::Method::resolveTypedefs() throw (InvalidContent)
     {
       for (auto iter = mArguments.begin(); iter != mArguments.end(); ++iter) {
         auto obj = (*iter);
@@ -2977,7 +3010,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IWrapperTypes::createMethods(
+    void IIDLTypes::createMethods(
                                       ContextPtr context,
                                       ElementPtr methodsEl,
                                       MethodList &outMethods

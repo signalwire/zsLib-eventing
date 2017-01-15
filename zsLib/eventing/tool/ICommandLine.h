@@ -72,7 +72,7 @@ namespace zsLib
           Flag_Source,
           Flag_OutputName,
           Flag_Author,
-          Flag_Wrapper,
+          Flag_IDL,
           Flag_Monitor,
           Flag_MonitorPort,
           Flag_MonitorIP,
