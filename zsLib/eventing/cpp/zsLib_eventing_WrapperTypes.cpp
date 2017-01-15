@@ -2483,6 +2483,47 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
+    void IWrapperTypes::createGenericForwards(
+                                             ContextPtr context,
+                                             ElementPtr genericsEl,
+                                             GenericTypeList &outGenerics
+                                             ) throw (InvalidContent)
+    {
+      if (!genericsEl) return;
+      
+      auto genericEl = genericsEl->findFirstChildElement("generic");
+      
+      while (genericEl) {
+        auto genericObj = GenericType::createForward(context, genericEl);
+        outGenerics.push_back(genericObj);
+
+        genericEl = genericEl->findNextSiblingElement("generic");
+      }
+    }
+    
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::parseGenerics(
+                                     ContextPtr context,
+                                     ElementPtr genericsEl,
+                                     GenericTypeList &ioGenerics
+                                     ) throw (InvalidContent)
+    {
+      if (!genericsEl) return;
+      
+      auto genericEl = genericsEl->findFirstChildElement("generic");
+      
+      auto iter = ioGenerics.begin();
+      while ((genericEl) &&
+             (iter != ioGenerics.end())) {
+        
+        auto genericObj = (*iter);
+        genericObj->parse(genericEl);
+
+        genericEl = genericEl->findNextSiblingElement("generic");
+      }
+    }
+
+    //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
@@ -2615,6 +2656,54 @@ namespace zsLib
       return hash();
     }
     
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::createTemplatedStructTypeForwards(
+                                                          ContextPtr context,
+                                                          ElementPtr templatedStructsEl,
+                                                          TemplatedStructTypeMap &outTemplatedStruct
+                                                          ) throw (InvalidContent)
+    {
+      if (!templatedStructsEl) return;
+      
+      auto templatedStructEl = templatedStructsEl->findFirstChildElement("templatedStruct");
+      
+      while (templatedStructEl) {
+        auto templatedStructObj = TemplatedStructType::createForwards(context, templatedStructEl);
+        outTemplatedStruct[templatedStructObj->getMappingName()] = templatedStructObj;
+
+        templatedStructEl = templatedStructEl->findNextSiblingElement("templatedStruct");
+      }
+    }
+    
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::parseTemplatedStructTypes(
+                                                  ContextPtr context,
+                                                  ElementPtr templatedStructsEl,
+                                                  TemplatedStructTypeMap &ioTemplatedStruct
+                                                  ) throw (InvalidContent)
+    {
+      if (!templatedStructsEl) return;
+      
+      auto templatedStructEl = templatedStructsEl->findFirstChildElement("templatedStruct");
+      
+      while (templatedStructEl) {
+        auto name = context->aliasLookup(UseHelper::getElementTextAndDecode(templatedStructEl->findFirstChildElement("name")));
+        
+        TemplatedStructTypePtr templatedStructObj;
+        
+        auto found = ioTemplatedStruct.find(name);
+        if (found == ioTemplatedStruct.end()) {
+          templatedStructObj = TemplatedStructType::createForwards(context, templatedStructEl);
+          ioTemplatedStruct[templatedStructObj->getMappingName()] = templatedStructObj;
+        } else {
+          templatedStructObj = (*found).second;
+        }
+        templatedStructObj->parse(templatedStructEl);
+
+        templatedStructEl = templatedStructEl->findNextSiblingElement("templatedStruct");
+      }
+    }
+
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------

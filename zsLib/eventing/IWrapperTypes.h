@@ -575,7 +575,7 @@ namespace zsLib
 
       static void createGenericForwards(
                                         ContextPtr context,
-                                        ElementPtr structsEl,
+                                        ElementPtr genericsEl,
                                         GenericTypeList &outGenerics
                                         ) throw (InvalidContent);
 
@@ -624,14 +624,14 @@ namespace zsLib
 
       static void createTemplatedStructTypeForwards(
                                                     ContextPtr context,
-                                                    ElementPtr structsEl,
-                                                    TemplatedStructTypeMap &outGenerics
+                                                    ElementPtr templatedStructsEl,
+                                                    TemplatedStructTypeMap &outTemplatedStruct
                                                     ) throw (InvalidContent);
 
       static void parseTemplatedStructTypes(
                                             ContextPtr context,
-                                            ElementPtr structsEl,
-                                            TemplatedStructTypeMap &ioGenerics
+                                            ElementPtr templatedStructsEl,
+                                            TemplatedStructTypeMap &ioTemplatedStruct
                                             ) throw (InvalidContent);
 
       //-----------------------------------------------------------------------
