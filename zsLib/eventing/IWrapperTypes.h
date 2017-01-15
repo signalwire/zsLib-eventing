@@ -59,6 +59,7 @@ namespace zsLib
       ZS_DECLARE_STRUCT_PTR(TypedefType);
       ZS_DECLARE_STRUCT_PTR(Struct);
       ZS_DECLARE_STRUCT_PTR(GenericType);
+      ZS_DECLARE_STRUCT_PTR(TemplatedStructType);
       ZS_DECLARE_STRUCT_PTR(Property);
       ZS_DECLARE_STRUCT_PTR(Method);
 
@@ -111,6 +112,8 @@ namespace zsLib
       typedef std::map<Name, TypedefTypePtr> TypedefTypeMap;
       typedef std::list<GenericTypePtr> GenericTypeList;
       typedef std::map<Name, GenericTypePtr> GenericTypeMap;
+      typedef std::list<TemplatedStructTypePtr> TemplatedStructTypeList;
+      typedef std::map<Name, TemplatedStructTypePtr> TemplatedStructTypeMap;
       typedef std::map<Name, StructPtr> StructMap;
       typedef std::map<Name, EnumTypePtr> EnumMap;
       typedef std::list<PropertyPtr> PropertyList;
@@ -147,18 +150,19 @@ namespace zsLib
 
       public:
         virtual ~Context() {mThisWeak.reset();}
-        
-        virtual ContextPtr toContext() const          {return mThisWeak.lock();}
-        virtual ProjectPtr toProject() const          {return ProjectPtr();}
-        virtual NamespacePtr toNamespace() const      {return NamespacePtr();}
-        virtual TypePtr toType() const                {return TypePtr();}
-        virtual BasicTypePtr toBasicType() const      {return BasicTypePtr();}
-        virtual EnumTypePtr toEnumType() const        {return EnumTypePtr();}
-        virtual TypedefTypePtr toTypedefType() const  {return TypedefTypePtr();}
-        virtual GenericTypePtr toGenericType() const  {return GenericTypePtr();}
-        virtual StructPtr toStruct() const            {return StructPtr();}
-        virtual PropertyPtr toProperty() const        {return PropertyPtr();}
-        virtual MethodPtr toMethod() const            {return MethodPtr();}
+
+        virtual ContextPtr toContext() const                          {return mThisWeak.lock();}
+        virtual ProjectPtr toProject() const                          {return ProjectPtr();}
+        virtual NamespacePtr toNamespace() const                      {return NamespacePtr();}
+        virtual TypePtr toType() const                                {return TypePtr();}
+        virtual BasicTypePtr toBasicType() const                      {return BasicTypePtr();}
+        virtual EnumTypePtr toEnumType() const                        {return EnumTypePtr();}
+        virtual TypedefTypePtr toTypedefType() const                  {return TypedefTypePtr();}
+        virtual GenericTypePtr toGenericType() const                  {return GenericTypePtr();}
+        virtual TemplatedStructTypePtr toTemplatedStructType() const  {return TemplatedStructTypePtr();}
+        virtual StructPtr toStruct() const                            {return StructPtr();}
+        virtual PropertyPtr toProperty() const                        {return PropertyPtr();}
+        virtual MethodPtr toMethod() const                            {return MethodPtr();}
 
         virtual ElementPtr createElement(const char *objectName = NULL) const = 0;
         virtual String hash() const;
@@ -204,11 +208,6 @@ namespace zsLib
 
         virtual void resolveTypedefs() throw (InvalidContent) {}
         virtual bool fixTemplateHashMapping() {return false;}
-
-        virtual void cloneContentsFromOriginalTemplateAndResolve(
-                                                                 ContextPtr originalObj,
-                                                                 const TypeMap &templateTypes
-                                                                 ) throw (InvalidContent) {}
 
         virtual String aliasLookup(const String &value);
         
@@ -439,14 +438,12 @@ namespace zsLib
       struct TypedefType : public Type
       {
         TypeWeakPtr mOriginalType;
-        GenericTypePtr mOriginalGenericReferenceHolder;
-        size_t mArraySize {};         // allow for one dimensional array
 
         TypedefType(
                     const make_private &v,
                     ContextPtr context
                     ) : Type(v, context) {}
-        
+
       protected:
         void init();
         void init(const ElementPtr &rootEl) throw (InvalidContent);
@@ -488,11 +485,10 @@ namespace zsLib
 
       struct Struct : public Type
       {
-        StructModifiers mModifiers {};
-        TypeList mTemplates;
-        TypeList mTemplateDefaultTypes;
+        GenericTypeList mGenerics;
+        TypeList mGenericDefaultTypes;
 
-        String mTemplateID;
+        TemplatedStructTypeMap mTemplatedStructs;
 
         RelatedStructMap mIsARelationships;
 
@@ -519,17 +515,10 @@ namespace zsLib
                                         const ElementPtr &el
                                         ) throw (InvalidContent);
 
-        static StructPtr createFromTemplate(
-                                            StructPtr structObj,
-                                            const TypeList &templateTypes
-                                            ) throw (InvalidContent);
-
         virtual ElementPtr createElement(const char *objectName = NULL) const override;
         virtual void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
         virtual String hash() const override;
 
-        virtual String getMappingName() const override;
-        
         virtual TypePtr findType(
                                  const String &pathStr,
                                  const String &typeName,
@@ -538,14 +527,7 @@ namespace zsLib
         virtual void resolveTypedefs() throw (InvalidContent) override;
         virtual bool fixTemplateHashMapping() override;
 
-        virtual void cloneContentsFromOriginalTemplateAndResolve(
-                                                                 ContextPtr originalObj,
-                                                                 const TypeMap &templateTypes
-                                                                 ) throw (InvalidContent) override;
-        
         virtual StructPtr toStruct() const override {return ZS_DYNAMIC_PTR_CAST(Struct, toContext());}
-
-        String calculateTemplateID() const;
       };
 
       static void createStructForwards(
@@ -559,16 +541,14 @@ namespace zsLib
                                ElementPtr structsEl,
                                StructMap &ioStructs
                                ) throw (InvalidContent);
-      
+
       //-----------------------------------------------------------------------
       #pragma mark
       #pragma mark IWrapperTypes::TypedefType
       #pragma mark
-      
+
       struct GenericType : public Type
       {
-        TypeList mTemplates;
-
       public:
         GenericType(
                     const make_private &v,
@@ -581,16 +561,78 @@ namespace zsLib
         
       public:
         static GenericTypePtr create(ContextPtr context);
-        static GenericTypePtr create(
-                                     ContextPtr context,
-                                     const ElementPtr &el
-                                     ) throw (InvalidContent);
+        static GenericTypePtr createForward(
+                                            ContextPtr context,
+                                            const ElementPtr &el
+                                            ) throw (InvalidContent);
 
         virtual GenericTypePtr toGenericType() const override {return ZS_DYNAMIC_PTR_CAST(GenericType, toContext());}
         
         virtual ElementPtr createElement(const char *objectName = NULL) const override;
+        virtual void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
         virtual String hash() const override;
       };
+
+      static void createGenericForwards(
+                                        ContextPtr context,
+                                        ElementPtr structsEl,
+                                        GenericTypeList &outGenerics
+                                        ) throw (InvalidContent);
+
+      static void parseGenerics(
+                                ContextPtr context,
+                                ElementPtr structsEl,
+                                GenericTypeList &ioGenerics
+                                ) throw (InvalidContent);
+
+      //-----------------------------------------------------------------------
+      #pragma mark
+      #pragma mark IWrapperTypes::TypedefType
+      #pragma mark
+
+      struct TemplatedStructType : public Type
+      {
+        TypeList mTemplateArguments;
+
+      public:
+        TemplatedStructType(
+                            const make_private &v,
+                            ContextPtr context
+                            ) : Type(v, context) {}
+
+      protected:
+        void init();
+        void init(const ElementPtr &rootEl) throw (InvalidContent);
+        
+      public:
+        static TemplatedStructTypePtr create(ContextPtr context);
+        static TemplatedStructTypePtr createForwards(
+                                                     ContextPtr context,
+                                                     const ElementPtr &el
+                                                     ) throw (InvalidContent);
+
+        virtual TemplatedStructTypePtr toTemplatedStructType() const override {return ZS_DYNAMIC_PTR_CAST(TemplatedStructType, toContext());}
+        
+        virtual ElementPtr createElement(const char *objectName = NULL) const override;
+        virtual void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
+        virtual String hash() const override;
+
+        virtual void resolveTypedefs() throw (InvalidContent) override;
+
+        String calculateTemplateID() const;
+      };
+
+      static void createTemplatedStructTypeForwards(
+                                                    ContextPtr context,
+                                                    ElementPtr structsEl,
+                                                    TemplatedStructTypeMap &outGenerics
+                                                    ) throw (InvalidContent);
+
+      static void parseTemplatedStructTypes(
+                                            ContextPtr context,
+                                            ElementPtr structsEl,
+                                            TemplatedStructTypeMap &ioGenerics
+                                            ) throw (InvalidContent);
 
       //-----------------------------------------------------------------------
       #pragma mark
@@ -639,7 +681,6 @@ namespace zsLib
 
       struct Method : public Context
       {
-        MethodModifiers mModifiers {};
         PropertyList mArguments;
 
         TypeList mThrows;

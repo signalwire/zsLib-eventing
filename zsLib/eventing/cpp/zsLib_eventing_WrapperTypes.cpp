@@ -717,6 +717,7 @@ namespace zsLib
     {
       auto hasher = IHasher::sha256();
 
+      hasher->update("project:");
       hasher->update(Context::hash());
 
       hasher->update(":list:aliases");
@@ -951,6 +952,7 @@ namespace zsLib
     {
       auto hasher = IHasher::sha256();
       
+      hasher->update("namespace:");
       hasher->update(Context::hash());
 
       hasher->update(":namespaces:");
@@ -1278,42 +1280,14 @@ namespace zsLib
       }
 
       {
-        auto enumEl = parentEl->findFirstChildElement("enum");
-        if (enumEl) {
-          auto pathStr = context->aliasLookup(UseHelper::getElementTextAndDecode(enumEl->findFirstChildElement("path")));
-          auto baseStr = context->aliasLookup(UseHelper::getElementTextAndDecode(enumEl->findFirstChildElement("base")));
+        auto referenceEl = parentEl->findFirstChildElement("reference");
+        if (referenceEl) {
+          auto pathStr = context->aliasLookup(UseHelper::getElementTextAndDecode(referenceEl->findFirstChildElement("path")));
+          auto baseStr = context->aliasLookup(UseHelper::getElementTextAndDecode(referenceEl->findFirstChildElement("base")));
 
           auto foundType = context->findType(pathStr, baseStr, options);
           if (!foundType) {
-            ZS_THROW_CUSTOM(InvalidContent, String("Enum type was not found, path=") + pathStr + ", base=" + baseStr);
-          }
-          return foundType;
-        }
-      }
-
-      {
-        auto structEl = parentEl->findFirstChildElement("struct");
-        if (structEl) {
-          auto pathStr = context->aliasLookup(UseHelper::getElementTextAndDecode(structEl->findFirstChildElement("path")));
-          auto baseStr = context->aliasLookup(UseHelper::getElementTextAndDecode(structEl->findFirstChildElement("base")));
-
-          auto foundType = context->findType(pathStr, baseStr, options);
-          if (!foundType) {
-            ZS_THROW_CUSTOM(InvalidContent, String("Struct type was not found, path=") + pathStr + ", base=" + baseStr);
-          }
-          return foundType;
-        }
-      }
-      
-      {
-        auto genericEl = parentEl->findFirstChildElement("generic");
-        if (genericEl) {
-          auto pathStr = context->aliasLookup(UseHelper::getElementTextAndDecode(genericEl->findFirstChildElement("path")));
-          auto baseStr = context->aliasLookup(UseHelper::getElementTextAndDecode(genericEl->findFirstChildElement("base")));
-          
-          auto foundType = context->findType(pathStr, baseStr, options);
-          if (!foundType) {
-            ZS_THROW_CUSTOM(InvalidContent, String("Generic type was not found, path=") + pathStr + ", base=" + baseStr);
+            ZS_THROW_CUSTOM(InvalidContent, String("Referenced type was not found, path=") + pathStr + ", base=" + baseStr);
           }
           return foundType;
         }
@@ -1341,38 +1315,11 @@ namespace zsLib
       }
 
       {
-        auto enumType = toEnumType();
-        if (enumType) {
-          auto typeEl = Element::create("enum");
-          auto pathStr = enumType->getPath();
-          typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("path", pathStr));
-          typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("base", enumType->getMappingName()));
-          return typeEl;
-        }
-      }
-
-      {
-        auto structType = toStruct();
-        if (structType) {
-          auto typeEl = Element::create("struct");
-
-          auto pathStr = structType->getPath();
-          typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("path", pathStr));
-          typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("base", structType->getMappingName()));
-          return typeEl;
-        }
-      }
-      
-      {
-        auto genericType = toGenericType();
-        if (genericType) {
-          auto typeEl = Element::create("generic");
-          
-          auto pathStr = genericType->getPath();
-          typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("path", pathStr));
-          typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("base", genericType->getMappingName()));
-          return typeEl;
-        }
+        auto typeEl = Element::create("reference");
+        auto pathStr = getPath();
+        typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("path", pathStr));
+        typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("base", getMappingName()));
+        return typeEl;
       }
 
       ZS_THROW_INVALID_ASSUMPTION("Unexpected type reference found: " + getMappingName());
@@ -1393,7 +1340,7 @@ namespace zsLib
     {
       Context::init();
     }
-    
+
     //-------------------------------------------------------------------------
     void IWrapperTypes::BasicType::init(const ElementPtr &rootEl) throw (InvalidContent)
     {
@@ -1446,6 +1393,7 @@ namespace zsLib
     {
       auto hasher = IHasher::sha256();
       
+      hasher->update("basic:");
       hasher->update(Context::hash());
       hasher->update(":");
       hasher->update(IEventingTypes::toString(mBaseType));
@@ -1562,6 +1510,7 @@ namespace zsLib
     {
       auto hasher = IHasher::sha256();
 
+      hasher->update("enum:");
       hasher->update(Context::hash());
       
       hasher->update(":values:");
@@ -1675,16 +1624,6 @@ namespace zsLib
       ElementPtr rootEl = Element::create(objectName);
 
       Context::write(rootEl);
-      
-      String modifiersStr = toString(mModifiers);
-
-      if (modifiersStr.hasData()) {
-        rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("modifiers", modifiersStr));
-      }
-      
-      if (0 != mArraySize) {
-        rootEl->adoptAsLastChild(UseHelper::createElementWithNumber("arraySize", string(mArraySize)));
-      }
 
       auto originalType = mOriginalType.lock();
 
@@ -1746,26 +1685,12 @@ namespace zsLib
     void IWrapperTypes::TypedefType::parse(const ElementPtr &rootEl) throw (InvalidContent)
     {
       if (!rootEl) return;
-      
-      Context::parse(rootEl);
 
-      String modifiersStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("modifiers")));
-      if (modifiersStr.hasData()) {
-        mModifiers = toTypeModifier(modifiersStr);
-      }
-      
-      String arrayStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("arraySize")));
-      if (arrayStr.hasData()) {
-        try {
-          mArraySize = Numeric<decltype(mArraySize)>(arrayStr);
-        } catch(const Numeric<decltype(mArraySize)>::ValueOutOfRange &) {
-          ZS_THROW_CUSTOM(InvalidContent, String("array size is not valid: ") + arrayStr);
-        }
-      }
+      Context::parse(rootEl);
 
       String pathStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("path")));
       String baseStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("base")));
-      
+
       FindTypeOptions options;
       auto foundType = findType(pathStr, baseStr, options);
 
@@ -1781,22 +1706,18 @@ namespace zsLib
     {
       auto hasher = IHasher::sha256();
       
+      hasher->update("typedef:");
       hasher->update(Context::hash());
-
-      hasher->update(":");
-      hasher->update(toString(mModifiers));
-      hasher->update(":");
 
       auto original = mOriginalType.lock();
       auto name = original->getMappingName();
       auto path = original->getPath();
 
+      hasher->update(":");
       hasher->update(path);
       hasher->update(":");
       hasher->update(name);
-      hasher->update(":");
 
-      hasher->update(mArraySize);
       hasher->update(":end");
       
       return hasher->finalizeAsString();
@@ -1820,8 +1741,11 @@ namespace zsLib
 
           typedefsSet.insert(typedefType);
           linkedTypedefs.push_front(typedefType);
+          
+          originalType = typedefType->mOriginalType.lock();
           continue;
         }
+
         baseType = originalType;
         break;
       }
@@ -1834,75 +1758,17 @@ namespace zsLib
 
       for (auto iter = linkedTypedefs.begin(); iter != linkedTypedefs.end(); ++iter) {
         auto typedefObj = (*iter);
-
-        if (0 != typedefObj->mArraySize) {
-          if (0 != mArraySize) {
-            ZS_THROW_CUSTOM(InvalidContent, String("Multi-dimensional array not support: ") + getMappingName());
-          }
-          mArraySize = typedefObj->mArraySize;
-        }
-
-        TypeModifiers originalModifiers = typedefObj->mModifiers;
-
-        // process safe to combine modifiers
+        
+        for (auto iter = typedefObj->mModifiers.begin(); iter != typedefObj->mModifiers.end(); ++iter)
         {
-          if (hasModifier(typedefObj->mModifiers, TypeModifier_Const)) {
-            mModifiers = addModifiers(mModifiers, TypeModifier_Const);
-            originalModifiers = removeModifiers(originalModifiers, TypeModifier_Const);
+          auto name = (*iter).first;
+          auto nameValueEl = (*iter).second;
+          
+          if (mModifiers.end() != mModifiers.find(name)) {
+            ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, modifier=") + name);
           }
-          if (hasModifier(typedefObj->mModifiers, TypeModifier_Ptr)) {
-            mModifiers = addModifiers(mModifiers, TypeModifier_Ptr);
-            originalModifiers = removeModifiers(originalModifiers, TypeModifier_Ptr);
-          }
-        }
 
-        if (hasModifier(mModifiers, typedefObj->mModifiers)) {
-          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers) + ", linked modifiers=" + toString(originalModifiers));
-        }
-      }
-
-      if (hasModifier(mModifiers, TypeModifier_SharedPtr)) {
-        if (hasModifier(mModifiers, TypeModifier_WeakPtr)) {
-          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
-        }
-        if (hasModifier(mModifiers, TypeModifier_UniPtr)) {
-          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
-        }
-        if (hasModifier(mModifiers, TypeModifier_CollectionPtr)) {
-          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
-        }
-      }
-      if (hasModifier(mModifiers, TypeModifier_WeakPtr)) {
-        if (hasModifier(mModifiers, TypeModifier_SharedPtr)) {
-          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
-        }
-        if (hasModifier(mModifiers, TypeModifier_UniPtr)) {
-          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
-        }
-        if (hasModifier(mModifiers, TypeModifier_CollectionPtr)) {
-          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
-        }
-      }
-      if (hasModifier(mModifiers, TypeModifier_UniPtr)) {
-        if (hasModifier(mModifiers, TypeModifier_SharedPtr)) {
-          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
-        }
-        if (hasModifier(mModifiers, TypeModifier_WeakPtr)) {
-          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
-        }
-        if (hasModifier(mModifiers, TypeModifier_CollectionPtr)) {
-          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
-        }
-      }
-      if (hasModifier(mModifiers, TypeModifier_CollectionPtr)) {
-        if (hasModifier(mModifiers, TypeModifier_SharedPtr)) {
-          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
-        }
-        if (hasModifier(mModifiers, TypeModifier_WeakPtr)) {
-          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
-        }
-        if (hasModifier(mModifiers, TypeModifier_UniPtr)) {
-          ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, current modifiers=") + toString(mModifiers));
+          mModifiers[name] = nameValueEl ? nameValueEl->clone()->toElement() : ElementPtr();
         }
       }
 
@@ -1912,9 +1778,7 @@ namespace zsLib
     //-------------------------------------------------------------------------
     IWrapperTypes::TypePtr IWrapperTypes::TypedefType::getTypeBypassingTypedefIfNoop() const
     {
-      if (0 != mArraySize) return toType();
-
-      if (TypeModifier_None == mModifiers) {
+      if (mModifiers.size() < 1) {
         auto originalType = mOriginalType.lock();
         if (originalType) return originalType;
       }
@@ -1990,13 +1854,13 @@ namespace zsLib
       
       if (!rootEl) return;
 
-      mTemplateID = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("templateId")));
-
       auto context = toContext();
 
       createEnumForwards(context, rootEl->findFirstChildElement("enums"), mEnums);
       createStructForwards(context, rootEl->findFirstChildElement("structs"), mStructs);
       createTypedefForwards(context, rootEl->findFirstChildElement("typedefs"), mTypedefs);
+      createGenericForwards(context, rootEl->findFirstChildElement("generics"), mGenerics);
+      createTemplatedStructTypeForwards(context, rootEl->findFirstChildElement("templatedStructs"), mTemplatedStructs);
     }
     
     //-------------------------------------------------------------------------
@@ -2021,116 +1885,6 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IWrapperTypes::StructPtr IWrapperTypes::Struct::createFromTemplate(
-                                                                       StructPtr structObj,
-                                                                       const TypeList &templateTypes
-                                                                       ) throw (InvalidContent)
-    {
-      ZS_THROW_CUSTOM_IF(InvalidContent, !structObj);
-
-      auto parent = structObj->getParent();
-      ZS_THROW_CUSTOM_IF(InvalidContent, !parent);
-      ZS_THROW_CUSTOM_IF(InvalidContent, !hasModifier(structObj->mModifiers, StructModifier_Generic));
-
-      auto pThis(make_shared<Struct>(make_private{}, parent));
-      pThis->mThisWeak = pThis;
-      pThis->init();
-      pThis->mModifiers = removeModifiers(structObj->mModifiers, StructModifier_Generic);
-
-      ZS_THROW_CUSTOM_IF(InvalidContent, templateTypes.size() > structObj->mTemplates.size());
-
-      TypeList typeArgs = templateTypes;
-
-      // scope resolve missing types
-      {
-        auto iterArgs = templateTypes.begin();
-        auto iterStructGenerics = structObj->mTemplates.begin();
-        auto iterStructDefaults = structObj->mTemplateDefaultTypes.begin();
-        for (
-             ;
-             ((iterArgs != structObj->mTemplates.end()) &&
-              (iterStructGenerics != structObj->mTemplates.end()) &&
-              (iterStructDefaults != structObj->mTemplateDefaultTypes.end()));
-             ++iterArgs, ++iterStructGenerics, ++iterStructDefaults
-             )
-        {
-        }
-        
-        for (
-             ;
-             ((iterStructGenerics != structObj->mTemplates.end()) &&
-              (iterStructDefaults != structObj->mTemplateDefaultTypes.end()));
-             ++iterStructGenerics, ++iterStructDefaults
-             )
-        {
-          auto defaulType = (*iterStructDefaults);
-          ZS_THROW_CUSTOM_IF(InvalidContent, !defaulType);
-          typeArgs.push_back(defaulType);
-        }
-
-        ZS_THROW_CUSTOM_IF(InvalidContent, iterArgs != templateTypes.end());
-        ZS_THROW_CUSTOM_IF(InvalidContent, iterStructGenerics != structObj->mTemplates.end());
-        ZS_THROW_CUSTOM_IF(InvalidContent, iterStructDefaults != structObj->mTemplateDefaultTypes.end());
-      }
-
-      TypeMap genericMapping;
-      {
-        ZS_THROW_CUSTOM_IF(InvalidContent, typeArgs.size() != structObj->mTemplates.size());
-        auto iterArgs = typeArgs.begin();
-        auto iterStructGenerics = structObj->mTemplates.begin();
-        for (; ((iterArgs != typeArgs.end()) && (iterStructGenerics != structObj->mTemplates.end())); ++iterArgs, ++iterStructGenerics)
-        {
-          auto argType = (*iterArgs);
-          auto structType = (*iterStructGenerics);
-          ZS_THROW_CUSTOM_IF(InvalidContent, !argType);
-          ZS_THROW_CUSTOM_IF(InvalidContent, !structType);
-          
-          auto genericType = structType->toGenericType();
-          ZS_THROW_CUSTOM_IF(InvalidContent, !genericType);
-
-          genericMapping[genericType->getMappingName()] = argType;
-        }
-      }
-      
-      pThis->mTemplates = typeArgs;
-      pThis->mTemplateID = pThis->calculateTemplateID();
-      
-      String mappingName = pThis->getMappingName();
-      
-      bool mapped = false;
-
-      {
-        auto parentNamespace = parent->toNamespace();
-        if (parentNamespace) {
-          auto foundExisting = parentNamespace->mStructs.find(mappingName);
-          if (foundExisting != parentNamespace->mStructs.end()) {
-            // already created and resolved this template
-            return (*foundExisting).second;
-          }
-          parentNamespace->mStructs[mappingName] = pThis;
-          mapped = true;
-        }
-      }
-      {
-        auto parentStruct = parent->toStruct();
-        if (parentStruct) {
-          auto foundExisting = parentStruct->mStructs.find(mappingName);
-          if (foundExisting != parentStruct->mStructs.end()) {
-            // already created and resolved this template
-            return (*foundExisting).second;
-          }
-          parentStruct->mStructs[mappingName] = pThis;
-          mapped = true;
-        }
-      }
-
-      ZS_THROW_CUSTOM_IF(InvalidContent, !mapped);
-
-      pThis->cloneContentsFromOriginalTemplateAndResolve(structObj, genericMapping);
-      return pThis;
-    }
-    
-    //-------------------------------------------------------------------------
     ElementPtr IWrapperTypes::Struct::createElement(const char *objectName) const
     {
       if (NULL == objectName) objectName = "struct";
@@ -2139,41 +1893,23 @@ namespace zsLib
 
       Context::write(rootEl);
 
-      String modifiersStr = toString(mModifiers);
+      if (mGenerics.size() > 0) {
+        ElementPtr genericsEl = Element::create("generics");
 
-      if (modifiersStr.hasData()) {
-        rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("modifiers", modifiersStr));
-      }
+        for (auto iter = mGenerics.begin(); iter != mGenerics.end(); ++iter) {
+          auto genericType = (*iter);
 
-      String lastVisibilityStr = toString(mCurrentVisbility);
-      if (lastVisibilityStr.hasData()) {
-        rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("visibility", lastVisibilityStr));
-      }
-
-      if (mTemplateID.hasData()) {
-        rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("templateId", mTemplateID));
-      }
-
-      if (mTemplates.size() > 0) {
-        ElementPtr templatesEl = Element::create("templates");
-
-        for (auto iter = mTemplates.begin(); iter != mTemplates.end(); ++iter) {
-          auto templateType = (*iter);
-
-          ElementPtr templateEl = Element::create("template");
-
-          templateEl->adoptAsLastChild(templateType->createReferenceTypeElement());
-          templatesEl->adoptAsLastChild(templateEl);
+          genericsEl->adoptAsLastChild(genericType->createElement());
         }
       }
 
-      if (mTemplateDefaultTypes.size() > 0) {
-        ElementPtr templateDefaultsEl = Element::create("templateDefaults");
+      if (mGenericDefaultTypes.size() > 0) {
+        ElementPtr templateDefaultsEl = Element::create("genericDefaults");
         
-        for (auto iter = mTemplateDefaultTypes.begin(); iter != mTemplateDefaultTypes.end(); ++iter) {
+        for (auto iter = mGenericDefaultTypes.begin(); iter != mGenericDefaultTypes.end(); ++iter) {
           auto templateType = (*iter);
 
-          ElementPtr templateEl = Element::create("templateDefault");
+          ElementPtr templateEl = Element::create("genericDefault");
 
           if (!templateType) {
             templateEl->adoptAsLastChild(UseHelper::createElementWithNumber("value", "null"));
@@ -2183,19 +1919,22 @@ namespace zsLib
           templateDefaultsEl->adoptAsLastChild(templateEl);
         }
       }
-      
+
+      if (mGenerics.size() > 0) {
+        ElementPtr templateStructsEl = Element::create("templatedStructs");
+        
+        for (auto iter = mTemplatedStructs.begin(); iter != mTemplatedStructs.end(); ++iter) {
+          auto templatedStruct = (*iter).second;
+          templateStructsEl->adoptAsLastChild(templatedStruct->createElement());
+        }
+      }
+
       if (mIsARelationships.size() > 0) {
         ElementPtr relationshipsEl = Element::create("relationships");
         for (auto iter = mIsARelationships.begin(); iter != mIsARelationships.end(); ++iter) {
-          auto visibility = (*iter).second.first;
-          auto structType = (*iter).second.second;
+          auto structType = (*iter).second;
 
           auto relationshipEl = Element::create("relationsip");
-
-          String visibilityStr = toString(visibility);
-          if (visibilityStr.hasData()) {
-            relationshipEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("visibility", visibilityStr));
-          }
 
           auto pathStr = structType->getPath();
           if (pathStr.hasData()) {
@@ -2279,53 +2018,27 @@ namespace zsLib
 
       auto context = toContext();
 
-      {
-        auto modifiersStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("modifiers")));
-        if (modifiersStr.hasData()) {
-          mModifiers = toStructModifier(modifiersStr);
-        }
-      }
+      parseGenerics(context, rootEl->findFirstChildElement("generics"), mGenerics);
+      parseTemplatedStructTypes(context, rootEl->findFirstChildElement("templatedStructs"), mTemplatedStructs);
 
-      {
-        auto visibilityStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("visibility")));
-        if (visibilityStr.hasData()) {
-          mCurrentVisbility = toVisibility(visibilityStr);
-        }
-      }
-
-      mTemplateID = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("templateId")));
-
-      {
-        bool isGeneric = hasModifier(mModifiers, StructModifier_Generic);
-        auto templatesEl = rootEl->findFirstChildElement("templates");
-        if (templatesEl) {
-          auto templateEl = templatesEl->findFirstChildElement("template");
-
-          if (isGeneric) {
-            mTemplates.push_back(GenericType::create(context, templateEl));
-          } else {
-            mTemplates.push_back(createReferencedType(context, templateEl));
-          }
-          templateEl = templateEl->findNextSiblingElement("template");
-        }
-      }
-      
       {
         auto templatesEl = rootEl->findFirstChildElement("templateDefaults");
         if (templatesEl) {
-          auto templateEl = templatesEl->findFirstChildElement("templateDefault");
+          auto templateDefaultEl = templatesEl->findFirstChildElement("templateDefault");
           
-          auto valueEl = templateEl->findFirstChildElement("value");
-          if (valueEl) {
-            String value = UseHelper::getElementTextAndDecode(valueEl);
-            if (value != "null") {
-              ZS_THROW_CUSTOM(InvalidContent, String("Template default value contains data other than expected null: ") + value);
+          while (templateDefaultEl) {
+            auto valueEl = templateDefaultEl->findFirstChildElement("value");
+            if (valueEl) {
+              String value = UseHelper::getElementTextAndDecode(valueEl);
+              if (value != "null") {
+                ZS_THROW_CUSTOM(InvalidContent, String("Template default value contains data other than expected null: ") + value);
+              }
+              mGenericDefaultTypes.push_back(TypePtr());
+            } else {
+              mGenericDefaultTypes.push_back(createReferencedType(context, templateDefaultEl));
             }
-            mTemplateDefaultTypes.push_back(TypePtr());
-          } else {
-            mTemplateDefaultTypes.push_back(createReferencedType(context, templateEl));
+            templateDefaultEl = templateDefaultEl->findNextSiblingElement("templateDefault");
           }
-          templateEl = templateEl->findNextSiblingElement("template");
         }
       }
 
@@ -2338,15 +2051,6 @@ namespace zsLib
           auto relationshipEl = relationshipsEl->findFirstChildElement("relationship");
           while (relationshipEl) {
 
-            Visibilities visible {Visibility_First};
-
-            {
-              auto visibiltyStr = aliasLookup(UseHelper::getElementTextAndDecode(relationshipEl->findFirstChildElement("visibility")));
-              if (visibiltyStr.hasData()) {
-                visible = toVisibility(visibiltyStr);
-              }
-            }
-
             {
               auto pathStr = aliasLookup(UseHelper::getElementTextAndDecode(relationshipEl->findFirstChildElement("path")));
               auto baseStr = aliasLookup(UseHelper::getElementTextAndDecode(relationshipEl->findFirstChildElement("base")));
@@ -2356,12 +2060,7 @@ namespace zsLib
                 ZS_THROW_CUSTOM(InvalidContent, String("Relationship struct type was not found, path=") + pathStr + ", base=" + baseStr);
               }
 
-              auto structObj = foundType->toStruct();
-              if (!structObj) {
-                ZS_THROW_CUSTOM(InvalidContent, String("Relationship struct type was found but was not a struct, path=") + pathStr + ", base=" + baseStr);
-              }
-
-              mIsARelationships[structObj->getMappingName()] = IWrapperTypes::VisibleTypePair(visible, structObj);
+              mIsARelationships[foundType->getMappingName()] = foundType;
             }
 
             relationshipEl = relationshipEl->findNextSiblingElement("relationship");
@@ -2383,37 +2082,18 @@ namespace zsLib
     {
       auto hasher = IHasher::sha256();
       
+      hasher->update("struct:");
       hasher->update(Context::hash());
 
-      hasher->update(":");
-      hasher->update(toString(mModifiers));
-      hasher->update(":");
-      hasher->update(toString(mCurrentVisbility));
-      hasher->update(":");
-      hasher->update(mTemplateID);
+      hasher->update(":generics:");
+      for (auto iter = mGenerics.begin(); iter != mGenerics.end(); ++iter) {
+        auto genericObj = (*iter);
 
-      hasher->update(":templates:");
-      
-      bool isGeneric = hasModifier(mModifiers, StructModifier_Generic);
-      
-      for (auto iter = mTemplates.begin(); iter != mTemplates.end(); ++iter) {
-        auto templateObj = (*iter);
-        
-        if (!isGeneric) {
-          String pathStr = templateObj->getPath();
-          String baseStr = templateObj->getMappingName();
-
-          hasher->update(pathStr);
-          hasher->update(":");
-          hasher->update(baseStr);
-          hasher->update(":next:");
-        } else {
-          hasher->update(templateObj->hash());
-        }
+        hasher->update(genericObj->hash());
       }
 
-      hasher->update(":templates:defaults:");
-      for (auto iter = mTemplateDefaultTypes.begin(); iter != mTemplateDefaultTypes.end(); ++iter) {
+      hasher->update(":generics:defaults:");
+      for (auto iter = mGenericDefaultTypes.begin(); iter != mGenericDefaultTypes.end(); ++iter) {
         auto templateObj = (*iter);
 
         if (templateObj) {
@@ -2426,15 +2106,20 @@ namespace zsLib
         hasher->update(":next:");
       }
 
+      hasher->update(":templatedStructs:");
+      for (auto iter = mTemplatedStructs.begin(); iter != mTemplatedStructs.end(); ++iter) {
+        auto templatedStruct = (*iter).second;
+
+        hasher->update(templatedStruct->hash());
+      }
+
       hasher->update(":relationships:");
       for (auto iter = mIsARelationships.begin(); iter != mIsARelationships.end(); ++iter) {
-        auto visibility = (*iter).second.first;
-        auto structObj = (*iter).second.second;
+        auto typeObj = (*iter).second;
 
-        String pathStr = structObj->getPath();
-        String baseStr = structObj->getMappingName();
+        String pathStr = typeObj->getPath();
+        String baseStr = typeObj->getMappingName();
 
-        hasher->update(toString(visibility));
         hasher->update(":");
         hasher->update(pathStr);
         hasher->update(":");
@@ -2471,15 +2156,6 @@ namespace zsLib
       return hasher->finalizeAsString();
     }
 
-    //-------------------------------------------------------------------------
-    String IWrapperTypes::Struct::getMappingName() const
-    {
-      if (mTemplateID.hasData()) {
-        return mName + "/" + mTemplateID;
-      }
-      return mName;
-    }
-    
     //-------------------------------------------------------------------------
     IWrapperTypes::TypePtr IWrapperTypes::Struct::findType(
                                                            const String &pathStr,
@@ -2529,8 +2205,8 @@ namespace zsLib
           for (auto iter = mIsARelationships.begin(); iter != mIsARelationships.end(); ++iter)
           {
             auto checkName = (*iter).first;
-            auto baseType = (*iter).second.second;
-            
+            auto baseType = (*iter).second;
+
             baseType->findType(pathStr, typeName, baseOptions);
             if (checkName == searchPath) {
               baseType->findType(checkPath, typeName, baseOptions);
@@ -2563,14 +2239,17 @@ namespace zsLib
       }
 
       {
-        if (hasModifier(mModifiers, StructModifier_Generic)) {
-          for (auto iter = mTemplates.begin(); iter != mTemplates.end(); ++iter) {
-            auto type = (*iter);
-            auto name = type->getMappingName();
+        for (auto iter = mGenerics.begin(); iter != mGenerics.end(); ++iter) {
+          auto type = (*iter);
+          auto name = type->getMappingName();
 
-            if (name == typeName) return type;
-          }
+          if (name == typeName) return type;
         }
+      }
+
+      {
+        auto found = mTemplatedStructs.find(typeName);
+        if (found != mTemplatedStructs.end()) return (*found).second;
       }
 
       {
@@ -2580,7 +2259,7 @@ namespace zsLib
         for (auto iter = mIsARelationships.begin(); iter != mIsARelationships.end(); ++iter)
         {
           auto checkName = (*iter).first;
-          auto baseType = (*iter).second.second;
+          auto baseType = (*iter).second;
 
           baseType->findType(String(), typeName, baseOptions);
         }
@@ -2590,7 +2269,7 @@ namespace zsLib
         auto parent = getParent();
         if (parent) return parent->findType(pathStr, typeName, options);
       }
-      
+
       return TypePtr();
     }
 
@@ -2620,20 +2299,12 @@ namespace zsLib
         obj->resolveTypedefs();
       }
 
-      for (auto iter_doNotUse = mTemplates.begin(); iter_doNotUse != mTemplates.end(); ) {
-        auto current = iter_doNotUse;
-        ++iter_doNotUse;
-
-        TypePtr obj = (*current);
-        if (!obj) continue;
-
-        TypePtr bypassType = obj->getTypeBypassingTypedefIfNoop();
-        if (bypassType == obj) continue;
-
-        mTemplates.insert(current, bypassType);
-        mTemplates.erase(current);
+      for (auto iter = mGenerics.begin(); iter != mGenerics.end(); ++iter) {
+        auto obj = (*iter);
+        obj->resolveTypedefs();
       }
-      for (auto iter_doNotUse = mTemplateDefaultTypes.begin(); iter_doNotUse != mTemplateDefaultTypes.end(); ) {
+
+      for (auto iter_doNotUse = mGenericDefaultTypes.begin(); iter_doNotUse != mGenericDefaultTypes.end(); ) {
         auto current = iter_doNotUse;
         ++iter_doNotUse;
         
@@ -2642,9 +2313,14 @@ namespace zsLib
         
         TypePtr bypassType = obj->getTypeBypassingTypedefIfNoop();
         if (bypassType == obj) continue;
-        
-        mTemplateDefaultTypes.insert(current, bypassType);
-        mTemplateDefaultTypes.erase(current);
+
+        mGenericDefaultTypes.insert(current, bypassType);
+        mGenericDefaultTypes.erase(current);
+      }
+
+      for (auto iter = mTemplatedStructs.begin(); iter != mTemplatedStructs.end(); ++iter) {
+        auto obj = (*iter).second;
+        obj->resolveTypedefs();
       }
     }
 
@@ -2661,117 +2337,26 @@ namespace zsLib
         if (obj->fixTemplateHashMapping()) didFix = true;
       }
 
-      for (auto iter_doNotUse = mStructs.begin(); iter_doNotUse != mStructs.end(); ) {
+      for (auto iter_doNotUse = mTemplatedStructs.begin(); iter_doNotUse != mTemplatedStructs.end(); ) {
         
         auto current = iter_doNotUse;
         ++iter_doNotUse;
 
+        auto name = (*current).first;
         auto obj = (*current).second;
 
-        String calculatedID = calculateTemplateID();
+        String calculatedID = obj->calculateTemplateID();
 
-        if (mTemplateID == calculatedID) continue;
+        if (name == calculatedID) continue;
 
-        auto parent = mContext.lock();
-        if (!parent) continue;
+        obj->mName = calculatedID;
+        mTemplatedStructs.erase(current);
+        mTemplatedStructs[calculatedID] = obj;
 
-        {
-          auto parentNamespace = parent->toNamespace();
-          if (parentNamespace) {
-            auto found = parentNamespace->mStructs.find(getMappingName());
-            if (found != parentNamespace->mStructs.end()) {
-              parentNamespace->mStructs.erase(found);
-            }
-            mTemplateID = calculatedID;
-            parentNamespace->mStructs[getMappingName()] = toStruct();
-            return true;
-          }
-        }
-
-        {
-          auto parentStruct = parent->toStruct();
-          if (parentStruct) {
-            auto found = parentStruct->mStructs.find(getMappingName());
-            if (found != parentStruct->mStructs.end()) {
-              parentStruct->mStructs.erase(found);
-            }
-            mTemplateID = calculatedID;
-            parentStruct->mStructs[getMappingName()] = toStruct();
-            return true;
-          }
-        }
+        didFix = true;
       }
 
       return didFix;
-    }
-    
-    //-------------------------------------------------------------------------
-    void IWrapperTypes::Struct::cloneContentsFromOriginalTemplateAndResolve(
-                                                                            ContextPtr originalObj,
-                                                                            const TypeMap &templateTypes
-                                                                            ) throw (InvalidContent)
-    {
-      ZS_THROW_CUSTOM_IF(InvalidContent, !originalObj);
-      StructPtr original = originalObj->toStruct();
-      ZS_THROW_CUSTOM_IF(InvalidContent, !original);
-      
-      mModifiers = removeModifiers(original->mModifiers, StructModifier_Generic);
-      mName = original->mName;
-      if (original->mDocumentation) {
-        mDocumentation = original->mDocumentation->clone()->toElement();
-      }
-      if (original->mDirectives) {
-        mDocumentation = original->mDirectives->clone()->toElement();
-      }
-
-      mCurrentVisbility = original->mCurrentVisbility;
-
-      for (auto iter = original->mIsARelationships.begin(); iter != original->mIsARelationships.end(); ++iter)
-      {
-        auto relatedObj = (*iter).second.second;
-        auto visibility = (*iter).second.first;
-        auto mappingName = relatedObj->getMappingName();
-
-        auto genericObj = relatedObj->toGenericType();
-        if (!genericObj) {
-          mIsARelationships[mappingName] = VisibleTypePair(visibility, relatedObj);
-          continue;
-        }
-
-        auto found = templateTypes.find(mappingName);
-        ZS_THROW_CUSTOM_IF(InvalidContent, found == templateTypes.end());
-
-        auto foundObj = (*found).second;
-        ZS_THROW_CUSTOM_IF(InvalidContent, !foundObj);
-        auto foundStructObj = foundObj->toStruct();
-        ZS_THROW_CUSTOM_IF(InvalidContent, !foundStructObj);
-
-        if (!hasModifier(foundStructObj->mModifiers, StructModifier_Generic)) {
-          mIsARelationships[foundStructObj->getMappingName()] = VisibleTypePair(visibility, foundStructObj);
-          continue;
-        }
-      }
-
-#error STOP
-    }
-
-    //-------------------------------------------------------------------------
-    String IWrapperTypes::Struct::calculateTemplateID() const
-    {
-      if (hasModifier(mModifiers, StructModifier_Generic)) return String();
-      if (mTemplates.size() < 1) return String();
-
-      auto hasher = IHasher::sha256();
-
-      for (auto iter = mTemplates.begin(); iter != mTemplates.end(); ++iter)
-      {
-        auto obj = (*iter);
-
-        hasher->update(obj->hash());
-        hasher->update(":");
-      }
-
-      return hasher->finalizeAsString();
     }
 
     //-------------------------------------------------------------------------
@@ -2822,6 +2407,214 @@ namespace zsLib
       }
     }
 
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    #pragma mark
+    #pragma mark IWrapperTypes::GenericType
+    #pragma mark
+
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::GenericType::init()
+    {
+      Context::init();
+    }
+    
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::GenericType::init(const ElementPtr &rootEl) throw (InvalidContent)
+    {
+      Context::init(rootEl);
+
+      if (!rootEl) return;
+    }
+    
+    //-------------------------------------------------------------------------
+    IWrapperTypes::GenericTypePtr IWrapperTypes::GenericType::create(ContextPtr context)
+    {
+      auto pThis(make_shared<GenericType>(make_private{}, context));
+      pThis->mThisWeak = pThis;
+      pThis->init();
+      return pThis;
+    }
+    
+    //-------------------------------------------------------------------------
+    IWrapperTypes::GenericTypePtr IWrapperTypes::GenericType::createForward(
+                                                                            ContextPtr context,
+                                                                            const ElementPtr &el
+                                                                            ) throw (InvalidContent)
+    {
+      auto pThis(make_shared<GenericType>(make_private{}, context));
+      pThis->mThisWeak = pThis;
+      pThis->init(el);
+      return pThis;
+    }
+
+    //-------------------------------------------------------------------------
+    ElementPtr IWrapperTypes::GenericType::createElement(const char *objectName) const
+    {
+      if (NULL == objectName) objectName = "generic";
+
+      ElementPtr rootEl = Element::create(objectName);
+      
+      Context::write(rootEl);
+      
+      return rootEl;
+    }
+    
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::GenericType::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    {
+      if (!rootEl) return;
+      
+      Context::parse(rootEl);
+    }
+    
+    //-------------------------------------------------------------------------
+    String IWrapperTypes::GenericType::hash() const
+    {
+      auto hasher = IHasher::sha256();
+      
+      hasher->update("generic:");
+      hasher->update(Context::hash());
+      hasher->update(":end");
+      
+      return hasher->finalizeAsString();
+    }
+
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    #pragma mark
+    #pragma mark IWrapperTypes::TemplatedStructType
+    #pragma mark
+
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::TemplatedStructType::init()
+    {
+      Context::init();
+    }
+    
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::TemplatedStructType::init(const ElementPtr &rootEl) throw (InvalidContent)
+    {
+      Context::init(rootEl);
+      
+      if (!rootEl) return;
+    }
+    
+    //-------------------------------------------------------------------------
+    IWrapperTypes::TemplatedStructTypePtr IWrapperTypes::TemplatedStructType::create(ContextPtr context)
+    {
+      auto pThis(make_shared<TemplatedStructType>(make_private{}, context));
+      pThis->mThisWeak = pThis;
+      pThis->init();
+      return pThis;
+    }
+    
+    //-------------------------------------------------------------------------
+    IWrapperTypes::TemplatedStructTypePtr IWrapperTypes::TemplatedStructType::createForwards(
+                                                                                             ContextPtr context,
+                                                                                             const ElementPtr &el
+                                                                                             ) throw (InvalidContent)
+    {
+      auto pThis(make_shared<TemplatedStructType>(make_private{}, context));
+      pThis->mThisWeak = pThis;
+      pThis->init(el);
+      return pThis;
+    }
+    
+    //-------------------------------------------------------------------------
+    ElementPtr IWrapperTypes::TemplatedStructType::createElement(const char *objectName) const
+    {
+      if (NULL == objectName) objectName = "templatedStruct";
+      
+      ElementPtr rootEl = Element::create(objectName);
+
+      if (mTemplateArguments.size() > 0) {
+        ElementPtr templateArgumentsEl = Element::create("templateArguments");
+
+        for (auto iter = mTemplateArguments.begin(); iter != mTemplateArguments.end(); ++iter) {
+          auto templateType = (*iter);
+          
+          ElementPtr templateArgumentEl = Element::create("templateArgument");
+
+          if (!templateType) {
+            templateArgumentEl->adoptAsLastChild(UseHelper::createElementWithNumber("value", "null"));
+          } else {
+            templateArgumentEl->adoptAsLastChild(templateType->createReferenceTypeElement());
+          }
+          templateArgumentsEl->adoptAsLastChild(templateArgumentEl);
+        }
+      }
+
+      return rootEl;
+    }
+    
+    //-------------------------------------------------------------------------
+    void IWrapperTypes::TemplatedStructType::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    {
+      if (!rootEl) return;
+      
+      Context::parse(rootEl);
+      
+      auto context = toContext();
+      
+      {
+        auto templatesEl = rootEl->findFirstChildElement("templateArguments");
+        if (templatesEl) {
+          auto templateDefaultEl = templatesEl->findFirstChildElement("templateArgument");
+          
+          while (templateDefaultEl) {
+            auto valueEl = templateDefaultEl->findFirstChildElement("value");
+            if (valueEl) {
+              String value = UseHelper::getElementTextAndDecode(valueEl);
+              if (value != "null") {
+                ZS_THROW_CUSTOM(InvalidContent, String("Template argument value contains data other than expected null: ") + value);
+              }
+              mTemplateArguments.push_back(TypePtr());
+            } else {
+              mTemplateArguments.push_back(createReferencedType(context, templateDefaultEl));
+            }
+            templateDefaultEl = templateDefaultEl->findNextSiblingElement("templateArgument");
+          }
+        }
+      }
+    }
+    
+    //-------------------------------------------------------------------------
+    String IWrapperTypes::TemplatedStructType::hash() const
+    {
+      auto hasher = IHasher::sha256();
+      
+      hasher->update("templatedStruct:");
+      hasher->update(Context::hash());
+      
+      hasher->update(":templateArguments:");
+      for (auto iter = mTemplateArguments.begin(); iter != mTemplateArguments.end(); ++iter) {
+        auto templateObj = (*iter);
+        
+        if (templateObj) {
+          String pathStr = templateObj->getPath();
+          String baseStr = templateObj->getMappingName();
+          hasher->update(pathStr);
+          hasher->update(":");
+          hasher->update(baseStr);
+        }
+        hasher->update(":next:");
+      }
+
+      hasher->update(":end");
+      return hasher->finalizeAsString();
+    }
+
+    //-------------------------------------------------------------------------
+    String IWrapperTypes::TemplatedStructType::calculateTemplateID() const
+    {
+      return hash();
+    }
+    
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
@@ -2895,6 +2688,7 @@ namespace zsLib
     {
       auto hasher = IHasher::sha256();
       
+      hasher->update("property:");
       hasher->update(Context::hash());
       hasher->update(":");
       hasher->update(mDefaultValue);
@@ -2960,11 +2754,6 @@ namespace zsLib
 
       auto context = toContext();
 
-      auto modifiersStr = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("modifiers")));
-      if (modifiersStr.hasData()) {
-        mModifiers = toMethodModifier(modifiersStr);
-      }
-
       {
         auto propertiesEl = rootEl->findFirstChildElement("arguments");
         if (propertiesEl) {
@@ -3021,11 +2810,6 @@ namespace zsLib
       
       ElementPtr rootEl = Element::create(objectName);
 
-      String modifieresStr = toString(mModifiers);
-      if (modifieresStr.hasData()) {
-        rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("modifiers", modifieresStr));
-      }
-
       if (mArguments.size() > 0) {
         auto argumentsEl = Element::create("arguments");
         for (auto iter = mArguments.begin(); iter != mArguments.end(); ++iter) {
@@ -3053,10 +2837,9 @@ namespace zsLib
     {
       auto hasher = IHasher::sha256();
       
+      hasher->update("method:");
       hasher->update(Context::hash());
-      hasher->update(":");
-      hasher->update(toString(mModifiers));
-
+      
       hasher->update(":arguments:");
       for (auto iter = mArguments.begin(); iter != mArguments.end(); ++iter) {
         auto propertyObj = (*iter);
