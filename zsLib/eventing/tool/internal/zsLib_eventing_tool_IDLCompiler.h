@@ -63,6 +63,8 @@ namespace zsLib
           ZS_DECLARE_TYPEDEF_PTR(IIDLTypes::Project, Project);
           
           typedef std::list<ElementPtr> ElementList;
+          
+          typedef std::map<Name, StringList> ModifierValueMap;
 
           ZS_DECLARE_STRUCT_PTR(Token);
           typedef std::list<TokenPtr> TokenList;
@@ -112,7 +114,7 @@ namespace zsLib
             bool isOpenBrace() const;
             bool isCloseBrace() const;
           };
-          
+
         public:
           //-------------------------------------------------------------------
           IDLCompiler(
@@ -159,7 +161,8 @@ namespace zsLib
           ElementPtr getDirectives();
           void mergeDocumentation(ElementPtr &existingDocumentation);
           void mergeDirectives(ElementPtr &existingDocumentation);
-          void fillDocumentationAndDirectives(ContextPtr context);
+          void mergeModifiers(ContextPtr context) throw (FailureWithLine);
+          void fillContext(ContextPtr context);
 
           static String makeTypenameFromTokens(const TokenList &tokens) throw (InvalidContent);
 
@@ -221,11 +224,15 @@ namespace zsLib
                               const TokenList &typeTokens,
                               const String &typeName
                               ) throw (FailureWithLine);
-
           StructPtr processStructForward(
                                          ContextPtr context,
-                                         const String &typeName
+                                         const String &typeName,
+                                         bool *wasCreated = NULL
                                          ) throw (FailureWithLine);
+          void processRelated(
+                              StructPtr structObj,
+                              const TokenList &typeTokens
+                              ) throw (FailureWithLine);
 
           TypePtr findTypeOrCreateTypedef(
                                           ContextPtr context,
@@ -248,6 +255,7 @@ namespace zsLib
           Config mConfig;
           TokenList mPendingDocumentation;
           ElementList mPendingDirectives;
+          ModifierValueMap mPendingModifiers;
 
           TokenListStack mTokenListStack;
           TokenStack mLastTokenStack;
