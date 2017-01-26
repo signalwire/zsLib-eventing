@@ -44,6 +44,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <sstream>
 #include <list>
 #include <set>
+#include <cctype>
 
 #define ZS_WRAPPER_COMPILER_DIRECTIVE_EXCLUSIZE "EXCLUSIVE"
 
@@ -229,7 +230,7 @@ namespace zsLib
             Helper::skipWhitespaceExceptEOL(start);
           }
 
-          if (!isnumber(*start)) return TokenPtr();
+          if (!isdigit(*start)) return TokenPtr();
 
           p = start;
           
@@ -343,7 +344,7 @@ namespace zsLib
               ++p;
             }
 
-            while (isnumber(*p)) {
+            while (isdigit(*p)) {
               foundExponentNumber = true;
               ++p;
             }
