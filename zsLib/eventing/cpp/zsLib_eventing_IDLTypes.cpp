@@ -394,9 +394,9 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     IIDLTypes::TypePtr IIDLTypes::Context::findType(
-                                                            const String &typeNameWithPath,
-                                                            const FindTypeOptions *options
-                                                            ) const
+                                                    const String &typeNameWithPath,
+                                                    const FindTypeOptions *options
+                                                    ) const
     {
       FindTypeOptions defaultOptions;
       if (!options) options = &defaultOptions;
@@ -411,10 +411,10 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     IIDLTypes::TypePtr IIDLTypes::Context::findType(
-                                                            const String &pathStr,
-                                                            const String &typeName,
-                                                            const FindTypeOptions &options
-                                                            ) const
+                                                    const String &pathStr,
+                                                    const String &typeName,
+                                                    const FindTypeOptions &options
+                                                    ) const
     {
       if (options.mSearchParents) {
         auto parent = getParent();
@@ -435,9 +435,9 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     String IIDLTypes::Context::getModifierValue(
-                                                    Modifiers modifier,
-                                                    size_t index
-                                                    ) const
+                                                Modifiers modifier,
+                                                size_t index
+                                                ) const
     {
       auto found = mModifiers.find(toString(modifier));
       if (found == mModifiers.end()) return String();
@@ -458,9 +458,9 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     void IIDLTypes::Context::getModifierValues(
-                                                   Modifiers modifier,
-                                                   StringList &outValues
-                                                   ) const
+                                               Modifiers modifier,
+                                               StringList &outValues
+                                               ) const
     {
       auto found = mModifiers.find(toString(modifier));
       if (found == mModifiers.end()) return;
@@ -503,9 +503,9 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     void IIDLTypes::Context::setModifier(
-                                             Modifiers modifier,
-                                             const String &value
-                                             )
+                                         Modifiers modifier,
+                                         const String &value
+                                         )
     {
       StringList values;
       values.push_back(value);
@@ -514,9 +514,9 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     void IIDLTypes::Context::setModifier(
-                                             Modifiers modifier,
-                                             const StringList &values
-                                             )
+                                         Modifiers modifier,
+                                         const StringList &values
+                                         )
     {
       clearModifier(modifier);
       
@@ -786,10 +786,10 @@ namespace zsLib
 
     //-------------------------------------------------------------------------
     IIDLTypes::TypePtr IIDLTypes::Project::findType(
-                                                            const String &pathStr,
-                                                            const String &typeName,
-                                                            const FindTypeOptions &options
-                                                            ) const
+                                                    const String &pathStr,
+                                                    const String &typeName,
+                                                    const FindTypeOptions &options
+                                                    ) const
     {
       if (pathStr.hasData()) {
         if (!mGlobal) return TypePtr();
@@ -898,9 +898,9 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     IIDLTypes::NamespacePtr IIDLTypes::Namespace::createForwards(
-                                                                         ContextPtr context,
-                                                                         const ElementPtr &el
-                                                                         ) throw (InvalidContent)
+                                                                 ContextPtr context,
+                                                                 const ElementPtr &el
+                                                                 ) throw (InvalidContent)
     {
       auto pThis(make_shared<Namespace>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -1027,10 +1027,10 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     IIDLTypes::TypePtr IIDLTypes::Namespace::findType(
-                                                              const String &pathStr,
-                                                              const String &typeName,
-                                                              const FindTypeOptions &options
-                                                              ) const
+                                                      const String &pathStr,
+                                                      const String &typeName,
+                                                      const FindTypeOptions &options
+                                                      ) const
     {
       String checkPath = pathStr;
       
@@ -1159,9 +1159,9 @@ namespace zsLib
 
     //-------------------------------------------------------------------------
     IIDLTypes::NamespacePtr IIDLTypes::Namespace::findNamespace(
-                                                                        const String &pathStr,
-                                                                        const String &name
-                                                                        ) const
+                                                                const String &pathStr,
+                                                                const String &name
+                                                                ) const
     {
       NamespacePtr parentNamespace;
       
@@ -1229,10 +1229,10 @@ namespace zsLib
 
     //-------------------------------------------------------------------------
     void IIDLTypes::createNamespaceForwards(
-                                                ContextPtr context,
-                                                ElementPtr namespacesEl,
-                                                NamespaceMap &outNamespaces
-                                                ) throw (InvalidContent)
+                                            ContextPtr context,
+                                            ElementPtr namespacesEl,
+                                            NamespaceMap &outNamespaces
+                                            ) throw (InvalidContent)
     {
       if (!namespacesEl) return;
 
@@ -1248,10 +1248,10 @@ namespace zsLib
 
     //-------------------------------------------------------------------------
     void IIDLTypes::parseNamespaces(
-                                        ContextPtr context,
-                                        ElementPtr namespacesEl,
-                                        NamespaceMap &ioNamespaces
-                                        ) throw (InvalidContent)
+                                    ContextPtr context,
+                                    ElementPtr namespacesEl,
+                                    NamespaceMap &ioNamespaces
+                                    ) throw (InvalidContent)
     {
       if (!namespacesEl) return;
       
@@ -1285,9 +1285,9 @@ namespace zsLib
 
     //-------------------------------------------------------------------------
     IIDLTypes::TypePtr IIDLTypes::Type::createReferencedType(
-                                                                     ContextPtr context,
-                                                                     ElementPtr parentEl
-                                                                     ) throw (InvalidContent)
+                                                             ContextPtr context,
+                                                             ElementPtr parentEl
+                                                             ) throw (InvalidContent)
     {
       FindTypeOptions options;
 
@@ -1356,7 +1356,6 @@ namespace zsLib
       }
 
       ZS_THROW_INVALID_ASSUMPTION("Unexpected type reference found: " + getMappingName());
-      
       return ElementPtr();
     }
 
@@ -1469,9 +1468,9 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     IIDLTypes::EnumTypePtr IIDLTypes::EnumType::createForwards(
-                                                                       ContextPtr context,
-                                                                       const ElementPtr &el
-                                                                       ) throw (InvalidContent)
+                                                               ContextPtr context,
+                                                               const ElementPtr &el
+                                                               ) throw (InvalidContent)
     {
       auto pThis(make_shared<EnumType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -1563,10 +1562,10 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     void IIDLTypes::createEnumForwards(
-                                           ContextPtr context,
-                                           ElementPtr enumsEl,
-                                           EnumMap &outEnums
-                                           ) throw (InvalidContent)
+                                       ContextPtr context,
+                                       ElementPtr enumsEl,
+                                       EnumMap &outEnums
+                                       ) throw (InvalidContent)
     {
       if (!enumsEl) return;
 
@@ -1580,10 +1579,10 @@ namespace zsLib
 
     //-------------------------------------------------------------------------
     void IIDLTypes::parseEnums(
-                                   ContextPtr context,
-                                   ElementPtr enumsEl,
-                                   EnumMap &ioEnums
-                                   ) throw (InvalidContent)
+                               ContextPtr context,
+                               ElementPtr enumsEl,
+                               EnumMap &ioEnums
+                               ) throw (InvalidContent)
     {
       if (!enumsEl) return;
       
@@ -1673,35 +1672,33 @@ namespace zsLib
 
         {
           auto enumType = originalType->toEnumType();
-          if (enumType) {
-            auto pathStr = enumType->getPath();
-            rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("path", pathStr));
-            rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("base", enumType->getMappingName()));
-            goto done;
-          }
+          if (enumType) goto insert_path_and_base;
         }
 
         {
           auto structType = originalType->toStruct();
-          if (structType) {
-            auto pathStr = structType->getPath();
-            rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("path", pathStr));
-            rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("base", structType->getMappingName()));
-            goto done;
-          }
+          if (structType) goto insert_path_and_base;
         }
 
         {
           auto genericType = originalType->toGenericType();
-          if (genericType) {
-            auto pathStr = genericType->getPath();
-            rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("path", pathStr));
-            rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("base", genericType->getMappingName()));
-            goto done;
-          }
+          if (genericType) goto insert_path_and_base;
         }
-        
+
+        {
+          auto templatedStructType = originalType->toTemplatedStructType();
+          if (templatedStructType) goto insert_path_and_base;
+        }
+
         ZS_THROW_BAD_STATE("typedef is not resolved to a proper type");
+
+      insert_path_and_base:
+        {
+          auto pathStr = originalType->getPath();
+          rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("path", pathStr));
+          rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("base", originalType->getMappingName()));
+          goto done;
+        }
 
       done:
         {
@@ -1821,10 +1818,10 @@ namespace zsLib
 
     //-------------------------------------------------------------------------
     void IIDLTypes::createTypedefForwards(
-                                              ContextPtr context,
-                                              ElementPtr typedefsEl,
-                                              TypedefTypeMap &outTypedefs
-                                              ) throw (InvalidContent)
+                                          ContextPtr context,
+                                          ElementPtr typedefsEl,
+                                          TypedefTypeMap &outTypedefs
+                                          ) throw (InvalidContent)
     {
       if (!typedefsEl) return;
       
@@ -1838,10 +1835,10 @@ namespace zsLib
 
     //-------------------------------------------------------------------------
     void IIDLTypes::parseTypedefs(
-                                      ContextPtr context,
-                                      ElementPtr typedefsEl,
-                                      TypedefTypeMap &ioTypedefs
-                                      ) throw (InvalidContent)
+                                  ContextPtr context,
+                                  ElementPtr typedefsEl,
+                                  TypedefTypeMap &ioTypedefs
+                                  ) throw (InvalidContent)
     {
       if (!typedefsEl) return;
 
@@ -2191,10 +2188,10 @@ namespace zsLib
 
     //-------------------------------------------------------------------------
     IIDLTypes::TypePtr IIDLTypes::Struct::findType(
-                                                           const String &pathStr,
-                                                           const String &typeName,
-                                                           const FindTypeOptions &options
-                                                           ) const
+                                                   const String &pathStr,
+                                                   const String &typeName,
+                                                   const FindTypeOptions &options
+                                                   ) const
     {
       String checkPath = pathStr;
       
@@ -2394,10 +2391,10 @@ namespace zsLib
 
     //-------------------------------------------------------------------------
     void IIDLTypes::createStructForwards(
-                                             ContextPtr context,
-                                             ElementPtr structsEl,
-                                             StructMap &outStructs
-                                             ) throw (InvalidContent)
+                                         ContextPtr context,
+                                         ElementPtr structsEl,
+                                         StructMap &outStructs
+                                         ) throw (InvalidContent)
     {
       if (!structsEl) return;
 
@@ -2413,10 +2410,10 @@ namespace zsLib
 
     //-------------------------------------------------------------------------
     void IIDLTypes::parseStructs(
-                                     ContextPtr context,
-                                     ElementPtr structsEl,
-                                     StructMap &ioStructs
-                                     ) throw (InvalidContent)
+                                 ContextPtr context,
+                                 ElementPtr structsEl,
+                                 StructMap &ioStructs
+                                 ) throw (InvalidContent)
     {
       if (!structsEl) return;
 
@@ -2473,9 +2470,9 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     IIDLTypes::GenericTypePtr IIDLTypes::GenericType::createForward(
-                                                                            ContextPtr context,
-                                                                            const ElementPtr &el
-                                                                            ) throw (InvalidContent)
+                                                                    ContextPtr context,
+                                                                    const ElementPtr &el
+                                                                    ) throw (InvalidContent)
     {
       auto pThis(make_shared<GenericType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2517,10 +2514,10 @@ namespace zsLib
 
     //-------------------------------------------------------------------------
     void IIDLTypes::createGenericForwards(
-                                             ContextPtr context,
-                                             ElementPtr genericsEl,
-                                             GenericTypeList &outGenerics
-                                             ) throw (InvalidContent)
+                                          ContextPtr context,
+                                          ElementPtr genericsEl,
+                                          GenericTypeList &outGenerics
+                                          ) throw (InvalidContent)
     {
       if (!genericsEl) return;
       
@@ -2589,9 +2586,9 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     IIDLTypes::TemplatedStructTypePtr IIDLTypes::TemplatedStructType::createForwards(
-                                                                                             ContextPtr context,
-                                                                                             const ElementPtr &el
-                                                                                             ) throw (InvalidContent)
+                                                                                     ContextPtr context,
+                                                                                     const ElementPtr &el
+                                                                                     ) throw (InvalidContent)
     {
       auto pThis(make_shared<TemplatedStructType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2684,6 +2681,24 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
+    void IIDLTypes::TemplatedStructType::resolveTypedefs() throw (InvalidContent)
+    {
+      for (auto iter_doNotUse = mTemplateArguments.begin(); iter_doNotUse != mTemplateArguments.end(); ) {
+        auto current = iter_doNotUse;
+        ++iter_doNotUse;
+
+        TypePtr obj = (*current);
+        if (!obj) continue;
+
+        TypePtr bypassType = obj->getTypeBypassingTypedefIfNoop();
+        if (bypassType == obj) continue;
+
+        mTemplateArguments.insert(current, bypassType);
+        mTemplateArguments.erase(current);
+      }
+    }
+
+    //-------------------------------------------------------------------------
     String IIDLTypes::TemplatedStructType::calculateTemplateID() const
     {
       return hash();
@@ -2691,10 +2706,10 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     void IIDLTypes::createTemplatedStructTypeForwards(
-                                                          ContextPtr context,
-                                                          ElementPtr templatedStructsEl,
-                                                          TemplatedStructTypeMap &outTemplatedStruct
-                                                          ) throw (InvalidContent)
+                                                      ContextPtr context,
+                                                      ElementPtr templatedStructsEl,
+                                                      TemplatedStructTypeMap &outTemplatedStruct
+                                                      ) throw (InvalidContent)
     {
       if (!templatedStructsEl) return;
       
@@ -2710,10 +2725,10 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     void IIDLTypes::parseTemplatedStructTypes(
-                                                  ContextPtr context,
-                                                  ElementPtr templatedStructsEl,
-                                                  TemplatedStructTypeMap &ioTemplatedStruct
-                                                  ) throw (InvalidContent)
+                                              ContextPtr context,
+                                              ElementPtr templatedStructsEl,
+                                              TemplatedStructTypeMap &ioTemplatedStruct
+                                              ) throw (InvalidContent)
     {
       if (!templatedStructsEl) return;
       
