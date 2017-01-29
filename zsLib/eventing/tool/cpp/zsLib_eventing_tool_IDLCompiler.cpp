@@ -112,6 +112,16 @@ namespace zsLib
             }
           }
         }
+
+        //---------------------------------------------------------------------
+        static bool isStructDeclaration(const String &str)
+        {
+          if ("struct" == str) return true;
+          if ("interface" == str) return true;
+          if ("class" == str) return true;
+          if ("interaction" == str) return true;
+          return false;
+        }
         
         //---------------------------------------------------------------------
         static TokenPtr getCPPDirectiveToken(
@@ -433,7 +443,7 @@ namespace zsLib
           result->mLineCount = lineCount;
           return result;
         }
-        
+
         //---------------------------------------------------------------------
         static TokenPtr getIdentifierToken(
                                            const char * &p,
@@ -1167,10 +1177,7 @@ namespace zsLib
             token = peekNextToken(what);  // get type of struct/internface
           }
 
-          if (("class" != token->mToken) &&
-              ("interface" != token->mToken) &&
-              ("interaction" != token->mToken) &&
-              ("struct" != token->mToken)) {
+          if (!isStructDeclaration(token->mToken)) {
             if (foundTemplate) {
               ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " template expecting keyword struct or interface");
             }
