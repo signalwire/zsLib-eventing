@@ -40,6 +40,14 @@ namespace zsLib
 {
   namespace eventing
   {
+    namespace tool
+    {
+      namespace internal
+      {
+        class IDLCompiler;
+      }
+    }
+    
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
@@ -71,7 +79,6 @@ namespace zsLib
 
         Modifier_Struct_StructuredData,   // struct is treated as simple structured data; properties default without getters/setters
         Modifier_Struct_Interface,        // struct is treated as full interface; properties default with getters/setters
-        Modifier_Struct_Generic,          // struct is generic template
         Modifier_Struct_Exception,        // struct is meant for throws declarations
 
         Modifier_Method_Ctor,
@@ -129,7 +136,7 @@ namespace zsLib
       typedef std::pair<Name, Value> NameValuePair;
       typedef std::list<NameValuePair> NameValueList;
       typedef std::set<Value> ValueSet;
-      typedef std::map<Name, ElementPtr> ElementMap;
+      typedef std::map<Name, StringList> StringListMap;
 
       //-----------------------------------------------------------------------
       #pragma mark
@@ -138,6 +145,9 @@ namespace zsLib
 
       struct Context
       {
+      public:
+        friend class tool::internal::IDLCompiler;
+        
       protected:
         struct make_private {};
 
@@ -152,7 +162,7 @@ namespace zsLib
         String mName;
         
         ElementPtr mDocumentation;
-        ElementMap mModifiers;
+        StringListMap mModifiers;
 
       public:
         virtual ~Context() {mThisWeak.reset();}
@@ -199,7 +209,6 @@ namespace zsLib
                                        Modifiers modifier,
                                        StringList &outValues
                                        ) const;
-        virtual ElementPtr getModifierRawValue(Modifiers modifier) const;
         
         virtual void clearModifier(Modifiers modifier);
         virtual void setModifier(Modifiers modifier);

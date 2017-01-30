@@ -112,7 +112,6 @@ namespace zsLib
           
         case IIDLTypes::Modifier_Struct_StructuredData:     return "struct";
         case IIDLTypes::Modifier_Struct_Interface:          return "class";
-        case IIDLTypes::Modifier_Struct_Generic:            return "generic";
         case IIDLTypes::Modifier_Struct_Exception:          return "exception";
 
         case IIDLTypes::Modifier_Method_Ctor:               return "constructor";
@@ -146,7 +145,6 @@ namespace zsLib
 
         case IIDLTypes::Modifier_Struct_StructuredData:     return 0;
         case IIDLTypes::Modifier_Struct_Interface:          return 0;
-        case IIDLTypes::Modifier_Struct_Generic:            return 0;
         case IIDLTypes::Modifier_Struct_Exception:          return 0;
 
         case IIDLTypes::Modifier_Method_Ctor:               return 0;
@@ -204,7 +202,6 @@ namespace zsLib
       {
         case IIDLTypes::Modifier_Struct_StructuredData:
         case IIDLTypes::Modifier_Struct_Interface:
-        case IIDLTypes::Modifier_Struct_Generic:
         case IIDLTypes::Modifier_Struct_Exception:
         {
           return true;
@@ -214,7 +211,7 @@ namespace zsLib
       
       return false;
     }
-    
+
     //-------------------------------------------------------------------------
     bool IIDLTypes::isValidForMethod(Modifiers value)
     {
@@ -300,11 +297,16 @@ namespace zsLib
         hasher->update(":modifiers:");
         for (auto iter = mModifiers.begin(); iter != mModifiers.end(); ++iter) {
           auto name = (*iter).first;
-          auto value = (*iter).second;
+          auto values = (*iter).second;
           
           hasher->update(name);
-          hasher->update(":");
-          hasher->update(UseHelper::toString(value));
+          hasher->update(":values:");
+          for (auto iterValues = values.begin(); iterValues != values.end(); ++iterValues)
+          {
+            auto value = (*iterValues);
+            hasher->update(value);
+            hasher->update(":value:");
+          }
           hasher->update(":next:");
         }
         
@@ -441,16 +443,12 @@ namespace zsLib
     {
       auto found = mModifiers.find(toString(modifier));
       if (found == mModifiers.end()) return String();
-      
-      auto rootEl = (*found).second;
-      if (!rootEl) return String();
-      
-      auto childEl = rootEl->getFirstChildElement();
-      while (childEl)
-      {
-        if (index < 1) return UseHelper::getElementTextAndDecode(childEl);
-        --index;
-        childEl = childEl->getNextSiblingElement();
+     
+      auto values = (*found).second;
+      auto iter = values.begin();
+      for (size_t pos = 0; pos < index && (iter != values.end()); ++pos, ++iter) {
+        if (pos != index) continue;
+        return (*iter);
       }
       
       return String();
@@ -465,24 +463,7 @@ namespace zsLib
       auto found = mModifiers.find(toString(modifier));
       if (found == mModifiers.end()) return;
       
-      auto rootEl = (*found).second;
-      if (!rootEl) return;
-      
-      auto childEl = rootEl->getFirstChildElement();
-      while (childEl)
-      {
-        outValues.push_back(UseHelper::getElementTextAndDecode(childEl));
-        childEl = childEl->getNextSiblingElement();
-      }
-    }
-    
-    //-------------------------------------------------------------------------
-    ElementPtr IIDLTypes::Context::getModifierRawValue(Modifiers modifier) const
-    {
-      auto found = mModifiers.find(toString(modifier));
-      if (found == mModifiers.end()) return ElementPtr();
-
-      return (*found).second;
+      outValues = (*found).second;
     }
     
     //-------------------------------------------------------------------------
@@ -521,18 +502,11 @@ namespace zsLib
       clearModifier(modifier);
       
       if (values.size() < 1) {
-        mModifiers[toString(modifier)] = ElementPtr();
+        mModifiers[toString(modifier)] = StringList();
         return;
       }
 
-      auto rootEl = Element::create("contents");
-      for (auto iter = values.begin(); iter != values.end(); ++iter)
-      {
-        auto value = (*iter);
-        rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("content", value));
-      }
-
-      mModifiers[toString(modifier)] = rootEl;
+      mModifiers[toString(modifier)] = values;
     }
 
     //-------------------------------------------------------------------------
@@ -570,16 +544,19 @@ namespace zsLib
         auto modifiersEl = Element::create("modifiers");
         for (auto iter = mModifiers.begin(); iter != mModifiers.end(); ++iter) {
           auto name = (*iter).first;
-          auto nameValueEl = (*iter).second;
+          auto values = (*iter).second;
           auto modifierEl = Element::create("modifier");
 
           modifierEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("name", name));
-          if (nameValueEl) {
-            auto valueEl = Element::create("value");
-            valueEl->adoptAsLastChild(nameValueEl->clone());
-            modifierEl->adoptAsLastChild(valueEl);
+          if (values.size() > 0) {
+            auto valuesEl = Element::create("values");
+            for (auto iterValues = values.begin(); iterValues != values.end(); ++iterValues)
+            {
+              auto value = (*iterValues);
+              modifierEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("value", value));
+            }
+            modifierEl->adoptAsLastChild(valuesEl);
           }
-
           modifiersEl->adoptAsLastChild(modifierEl);
         }
         rootEl->adoptAsLastChild(modifiersEl);
@@ -600,15 +577,19 @@ namespace zsLib
         auto modifierEl = modifiersEl->findFirstChildElement("modifier");
         while (modifierEl) {
           auto name = UseHelper::getElementTextAndDecode(modifierEl->findLastChildElement("name"));
-          auto valueEl = modifierEl->findFirstChildElement("value");
-          ElementPtr nameValueEl;
-          if (valueEl) {
-            auto firstChildEl = valueEl->getFirstChildElement();
-            if (firstChildEl) {
-              nameValueEl = firstChildEl->clone()->toElement();
+          
+          StringList values;
+          auto valuesEl = modifierEl->findFirstChildElement("values");
+          if (valuesEl) {
+            auto valueEl = valuesEl->findFirstChildElement("value");
+            while (valueEl) {
+              auto value = UseHelper::getElementTextAndDecode(valueEl);
+              values.push_back(value);
+              valueEl = valuesEl->findNextSiblingElement("value");
             }
           }
-          mModifiers[name] = nameValueEl;
+
+          mModifiers[name] = values;
           modifierEl = modifierEl->findNextSiblingElement("modifier");
         }
       }
@@ -631,8 +612,8 @@ namespace zsLib
       for (auto iter = originalContext->mModifiers.begin(); iter != originalContext->mModifiers.end(); ++iter)
       {
         auto name = (*iter).first;
-        auto valueEl = (*iter).second;
-        mModifiers[name] = valueEl ? valueEl->clone()->toElement() : ElementPtr();
+        auto values = (*iter).second;
+        mModifiers[name] = values;
       }
     }
 
@@ -1792,13 +1773,12 @@ namespace zsLib
         for (auto iter = typedefObj->mModifiers.begin(); iter != typedefObj->mModifiers.end(); ++iter)
         {
           auto name = (*iter).first;
-          auto nameValueEl = (*iter).second;
+          auto values = (*iter).second;
           
           if (mModifiers.end() != mModifiers.find(name)) {
             ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, modifier=") + name);
           }
-
-          mModifiers[name] = nameValueEl ? nameValueEl->clone()->toElement() : ElementPtr();
+          mModifiers[name] = values;
         }
       }
 
@@ -2701,7 +2681,24 @@ namespace zsLib
     //-------------------------------------------------------------------------
     String IIDLTypes::TemplatedStructType::calculateTemplateID() const
     {
-      return hash();
+      auto hasher = IHasher::sha256();
+      
+      hasher->update("templatedStruct:");
+      for (auto iter = mTemplateArguments.begin(); iter != mTemplateArguments.end(); ++iter) {
+        auto templateObj = (*iter);
+        
+        if (templateObj) {
+          String pathStr = templateObj->getPath();
+          String baseStr = templateObj->getMappingName();
+          hasher->update(pathStr);
+          hasher->update(":");
+          hasher->update(baseStr);
+        }
+        hasher->update(":next:");
+      }
+
+      hasher->update(":end");
+      return hasher->finalizeAsString();
     }
     
     //-------------------------------------------------------------------------

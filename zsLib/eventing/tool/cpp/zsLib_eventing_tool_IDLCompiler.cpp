@@ -2082,6 +2082,9 @@ namespace zsLib
           if (!type) {
             ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " related type was not found");
           }
+
+          
+          
         }
         
         //---------------------------------------------------------------------
@@ -2152,7 +2155,7 @@ namespace zsLib
           {
             bool mAnyBasicTypeModifiers {false};
             bool mAnyOtherModifier {false};
-            
+
             bool mSigned {false};
             bool mUnsigned {false};
             bool mChar {false};
@@ -2547,6 +2550,14 @@ namespace zsLib
                     ZS_THROW_CUSTOM(InvalidContent, "did not find new basic type");
                   }
                   outCreatedTypedef->mOriginalType = foundNewBasicType;
+                  outCreatedTypedef->resolveTypedefs();
+
+                  auto bypassResult = outCreatedTypedef->getTypeBypassingTypedefIfNoop();
+                  if (bypassResult != outCreatedTypedef) {
+                    outCreatedTypedef.reset();
+                    return bypassResult;
+                  }
+
                   return outCreatedTypedef;
                 }
 
@@ -2556,6 +2567,12 @@ namespace zsLib
                 outCreatedTypedef = TypedefType::create(context);
                 outCreatedTypedef->mOriginalType = existingType;
                 outCreatedTypedef->resolveTypedefs();
+
+                auto bypassResult = outCreatedTypedef->getTypeBypassingTypedefIfNoop();
+                if (bypassResult != outCreatedTypedef) {
+                  outCreatedTypedef.reset();
+                  return bypassResult;
+                }
                 return outCreatedTypedef;
               }
 
@@ -2574,7 +2591,6 @@ namespace zsLib
               }
               return existingBasicType;
             }
-            
           };
         };
 
@@ -2665,64 +2681,43 @@ namespace zsLib
 
               auto structObj = originalType->toStruct();
               if (structObj) {
-#define TODO 1
-#define TODO 2
-#if 0
-                if (hasModifier(structObj->mModifiers, StructModifier_Generic)) {
-                  auto newTemplateStruct = Struct::createFromTemplate(structObj, templateParams);
-                  if (outCreatedTypedef) {
-                    result = typedefObj = createTypedefToNewTemplateFromExistingTypedef(outCreatedTypedef, newTemplateStruct);
-                  } if (!typedefObj) {
-                    result = newTemplateStruct;
+                
+                if (templateTypes.size() > 0) {
+                  auto templatedStruct = TemplatedStructType::create(structObj);
+                  templatedStruct->mTemplateArguments = templateTypes;
+                  auto hashID = templatedStruct->calculateTemplateID();
+                  
+                  auto found = structObj->mTemplatedStructs.find(hashID);
+                  if (found == structObj->mTemplatedStructs.end()) {
+                    structObj->mTemplatedStructs[hashID] = templatedStruct;
                   } else {
-                    // A typedef to a generic template was found and this
-                    // shouldn't be legal but perhaps a use case was missed...
-                    ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " is a typedef to a template but typedef to generatic isn't allowed in this context");
+                    templatedStruct = (*found).second;
                   }
-                } else {
-                  if (templateTypes.size() > 0) {
-                    ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " has template parameters but type referenced isn't a generic template");
+                  
+                  if (outCreatedTypedef) {
+                    auto replacementTypedef = TypedefType::create(outCreatedTypedef->getParent());
+                    replacementTypedef->copyContentsFrom(outCreatedTypedef);
+                    replacementTypedef->mOriginalType = templatedStruct;
+                    outCreatedTypedef = replacementTypedef;
                   }
                 }
-#endif //0
               } else {
                 if (templateTypes.size() > 0) {
                   ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " has template parameters but type referenced isn't a struct or generic template");
                 }
               }
             }
-            
           } catch (const InvalidContent &e) {
             ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " " + e.message());
           }
 
-          return result->getTypeBypassingTypedefIfNoop();
+          auto bypassType = result->getTypeBypassingTypedefIfNoop();
+          if (bypassType != result) {
+            outCreatedTypedef = TypedefTypePtr();
+          }
+          return bypassType;
         }
 
-#if 0
-        //---------------------------------------------------------------------
-        IDLCompiler::TypedefTypePtr IDLCompiler::createTypedefToNewTemplateFromExistingTypedef(
-                                                                                                       TypedefTypePtr existingTypedefObj,
-                                                                                                       StructPtr newTemplate
-                                                                                                       ) throw (InvalidContent)
-        {
-          auto newTypedefObj = TypedefType::create(existingTypedefObj);
-
-          newTypedefObj->mModifiers = existingTypedefObj->mModifiers;
-          newTypedefObj->mArraySize = existingTypedefObj->mArraySize;
-          newTypedefObj->mName = existingTypedefObj->mName;
-          if (existingTypedefObj->mDocumentation) {
-            newTypedefObj->mDocumentation = existingTypedefObj->mDocumentation->clone()->toElement();
-          }
-          if (existingTypedefObj->mDirectives) {
-            newTypedefObj->mDirectives = existingTypedefObj->mDirectives->clone()->toElement();
-          }
-
-          newTypedefObj->mOriginalType = newTemplate;
-          return newTypedefObj;
-        }
-#endif //0
-        
         //---------------------------------------------------------------------
         void IDLCompiler::writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure)
         {
