@@ -1054,6 +1054,8 @@ namespace zsLib
           }
 
           processedTypedefs[type] = String();
+
+          type = (*found).second;
         } while (true);
       }
     }
