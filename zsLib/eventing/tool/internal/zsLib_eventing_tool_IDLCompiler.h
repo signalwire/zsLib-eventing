@@ -104,6 +104,8 @@ namespace zsLib
             TokenType_Last = TokenType_EqualsOperator,
           };
 
+          typedef std::set<TokenTypes> TokenTypeSet;
+
           struct Token
           {
             TokenTypes mTokenType {TokenType_First};
@@ -148,6 +150,9 @@ namespace zsLib
           bool parseUsing(NamespacePtr namespaceObj) throw (FailureWithLine);
           bool parseTypedef(ContextPtr context) throw (FailureWithLine);
           bool parseStruct(ContextPtr context) throw (FailureWithLine);
+          bool parseEnum(ContextPtr context) throw (FailureWithLine);
+          bool parseProperty(StructPtr context) throw (FailureWithLine);
+          bool parseMethod(StructPtr context) throw (FailureWithLine);
 
           bool parseDocumentation();
           bool parseSemiColon();
@@ -210,6 +215,8 @@ namespace zsLib
                                   bool includeFoundToken = false,
                                   bool processBrackets = true
                                   ) throw (FailureWithLine);
+
+          TokenPtr peekAheadToFirstTokenOfType(const TokenTypeSet &tokenTypes);
 
           void processUsingNamespace(
                                      NamespacePtr currentNamespace,

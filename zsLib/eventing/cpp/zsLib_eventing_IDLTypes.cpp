@@ -2788,9 +2788,9 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     IIDLTypes::PropertyPtr IIDLTypes::Property::create(
-                                                               ContextPtr context,
-                                                               const ElementPtr &el
-                                                               ) throw (InvalidContent)
+                                                       ContextPtr context,
+                                                       const ElementPtr &el
+                                                       ) throw (InvalidContent)
     {
       auto pThis(make_shared<Property>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2849,10 +2849,10 @@ namespace zsLib
 
     //-------------------------------------------------------------------------
     void IIDLTypes::createProperties(
-                                         ContextPtr context,
-                                         ElementPtr propertiesEl,
-                                         PropertyList &outProperties
-                                         ) throw (InvalidContent)
+                                     ContextPtr context,
+                                     ElementPtr propertiesEl,
+                                     PropertyList &outProperties
+                                     ) throw (InvalidContent)
     {
       if (!propertiesEl) return;
 
@@ -2887,6 +2887,13 @@ namespace zsLib
       Context::parse(rootEl);
 
       auto context = toContext();
+
+      {
+        auto resultEl = rootEl->findFirstChildElement("result");
+        if (resultEl) {
+          mResult = Type::createReferencedType(context, resultEl);
+        }
+      }
 
       {
         auto propertiesEl = rootEl->findFirstChildElement("arguments");
@@ -2927,9 +2934,9 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     IIDLTypes::MethodPtr IIDLTypes::Method::create(
-                                                           ContextPtr context,
-                                                           const ElementPtr &el
-                                                           ) throw (InvalidContent)
+                                                   ContextPtr context,
+                                                   const ElementPtr &el
+                                                   ) throw (InvalidContent)
     {
       auto pThis(make_shared<Method>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2943,6 +2950,12 @@ namespace zsLib
       if (NULL == objectName) objectName = "method";
       
       ElementPtr rootEl = Element::create(objectName);
+
+      if (mResult) {
+        auto resultEl = Element::create("result");
+        resultEl->adoptAsLastChild(mResult->createReferenceTypeElement());
+        rootEl->adoptAsLastChild(resultEl);
+      }
 
       if (mArguments.size() > 0) {
         auto argumentsEl = Element::create("arguments");
@@ -2973,7 +2986,15 @@ namespace zsLib
       
       hasher->update("method:");
       hasher->update(Context::hash());
-      
+
+      hasher->update(":result:");
+      if (mResult) {
+        hasher->update(mResult->getPath());
+        hasher->update(":");
+        hasher->update(mResult->getMappingName());
+        hasher->update(":");
+      }
+
       hasher->update(":arguments:");
       for (auto iter = mArguments.begin(); iter != mArguments.end(); ++iter) {
         auto propertyObj = (*iter);
@@ -3023,10 +3044,10 @@ namespace zsLib
 
     //-------------------------------------------------------------------------
     void IIDLTypes::createMethods(
-                                      ContextPtr context,
-                                      ElementPtr methodsEl,
-                                      MethodList &outMethods
-                                      ) throw (InvalidContent)
+                                  ContextPtr context,
+                                  ElementPtr methodsEl,
+                                  MethodList &outMethods
+                                  ) throw (InvalidContent)
     {
       if (!methodsEl) return;
 

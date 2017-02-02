@@ -696,6 +696,7 @@ namespace zsLib
 
       struct Method : public Context
       {
+        TypePtr mResult;
         PropertyList mArguments;
 
         TypeList mThrows;

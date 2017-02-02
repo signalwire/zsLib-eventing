@@ -1062,6 +1062,7 @@ namespace zsLib
             if (parseModifiers()) continue;
             if (parseNamespace(namespaceObj)) continue;
             if (parseUsing(namespaceObj)) continue;
+            if (parseEnum(namespaceObj)) continue;
             if (parseTypedef(namespaceObj)) continue;
             if (parseStruct(namespaceObj)) continue;
           }
@@ -1294,20 +1295,236 @@ namespace zsLib
           
           pushTokens(structTokens);
 
+          TokenTypeSet searchTypes;
+          searchTypes.insert(TokenType_SemiColon);
+          searchTypes.insert(TokenType_EqualsOperator);
+          searchTypes.insert(TokenType_Brace);
+          searchTypes.insert(TokenType_CurlyBrace);
+
           while (hasMoreTokens()) {
             if (parseDocumentation()) continue;
             if (parseSemiColon()) continue;
             if (parseDirective()) continue;
             if (parseModifiers()) continue;
+            if (parseEnum(newStruct)) continue;
             if (parseTypedef(newStruct)) continue;
             if (parseStruct(newStruct)) continue;
+
+            {
+              auto foundToken = peekAheadToFirstTokenOfType(searchTypes);
+              if (!foundToken) goto did_not_find_peek_ahead_token;
+
+              switch (foundToken->mTokenType)
+              {
+              case TokenType_SemiColon:
+              case TokenType_EqualsOperator:
+              case TokenType_CurlyBrace:
+              {
+                parseProperty(newStruct);
+                break;
+              }
+              case TokenType_Brace:
+              {
+                parseMethod(newStruct);
+                break;
+              }
+              default:  goto did_not_find_peek_ahead_token;
+              }
+              continue;
+            }
+
+          did_not_find_peek_ahead_token:
+            {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting a peek ahead token to be found that does not exist of type \"{}()=;\"");
+            }
           }
           
           popTokens();  // structTokens
 
+          return true;
+        }
+
+        //---------------------------------------------------------------------
+        bool IDLCompiler::parseEnum(ContextPtr context) throw (FailureWithLine)
+        {
+          const char *what = "enum";
 #define TODO 1
 #define TODO 2
+          return false;
+        }
 
+        //---------------------------------------------------------------------
+        bool IDLCompiler::parseProperty(StructPtr context) throw (FailureWithLine)
+        {
+          const char *what = "property";
+
+          TokenList typeTokens;
+
+          TokenPtr nameToken;
+          TokenPtr stopToken;
+
+          while (hasMoreTokens())
+          {
+            if (parseDocumentation()) continue;
+
+            auto token = extractNextToken(what);
+            if ((TokenType_SemiColon == token->mTokenType) ||
+                (TokenType_EqualsOperator == token->mTokenType) ||
+                (TokenType_CurlyBrace == token->mTokenType)) {
+              stopToken = token;
+              break;
+            }
+            if (nameToken) {
+              typeTokens.push_back(nameToken);
+            }
+            nameToken = token;
+          }
+
+          if (!stopToken) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting more tokens");
+          }
+          if (!nameToken) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting a property name");
+          }
+          if (TokenType_Identifier != nameToken->mTokenType) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting a property name to be an identifier but found: " + nameToken->mToken);
+          }
+          if (typeTokens.size() < 1) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting property types");
+          }
+
+          auto property = Property::create(context);          
+          fillContext(property);
+          property->mName = nameToken->mToken;
+
+          TypedefTypePtr createdTypedef;
+          property->mType = findTypeOrCreateTypedef(property, typeTokens, createdTypedef);
+          if (!property->mType) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " did not find valid property type");
+          }
+
+          if ((TokenType_EqualsOperator == stopToken->mTokenType) ||
+              (TokenType_CurlyBrace == stopToken->mTokenType)) {
+
+            auto defaultValueToken = extractNextToken(what);
+
+            if (TokenType_CurlyBrace == stopToken->mTokenType) {
+              auto finalToken = extractNextToken(what);
+              if ((!stopToken->isOpenBrace()) ||
+                  (TokenType_CurlyBrace != finalToken->mTokenType) ||
+                  (!finalToken->isCloseBrace())) {
+                property->mDefaultValue = defaultValueToken->mToken;
+              }
+            }
+          }
+
+          context->mProperties.push_back(property);
+          return true;
+        }
+
+        //---------------------------------------------------------------------
+        bool IDLCompiler::parseMethod(StructPtr context) throw (FailureWithLine)
+        {
+          const char *what = "method";
+          TokenList typeTokens;
+
+          TokenPtr nameToken;
+          TokenPtr stopToken;
+
+          while (hasMoreTokens())
+          {
+            if (parseDocumentation()) continue;
+
+            auto token = extractNextToken(what);
+            if (TokenType_Brace == token->mTokenType) {
+              stopToken = token;
+              break;
+            }
+
+            if (nameToken) {
+              typeTokens.push_back(nameToken);
+            }
+            nameToken = token;
+          }
+
+          if (!stopToken) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting more tokens");
+          }
+          if (!stopToken->isOpenBrace()) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting open brace \'(\'");
+          }
+          if (!nameToken) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting a method name");
+          }
+          if (TokenType_Identifier != nameToken->mTokenType) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting a method name to be an identifier but found: " + nameToken->mToken);
+          }
+          if (typeTokens.size() < 1) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting method return type");
+          }
+
+          auto method = Method::create(context);
+          fillContext(method);
+          method->mName = nameToken->mToken;
+
+          TypedefTypePtr createdTypedef;
+          method->mResult = findTypeOrCreateTypedef(method, typeTokens, createdTypedef);
+          if (!method->mResult) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " did not find valid property type");
+          }
+
+          putBackToken(stopToken);
+
+          TokenList argumentsTokens;
+          extractToClosingBraceToken(what, argumentsTokens);
+
+          pushTokens(argumentsTokens);
+
+          while (hasMoreTokens())
+          {
+            TokenList argumentTokens;
+            extractToTokenType(what, TokenType_CommaOperator, argumentTokens);
+            
+            pushTokens(argumentTokens);
+
+            TokenPtr argumentNameToken;
+            TokenList argumentTypeTokens;
+            while (hasMoreTokens())
+            {
+              if (parseDocumentation()) continue;
+
+              auto token = extractNextToken(what);
+              if (argumentNameToken) {
+                argumentTypeTokens.push_back(argumentNameToken);
+              }
+              argumentNameToken = token;
+            }
+            popTokens();
+
+            if (!argumentNameToken) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting an argument name");
+            }
+            if (TokenType_Identifier != argumentNameToken->mTokenType) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting a argument name to be an identifier but found: " + nameToken->mToken);
+            }
+            if (argumentTypeTokens.size() < 1) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting an argument type");
+            }
+
+            auto property = Property::create(context);
+            fillContext(property);
+            property->mName = argumentNameToken->mToken;
+            TypedefTypePtr createdTypedef;
+            property->mType = findTypeOrCreateTypedef(method, typeTokens, createdTypedef);
+            if (!property->mType) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " did not find valid method argument type");
+            }
+            method->mArguments.push_back(property);
+          }
+
+          popTokens();
+
+          context->mMethods.push_back(method);
           return true;
         }
 
@@ -1945,6 +2162,23 @@ namespace zsLib
             outTokens.push_back(token);
           }
           return true;
+        }
+
+        //---------------------------------------------------------------------
+        TokenPtr IDLCompiler::peekAheadToFirstTokenOfType(const TokenTypeSet &tokenTypes)
+        {
+          auto tokenList = getTokens();
+          if (!tokenList) return TokenPtr();
+
+          for (auto iter = tokenList->begin(); iter != tokenList->end(); ++iter)
+          {
+            auto token = (*iter);
+
+            auto found = tokenTypes.find(token->mTokenType);
+            if (found != tokenTypes.end()) return token;
+          }
+
+          return TokenPtr();
         }
 
         //---------------------------------------------------------------------
