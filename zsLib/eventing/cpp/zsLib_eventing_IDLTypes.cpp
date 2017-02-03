@@ -1473,14 +1473,8 @@ namespace zsLib
       if (mValues.size() > 0) {
         auto valuesEl = Element::create("values");
         for (auto iter = mValues.begin(); iter != mValues.end(); ++iter) {
-          auto nameValuePair = (*iter);
-          
-          auto valueEl = Element::create("value");
-          
-          valueEl->adoptAsFirstChild(UseHelper::createElementWithTextAndJSONEncode("name", nameValuePair.first));
-          valueEl->adoptAsFirstChild(UseHelper::createElementWithTextAndJSONEncode("value", nameValuePair.second));
-
-          valuesEl->adoptAsFirstChild(valueEl);
+          auto value = (*iter);
+          valuesEl->adoptAsFirstChild(value->createElement());
         }
 
         rootEl->adoptAsLastChild(valuesEl);
@@ -1505,17 +1499,8 @@ namespace zsLib
           ZS_THROW_CUSTOM(InvalidContent, String("Invalid base type") + baseTypeStr);
         }
       }
-      
-      auto valuesEl = rootEl->findFirstChildElement("values");
-      if (valuesEl) {
-        auto valueEl = valuesEl->findFirstChildElement("value");
-        while (valueEl) {
-          String name = aliasLookup(UseHelper::getElementTextAndDecode(valueEl->findFirstChildElement("name")));
-          String value = aliasLookup(UseHelper::getElementTextAndDecode(valueEl->findFirstChildElement("value")));
-          mValues.push_back(NameValuePair(name, value));
-          valueEl = valueEl->findNextSiblingElement("value");
-        }
-      }
+
+      IIDLTypes::createEnumValues(toContext(), rootEl->findFirstChildElement("values"), mValues);
     }
     
     //-------------------------------------------------------------------------
@@ -1529,13 +1514,11 @@ namespace zsLib
       hasher->update(":values:");
       for (auto iter = mValues.begin(); iter != mValues.end(); ++iter)
       {
-        auto nameValuePair = (*iter);
-        hasher->update(nameValuePair.first);
-        hasher->update(":value:");
-        hasher->update(nameValuePair.second);
+        auto value = (*iter);
+        hasher->update(value->hash());
         hasher->update(":next:");
       }
-      
+
       hasher->update(":end");
 
       return hasher->finalizeAsString();
@@ -1583,6 +1566,105 @@ namespace zsLib
         enumObj->parse(enumEl);
 
         enumEl = enumEl->findNextSiblingElement("enum");
+      }
+    }
+
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    #pragma mark
+    #pragma mark IIDLTypes::EnumTypeValue
+    #pragma mark
+
+    //-------------------------------------------------------------------------
+    void IIDLTypes::EnumTypeValue::init()
+    {
+      Context::init();
+    }
+    
+    //-------------------------------------------------------------------------
+    void IIDLTypes::EnumTypeValue::init(const ElementPtr &rootEl) throw (InvalidContent)
+    {
+      Context::init(rootEl);
+      
+      if (!rootEl) return;
+    }
+
+    //-------------------------------------------------------------------------
+    IIDLTypes::EnumTypeValuePtr IIDLTypes::EnumTypeValue::create(ContextPtr context)
+    {
+      auto pThis(make_shared<EnumTypeValue>(make_private{}, context));
+      pThis->mThisWeak = pThis;
+      pThis->init();
+      return pThis;
+    }
+    
+    //-------------------------------------------------------------------------
+    IIDLTypes::EnumTypeValuePtr IIDLTypes::EnumTypeValue::create(
+                                                                 ContextPtr context,
+                                                                 const ElementPtr &el
+                                                                 ) throw (InvalidContent)
+    {
+      auto pThis(make_shared<EnumTypeValue>(make_private{}, context));
+      pThis->mThisWeak = pThis;
+      pThis->init(el);
+      return pThis;
+    }
+    
+    //-------------------------------------------------------------------------
+    ElementPtr IIDLTypes::EnumTypeValue::createElement(const char *objectName) const
+    {
+      if (NULL == objectName) objectName = "value";
+      
+      ElementPtr rootEl = Element::create(objectName);
+
+      Context::write(rootEl);
+
+      rootEl->adoptAsFirstChild(UseHelper::createElementWithTextAndJSONEncode("value", mValue));
+
+      return rootEl;
+    }
+    
+    //-------------------------------------------------------------------------
+    void IIDLTypes::EnumTypeValue::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    {
+      if (!rootEl) return;
+
+      Context::parse(rootEl);
+
+      mValue = aliasLookup(UseHelper::getElementTextAndDecode(rootEl->findFirstChildElement("value")));
+    }
+    
+    //-------------------------------------------------------------------------
+    String IIDLTypes::EnumTypeValue::hash() const
+    {
+      auto hasher = IHasher::sha256();
+
+      hasher->update("enumValue:");
+      hasher->update(Context::hash());
+      
+      hasher->update(":");
+      hasher->update(mValue);
+      hasher->update(":end");
+
+      return hasher->finalizeAsString();
+    }
+    
+    //-------------------------------------------------------------------------
+    void IIDLTypes::createEnumValues(
+                                     ContextPtr context,
+                                     ElementPtr enumValuesEl,
+                                     EnumTypeValueList &outEnumValues
+                                     ) throw (InvalidContent)
+    {
+      if (!enumValuesEl) return;
+
+      auto valueEl = enumValuesEl->findFirstChildElement("value");
+      while (valueEl) {
+        auto enumObj = EnumTypeValue ::create(context, valueEl);
+        outEnumValues.push_back(enumObj);
+        valueEl = valueEl->findNextSiblingElement("value");
       }
     }
 

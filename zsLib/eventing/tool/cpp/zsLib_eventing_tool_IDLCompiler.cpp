@@ -806,9 +806,9 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         IDLCompiler::IDLCompiler(
-                                           const make_private &,
-                                           const Config &config
-                                           ) :
+                                 const make_private &,
+                                 const Config &config
+                                 ) :
           mConfig(config)
         {
         }
@@ -1348,9 +1348,80 @@ namespace zsLib
         bool IDLCompiler::parseEnum(ContextPtr context) throw (FailureWithLine)
         {
           const char *what = "enum";
-#define TODO 1
-#define TODO 2
-          return false;
+
+          auto token = peekNextToken(what);
+          if ("enum" != token->mToken) return false;
+
+          token = extractNextToken(what);
+          if (TokenType_Identifier != token->mTokenType) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting an identifier name");
+          }
+
+          auto enumType = EnumType::create(context);
+          fillContext(enumType);
+          enumType->mName = token->mToken;
+
+          token = peekNextToken(what);
+          if (TokenType_ColonOperator == token->mTokenType) {
+            TokenList enumTypeTokens;
+            extractToTokenType(what, TokenType_CurlyBrace, enumTypeTokens);
+
+            TypedefTypePtr createdTypedef;
+            auto existingType = findTypeOrCreateTypedef(enumType, enumTypeTokens, createdTypedef);
+            if (!existingType) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting a type to resolve");
+            }
+            auto basicType = existingType->toBasicType();
+            if (!basicType) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " only supports deriving from basic types (and generics in templates are not supported either)");
+            }
+            enumType->mBaseType = basicType->mBaseType;
+          }
+
+          token = extractNextToken(what);
+          if ((TokenType_CurlyBrace != token->mTokenType) ||
+              (!token->isOpenBrace())) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " is missing definition");
+          }
+
+          bool foundEndBrace = false;
+
+          while (hasMoreTokens()) {
+            if (parseDocumentation()) continue;
+
+            token = extractNextToken(what);
+            if ((TokenType_CurlyBrace == token->mTokenType) &&
+                (token->isCloseBrace())) {
+              foundEndBrace = true;
+              break;
+            }
+
+            if (TokenType_CommaOperator == token->mTokenType) continue;
+
+            if (TokenType_Identifier != token->mTokenType) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " is expecting an identifier");
+            }
+
+            auto enumValue = EnumTypeValue::create(enumType);
+            fillContext(enumValue);
+            enumValue->mName = token->mToken;
+
+            token = peekNextToken(what);
+            if (TokenType_EqualsOperator == token->mTokenType) {
+              extractNextToken(what); // skip equals
+
+              token = extractNextToken(what);
+              enumValue->mValue = token->mToken;
+            }
+
+            enumType->mValues.push_back(enumValue);
+          }
+
+          if (!foundEndBrace) {
+            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " is missing closing brace");
+          }
+
+          return true;
         }
 
         //---------------------------------------------------------------------
@@ -1523,6 +1594,10 @@ namespace zsLib
           }
 
           popTokens();
+
+          // extract throws
+#define TODO 1
+#define TODO 2
 
           context->mMethods.push_back(method);
           return true;

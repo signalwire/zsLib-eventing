@@ -64,6 +64,7 @@ namespace zsLib
       ZS_DECLARE_STRUCT_PTR(Type);
       ZS_DECLARE_STRUCT_PTR(BasicType);
       ZS_DECLARE_STRUCT_PTR(EnumType);
+      ZS_DECLARE_STRUCT_PTR(EnumTypeValue);
       ZS_DECLARE_STRUCT_PTR(TypedefType);
       ZS_DECLARE_STRUCT_PTR(Struct);
       ZS_DECLARE_STRUCT_PTR(GenericType);
@@ -129,6 +130,7 @@ namespace zsLib
       typedef std::map<Name, TemplatedStructTypePtr> TemplatedStructTypeMap;
       typedef std::map<Name, StructPtr> StructMap;
       typedef std::map<Name, EnumTypePtr> EnumMap;
+      typedef std::list<EnumTypeValuePtr> EnumTypeValueList;
       typedef std::list<PropertyPtr> PropertyList;
       typedef std::map<Name, PropertyPtr> PropertyMap;
       typedef std::list<MethodPtr> MethodList;
@@ -173,6 +175,7 @@ namespace zsLib
         virtual TypePtr toType() const                                {return TypePtr();}
         virtual BasicTypePtr toBasicType() const                      {return BasicTypePtr();}
         virtual EnumTypePtr toEnumType() const                        {return EnumTypePtr();}
+        virtual EnumTypeValuePtr toEnumTypeValue() const              {return EnumTypeValuePtr();}
         virtual TypedefTypePtr toTypedefType() const                  {return TypedefTypePtr();}
         virtual GenericTypePtr toGenericType() const                  {return GenericTypePtr();}
         virtual TemplatedStructTypePtr toTemplatedStructType() const  {return TemplatedStructTypePtr();}
@@ -408,7 +411,7 @@ namespace zsLib
       {
         PredefinedTypedefs mBaseType {PredefinedTypedef_int};
 
-        NameValueList mValues;
+        EnumTypeValueList mValues;
 
         EnumType(
                  const make_private &v,
@@ -444,7 +447,43 @@ namespace zsLib
                              ElementPtr enumsEl,
                              EnumMap &ioEnums
                              ) throw (InvalidContent);
-      
+
+
+      //-----------------------------------------------------------------------
+      #pragma mark
+      #pragma mark IIDLTypes::EnumTypeValue
+      #pragma mark
+
+      struct EnumTypeValue : public Context
+      {
+        String mValue;
+
+        EnumTypeValue(
+                      const make_private &v,
+                      ContextPtr context
+                      ) : Context(v, context) {}
+
+      protected:
+        void init();
+        void init(const ElementPtr &rootEl) throw (InvalidContent);
+        
+      public:
+        static EnumTypeValuePtr create(ContextPtr context);
+        static EnumTypeValuePtr create(ContextPtr context, const ElementPtr &el);
+
+        virtual EnumTypeValuePtr toEnumTypeValue() const override {return ZS_DYNAMIC_PTR_CAST(EnumTypeValue, toContext());}
+        
+        virtual ElementPtr createElement(const char *objectName = NULL) const override;
+        virtual void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
+        virtual String hash() const override;
+      };
+
+      static void createEnumValues(
+                                   ContextPtr context,
+                                   ElementPtr enumsEl,
+                                   EnumTypeValueList &outEnumValues
+                                   ) throw (InvalidContent);
+
       //-----------------------------------------------------------------------
       #pragma mark
       #pragma mark IIDLTypes::TypedefType
