@@ -1595,9 +1595,36 @@ namespace zsLib
 
           popTokens();
 
-          // extract throws
-#define TODO 1
-#define TODO 2
+          auto token = peekNextToken(what);
+
+          if ("throws" == token->mToken) {
+            extractNextToken(what); // skip "throws"
+
+            token = extractNextToken(what);
+            if ((TokenType_Brace != token->mTokenType) ||
+                (token->isOpenBrace())) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting a list of thrown objects");
+            }
+
+            TokenList throwTokens;
+            extractToClosingBraceToken(what, throwTokens);
+
+            pushTokens(throwTokens);
+
+            while (hasMoreTokens())
+            {
+              if (parseComma()) continue;
+
+              TokenList typeTokens;
+              extractToComma(what, typeTokens);
+
+              TypedefTypePtr createdTypedef;
+              auto type = findTypeOrCreateTypedef(context, typeTokens, createdTypedef);
+              method->mThrows.push_back(type);
+            }
+
+            popTokens();
+          }
 
           context->mMethods.push_back(method);
           return true;
@@ -1683,6 +1710,7 @@ namespace zsLib
                 while (hasMoreTokens()) {
                   TokenList paramTokens;
                   extractToComma(what, paramTokens);
+                  parseComma();
 
                   std::stringstream value;
                   bool added {false};
@@ -2188,30 +2216,30 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         bool IDLCompiler::extractToComma(
-                                             const char *whatExpectingComma,
-                                             TokenList &outTokens
-                                             ) throw (FailureWithLine)
+                                         const char *whatExpectingComma,
+                                         TokenList &outTokens
+                                         ) throw (FailureWithLine)
         {
           return extractToTokenType(whatExpectingComma, TokenType_CommaOperator, outTokens);
         }
 
         //---------------------------------------------------------------------
         bool IDLCompiler::extractToEquals(
-                                              const char *whatExpectingComma,
-                                              TokenList &outTokens
-                                              ) throw (FailureWithLine)
+                                          const char *whatExpectingComma,
+                                          TokenList &outTokens
+                                          ) throw (FailureWithLine)
         {
           return extractToTokenType(whatExpectingComma, TokenType_EqualsOperator, outTokens);
         }
 
         //---------------------------------------------------------------------
         bool IDLCompiler::extractToTokenType(
-                                                 const char *whatExpectingComma,
-                                                 TokenTypes searchTokenType,
-                                                 TokenList &outTokens,
-                                                 bool includeFoundToken,
-                                                 bool processBrackets
-                                                 ) throw (FailureWithLine)
+                                             const char *whatExpectingComma,
+                                             TokenTypes searchTokenType,
+                                             TokenList &outTokens,
+                                             bool includeFoundToken,
+                                             bool processBrackets
+                                             ) throw (FailureWithLine)
         {
           while (hasMoreTokens()) {
             auto token = extractNextToken(whatExpectingComma);
@@ -2258,9 +2286,9 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         void IDLCompiler::processUsingNamespace(
-                                                    NamespacePtr currentNamespace,
-                                                    NamespacePtr usingNamespace
-                                                    )
+                                                NamespacePtr currentNamespace,
+                                                NamespacePtr usingNamespace
+                                                )
         {
           if (currentNamespace == usingNamespace) return;
 
@@ -2309,9 +2337,9 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         void IDLCompiler::processUsingType(
-                                               NamespacePtr currentNamespace,
-                                               TypePtr usingType
-                                               )
+                                           NamespacePtr currentNamespace,
+                                           TypePtr usingType
+                                           )
         {
           usingType = usingType->getTypeBypassingTypedefIfNoop();
 
@@ -2934,7 +2962,7 @@ namespace zsLib
                 pushTokens(templateContents);
 
                 while (hasMoreTokens()) {
-                  parseComma(); // skip over a comma
+                  if (parseComma()) continue;
 
                   TokenList templateTypeTokens;
                   extractToComma(what, templateTypeTokens);
