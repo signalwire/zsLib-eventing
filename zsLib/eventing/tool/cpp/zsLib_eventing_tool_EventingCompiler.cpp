@@ -3060,7 +3060,7 @@ namespace zsLib
       {
         switch (config.mMode) {
           case ICompilerTypes::Mode_Eventing:   break;
-          case ICompilerTypes::Mode_IDL:        internal::IDLCompiler::create(config);
+          case ICompilerTypes::Mode_IDL:        return internal::IDLCompiler::create(config);
         }
         return internal::EventingCompiler::create(config);
       }

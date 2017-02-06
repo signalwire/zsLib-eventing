@@ -259,6 +259,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\zsLib\zsLib\cpp\zsLib.events.json" />
+    <None Include="..\..\..\..\zsLib\zsLib\idl\config.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="..\..\..\..\zsLib\zsLib\idl\std.idl" />
+    <Midl Include="..\..\..\..\zsLib\zsLib\idl\zsLib.idl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{75CD59A3-CFC3-4F5E-AE2E-30E55157AA22}</ProjectGuid>

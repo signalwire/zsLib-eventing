@@ -86,6 +86,7 @@ namespace zsLib
         Modifier_Method_Static,
         Modifier_Method_Dynamic,
         Modifier_Method_EventHandler,
+        Modifier_Method_Default,
 
         Modifier_Method_Argument_In,
         Modifier_Method_Argument_Out,
@@ -192,6 +193,7 @@ namespace zsLib
         ContextPtr getRoot() const;
         ProjectPtr getProject() const;
         String getPath() const;
+        String getPathName() const;
 
         virtual TypePtr findType(
                                  const String &typeNameWithPath,

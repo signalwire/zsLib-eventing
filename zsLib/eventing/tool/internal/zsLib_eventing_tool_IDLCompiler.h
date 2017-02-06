@@ -115,6 +115,9 @@ namespace zsLib
             bool isBrace() const;
             bool isOpenBrace() const;
             bool isCloseBrace() const;
+            bool isOpenBrace(TokenTypes type) const;
+            bool isCloseBrace(TokenTypes type) const;
+            bool isIdentifier(const char *identifier) const;
           };
 
         public:

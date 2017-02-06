@@ -118,6 +118,7 @@ namespace zsLib
         case IIDLTypes::Modifier_Method_Static:             return "static";
         case IIDLTypes::Modifier_Method_Dynamic:            return "dynamic";
         case IIDLTypes::Modifier_Method_EventHandler:       return "eventhandler";
+        case IIDLTypes::Modifier_Method_Default:            return "default";
 
         case IIDLTypes::Modifier_Method_Argument_In:        return "in";
         case IIDLTypes::Modifier_Method_Argument_Out:       return "out";
@@ -151,6 +152,7 @@ namespace zsLib
         case IIDLTypes::Modifier_Method_Static:             return 0;
         case IIDLTypes::Modifier_Method_Dynamic:            return 0;
         case IIDLTypes::Modifier_Method_EventHandler:       return 0;
+        case IIDLTypes::Modifier_Method_Default:            return 0;
 
         case IIDLTypes::Modifier_Method_Argument_In:        return 0;
         case IIDLTypes::Modifier_Method_Argument_Out:       return 0;
@@ -369,8 +371,11 @@ namespace zsLib
         {
           auto namespaceObj = parent->toNamespace();
           if (namespaceObj) {
-            pathStr += "::";
-            pathStr += namespaceObj->getMappingName();
+            String mappingName = namespaceObj->getMappingName();
+            if (mappingName.hasData()) {
+              pathStr += "::";
+              pathStr += mappingName;
+            }
             goto next;
           }
         }
@@ -392,6 +397,14 @@ namespace zsLib
       if (pathStr.isEmpty()) return String("::");
 
       return pathStr;
+    }
+
+    //-------------------------------------------------------------------------
+    String IIDLTypes::Context::getPathName() const
+    {
+      String path = getPath();
+      if ("::" == path) return path + getMappingName();
+      return path + "::" + getMappingName();
     }
     
     //-------------------------------------------------------------------------
@@ -567,7 +580,11 @@ namespace zsLib
     void IIDLTypes::Context::parse(const ElementPtr &rootEl) throw (InvalidContent)
     {
       if (!rootEl) return;
-      
+
+      if (!mName.hasData()) {
+        mName = UseHelper::getElementTextAndDecode(rootEl->findLastChildElement("name"));
+      }
+
       auto docEl = rootEl->findFirstChildElement("documentation");
       if (docEl) {
         mDocumentation = docEl->clone()->toElement();
@@ -713,16 +730,16 @@ namespace zsLib
         }
       }
 
-      auto context = toContext();
-      
-      Context::parse(rootEl);
-      
       ElementPtr namespaceEl = rootEl->findFirstChildElement("namespace");
       if (namespaceEl) {
-        mGlobal = Namespace::createForwards(toContext(), namespaceEl);
-        mGlobal->parse(namespaceEl);
+        if (!mGlobal) {
+          mGlobal = Namespace::createForwards(toContext(), namespaceEl);
+          mGlobal->parse(namespaceEl);
+        }
       } else {
-        mGlobal = Namespace::create(context);
+        if (!mGlobal) {
+          mGlobal = Namespace::create(toContext());
+        }
       }
     }
 
@@ -1186,7 +1203,7 @@ namespace zsLib
         if (!parent) return NamespacePtr();
         
         parentNamespace = parent->toNamespace();
-        if (!parentNamespace) NamespacePtr();
+        if (!parentNamespace) return NamespacePtr();
 
         return parentNamespace->findNamespace(pathStr, name);
       }
@@ -1201,7 +1218,7 @@ namespace zsLib
         if (!parent) return NamespacePtr();
         
         parentNamespace = parent->toNamespace();
-        if (!parentNamespace) NamespacePtr();
+        if (!parentNamespace) return NamespacePtr();
 
       }
 

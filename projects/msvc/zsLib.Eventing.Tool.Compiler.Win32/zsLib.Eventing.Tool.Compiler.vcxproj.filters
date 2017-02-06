@@ -238,6 +238,9 @@
     <Filter Include="zsLib\eventing\tool\internal">
       <UniqueIdentifier>{04d58746-12cb-4d5b-bb8b-4a655d058a9c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="zsLib\idl">
+      <UniqueIdentifier>{9be6eed1-12d7-4799-bf84-ecf9295e7542}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\zsLib\zsLib\helpers.h">
@@ -535,5 +538,16 @@
     <None Include="..\..\..\..\zsLib\zsLib\cpp\zsLib.events.json">
       <Filter>zsLib\cpp</Filter>
     </None>
+    <None Include="..\..\..\..\zsLib\zsLib\idl\config.json">
+      <Filter>zsLib\idl</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="..\..\..\..\zsLib\zsLib\idl\std.idl">
+      <Filter>zsLib\idl</Filter>
+    </Midl>
+    <Midl Include="..\..\..\..\zsLib\zsLib\idl\zsLib.idl">
+      <Filter>zsLib\idl</Filter>
+    </Midl>
   </ItemGroup>
 </Project>
