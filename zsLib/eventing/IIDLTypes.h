@@ -78,13 +78,12 @@ namespace zsLib
 
         Modifier_Common_AltName = Modifier_First,
 
-        Modifier_Struct_StructuredData,   // struct is treated as simple structured data; properties default without getters/setters
-        Modifier_Struct_Interface,        // struct is treated as full interface; properties default with getters/setters
+        Modifier_Struct_Dictionary,       // struct is treated as simple structured dictionary data; properties default without getters/setters
         Modifier_Struct_Exception,        // struct is meant for throws declarations
+        Modifier_Struct_Special,          // struct wrapper is created through special / custom processing
 
         Modifier_Method_Ctor,
         Modifier_Method_Static,
-        Modifier_Method_Dynamic,
         Modifier_Method_EventHandler,
         Modifier_Method_Default,
 
@@ -92,15 +91,17 @@ namespace zsLib
         Modifier_Method_Argument_Out,
         Modifier_Method_Argument_Grouping,  // grouped arguments for languages (e.g. objective-C) that allow "with" argument groupings
 
-        Modifier_Property_Nullable,         // value of null is legal
         Modifier_Property_ReadOnly,         // value can be fetched but not set
         Modifier_Property_WriteOnly,        // value can be set but not fetched
         Modifier_Property_Getter,           // value is not stored in wrapper, fetched from code
         Modifier_Property_Setter,           // value is not set in wrapper, set in code
+        Modifier_Property_Dynamic,          // value might be a derived type
 
-        Modifier_,
+        Modifier_Nullable,                  // value of null is legal
+        Modifier_Optional,                  // optional type whose value may not be set
+        Modifier_Dynamic,                   // type might be of derived type
 
-        Modifier_Last = Modifier_,
+        Modifier_Last = Modifier_Dynamic,
       };
 
       static const char *toString(Modifiers value);

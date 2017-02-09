@@ -110,28 +110,27 @@ namespace zsLib
       {
         case IIDLTypes::Modifier_Common_AltName:            return "altname";
           
-        case IIDLTypes::Modifier_Struct_StructuredData:     return "struct";
-        case IIDLTypes::Modifier_Struct_Interface:          return "class";
+        case IIDLTypes::Modifier_Struct_Dictionary:         return "dictionary";
         case IIDLTypes::Modifier_Struct_Exception:          return "exception";
+        case IIDLTypes::Modifier_Struct_Special:            return "special";
 
         case IIDLTypes::Modifier_Method_Ctor:               return "constructor";
         case IIDLTypes::Modifier_Method_Static:             return "static";
-        case IIDLTypes::Modifier_Method_Dynamic:            return "dynamic";
-        case IIDLTypes::Modifier_Method_EventHandler:       return "eventhandler";
+        case IIDLTypes::Modifier_Method_EventHandler:       return "event";
         case IIDLTypes::Modifier_Method_Default:            return "default";
 
         case IIDLTypes::Modifier_Method_Argument_In:        return "in";
         case IIDLTypes::Modifier_Method_Argument_Out:       return "out";
         case IIDLTypes::Modifier_Method_Argument_Grouping:  return "grouping";
-          
-        case IIDLTypes::Modifier_Property_Nullable:         return "nullable";
+
         case IIDLTypes::Modifier_Property_ReadOnly:         return "readonly";
         case IIDLTypes::Modifier_Property_WriteOnly:        return "writeonly";
         case IIDLTypes::Modifier_Property_Getter:           return "getter";
         case IIDLTypes::Modifier_Property_Setter:           return "setter";
 
-        case IIDLTypes::Modifier_:                          return "_";
-
+        case IIDLTypes::Modifier_Nullable:                  return "nullable";
+        case IIDLTypes::Modifier_Optional:                  return "optional";
+        case IIDLTypes::Modifier_Dynamic:                   return "dynamic";
       }
 
       return "unknown";
@@ -144,13 +143,12 @@ namespace zsLib
       {
         case IIDLTypes::Modifier_Common_AltName:            return 1;
 
-        case IIDLTypes::Modifier_Struct_StructuredData:     return 0;
-        case IIDLTypes::Modifier_Struct_Interface:          return 0;
+        case IIDLTypes::Modifier_Struct_Dictionary:         return 0;
         case IIDLTypes::Modifier_Struct_Exception:          return 0;
+        case IIDLTypes::Modifier_Struct_Special:            return 0;
 
         case IIDLTypes::Modifier_Method_Ctor:               return 0;
         case IIDLTypes::Modifier_Method_Static:             return 0;
-        case IIDLTypes::Modifier_Method_Dynamic:            return 0;
         case IIDLTypes::Modifier_Method_EventHandler:       return 0;
         case IIDLTypes::Modifier_Method_Default:            return 0;
 
@@ -158,13 +156,14 @@ namespace zsLib
         case IIDLTypes::Modifier_Method_Argument_Out:       return 0;
         case IIDLTypes::Modifier_Method_Argument_Grouping:  return 1;
 
-        case IIDLTypes::Modifier_Property_Nullable:         return 0;
         case IIDLTypes::Modifier_Property_ReadOnly:         return 0;
         case IIDLTypes::Modifier_Property_WriteOnly:        return 0;
         case IIDLTypes::Modifier_Property_Getter:           return 0;
         case IIDLTypes::Modifier_Property_Setter:           return 0;
 
-        case IIDLTypes::Modifier_:                          return 0;
+        case IIDLTypes::Modifier_Nullable:                  return 0;
+        case IIDLTypes::Modifier_Optional:                  return 0;
+        case IIDLTypes::Modifier_Dynamic:                   return 0;
       }
 
       return -1;
@@ -202,9 +201,9 @@ namespace zsLib
       
       switch (value)
       {
-        case IIDLTypes::Modifier_Struct_StructuredData:
-        case IIDLTypes::Modifier_Struct_Interface:
+        case IIDLTypes::Modifier_Struct_Dictionary:
         case IIDLTypes::Modifier_Struct_Exception:
+        case IIDLTypes::Modifier_Struct_Special:
         {
           return true;
         }
@@ -223,8 +222,10 @@ namespace zsLib
       {
         case IIDLTypes::Modifier_Method_Ctor:
         case IIDLTypes::Modifier_Method_Static:
-        case IIDLTypes::Modifier_Method_Dynamic:
         case IIDLTypes::Modifier_Method_EventHandler:
+        case IIDLTypes::Modifier_Method_Default:
+        case IIDLTypes::Modifier_Nullable:
+        case IIDLTypes::Modifier_Dynamic:
         {
           return true;
         }
@@ -244,6 +245,9 @@ namespace zsLib
         case IIDLTypes::Modifier_Method_Argument_In:
         case IIDLTypes::Modifier_Method_Argument_Out:
         case IIDLTypes::Modifier_Method_Argument_Grouping:
+        case IIDLTypes::Modifier_Nullable:
+        case IIDLTypes::Modifier_Optional:
+        case IIDLTypes::Modifier_Dynamic:
         {
           return true;
         }
@@ -260,11 +264,13 @@ namespace zsLib
       
       switch (value)
       {
-        case IIDLTypes::Modifier_Property_Nullable:
         case IIDLTypes::Modifier_Property_ReadOnly:
         case IIDLTypes::Modifier_Property_WriteOnly:
         case IIDLTypes::Modifier_Property_Getter:
         case IIDLTypes::Modifier_Property_Setter:
+        case IIDLTypes::Modifier_Nullable:
+        case IIDLTypes::Modifier_Optional:
+        case IIDLTypes::Modifier_Dynamic:
         {
           return true;
         }
@@ -2041,20 +2047,11 @@ namespace zsLib
       if (mIsARelationships.size() > 0) {
         ElementPtr relationshipsEl = Element::create("relationships");
         for (auto iter = mIsARelationships.begin(); iter != mIsARelationships.end(); ++iter) {
-          auto structType = (*iter).second;
+          auto baseType = (*iter).second;
 
           auto relationshipEl = Element::create("relationsip");
 
-          auto pathStr = structType->getPath();
-          if (pathStr.hasData()) {
-            relationshipEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("path", pathStr));
-          }
-
-          auto nameStr = structType->getMappingName();
-          if (nameStr.hasData()) {
-            relationshipEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("base", nameStr));
-          }
-
+          relationshipEl->adoptAsLastChild(baseType->createReferenceTypeElement());
           relationshipsEl->adoptAsLastChild(relationshipEl);
         }
         rootEl->adoptAsLastChild(relationshipsEl);
@@ -2164,12 +2161,12 @@ namespace zsLib
               auto pathStr = aliasLookup(UseHelper::getElementTextAndDecode(relationshipEl->findFirstChildElement("path")));
               auto baseStr = aliasLookup(UseHelper::getElementTextAndDecode(relationshipEl->findFirstChildElement("base")));
 
-              auto foundType = findType(pathStr, baseStr, options);
+              auto foundType = Type::createReferencedType(context, relationshipEl);
               if (!foundType) {
                 ZS_THROW_CUSTOM(InvalidContent, String("Relationship struct type was not found, path=") + pathStr + ", base=" + baseStr);
               }
 
-              mIsARelationships[foundType->getMappingName()] = foundType;
+              mIsARelationships[foundType->getPathName()] = foundType;
             }
 
             relationshipEl = relationshipEl->findNextSiblingElement("relationship");
@@ -2313,8 +2310,8 @@ namespace zsLib
 
           for (auto iter = mIsARelationships.begin(); iter != mIsARelationships.end(); ++iter)
           {
-            auto checkName = (*iter).first;
             auto baseType = (*iter).second;
+            auto checkName = baseType->getMappingName();
 
             baseType->findType(pathStr, typeName, baseOptions);
             if (checkName == searchPath) {
@@ -2367,9 +2364,7 @@ namespace zsLib
 
         for (auto iter = mIsARelationships.begin(); iter != mIsARelationships.end(); ++iter)
         {
-          auto checkName = (*iter).first;
           auto baseType = (*iter).second;
-
           baseType->findType(String(), typeName, baseOptions);
         }
       }

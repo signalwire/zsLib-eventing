@@ -262,8 +262,18 @@
     <None Include="..\..\..\..\zsLib\zsLib\idl\config.json" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="..\..\..\..\zsLib\zsLib\idl\std.idl" />
-    <Midl Include="..\..\..\..\zsLib\zsLib\idl\zsLib.idl" />
+    <Midl Include="..\..\..\..\zsLib\zsLib\idl\std.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Midl>
+    <Midl Include="..\..\..\..\zsLib\zsLib\idl\zsLib.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Midl>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{75CD59A3-CFC3-4F5E-AE2E-30E55157AA22}</ProjectGuid>

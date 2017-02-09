@@ -1168,9 +1168,10 @@ namespace zsLib
           
           TokenList typeTokens;
 
-          token = peekNextToken(what);
+          token = extractNextToken(what);
           while (TokenType_SemiColon != token->mTokenType) {
-            typeTokens.push_back(extractNextToken(what));
+            typeTokens.push_back(token);
+            token = extractNextToken(what);
           }
 
           if (typeTokens.size() < 2) {
@@ -1401,6 +1402,8 @@ namespace zsLib
 
           token = peekNextToken(what);
           if (TokenType_ColonOperator == token->mTokenType) {
+            extractNextToken(what); // skip ":"
+
             TokenList enumTypeTokens;
             extractToTokenType(what, TokenType_CurlyBrace, enumTypeTokens);
 
@@ -1456,6 +1459,20 @@ namespace zsLib
 
           if (!foundEndBrace) {
             ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " is missing closing brace");
+          }
+
+          {
+            auto namespaceObj = context->toNamespace();
+            if (namespaceObj) {
+              namespaceObj->mEnums[enumType->getMappingName()] = enumType;
+            }
+          }
+
+          {
+            auto structObj = context->toStruct();
+            if (structObj) {
+              structObj->mEnums[enumType->getMappingName()] = enumType;
+            }
           }
 
           return true;
@@ -1638,7 +1655,7 @@ namespace zsLib
           if (token->isIdentifier("throws")) {
             extractNextToken(what); // skip "throws"
 
-            token = extractNextToken(what);
+            token = peekNextToken(what);
             if (!token->isOpenBrace(TokenType_Brace)) {
               ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting a list of thrown objects");
             }
@@ -2469,8 +2486,7 @@ namespace zsLib
             ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " related type was not found");
           }
 
-          
-          
+          structObj->mIsARelationships[type->getPathName()] = type;
         }
         
         //---------------------------------------------------------------------
@@ -2630,9 +2646,6 @@ namespace zsLib
                 return;
               }
 
-              if (mTypeName.hasData()) {
-                ZS_THROW_CUSTOM(InvalidContent, "has type name redeclared");
-              }
               if (mLastWasTypename) throwInvalidModifier();
               mLastWasTypename = true;
               mLastWasScope = false;
@@ -2845,12 +2858,16 @@ namespace zsLib
                   if (mSigned || mUnsigned || mChar || mShort || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
                   break;
                 }
-                case PredefinedTypedef_pointer:
                 case PredefinedTypedef_binary:
-                case PredefinedTypedef_size:
                 case PredefinedTypedef_string:
                 case PredefinedTypedef_astring:
-                case PredefinedTypedef_wstring: throwInvalidModifier();
+                case PredefinedTypedef_wstring: 
+                {
+                  if (mSigned || mUnsigned || mChar || mShort || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
+                  break;
+                }
+                case PredefinedTypedef_pointer:
+                case PredefinedTypedef_size:    throwInvalidModifier();
               }
               return newBasicType;
             }
@@ -3001,7 +3018,6 @@ namespace zsLib
 
             while (hasMoreTokens()) {
               auto token = extractNextToken(what);
-              pretemplateTokens.push_back(token);
 
               if (token->isOpenBrace(TokenType_AngleBrace)) {
                 putBackToken(token);
@@ -3018,12 +3034,16 @@ namespace zsLib
 
                   TypedefTypePtr typedefObj;
                   auto foundType = findTypeOrCreateTypedef(context, templateTypeTokens, typedefObj);
+                  if (!foundType) {
+                    ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " did not find templated type");
+                  }
                   templateTypes.push_back(foundType);
                 }
 
                 popTokens();
                 break;
               }
+              pretemplateTokens.push_back(token);
             }
 
             popTokens();
@@ -3085,6 +3105,9 @@ namespace zsLib
                     replacementTypedef->copyContentsFrom(outCreatedTypedef);
                     replacementTypedef->mOriginalType = templatedStruct;
                     outCreatedTypedef = replacementTypedef;
+                    result = replacementTypedef;
+                  } else {
+                    result = templatedStruct;
                   }
                 }
               } else {
