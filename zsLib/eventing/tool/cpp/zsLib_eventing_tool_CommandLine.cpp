@@ -31,6 +31,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_CommandLine.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Monitor.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h>
 
 #include <zsLib/eventing/tool/ICompiler.h>
 #include <zsLib/eventing/tool/OutputStream.h>
@@ -49,6 +50,46 @@ namespace zsLib
     {
       namespace internal
       {
+        ZS_DECLARE_CLASS_PTR(IDLTargets);
+
+        class IDLTargets
+        {
+        public:
+          //-------------------------------------------------------------------
+          static void installIDLTarget(IIDLCompilerTargetPtr target)
+          {
+            auto pThis = singleton();
+            if (!pThis) return;
+
+            pThis->mTargets[target->targetKeyword()] = target;
+          }
+
+          //-------------------------------------------------------------------
+          static IDLTargetsPtr singleton()
+          {
+            static SingletonLazySharedPtr<IDLTargets> singleton(make_shared<IDLTargets>());
+            return singleton.singleton();
+          }
+
+          //-------------------------------------------------------------------
+          static void getTargets(ICompilerTypes::IDLCompilerTargetMap &targets)
+          {
+            auto pThis = singleton();
+            if (!pThis) return;
+
+            targets = pThis->mTargets;
+          }
+
+        private:
+          ICompilerTypes::IDLCompilerTargetMap mTargets;
+        };
+
+        //---------------------------------------------------------------------
+        void installIDLTarget(IIDLCompilerTargetPtr target)
+        {
+          if (!target) return;
+          IDLTargets::installIDLTarget(target);
+        }
       }
 
       //-----------------------------------------------------------------------
@@ -107,6 +148,9 @@ namespace zsLib
       //-----------------------------------------------------------------------
       void ICommandLine::outputHelp()
       {
+        ICompilerTypes::IDLCompilerTargetMap targets;
+        internal::IDLTargets::getTargets(targets);
+
         output() <<
           " -?\n"
           " -h\n"
@@ -116,9 +160,18 @@ namespace zsLib
           " -c            config_file_name          - input event provider json configuration file.\n"
           " -s            source_file_name_1 ... n  - input C/C++ source file.\n"
           " -o            output_name ... n         - output name.\n"
-          " -idl          idl_target_output         - one of the following values:\n"
-          "                                           cx - C++/CX UWP wrapper\n"
-          "                                           objc - Objective-C\n"
+          " -idl          idl_target_output_1 ... n - the following values:\n";
+
+          for (auto iter = targets.begin(); iter != targets.end(); ++iter)
+          {
+            auto target = (*iter).second;
+            output() <<
+              "                                           " << target->targetKeyword() << " - " << target->targetKeywordHelp() << "\n";
+          }
+
+          output() <<
+          "                                           cx - Generate C++/CX UWP wrapper\n"
+          "                                           objc - Generate Objective-C wrapper\n"
           "                                           android - Java on Android\n"
           " -author       \"John Q Public\"           - manifest author.\n"
           " -monitor                                - monitor for remote events\n"
@@ -169,6 +222,9 @@ namespace zsLib
       {
         zsLib::IHelper::setup();
         zsLib::ISettings::applyDefaults();
+
+        internal::IDLCompiler::installDefaultTargets();
+
         int result = 0;
 
         try
@@ -216,6 +272,9 @@ namespace zsLib
                                  bool &outDidOutputHelp
                                  ) throw (InvalidArgument)
       {
+        ICompilerTypes::IDLCompilerTargetMap idlTargets;
+        internal::IDLTargets::getTargets(idlTargets);
+
         MonitorInfo monitorInfo;
         ICompilerTypes::Config config;
 
@@ -245,16 +304,9 @@ namespace zsLib
             switch (flag)
             {
               case ICommandLine::Flag_Source:
-              {
-                flag = ICommandLine::Flag_None;
-                break;
-              }
               case ICommandLine::Flag_MonitorJMAN:
-              {
-                flag = ICommandLine::Flag_None;
-                break;
-              }
               case ICommandLine::Flag_MonitorProvider:
+              case ICommandLine::Flag_IDL:
               {
                 flag = ICommandLine::Flag_None;
                 break;
@@ -290,7 +342,7 @@ namespace zsLib
               case ICommandLine::Flag_Source:           goto process_flag;
               case ICommandLine::Flag_OutputName:       goto process_flag;
               case ICommandLine::Flag_Author:           goto process_flag;
-              case ICommandLine::Flag_IDL:          goto process_flag;
+              case ICommandLine::Flag_IDL:              goto process_flag;
               case ICommandLine::Flag_Monitor:          {
                 monitorInfo.mMonitor = true;
                 goto processed_flag;
@@ -334,12 +386,12 @@ namespace zsLib
               }
               case ICommandLine::Flag_IDL: {
                 config.mMode = ICompilerTypes::Mode_IDL;
-                try {
-                  config.mIDLOutput = ICompilerTypes::toIDLOutput(arg);
-                } catch (const InvalidArgument &) {
-                  ZS_THROW_INVALID_ARGUMENT(String("IDL mode is not understood: ") + arg);
+                auto found = idlTargets.find(arg);
+                if (found == idlTargets.end()) {
+                  ZS_THROW_INVALID_ARGUMENT(String("IDL target not understood: ") + arg);
                 }
-                goto processed_flag;
+                config.mIDLOutputs[(*found).first] = (*found).second;
+                goto process_flag;  // process next source file in the list (maintain same flag)
               }
               case ICommandLine::Flag_MonitorPort: {
                 try {

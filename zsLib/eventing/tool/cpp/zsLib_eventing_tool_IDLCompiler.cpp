@@ -64,6 +64,10 @@ namespace zsLib
 
       namespace internal
       {
+        ZS_DECLARE_STRUCT_PTR(GenerateStructHeader);
+        ZS_DECLARE_STRUCT_PTR(GenerateStructImplHeader);
+        ZS_DECLARE_STRUCT_PTR(GenerateStructImplCpp);
+
         ZS_DECLARE_TYPEDEF_PTR(IDLCompiler::Token, Token);
         typedef IDLCompiler::TokenList TokenList;
 
@@ -898,10 +902,12 @@ namespace zsLib
             String pathStr = mConfig.mOutputName;
             pathStr.trimRight("/\\");
             pathStr += "/";
-            writeBinary(fixRelativeFilePath(pathStr, String("types.h")), generateTypesHeader());
-            outputStructsHeaders(pathStr);
-            outputStructsImplHeaders(pathStr);
-            outputStructsImplCpp(pathStr);
+
+            for (auto iter = mConfig.mIDLOutputs.begin(); iter != mConfig.mIDLOutputs.end(); ++iter)
+            {
+              auto target = (*iter).second;
+              target->targetOutput(pathStr, mConfig);
+            }
           }
         }
 
@@ -3145,6 +3151,13 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
+        #pragma mark GenerateTypesHeader
+        #pragma mark
+
         struct GenerateTypesHeader : public IDLCompiler
         {
           //-------------------------------------------------------------------
@@ -3170,7 +3183,9 @@ namespace zsLib
           //-------------------------------------------------------------------
           static void processTypesNamespace(
                                             std::stringstream &ss,
-                                            NamespacePtr namespaceObj
+                                            const String &inIndentStr,
+                                            NamespacePtr namespaceObj,
+                                            bool outputEnums
                                             )
           {
             if (!namespaceObj) return;
@@ -3178,7 +3193,7 @@ namespace zsLib
 
             int parentCount = 0;
             String initialIndentStr;
-            String indentStr;
+            String indentStr(inIndentStr);
 
             {
               auto parent = namespaceObj->getParent();
@@ -3210,27 +3225,29 @@ namespace zsLib
                 ss << "\n";
               }
               firstNamespace = false;
-              processTypesNamespace(ss, subNamespaceObj);
+              processTypesNamespace(ss, inIndentStr, subNamespaceObj, outputEnums);
             }
 
             bool firstEnum {true};
-            for (auto iter = namespaceObj->mEnums.begin(); iter != namespaceObj->mEnums.end(); ++iter)
-            {
-              auto enumObj = (*iter).second;
-              insertFirst(ss, firstEnum);
-              ss << indentStr << "enum " << enumObj->mName << " {\n";
-              for (auto iterValue = enumObj->mValues.begin(); iterValue != enumObj->mValues.end(); ++iterValue)
+            if (outputEnums) {
+              for (auto iter = namespaceObj->mEnums.begin(); iter != namespaceObj->mEnums.end(); ++iter)
               {
-                auto valueObj = (*iterValue);
-                ss << indentStr << "  " << enumObj->mName << "_" << valueObj->mName;
-                if (valueObj->mValue.hasData()) {
-                  ss << " = " << valueObj->mValue;
+                auto enumObj = (*iter).second;
+                insertFirst(ss, firstEnum);
+                ss << indentStr << "enum " << enumObj->mName << " {\n";
+                for (auto iterValue = enumObj->mValues.begin(); iterValue != enumObj->mValues.end(); ++iterValue)
+                {
+                  auto valueObj = (*iterValue);
+                  ss << indentStr << "  " << enumObj->mName << "_" << valueObj->mName;
+                  if (valueObj->mValue.hasData()) {
+                    ss << " = " << valueObj->mValue;
+                  }
+                  ss << ",\n";
                 }
-                ss << ",\n";
+                ss << indentStr << "};\n";
               }
-              ss << indentStr << "};\n";
+              insertLast(ss, firstEnum);
             }
-            insertLast(ss, firstEnum);
 
             bool firstStruct {firstEnum};
             for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter)
@@ -3254,33 +3271,65 @@ namespace zsLib
 
 
         //---------------------------------------------------------------------
-        SecureByteBlockPtr IDLCompiler::generateTypesHeader() const throw (Failure)
-        {
-          std::stringstream ss;
-
-          const ProjectPtr &project = mConfig.mProject;
-          if (!project) return SecureByteBlockPtr();
-          if (!project->mGlobal) return SecureByteBlockPtr();
-
-          ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
-          ss << "#pragma once\n\n";
-          ss << "#include <stdint.h>\n";
-          ss << "#include <zsLib/types.h>\n";
-          ss << "#include <zsLib/String.h>\n\n";
-          ss << "namespace wrapper {\n";
-          ss << "  using zsLib::String;\n\n";
-
-          GenerateTypesHeader::processTypesNamespace(ss, project->mGlobal);
-
-          ss << "} // namespace wrapper\n\n";
-
-          return UseHelper::convertToBuffer(ss.str());
-        }
-
         //---------------------------------------------------------------------
-        struct GenerateStructHeader : public IDLCompiler
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
+        #pragma mark GenerateStructHeader
+        #pragma mark
+
+        struct GenerateStructHeader : public IIDLCompilerTarget,
+                                      public IDLCompiler
         {
           typedef std::set<String> StringSet;
+
+          //-------------------------------------------------------------------
+          GenerateStructHeader() : IDLCompiler(Noop{})
+          {
+          }
+
+          //-------------------------------------------------------------------
+          static GenerateStructHeaderPtr create()
+          {
+            return make_shared<GenerateStructHeader>();
+          }
+
+          //---------------------------------------------------------------------
+          static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure)
+          {
+            std::stringstream ss;
+
+            if (!project) return SecureByteBlockPtr();
+            if (!project->mGlobal) return SecureByteBlockPtr();
+
+            ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
+            ss << "#pragma once\n\n";
+            ss << "#include <stdint.h>\n";
+            ss << "#include <list>\n";
+            ss << "#include <set>\n";
+            ss << "#include <map>\n";
+            ss << "#include <zsLib/types.h>\n";
+            ss << "#include <zsLib/String.h>\n";
+            ss << "#include <zsLib/Promise.h>\n";
+            ss << "\n";
+            ss << "namespace wrapper {\n";
+            ss << "  using ::zsLib::String;\n";
+            ss << "  using ::zsLib::Promise;\n";
+            ss << "  using ::zsLib::PromisePtr;\n";
+            ss << "  using ::zsLib::PromiseWith;\n";
+            ss << "  using ::std::shared_ptr;\n";
+            ss << "  using ::std::weak_ptr;\n";
+            ss << "  using ::std::list;\n";
+            ss << "  using ::std::set;\n";
+            ss << "  using ::std::map;\n";
+            ss << "\n";
+
+            GenerateTypesHeader::processTypesNamespace(ss, String(), project->mGlobal, true);
+
+            ss << "} // namespace wrapper\n\n";
+
+            return UseHelper::convertToBuffer(ss.str());
+          }
 
           //-------------------------------------------------------------------
           static String getStructFileName(StructPtr structObj)
@@ -3385,7 +3434,7 @@ namespace zsLib
                 if (structType->mGenerics.size() > 0) return String();
                 if (structType->hasModifier(Modifier_Special)) {
                   String specialName = structType->getPathName();
-                  if ("::zs::Promise" == specialName) return "::zsLib::PromisePtr";
+                  if ("::zs::Promise" == specialName) return "PromisePtr";
                   if ("::zs::exceptions::Exception" == specialName) return "::zsLib::Exception";
                   if ("::zs::exceptions::InvalidParameters" == specialName) return "::zsLib::Exceptions::InvalidArgument";
                   if ("::zs::exceptions::InvalidState" == specialName) return "::zsLib::Exceptions::BadState";
@@ -3418,10 +3467,10 @@ namespace zsLib
                     if (parentStruct) {
                       if (parentStruct->hasModifier(Modifier_Special)) {
                         specialName = parentStruct->getPathName();
-                        if ("::std::set" == specialName) templatedTypeStr = "::std::shared_ptr< ::std::set< ";
-                        if ("::std::list" == specialName) templatedTypeStr = "::std::shared_ptr< ::std::list< ";
-                        if ("::std::map" == specialName) templatedTypeStr = "::std::shared_ptr< ::std::map< ";
-                        if ("::zs::PromiseWith" == specialName) templatedTypeStr = "::std::shared_ptr< ::zsLib::PromiseWith< ";
+                        if ("::std::set" == specialName) templatedTypeStr = "shared_ptr< set< ";
+                        if ("::std::list" == specialName) templatedTypeStr = "shared_ptr< list< ";
+                        if ("::std::map" == specialName) templatedTypeStr = "shared_ptr< map< ";
+                        if ("::zs::PromiseWith" == specialName) templatedTypeStr = "shared_ptr< PromiseWith< ";
                         specialTemplate = templatedTypeStr.hasData();
                       }
                     }
@@ -3447,7 +3496,7 @@ namespace zsLib
             return String();
           }
 
-          //---------------------------------------------------------------------
+          //-------------------------------------------------------------------
           static void generateStruct(
                                      StructPtr structObj,
                                      String indentStr,
@@ -3548,41 +3597,8 @@ namespace zsLib
 
             if (outputSubTypes) ss << "\n";
 
+            ss << indentStr << "static " << structObj->mName << "Ptr wrapper_create();\n";
             ss << indentStr << "virtual ~" << structObj->mName << "() {}\n\n";
-
-            ss << indentStr << "struct WrapperFactory\n";
-            ss << indentStr << "{\n";
-
-            bool foundConstructor = false;
-            for (auto iterMethods = structObj->mMethods.begin(); iterMethods != structObj->mMethods.end(); ++iterMethods)
-            {
-              auto methodObj = (*iterMethods);
-              if (!methodObj->hasModifier(Modifier_Method_Ctor)) continue;
-
-              ss << indentStr << "  static " << structObj->mName << "Ptr create(";
-              if (methodObj->mArguments.size() > 1) ss << "\n" << indentStr << "    ";
-              bool firstArgument = true;
-              for (auto iterParams = methodObj->mArguments.begin(); iterParams != methodObj->mArguments.end(); ++iterParams)
-              {
-                auto argument = (*iterParams);
-                if (!firstArgument) {
-                  ss << ",\n";
-                  ss << indentStr << "    ";
-                }
-                firstArgument = false;
-
-                String typeStr = getWrapperTypeString(argument->hasModifier(Modifier_Optional), argument->mType);
-                ss << typeStr << " " << argument->mName;
-              }
-              if (methodObj->mArguments.size() > 1) ss << "\n" << indentStr << "    ";
-              ss << ");\n";
-
-              foundConstructor = true;
-            }
-            if (!foundConstructor) {
-              ss << indentStr << "  static " << structObj->mName << "Ptr create();\n";
-            }
-            ss << indentStr << "};\n";
 
             for (auto iterStructs = structObj->mStructs.begin(); iterStructs != structObj->mStructs.end(); ++iterStructs)
             {
@@ -3604,21 +3620,48 @@ namespace zsLib
                   observerSS << "\n";
                   observerSS << indentStr << "ZS_DECLARE_STRUCT_PTR(WrapperObserver);\n";
                   observerSS << "\n";
-                  observerSS << indentStr << "::zsLib::Lock wrapper_observerLock;\n";
-                  observerSS << indentStr << "WrapperObserverWeakPtr wrapper_observer;\n";
-                  observerSS << "\n";
                   observerSS << indentStr << "struct WrapperObserver\n";
                   observerSS << indentStr << "{\n";
                   observerMethodsSS << indentStr << "};\n\n";
-                  observerMethodsSS << indentStr << "virtual void wrapper_onObserverInstalled() = 0;\n";
-                  observerMethodsSS << indentStr << "void wrapper_installObserver(WrapperObserverPtr observer) { ::zsLib::AutoLock lock(wrapper_observerLock); wrapper_observer = observer; wrapper_onObserverInstalled(); }\n\n";
+                  observerMethodsSS << indentStr << "::zsLib::Lock wrapper_observerLock;\n";
+                  observerMethodsSS << indentStr << "ZS_DECLARE_TYPEDEF_PTR(::std::list<WrapperObserverWeakPtr>, WrapperObserverWeakList);\n";
+                  observerMethodsSS << indentStr << "WrapperObserverWeakListPtr wrapper_observers {::std::make_shared<WrapperObserverWeakList>()};\n";
+                  observerMethodsSS << "\n";
+                  observerMethodsSS << indentStr << "virtual void wrapper_onObserverCountChanged(size_t count) = 0;\n";
+                  observerMethodsSS << "\n";
+                  observerMethodsSS << indentStr << "void wrapper_installObserver(WrapperObserverPtr observer)\n";
+                  observerMethodsSS << indentStr << "{\n";
+                  observerMethodsSS << indentStr << "  size_t count {};\n";
+                  observerMethodsSS << indentStr << "  {\n";
+                  observerMethodsSS << indentStr << "    ::zsLib::AutoLock lock(wrapper_observerLock);\n";
+                  observerMethodsSS << indentStr << "    WrapperObserverWeakListPtr oldList;\n";
+                  observerMethodsSS << indentStr << "    WrapperObserverWeakListPtr newList(make_shared<WrapperObserverWeakList>());\n";
+                  observerMethodsSS << indentStr << "    if (observer) { newList->push_back(observer) };\n";
+                  observerMethodsSS << indentStr << "    for (auto iter = oldList->begin(); iter != oldList->end(); ++iter) {\n";
+                  observerMethodsSS << indentStr << "      WrapperObserverPtr existingObserver = (*iter).lock();\n";
+                  observerMethodsSS << indentStr << "      if (observer) { newList->push_back(existingObserver); }\n";
+                  observerMethodsSS << indentStr << "    }\n";
+                  observerMethodsSS << indentStr << "    count = newList->size();\n";
+                  observerMethodsSS << indentStr << "    wrapper_observers = newList;\n";
+                  observerMethodsSS << indentStr << "  }\n";
+                  observerMethodsSS << indentStr << "  wrapper_onObserverCountChanged(count);\n";
+                  observerMethodsSS << indentStr << "}\n";
+                  observerMethodsSS << indentStr << "void wrapper_observerClean() { wrapper_observerInstall(WrapperObserverPtr()); }\n\n";
                   foundEventHandler = true;
                 }
                 observerSS << indentStr << "  virtual void " << methodObj->mName << "(";
                 observerMethodsSS << indentStr << "void " << methodObj->mName << "(";
 
                 std::stringstream observerMethodsParamsSS;
-                observerMethodsParamsSS << ") { WrapperObserverPtr observer; {  ::zsLib::AutoLock lock(wrapper_observerLock); observer = wrapper_observer.lock(); } if (!observer) return; observer->" << methodObj->mName << "(";
+                observerMethodsParamsSS << ")\n";
+                observerMethodsParamsSS << indentStr << "{\n";
+                observerMethodsParamsSS << indentStr << "  WrapperObserverWeakList observers;\n";
+                observerMethodsParamsSS << indentStr << "  { ::zsLib::AutoLock lock(wrapper_observerLock); observers = wrapper_observers; }\n";
+                observerMethodsParamsSS << indentStr << "  bool clean {false};\n";
+                observerMethodsParamsSS << indentStr << "  for (auto iter = observers->begin(); iter != observers->end(); ++iter) {\n";
+                observerMethodsParamsSS << indentStr << "    auto observer = (*iter).lock();\n";
+                observerMethodsParamsSS << indentStr << "    if (!observer) { clean = true; continue; }\n";
+                observerMethodsParamsSS << indentStr << "    observer->" << methodObj->mName << "(";
 
                 {
                   bool firstArgument = true;
@@ -3639,8 +3682,13 @@ namespace zsLib
                   }
                 }
                 observerSS << ") = 0;\n";
+
+                observerMethodsParamsSS << ");\n";
+                observerMethodsParamsSS << indentStr << "  }\n";
+                observerMethodsParamsSS << indentStr << "  if (clean) wrapper_observerClean();\n";
+                observerMethodsParamsSS << indentStr << "}\n";
+
                 observerMethodsSS << observerMethodsParamsSS.str();
-                observerMethodsSS << "); }\n";
                 continue;
               }
 
@@ -3675,8 +3723,6 @@ namespace zsLib
 
               if (methodObj->mArguments.size() > 1) ss << "\n" << indentStr << "  ";
               ss << ") = 0;\n";
-
-              foundConstructor = true;
             }
 
             bool isDictionary = structObj->hasModifier(Modifier_Struct_Dictionary);
@@ -3729,109 +3775,193 @@ namespace zsLib
             indentStr = currentIdentStr;
             ss << indentStr << "};\n";
           }
+
+          //-------------------------------------------------------------------
+          //-------------------------------------------------------------------
+          //-------------------------------------------------------------------
+          //-------------------------------------------------------------------
+          #pragma mark
+          #pragma mark GenerateStructHeader::IIDLCompilerTarget
+          #pragma mark
+
+          //-------------------------------------------------------------------
+          virtual String targetKeyword() override
+          {
+            return String("wrapper");
+          }
+
+          //-------------------------------------------------------------------
+          virtual String targetKeywordHelp() override
+          {
+            return String("C++ wrapper API");
+          }
+
+          //-------------------------------------------------------------------
+          virtual void targetOutput(
+                                    const String &inPathStr,
+                                    const ICompilerTypes::Config &config
+                                    ) throw (Failure) override
+          {
+            typedef std::stack<NamespacePtr> NamespaceStack;
+            typedef std::stack<String> StringList;
+
+            String pathStr(fixRelativeFilePath(inPathStr, String("wrapper")));
+
+            try {
+              UseHelper::mkdir(pathStr);
+            } catch (const StdError &e) {
+              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Failed to create path \"" + pathStr + "\": " + " error=" + string(e.result()) + ", reason=" + e.message());
+            }
+            pathStr += "/";
+            pathStr = fixRelativeFilePath(pathStr, String("generated"));
+            try {
+              UseHelper::mkdir(pathStr);
+            } catch (const StdError &e) {
+              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Failed to create path \"" + pathStr + "\": " + " error=" + string(e.result()) + ", reason=" + e.message());
+            }
+            pathStr += "/";
+
+            const ProjectPtr &project = config.mProject;
+            if (!project) return;
+            if (!project->mGlobal) return;
+
+            writeBinary(fixRelativeFilePath(pathStr, String("types.h")), generateTypesHeader(project));
+
+            NamespaceStack namespaceStack;
+
+            namespaceStack.push(project->mGlobal);
+
+            while (namespaceStack.size() > 0)
+            {
+              auto namespaceObj = namespaceStack.top();
+              namespaceStack.pop();
+              if (!namespaceObj) continue;
+              if (namespaceObj->hasModifier(Modifier_Special)) continue;
+
+              for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter)
+              {
+                auto subNamespaceObj = (*iter).second;
+                namespaceStack.push(subNamespaceObj);
+              }
+
+              for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter)
+              {
+                auto structObj = (*iter).second;
+                if (structObj->hasModifier(Modifier_Special)) continue;
+                if (structObj->mGenerics.size() > 0) continue;
+
+                String filename = GenerateStructHeader::getStructFileName(structObj);
+
+                String outputname = fixRelativeFilePath(pathStr, filename);
+
+                std::stringstream ss;
+                std::stringstream includeSS;
+                std::stringstream structSS;
+                StringList endStrings;
+
+                ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
+                ss << "#pragma once\n\n";
+                ss << "#include \"types.h\"\n";
+
+                structSS << "namespace wrapper {\n";
+
+                NamespaceStack parentStack;
+                auto parent = structObj->getParent();
+                while (parent) {
+                  auto parentNamespace = parent->toNamespace();
+                  if (parentNamespace) {
+                    parentStack.push(parentNamespace);
+                  }
+                  parent = parent->getParent();
+                }
+
+                String indentStr = "  ";
+
+                while (parentStack.size() > 0)
+                {
+                  auto parentNamespace = parentStack.top();
+                  parentStack.pop();
+
+                  if (parentNamespace->mName.hasData()) {
+                    structSS << indentStr << "namespace " << parentNamespace->mName << " {\n";
+                    {
+                      std::stringstream endSS;
+                      endSS << indentStr << "} // " << parentNamespace->mName << "\n";
+                      endStrings.push(endSS.str());
+                    }
+
+                    indentStr += "  ";
+                  }
+                }
+
+                {
+                  GenerateStructHeader::StringSet processedHeaders;
+                  GenerateStructHeader::generateStruct(structObj, indentStr, processedHeaders, includeSS, structSS);
+                }
+
+                ss << includeSS.str();
+                ss << "\n";
+                ss << structSS.str();
+                ss << "\n";
+                while (endStrings.size() > 0) {
+                  ss << endStrings.top();
+                  endStrings.pop();
+                }
+                ss << "} // namespace wrapper\n\n";
+
+                writeBinary(outputname, UseHelper::convertToBuffer(ss.str()));
+              }
+            }
+          }
+
         };
 
         //---------------------------------------------------------------------
-        void IDLCompiler::outputStructsHeaders(const String &pathStr) const throw (Failure)
-        {
-          typedef std::stack<NamespacePtr> NamespaceStack;
-          typedef std::stack<String> StringList;
-
-          const ProjectPtr &project = mConfig.mProject;
-          if (!project) return;
-          if (!project->mGlobal) return;
-
-          NamespaceStack namespaceStack;
-
-          namespaceStack.push(project->mGlobal);
-
-          while (namespaceStack.size() > 0)
-          {
-            auto namespaceObj = namespaceStack.top();
-            namespaceStack.pop();
-            if (!namespaceObj) continue;
-            if (namespaceObj->hasModifier(Modifier_Special)) continue;
-
-            for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter)
-            {
-              auto subNamespaceObj = (*iter).second;
-              namespaceStack.push(subNamespaceObj);
-            }
-
-            for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter)
-            {
-              auto structObj = (*iter).second;
-              if (structObj->hasModifier(Modifier_Special)) continue;
-              if (structObj->mGenerics.size() > 0) continue;
-
-              String filename = GenerateStructHeader::getStructFileName(structObj);
-
-              String outputname = fixRelativeFilePath(pathStr, filename);
-
-              std::stringstream ss;
-              std::stringstream includeSS;
-              std::stringstream structSS;
-              StringList endStrings;
-
-              ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
-              ss << "#pragma once\n\n";
-              ss << "#include \"types.h\"\n";
-
-              structSS << "namespace wrapper {\n";
-
-              NamespaceStack parentStack;
-              auto parent = structObj->getParent();
-              while (parent) {
-                auto parentNamespace = parent->toNamespace();
-                if (parentNamespace) {
-                  parentStack.push(parentNamespace);
-                }
-                parent = parent->getParent();
-              }
-
-              String indentStr = "  ";
-
-              while (parentStack.size() > 0)
-              {
-                auto parentNamespace = parentStack.top();
-                parentStack.pop();
-
-                if (parentNamespace->mName.hasData()) {
-                  structSS << indentStr << "namespace " << parentNamespace->mName << " {\n";
-                  {
-                    std::stringstream endSS;
-                    endSS << indentStr << "} // " << parentNamespace->mName << "\n";
-                    endStrings.push(endSS.str());
-                  }
-
-                  indentStr += "  ";
-                }
-              }
-
-              {
-                GenerateStructHeader::StringSet processedHeaders;
-                GenerateStructHeader::generateStruct(structObj, indentStr, processedHeaders, includeSS, structSS);
-              }
-
-              ss << includeSS.str();
-              ss << "\n";
-              ss << structSS.str();
-              ss << "\n";
-              while (endStrings.size() > 0) {
-                ss << endStrings.top();
-                endStrings.pop();
-              }
-              ss << "} // namespace wrapper\n\n";
-
-              writeBinary(outputname, UseHelper::convertToBuffer(ss.str()));
-            }
-          }
-        }
-
         //---------------------------------------------------------------------
-        struct GenerateStructImplHeader : public IDLCompiler
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
+        #pragma mark GenerateStructImplHeader
+        #pragma mark
+
+        struct GenerateStructImplHeader : public IIDLCompilerTarget,
+                                          public IDLCompiler
         {
           typedef std::set<String> StringSet;
+
+          //-------------------------------------------------------------------
+          GenerateStructImplHeader() : IDLCompiler(Noop{})
+          {
+          }
+
+          //-------------------------------------------------------------------
+          static GenerateStructImplHeaderPtr create()
+          {
+            return make_shared<GenerateStructImplHeader>();
+          }
+
+
+          //---------------------------------------------------------------------
+          static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure)
+          {
+            std::stringstream ss;
+
+            if (!project) return SecureByteBlockPtr();
+            if (!project->mGlobal) return SecureByteBlockPtr();
+
+            ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
+            ss << "#pragma once\n\n";
+            ss << "#include \"generated/types.h\"\n\n";
+            ss << "namespace wrapper {\n";
+            ss << "  namespace impl {\n\n";
+
+            GenerateTypesHeader::processTypesNamespace(ss, String("  "), project->mGlobal, false);
+
+            ss << "  } // namespace impl\n";
+            ss << "} // namespace wrapper\n\n";
+
+            return UseHelper::convertToBuffer(ss.str());
+          }
 
           //-------------------------------------------------------------------
           static String getStructFileName(StructPtr structObj)
@@ -4009,120 +4139,163 @@ namespace zsLib
 
             if (foundEventHandler) {
               ss << "\n";
-              ss << indentStr << "virtual void wrapper_onObserverInstalled() override;\n";
+              ss << indentStr << "virtual void wrapper_onObserverCountChanged(size_t count) override;\n";
             }
 
             indentStr = currentIdentStr;
             ss << indentStr << "};\n";
           }
+
+          //-------------------------------------------------------------------
+          //-------------------------------------------------------------------
+          //-------------------------------------------------------------------
+          //-------------------------------------------------------------------
+          #pragma mark
+          #pragma mark GenerateStructImplHeader::IIDLCompilerTarget
+          #pragma mark
+
+          //-------------------------------------------------------------------
+          virtual String targetKeyword() override
+          {
+            return String("implheader");
+          }
+
+          //-------------------------------------------------------------------
+          virtual String targetKeywordHelp() override
+          {
+            return String("C++ implementation wrapper header template");
+          }
+
+          //-------------------------------------------------------------------
+          virtual void targetOutput(
+                                   const String &pathStr,
+                                   const ICompilerTypes::Config &config
+                                   ) throw (Failure) override
+          {
+            typedef std::stack<NamespacePtr> NamespaceStack;
+            typedef std::stack<String> StringList;
+
+            const ProjectPtr &project = config.mProject;
+            if (!project) return;
+            if (!project->mGlobal) return;
+
+            writeBinary(fixRelativeFilePath(pathStr, String("types.h")), generateTypesHeader(project));
+
+            NamespaceStack namespaceStack;
+
+            namespaceStack.push(project->mGlobal);
+
+            while (namespaceStack.size() > 0)
+            {
+              auto namespaceObj = namespaceStack.top();
+              namespaceStack.pop();
+              if (!namespaceObj) continue;
+              if (namespaceObj->hasModifier(Modifier_Special)) continue;
+
+              for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter)
+              {
+                auto subNamespaceObj = (*iter).second;
+                namespaceStack.push(subNamespaceObj);
+              }
+
+              for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter)
+              {
+                auto structObj = (*iter).second;
+                if (structObj->hasModifier(Modifier_Special)) continue;
+                if (structObj->mGenerics.size() > 0) continue;
+
+                String filename = GenerateStructImplHeader::getStructFileName(structObj);
+
+                String outputname = fixRelativeFilePath(pathStr, filename);
+
+                std::stringstream ss;
+                std::stringstream includeSS;
+                std::stringstream structSS;
+                StringList endStrings;
+
+                ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
+                ss << "#pragma once\n\n";
+                ss << "#include \"types.h\"\n";
+
+                includeSS << "#include \"generated/" << GenerateStructHeader::getStructFileName(structObj) << "\"\n\n";
+
+                structSS << "namespace wrapper {\n";
+                structSS << "  namespace impl {\n";
+
+                NamespaceStack parentStack;
+                auto parent = structObj->getParent();
+                while (parent) {
+                  auto parentNamespace = parent->toNamespace();
+                  if (parentNamespace) {
+                    parentStack.push(parentNamespace);
+                  }
+                  parent = parent->getParent();
+                }
+
+                String indentStr = "    ";
+
+                while (parentStack.size() > 0)
+                {
+                  auto parentNamespace = parentStack.top();
+                  parentStack.pop();
+
+                  if (parentNamespace->mName.hasData()) {
+                    structSS << indentStr << "namespace " << parentNamespace->mName << " {\n";
+                    {
+                      std::stringstream endSS;
+                      endSS << indentStr << "} // " << parentNamespace->mName << "\n";
+                      endStrings.push(endSS.str());
+                    }
+
+                    indentStr += "  ";
+                  }
+                }
+
+                {
+                  GenerateStructImplHeader::StringSet processedHeaders;
+                  GenerateStructImplHeader::generateStructHeaderImpl(structObj, indentStr, processedHeaders, structSS);
+                }
+
+                ss << includeSS.str();
+                ss << "\n";
+                ss << structSS.str();
+                ss << "\n";
+                while (endStrings.size() > 0) {
+                  ss << endStrings.top();
+                  endStrings.pop();
+                }
+                ss << "  } // namespace impl\n";
+                ss << "} // namespace wrapper\n\n";
+
+                writeBinary(outputname, UseHelper::convertToBuffer(ss.str()));
+              }
+            }
+          }
         };
 
         //---------------------------------------------------------------------
-        void IDLCompiler::outputStructsImplHeaders(const String &pathStr) const throw (Failure)
-        {
-          typedef std::stack<NamespacePtr> NamespaceStack;
-          typedef std::stack<String> StringList;
-
-          const ProjectPtr &project = mConfig.mProject;
-          if (!project) return;
-          if (!project->mGlobal) return;
-
-          NamespaceStack namespaceStack;
-
-          namespaceStack.push(project->mGlobal);
-
-          while (namespaceStack.size() > 0)
-          {
-            auto namespaceObj = namespaceStack.top();
-            namespaceStack.pop();
-            if (!namespaceObj) continue;
-            if (namespaceObj->hasModifier(Modifier_Special)) continue;
-
-            for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter)
-            {
-              auto subNamespaceObj = (*iter).second;
-              namespaceStack.push(subNamespaceObj);
-            }
-
-            for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter)
-            {
-              auto structObj = (*iter).second;
-              if (structObj->hasModifier(Modifier_Special)) continue;
-              if (structObj->mGenerics.size() > 0) continue;
-
-              String filename = GenerateStructImplHeader::getStructFileName(structObj);
-
-              String outputname = fixRelativeFilePath(pathStr, filename);
-
-              std::stringstream ss;
-              std::stringstream includeSS;
-              std::stringstream structSS;
-              StringList endStrings;
-
-              ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
-              ss << "#pragma once\n\n";
-              ss << "#include \"generated/types.h\"\n";
-
-              includeSS << "#include \"generated/" << GenerateStructHeader::getStructFileName(structObj) << "\"\n";
-
-              structSS << "namespace wrapper {\n";
-              structSS << "  namespace impl {\n";
-
-              NamespaceStack parentStack;
-              auto parent = structObj->getParent();
-              while (parent) {
-                auto parentNamespace = parent->toNamespace();
-                if (parentNamespace) {
-                  parentStack.push(parentNamespace);
-                }
-                parent = parent->getParent();
-              }
-
-              String indentStr = "    ";
-
-              while (parentStack.size() > 0)
-              {
-                auto parentNamespace = parentStack.top();
-                parentStack.pop();
-
-                if (parentNamespace->mName.hasData()) {
-                  structSS << indentStr << "namespace " << parentNamespace->mName << " {\n";
-                  {
-                    std::stringstream endSS;
-                    endSS << indentStr << "} // " << parentNamespace->mName << "\n";
-                    endStrings.push(endSS.str());
-                  }
-
-                  indentStr += "  ";
-                }
-              }
-
-              {
-                GenerateStructImplHeader::StringSet processedHeaders;
-                GenerateStructImplHeader::generateStructHeaderImpl(structObj, indentStr, processedHeaders, structSS);
-              }
-
-              ss << includeSS.str();
-              ss << "\n";
-              ss << structSS.str();
-              ss << "\n";
-              while (endStrings.size() > 0) {
-                ss << endStrings.top();
-                endStrings.pop();
-              }
-              ss << "  } // namespace impl\n";
-              ss << "} // namespace wrapper\n\n";
-
-              writeBinary(outputname, UseHelper::convertToBuffer(ss.str()));
-            }
-          }
-        }
-
-
         //---------------------------------------------------------------------
-        struct GenerateStructImplCpp : public IDLCompiler
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
+        #pragma mark GenerateStructImplCpp
+        #pragma mark
+
+        struct GenerateStructImplCpp : public IIDLCompilerTarget,
+                                       public IDLCompiler
         {
           typedef std::set<String> StringSet;
+
+          //-------------------------------------------------------------------
+          GenerateStructImplCpp() : IDLCompiler(Noop{})
+          {
+          }
+
+          //-------------------------------------------------------------------
+          static GenerateStructImplCppPtr create()
+          {
+            return make_shared<GenerateStructImplCpp>();
+          }
 
           //-------------------------------------------------------------------
           static String getStructFileName(StructPtr structObj)
@@ -4175,8 +4348,18 @@ namespace zsLib
           {
             String dashedLine = getDashedComment(String());
 
+            if (createConstructors) {
+              ss << dashedLine;
+              ss << "wrapper" << structObj->getPathName() << "Ptr " << "wrapper::" << structObj->getPathName() << "::wrapper_create()\n";
+              ss << "{\n";
+              ss << "  auto pThis = make_shared<wrapper::impl" << structObj->getPathName() << ">();\n";
+              ss << "  pThis->mThisWeak = pThis;\n";
+              ss << "  return pThis;\n";
+              ss << "}\n\n";
+            }
+
             // output relationships
-            {
+            if (!createConstructors) {
               for (auto iterRelations = structObj->mIsARelationships.begin(); iterRelations != structObj->mIsARelationships.end(); ++iterRelations)
               {
                 auto relatedObj = (*iterRelations).second;
@@ -4196,9 +4379,10 @@ namespace zsLib
               auto methodObj = (*iterMethods);
               bool isCtor = methodObj->hasModifier(Modifier_Method_Ctor);
               if (!createConstructors) {
-                if (isCtor) continue;
+                if ((isCtor) || (methodObj->hasModifier(Modifier_Method_Static))) continue;
+              } else {
+                if (!((isCtor) || (methodObj->hasModifier(Modifier_Method_Static)))) continue;
               }
-              if (methodObj->hasModifier(Modifier_Method_Static)) continue;
               if (methodObj->hasModifier(Modifier_Method_EventHandler)) {
                 foundEventHandler = true;
                 continue;
@@ -4238,101 +4422,45 @@ namespace zsLib
               ss << "}\n\n";
             }
 
-            if (createConstructors) {
-              for (auto iterMethods = structObj->mMethods.begin(); iterMethods != structObj->mMethods.end(); ++iterMethods)
+            if (!createConstructors) {
+              bool isDictionary = structObj->hasModifier(Modifier_Struct_Dictionary);
+              for (auto iterProperties = structObj->mProperties.begin(); iterProperties != structObj->mProperties.end(); ++iterProperties)
               {
-                auto methodObj = (*iterMethods);
-                bool isCtor = methodObj->hasModifier(Modifier_Method_Ctor);
-                bool isStatic = methodObj->hasModifier(Modifier_Method_Static);
+                auto propertyObj = (*iterProperties);
+                bool hasGetter = propertyObj->hasModifier(Modifier_Property_Getter);
+                bool hasSetter = propertyObj->hasModifier(Modifier_Property_Setter);
 
-                if ((!isCtor) && (!isStatic)) continue;
+                String typeStr = getWrapperTypeString(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType);
 
-                ss << dashedLine;
-                ss << getWrapperTypeString(methodObj->hasModifier(Modifier_Optional), methodObj->mResult);
-                ss << " wrapper" << structObj->getPathName() << "::";
-                if (isCtor) {
-                  ss << "WrapperFactory::create";
-                } else {
-                  ss << methodObj->mName;
-                }
-                ss << "(";
-                if (methodObj->mArguments.size() > 1) ss << "\n  ";
-
-                std::stringstream argsSS;
-
-                bool firstArgument = true;
-                for (auto iterParams = methodObj->mArguments.begin(); iterParams != methodObj->mArguments.end(); ++iterParams)
-                {
-                  auto argument = (*iterParams);
-                  if (!firstArgument) {
-                    ss << ",\n";
-                    ss << "  ";
-                    argsSS << ", ";
+                if (!isDictionary) {
+                  if (!((hasGetter) || (hasSetter))) {
+                    hasGetter = hasSetter = true;
                   }
-                  firstArgument = false;
+                }
 
-                  argsSS << argument->mName;
-                  String typeStr = getWrapperTypeString(argument->hasModifier(Modifier_Optional), argument->mType);
-                  ss << typeStr << " " << argument->mName;
+                if ((!hasGetter) && (!hasSetter)) continue;
+
+                if (hasGetter) {
+                  ss << dashedLine;
+                  ss << typeStr << " wrapper::impl" << structObj->getPathName() << "::get_" << propertyObj->mName << "()\n";
+                  ss << "{\n";
+                  ss << "}\n\n";
                 }
-                if (methodObj->mArguments.size() > 1) ss << "\n" << "  ";
-                ss << ")\n";
-                ss << "{\n";
-                if (isCtor) {
-                  ss << "  auto pThis = ::std::make_shared<wrapper::impl" << structObj->getPathName() << ">();\n";
-                  ss << "  pThis->mThisWeak = pThis;\n";
-                  ss << "  pThis->wrapper_init(" << argsSS.str() << ");\n";
-                  ss << "  return pThis;\n";
+                if (hasSetter) {
+                  ss << dashedLine;
+                  ss << "void wrapper::impl" << structObj->getPathName() << "::set_" << propertyObj->mName << "(" << typeStr << " value)\n";
+                  ss << "{\n";
+                  ss << "}\n\n";
                 }
-                ss << "}\n\n";
               }
-
+            } else {
               if (!foundCtor) {
                 ss << dashedLine;
                 ss << "void " << "wrapper::impl" << structObj->getPathName() << "::wrapper_init()\n";
                 ss << "{\n";
                 ss << "}\n\n";
-
-                ss << dashedLine;
-                ss << "wrapper" << structObj->getPathName() << "Ptr " << "wrapper::" << structObj->getPathName() << "::WrapperFactory::create()\n";
-                ss << "{\n";
-                ss << "  auto pThis = ::std::make_shared<wrapper::impl" << structObj->getPathName() << ">();\n";
-                ss << "  pThis->mThisWeak = pThis;\n";
-                ss << "  pThis->wrapper_init();\n";
-                ss << "  return pThis;\n";
-                ss << "}\n\n";
               }
-            }
-
-            bool isDictionary = structObj->hasModifier(Modifier_Struct_Dictionary);
-            for (auto iterProperties = structObj->mProperties.begin(); iterProperties != structObj->mProperties.end(); ++iterProperties)
-            {
-              auto propertyObj = (*iterProperties);
-              bool hasGetter = propertyObj->hasModifier(Modifier_Property_Getter);
-              bool hasSetter = propertyObj->hasModifier(Modifier_Property_Setter);
-
-              String typeStr = getWrapperTypeString(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType);
-
-              if (!isDictionary) {
-                if (!((hasGetter) || (hasSetter))) {
-                  hasGetter = hasSetter = true;
-                }
-              }
-
-              if ((!hasGetter) && (!hasSetter)) continue;
-
-              if (hasGetter) {
-                ss << dashedLine;
-                ss << typeStr << " wrapper::impl" << structObj->getPathName() << "::get_" << propertyObj->mName << "()\n";
-                ss << "{\n";
-                ss << "}\n\n";
-              }
-              if (hasSetter) {
-                ss << dashedLine;
-                ss << "void wrapper::impl" << structObj->getPathName() << "::set_" << propertyObj->mName << "(" << typeStr << " value)\n";
-                ss << "{\n";
-                ss << "}\n\n";
-              }
+              outputMethods(structObj, ss, false, foundEventHandler);
             }
           }
 
@@ -4371,75 +4499,114 @@ namespace zsLib
 
             if (foundEventHandler) {
               ss << dashedLine;
-              ss << "void wrapper::impl" << structObj->getPathName() << "::wrapper_onObserverInstalled()\n";
+              ss << "void wrapper::impl" << structObj->getPathName() << "::wrapper_onObserverCountChanged(size_t count)\n";
               ss << "{\n";
               ss << "}\n\n";
+            }
+          }
+
+          //-------------------------------------------------------------------
+          //-------------------------------------------------------------------
+          //-------------------------------------------------------------------
+          //-------------------------------------------------------------------
+          #pragma mark
+          #pragma mark GenerateStructImplCpp::IIDLCompilerTarget
+          #pragma mark
+
+          //-------------------------------------------------------------------
+          virtual String targetKeyword() override
+          {
+            return String("impl");
+          }
+
+          //-------------------------------------------------------------------
+          virtual String targetKeywordHelp() override
+          {
+            return String("C++ implementation wrapper template");
+          }
+
+          //-------------------------------------------------------------------
+          virtual void targetOutput(
+                                   const String &inPathStr,
+                                   const ICompilerTypes::Config &config
+                                   ) throw (Failure) override
+          {
+            typedef std::stack<NamespacePtr> NamespaceStack;
+            typedef std::stack<String> StringList;
+
+            String pathStr(fixRelativeFilePath(inPathStr, String("wrapper")));
+
+            try {
+              UseHelper::mkdir(pathStr);
+            } catch (const StdError &e) {
+              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Failed to create path \"" + pathStr + "\": " + " error=" + string(e.result()) + ", reason=" + e.message());
+            }
+            pathStr += "/";
+
+            {
+              auto header = GenerateStructImplHeader::create();
+              header->targetOutput(pathStr, config);
+            }
+
+            const ProjectPtr &project = config.mProject;
+            if (!project) return;
+            if (!project->mGlobal) return;
+
+            NamespaceStack namespaceStack;
+
+            namespaceStack.push(project->mGlobal);
+
+            while (namespaceStack.size() > 0)
+            {
+              auto namespaceObj = namespaceStack.top();
+              namespaceStack.pop();
+              if (!namespaceObj) continue;
+              if (namespaceObj->hasModifier(Modifier_Special)) continue;
+
+              for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter)
+              {
+                auto subNamespaceObj = (*iter).second;
+                namespaceStack.push(subNamespaceObj);
+              }
+
+              for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter)
+              {
+                auto structObj = (*iter).second;
+                if (structObj->hasModifier(Modifier_Special)) continue;
+                if (structObj->mGenerics.size() > 0) continue;
+
+                String filename = GenerateStructImplCpp::getStructFileName(structObj);
+
+                String outputname = fixRelativeFilePath(pathStr, filename);
+
+                std::stringstream ss;
+                std::stringstream includeSS;
+                std::stringstream structSS;
+
+                ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
+
+                includeSS << "#include \"" << GenerateStructImplHeader::getStructFileName(structObj) << "\"\n";
+
+                structSS << "using std::make_shared;\n";
+
+                {
+                  GenerateStructImplCpp::StringSet processedHeaders;
+                  GenerateStructImplCpp::generateStructCppImpl(structObj, processedHeaders, structSS);
+                }
+
+                ss << includeSS.str();
+                ss << "\n";
+                ss << structSS.str();
+                ss << "\n";
+
+                writeBinary(outputname, UseHelper::convertToBuffer(ss.str()));
+              }
             }
           }
         };
 
         //---------------------------------------------------------------------
-        void IDLCompiler::outputStructsImplCpp(const String &pathStr) const throw (Failure)
-        {
-          typedef std::stack<NamespacePtr> NamespaceStack;
-          typedef std::stack<String> StringList;
-
-          const ProjectPtr &project = mConfig.mProject;
-          if (!project) return;
-          if (!project->mGlobal) return;
-
-          NamespaceStack namespaceStack;
-
-          namespaceStack.push(project->mGlobal);
-
-          while (namespaceStack.size() > 0)
-          {
-            auto namespaceObj = namespaceStack.top();
-            namespaceStack.pop();
-            if (!namespaceObj) continue;
-            if (namespaceObj->hasModifier(Modifier_Special)) continue;
-
-            for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter)
-            {
-              auto subNamespaceObj = (*iter).second;
-              namespaceStack.push(subNamespaceObj);
-            }
-
-            for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter)
-            {
-              auto structObj = (*iter).second;
-              if (structObj->hasModifier(Modifier_Special)) continue;
-              if (structObj->mGenerics.size() > 0) continue;
-
-              String filename = GenerateStructImplCpp::getStructFileName(structObj);
-
-              String outputname = fixRelativeFilePath(pathStr, filename);
-
-              std::stringstream ss;
-              std::stringstream includeSS;
-              std::stringstream structSS;
-
-              ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
-
-              includeSS << "#include \"" << GenerateStructImplHeader::getStructFileName(structObj) << "\"\n";
-
-              {
-                GenerateStructImplCpp::StringSet processedHeaders;
-                GenerateStructImplCpp::generateStructCppImpl(structObj, processedHeaders, structSS);
-              }
-
-              ss << includeSS.str();
-              ss << "\n";
-              ss << structSS.str();
-              ss << "\n";
-
-              writeBinary(outputname, UseHelper::convertToBuffer(ss.str()));
-            }
-          }
-        }
-
-        //---------------------------------------------------------------------
-        void IDLCompiler::writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure)
+        void IDLCompiler::writeXML(const String &outputName, const DocumentPtr &doc) throw (Failure)
         {
           if (!doc) return;
           try {
@@ -4451,7 +4618,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::writeJSON(const String &outputName, const DocumentPtr &doc) const throw (Failure)
+        void IDLCompiler::writeJSON(const String &outputName, const DocumentPtr &doc) throw (Failure)
         {
           if (!doc) return;
           try {
@@ -4463,7 +4630,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::writeBinary(const String &outputName, const SecureByteBlockPtr &buffer) const throw (Failure)
+        void IDLCompiler::writeBinary(const String &outputName, const SecureByteBlockPtr &buffer) throw (Failure)
         {
           if ((!buffer) ||
               (0 == buffer->SizeInBytes())) {
@@ -4474,6 +4641,13 @@ namespace zsLib
           } catch (const StdError &e) {
             ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Failed to save file \"" + outputName + "\": " + " error=" + string(e.result()) + ", reason=" + e.message());
           }
+        }
+
+        //---------------------------------------------------------------------
+        void IDLCompiler::installDefaultTargets()
+        {
+          ICompiler::installTarget(internal::GenerateStructHeader::create());
+          ICompiler::installTarget(internal::GenerateStructImplCpp::create());
         }
 
       } // namespace internal

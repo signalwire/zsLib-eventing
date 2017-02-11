@@ -453,9 +453,6 @@
     <ClInclude Include="..\..\..\zsLib\eventing\tool\tool.h">
       <Filter>zsLib\eventing\tool</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\types.h">
-      <Filter>zsLib\eventing\tool</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\zsLib\eventing\tool\ICommandLine.h">
       <Filter>zsLib\eventing\tool</Filter>
     </ClInclude>
@@ -527,6 +524,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_Helper.h">
       <Filter>zsLib\eventing\tool\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\types.h">
+      <Filter>zsLib\eventing\tool</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
