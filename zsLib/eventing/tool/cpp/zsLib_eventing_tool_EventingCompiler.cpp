@@ -2244,9 +2244,9 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         SecureByteBlockPtr EventingCompiler::generateXPlatformEventsHeader(
-                                                                   const String &outputNameXPlatform,
-                                                                   const String &outputNameWindows
-                                                                   ) const throw (Failure)
+                                                                           const String &outputNameXPlatform,
+                                                                           const String &outputNameWindows
+                                                                           ) const throw (Failure)
         {
           std::stringstream ss;
 
@@ -2636,10 +2636,10 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         SecureByteBlockPtr EventingCompiler::generateWindowsEventsHeader(
-                                                                 const String &outputNameXPlatform,
-                                                                 const String &outputNameWindows,
-                                                                 const String &outputNameWindowsETW
-                                                                 ) const throw (Failure)
+                                                                         const String &outputNameXPlatform,
+                                                                         const String &outputNameWindows,
+                                                                         const String &outputNameWindowsETW
+                                                                         ) const throw (Failure)
         {
           std::stringstream ss;
 

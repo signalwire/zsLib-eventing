@@ -250,6 +250,11 @@ namespace zsLib
                                           TypedefTypePtr &outCreatedTypedef
                                           ) throw (FailureWithLine);
 
+          SecureByteBlockPtr generateTypesHeader() const throw (Failure);
+          void outputStructsHeaders(const String &pathStr) const throw (Failure);
+          void outputStructsImplHeaders(const String &pathStr) const throw (Failure);
+          void outputStructsImplCpp(const String &pathStr) const throw (Failure);
+
           void writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure);
           void writeJSON(const String &outputName, const DocumentPtr &doc) const throw (Failure);
           void writeBinary(const String &outputName, const SecureByteBlockPtr &buffer) const throw (Failure);

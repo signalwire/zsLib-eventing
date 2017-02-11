@@ -112,7 +112,6 @@ namespace zsLib
           
         case IIDLTypes::Modifier_Struct_Dictionary:         return "dictionary";
         case IIDLTypes::Modifier_Struct_Exception:          return "exception";
-        case IIDLTypes::Modifier_Struct_Special:            return "special";
 
         case IIDLTypes::Modifier_Method_Ctor:               return "constructor";
         case IIDLTypes::Modifier_Method_Static:             return "static";
@@ -128,6 +127,7 @@ namespace zsLib
         case IIDLTypes::Modifier_Property_Getter:           return "getter";
         case IIDLTypes::Modifier_Property_Setter:           return "setter";
 
+        case IIDLTypes::Modifier_Special:                   return "special";
         case IIDLTypes::Modifier_Nullable:                  return "nullable";
         case IIDLTypes::Modifier_Optional:                  return "optional";
         case IIDLTypes::Modifier_Dynamic:                   return "dynamic";
@@ -145,7 +145,6 @@ namespace zsLib
 
         case IIDLTypes::Modifier_Struct_Dictionary:         return 0;
         case IIDLTypes::Modifier_Struct_Exception:          return 0;
-        case IIDLTypes::Modifier_Struct_Special:            return 0;
 
         case IIDLTypes::Modifier_Method_Ctor:               return 0;
         case IIDLTypes::Modifier_Method_Static:             return 0;
@@ -161,6 +160,7 @@ namespace zsLib
         case IIDLTypes::Modifier_Property_Getter:           return 0;
         case IIDLTypes::Modifier_Property_Setter:           return 0;
 
+        case IIDLTypes::Modifier_Special:                   return 0;
         case IIDLTypes::Modifier_Nullable:                  return 0;
         case IIDLTypes::Modifier_Optional:                  return 0;
         case IIDLTypes::Modifier_Dynamic:                   return 0;
@@ -194,6 +194,24 @@ namespace zsLib
       return false;
     }
     
+    
+    //-------------------------------------------------------------------------
+    bool IIDLTypes::isValidForNamespace(Modifiers value)
+    {
+      if (isValidForAll(value)) return true;
+      
+      switch (value)
+      {
+        case IIDLTypes::Modifier_Special:
+        {
+          return true;
+        }
+        default:                                              break;
+      }
+      
+      return false;
+    }
+
     //-------------------------------------------------------------------------
     bool IIDLTypes::isValidForStruct(Modifiers value)
     {
@@ -203,7 +221,7 @@ namespace zsLib
       {
         case IIDLTypes::Modifier_Struct_Dictionary:
         case IIDLTypes::Modifier_Struct_Exception:
-        case IIDLTypes::Modifier_Struct_Special:
+        case IIDLTypes::Modifier_Special:
         {
           return true;
         }
@@ -1891,12 +1909,10 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::TypePtr IIDLTypes::TypedefType::getTypeBypassingTypedefIfNoop() const
+    IIDLTypes::TypePtr IIDLTypes::TypedefType::getOriginalType() const
     {
-      if (mModifiers.size() < 1) {
-        auto originalType = mOriginalType.lock();
-        if (originalType) return originalType;
-      }
+      auto originalType = mOriginalType.lock();
+      if (originalType) return originalType;
 
       return toType();
     }
@@ -2415,7 +2431,7 @@ namespace zsLib
         TypePtr obj = (*current);
         if (!obj) continue;
         
-        TypePtr bypassType = obj->getTypeBypassingTypedefIfNoop();
+        TypePtr bypassType = obj->getOriginalType();
         if (bypassType == obj) continue;
 
         mGenericDefaultTypes.insert(current, bypassType);
@@ -2461,6 +2477,23 @@ namespace zsLib
       }
 
       return didFix;
+    }
+
+    //-------------------------------------------------------------------------
+    IIDLTypes::StructPtr IIDLTypes::Struct::getRootStruct() const
+    {
+      StructPtr structObj = toStruct();
+
+      do
+      {
+        auto parent = structObj->getParent();
+        if (!parent) return structObj;
+        auto parentStruct = parent->toStruct();
+        if (!parentStruct) break;
+        structObj = parentStruct;
+      } while (true);
+
+      return structObj;
     }
 
     //-------------------------------------------------------------------------
@@ -2764,7 +2797,7 @@ namespace zsLib
         TypePtr obj = (*current);
         if (!obj) continue;
 
-        TypePtr bypassType = obj->getTypeBypassingTypedefIfNoop();
+        TypePtr bypassType = obj->getOriginalType();
         if (bypassType == obj) continue;
 
         mTemplateArguments.insert(current, bypassType);
@@ -2937,7 +2970,7 @@ namespace zsLib
     void IIDLTypes::Property::resolveTypedefs() throw (InvalidContent)
     {
       if (mType) {
-        mType = mType->getTypeBypassingTypedefIfNoop();
+        mType = mType->getOriginalType();
       }
     }
 
@@ -3128,7 +3161,7 @@ namespace zsLib
         TypePtr type = (*current);
         if (!type) continue;
 
-        TypePtr bypassType = type->getTypeBypassingTypedefIfNoop();
+        TypePtr bypassType = type->getOriginalType();
         if (type == bypassType) continue;
 
         mThrows.insert(current, bypassType);

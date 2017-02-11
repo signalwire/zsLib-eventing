@@ -895,6 +895,13 @@ namespace zsLib
           validate();
           if ((mConfig.mOutputName.hasData()) &&
               (mConfig.mProject)) {
+            String pathStr = mConfig.mOutputName;
+            pathStr.trimRight("/\\");
+            pathStr += "/";
+            writeBinary(fixRelativeFilePath(pathStr, String("types.h")), generateTypesHeader());
+            outputStructsHeaders(pathStr);
+            outputStructsImplHeaders(pathStr);
+            outputStructsImplCpp(pathStr);
           }
         }
 
@@ -917,12 +924,21 @@ namespace zsLib
           HashSet processedHashes;
 
           ProjectPtr &project = mConfig.mProject;
-          mConfig.mSourceFiles.push_front(mConfig.mConfigFile);
-          
-          while (mConfig.mSourceFiles.size() > 0)
+
+          StringList prioritySourceFiles = mConfig.mSourceFiles;
+          StringList sourceFiles;
+          prioritySourceFiles.push_front(mConfig.mConfigFile);
+
+          while ((sourceFiles.size() > 0) ||
+                 (prioritySourceFiles.size() > 0))
           {
-            String fileName = mConfig.mSourceFiles.front();
-            mConfig.mSourceFiles.pop_front();
+            StringList *useList = &sourceFiles;
+
+            if (prioritySourceFiles.size() > 0) {
+              useList = &prioritySourceFiles;
+            }
+            String fileName = (*useList).front();
+            (*useList).pop_front();
 
             SecureByteBlockPtr file;
             try {
@@ -955,8 +971,8 @@ namespace zsLib
                   project->parse(rootEl);
                 }
 
-                StringList sources = mConfig.mSourceFiles;
-                mConfig.mSourceFiles.clear();
+                StringList sources = sourceFiles;
+                sourceFiles.clear();
 
                 ElementPtr sourcesEl = rootEl->findFirstChildElement("includes");
                 if (sourcesEl) {
@@ -965,7 +981,7 @@ namespace zsLib
                     auto source = UseHelper::getElementTextAndDecode(sourceEl);
 
                     if (source.hasData()) {
-                      mConfig.mSourceFiles.push_back(fixRelativeFilePath(fileName, source));
+                      sourceFiles.push_back(fixRelativeFilePath(fileName, source));
                     }
                     sourceEl = sourceEl->findNextSiblingElement("include");
                   }
@@ -978,7 +994,7 @@ namespace zsLib
                     auto source = UseHelper::getElementTextAndDecode(includeEl);
 
                     if (source.hasData()) {
-                      mConfig.mSourceFiles.push_back(fixRelativeFilePath(fileName, source));
+                      sourceFiles.push_back(fixRelativeFilePath(fileName, source));
                     }
                     includeEl = includeEl->findNextSiblingElement("source");
                   }
@@ -986,7 +1002,7 @@ namespace zsLib
 
                 // put back the original configuration files
                 for (auto iter = sources.begin(); iter != sources.end(); ++iter) {
-                  mConfig.mSourceFiles.push_back(*iter);
+                  sourceFiles.push_back(*iter);
                 }
 
               } catch (const InvalidContent &e) {
@@ -1618,6 +1634,7 @@ namespace zsLib
             while (hasMoreTokens())
             {
               if (parseDocumentation()) continue;
+              if (parseModifiers()) continue;
 
               auto token = extractNextToken(what);
               if (argumentNameToken) {
@@ -1641,7 +1658,7 @@ namespace zsLib
             fillContext(property);
             property->mName = argumentNameToken->mToken;
             TypedefTypePtr createdTypedef;
-            property->mType = findTypeOrCreateTypedef(method, typeTokens, createdTypedef);
+            property->mType = findTypeOrCreateTypedef(method, argumentTypeTokens, createdTypedef);
             if (!property->mType) {
               ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " did not find valid method argument type");
             }
@@ -2379,7 +2396,7 @@ namespace zsLib
 
             auto newTypedef = TypedefType::create(currentNamespace);
             newTypedef->mName = name;
-            newTypedef->mOriginalType = type->getTypeBypassingTypedefIfNoop();
+            newTypedef->mOriginalType = type->getOriginalType();
             currentNamespace->mTypedefs[name] = newTypedef;
           }
 
@@ -2404,7 +2421,7 @@ namespace zsLib
                                            TypePtr usingType
                                            )
         {
-          usingType = usingType->getTypeBypassingTypedefIfNoop();
+          usingType = usingType->getOriginalType();
 
           auto name = usingType->getMappingName();
 
@@ -2955,7 +2972,7 @@ namespace zsLib
                   outCreatedTypedef->mOriginalType = foundNewBasicType;
                   outCreatedTypedef->resolveTypedefs();
 
-                  auto bypassResult = outCreatedTypedef->getTypeBypassingTypedefIfNoop();
+                  auto bypassResult = outCreatedTypedef->getOriginalType();
                   if (bypassResult != outCreatedTypedef) {
                     outCreatedTypedef.reset();
                     return bypassResult;
@@ -2971,7 +2988,7 @@ namespace zsLib
                 outCreatedTypedef->mOriginalType = existingType;
                 outCreatedTypedef->resolveTypedefs();
 
-                auto bypassResult = outCreatedTypedef->getTypeBypassingTypedefIfNoop();
+                auto bypassResult = outCreatedTypedef->getOriginalType();
                 if (bypassResult != outCreatedTypedef) {
                   outCreatedTypedef.reset();
                   return bypassResult;
@@ -3120,11 +3137,1305 @@ namespace zsLib
             ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " " + e.message());
           }
 
-          auto bypassType = result->getTypeBypassingTypedefIfNoop();
+          auto bypassType = result->getOriginalType();
           if (bypassType != result) {
             outCreatedTypedef = TypedefTypePtr();
           }
           return bypassType;
+        }
+
+        //---------------------------------------------------------------------
+        struct GenerateTypesHeader : public IDLCompiler
+        {
+          //-------------------------------------------------------------------
+          static void insertFirst(
+                                  std::stringstream &ss,
+                                  bool &first
+                                  )
+          {
+            if (!first) return;
+            first = false;
+            ss << "\n";
+          }
+          //-------------------------------------------------------------------
+          static void insertLast(
+                                  std::stringstream &ss,
+                                  bool &first
+                                  )
+          {
+            if (first) return;
+            ss << "\n";
+          }
+
+          //-------------------------------------------------------------------
+          static void processTypesNamespace(
+                                            std::stringstream &ss,
+                                            NamespacePtr namespaceObj
+                                            )
+          {
+            if (!namespaceObj) return;
+            if (namespaceObj->hasModifier(Modifier_Special)) return;
+
+            int parentCount = 0;
+            String initialIndentStr;
+            String indentStr;
+
+            {
+              auto parent = namespaceObj->getParent();
+              while (parent)
+              {
+                auto checkObj = parent->toNamespace();
+                if (!checkObj) break;
+                ++parentCount;
+                indentStr += "  ";
+                parent = parent->getParent();
+              }
+            }
+
+            initialIndentStr = indentStr;
+
+            if (namespaceObj->mName.hasData()) {
+              ss << indentStr << "namespace " << namespaceObj->mName << " {\n";
+            }
+
+            indentStr += "  ";
+
+            bool firstNamespace {true};
+            for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter)
+            {
+              auto subNamespaceObj = (*iter).second;
+              if (subNamespaceObj->hasModifier(Modifier_Special)) continue;
+
+              if (!firstNamespace) {
+                ss << "\n";
+              }
+              firstNamespace = false;
+              processTypesNamespace(ss, subNamespaceObj);
+            }
+
+            bool firstEnum {true};
+            for (auto iter = namespaceObj->mEnums.begin(); iter != namespaceObj->mEnums.end(); ++iter)
+            {
+              auto enumObj = (*iter).second;
+              insertFirst(ss, firstEnum);
+              ss << indentStr << "enum " << enumObj->mName << " {\n";
+              for (auto iterValue = enumObj->mValues.begin(); iterValue != enumObj->mValues.end(); ++iterValue)
+              {
+                auto valueObj = (*iterValue);
+                ss << indentStr << "  " << enumObj->mName << "_" << valueObj->mName;
+                if (valueObj->mValue.hasData()) {
+                  ss << " = " << valueObj->mValue;
+                }
+                ss << ",\n";
+              }
+              ss << indentStr << "};\n";
+            }
+            insertLast(ss, firstEnum);
+
+            bool firstStruct {firstEnum};
+            for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter)
+            {
+              auto structObj = (*iter).second;
+              if (structObj->hasModifier(Modifier_Special)) continue;
+              insertFirst(ss, firstStruct);
+              ss << indentStr << "ZS_DECLARE_STRUCT_PTR(" << structObj->mName << ");\n";
+            }
+            if (namespaceObj->mStructs.size() > 0) {
+              insertLast(ss, firstStruct);
+            }
+
+            indentStr = initialIndentStr;
+
+            if (namespaceObj->mName.hasData()) {
+              ss << indentStr << "} // namespace " << namespaceObj->mName << "\n";
+            }
+          }
+        };
+
+
+        //---------------------------------------------------------------------
+        SecureByteBlockPtr IDLCompiler::generateTypesHeader() const throw (Failure)
+        {
+          std::stringstream ss;
+
+          const ProjectPtr &project = mConfig.mProject;
+          if (!project) return SecureByteBlockPtr();
+          if (!project->mGlobal) return SecureByteBlockPtr();
+
+          ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
+          ss << "#pragma once\n\n";
+          ss << "#include <stdint.h>\n";
+          ss << "#include <zsLib/types.h>\n";
+          ss << "#include <zsLib/String.h>\n\n";
+          ss << "namespace wrapper {\n";
+          ss << "  using zsLib::String;\n\n";
+
+          GenerateTypesHeader::processTypesNamespace(ss, project->mGlobal);
+
+          ss << "} // namespace wrapper\n\n";
+
+          return UseHelper::convertToBuffer(ss.str());
+        }
+
+        //---------------------------------------------------------------------
+        struct GenerateStructHeader : public IDLCompiler
+        {
+          typedef std::set<String> StringSet;
+
+          //-------------------------------------------------------------------
+          static String getStructFileName(StructPtr structObj)
+          {
+            String filename = structObj->getPathName();
+            filename.replaceAll("::", "_");
+            filename += ".h";
+            filename.trim("_");
+            return filename;
+          }
+
+          //-------------------------------------------------------------------
+          static const char *getBasicTypeString(BasicTypePtr type)
+          {
+            if (!type) return "";
+            switch (type->mBaseType)
+            {
+              case PredefinedTypedef_void:        return "void";
+              case PredefinedTypedef_bool:        return "bool";
+              case PredefinedTypedef_uchar:       return "unsigned char";
+              case PredefinedTypedef_char:        return "char";
+              case PredefinedTypedef_schar:       return "signed char";
+              case PredefinedTypedef_ushort:      return "unsigned short";
+              case PredefinedTypedef_short:       return "short";
+              case PredefinedTypedef_sshort:      return "signed short";
+              case PredefinedTypedef_uint:        return "unsigned int";
+              case PredefinedTypedef_int:         return "int";
+              case PredefinedTypedef_sint:        return "signed int";
+              case PredefinedTypedef_ulong:       return "unsigned long";
+              case PredefinedTypedef_long:        return "long";
+              case PredefinedTypedef_slong:       return "signed long";
+              case PredefinedTypedef_ulonglong:   return "unsigned long long";
+              case PredefinedTypedef_longlong:    return "long long";
+              case PredefinedTypedef_slonglong:   return "signed long long";
+              case PredefinedTypedef_uint8:       return "uint8_t";
+              case PredefinedTypedef_int8:        return "int8_t";
+              case PredefinedTypedef_sint8:       return "int8_t";
+              case PredefinedTypedef_uint16:      return "uint16_t";
+              case PredefinedTypedef_int16:       return "int16_t";
+              case PredefinedTypedef_sint16:      return "int16_t";
+              case PredefinedTypedef_uint32:      return "uint32_t";
+              case PredefinedTypedef_int32:       return "int32_t";
+              case PredefinedTypedef_sint32:      return "int32_t";
+              case PredefinedTypedef_uint64:      return "uint64_t";
+              case PredefinedTypedef_int64:       return "int64_t";
+              case PredefinedTypedef_sint64:      return "int64_t";
+
+              case PredefinedTypedef_byte:        return "uint8_t";
+              case PredefinedTypedef_word:        return "uint16_t";
+              case PredefinedTypedef_dword:       return "uint32_t";
+              case PredefinedTypedef_qword:       return "uint64_t";
+
+              case PredefinedTypedef_float:       return "float";
+              case PredefinedTypedef_double:      return "double";
+              case PredefinedTypedef_ldouble:     return "long double";
+              case PredefinedTypedef_float32:     return "float";
+              case PredefinedTypedef_float64:     return "double";
+
+              case PredefinedTypedef_pointer:
+
+              case PredefinedTypedef_binary:      return "::zsLib::eventing::SecureByteBlockPtr";
+              case PredefinedTypedef_size:
+
+              case PredefinedTypedef_string:      return "String";
+              case PredefinedTypedef_astring:     return "String";
+              case PredefinedTypedef_wstring:     return "::std::wstring";
+            }
+            return "";
+          }
+
+          //---------------------------------------------------------------------
+          static String makeOptional(bool isOptional, const String &value)
+          {
+            if (!isOptional) return value;
+            return "::zsLib::Optional< " + value + " >";
+          }
+
+          //---------------------------------------------------------------------
+          static String getWrapperTypeString(bool isOptional, TypePtr type)
+          {
+            if (!type) return String();
+
+            type = type->getOriginalType();
+
+            {
+              auto typedefType = type->toTypedefType();
+              if (typedefType) {
+                ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Typedef failed to resolve to original type: " + typedefType->getPathName());
+              }
+            }
+
+            {
+              auto basicType = type->toBasicType();
+              if (basicType) {
+                return makeOptional(isOptional, String(getBasicTypeString(basicType)));
+              }
+            }
+
+            {
+              auto structType = type->toStruct();
+              if (structType) {
+                if (structType->mGenerics.size() > 0) return String();
+                if (structType->hasModifier(Modifier_Special)) {
+                  String specialName = structType->getPathName();
+                  if ("::zs::Promise" == specialName) return "::zsLib::PromisePtr";
+                  if ("::zs::exceptions::Exception" == specialName) return "::zsLib::Exception";
+                  if ("::zs::exceptions::InvalidParameters" == specialName) return "::zsLib::Exceptions::InvalidArgument";
+                  if ("::zs::exceptions::InvalidState" == specialName) return "::zsLib::Exceptions::BadState";
+                  if ("::zs::exceptions::NotImplemented" == specialName) return "::zsLib::Exceptions::NotImplemented";
+                  if ("::zs::exceptions::NotSupported" == specialName) return "::zsLib::Exceptions::NotSupported";
+                  if ("::zs::exceptions::Unexpected" == specialName) return "::zsLib::Exceptions::UnexpectedError";
+                }
+                return makeOptional(isOptional, "wrapper" + structType->getPathName() + "Ptr");
+              }
+            }
+
+            {
+              auto enumType = type->toEnumType();
+              if (enumType) {
+                return makeOptional(isOptional, "wrapper" + enumType->getPathName());
+              }
+            }
+
+            {
+              auto templatedType = type->toTemplatedStructType();
+              if (templatedType) {
+                String templatedTypeStr;
+                String specialName;
+                bool specialTemplate = false;
+
+                {
+                  auto parent = type->getParent();
+                  if (parent) {
+                    auto parentStruct = parent->toStruct();
+                    if (parentStruct) {
+                      if (parentStruct->hasModifier(Modifier_Special)) {
+                        specialName = parentStruct->getPathName();
+                        if ("::std::set" == specialName) templatedTypeStr = "::std::shared_ptr< ::std::set< ";
+                        if ("::std::list" == specialName) templatedTypeStr = "::std::shared_ptr< ::std::list< ";
+                        if ("::std::map" == specialName) templatedTypeStr = "::std::shared_ptr< ::std::map< ";
+                        if ("::zs::PromiseWith" == specialName) templatedTypeStr = "::std::shared_ptr< ::zsLib::PromiseWith< ";
+                        specialTemplate = templatedTypeStr.hasData();
+                      }
+                    }
+                  }
+                }
+                
+                if (templatedTypeStr.isEmpty()) {
+                  templatedTypeStr = "wrapper" + templatedType->getPathName() + "< ";
+                }
+                bool first = true;
+                for (auto iter = templatedType->mTemplateArguments.begin(); iter != templatedType->mTemplateArguments.end(); ++iter)
+                {
+                  auto templateArg = (*iter);
+                  if (!first) templatedTypeStr += ", ";
+                  templatedTypeStr += getWrapperTypeString(false, templateArg);
+                  first = false;
+                }
+                templatedTypeStr += " >";
+                if (specialTemplate) templatedTypeStr += " >";
+                return makeOptional(isOptional, templatedTypeStr);
+              }
+            }
+            return String();
+          }
+
+          //---------------------------------------------------------------------
+          static void generateStruct(
+                                     StructPtr structObj,
+                                     String indentStr,
+                                     StringSet &includedHeaders,
+                                     std::stringstream &includeSS,
+                                     std::stringstream &ss
+                                     )
+          {
+            if (!structObj) return;
+            if (structObj->hasModifier(Modifier_Special)) return;
+            if (structObj->mGenerics.size() > 0) return;
+
+            auto rootStruct = structObj->getRootStruct();
+
+            ss << "\n";
+            ss << indentStr << "struct " << structObj->mName;
+
+            if (structObj->mIsARelationships.size() > 0) {
+              ss << " : ";
+            }
+            else {
+              ss << "\n";
+            }
+
+            // output relationships
+            {
+              bool first{ true };
+              for (auto iterRelations = structObj->mIsARelationships.begin(); iterRelations != structObj->mIsARelationships.end(); ++iterRelations)
+              {
+                auto relatedObj = (*iterRelations).second;
+
+                {
+                  auto relatedStructObj = relatedObj->toStruct();
+                  if (relatedStructObj) {
+                    auto relatedRootStructObj = relatedStructObj->getRootStruct();
+                    if (rootStruct != relatedRootStructObj) {
+                      auto includeStr = getStructFileName(relatedStructObj);
+                      if (includedHeaders.end() == includedHeaders.find(includeStr)) {
+                        includeSS << "#include \"" << includeStr << "\"\n";
+                        includedHeaders.insert(includeStr);
+                      }
+                    }
+                  }
+
+                  if (!first) {
+                    ss << ",\n";
+                    ss << indentStr << "          ";
+                    for (size_t index = 0; index < structObj->mName.length(); ++index)
+                    {
+                      ss << " ";
+                    }
+                  }
+                  ss << "public wrapper" << relatedStructObj->getPathName();
+                }
+
+                first = false;
+              }
+              if (!first) ss << "\n";
+            }
+
+            ss << indentStr << "{\n";
+
+            String currentIdentStr = indentStr;
+            indentStr += "  ";
+
+            bool outputSubTypes = false;
+
+            for (auto iterSubStruct = structObj->mStructs.begin(); iterSubStruct != structObj->mStructs.end(); ++iterSubStruct)
+            {
+              auto subStructObj = (*iterSubStruct).second;
+              if (!subStructObj) continue;
+              if (subStructObj->hasModifier(Modifier_Special)) continue;
+              if (subStructObj->mGenerics.size() > 0) continue;
+              ss << indentStr << "ZS_DECLARE_STRUCT_PTR(" << subStructObj->mName << ");\n";
+              outputSubTypes = true;
+            }
+
+            for (auto iterEnums = structObj->mEnums.begin(); iterEnums != structObj->mEnums.end(); ++iterEnums)
+            {
+              auto enumObj = (*iterEnums).second;
+
+              ss << "\n";
+              ss << indentStr << "enum " << enumObj->mName << " {\n";
+
+              for (auto iterValue = enumObj->mValues.begin(); iterValue != enumObj->mValues.end(); ++iterValue)
+              {
+                auto valueObj = (*iterValue);
+                ss << indentStr << "  " << enumObj->mName << "_" << valueObj->mName;
+                if (valueObj->mValue.hasData()) {
+                  ss << " = " << valueObj->mValue;
+                }
+                ss << ",\n";
+              }
+
+              ss << indentStr << "};\n";
+              outputSubTypes = true;
+            }
+
+            if (outputSubTypes) ss << "\n";
+
+            ss << indentStr << "virtual ~" << structObj->mName << "() {}\n\n";
+
+            ss << indentStr << "struct WrapperFactory\n";
+            ss << indentStr << "{\n";
+
+            bool foundConstructor = false;
+            for (auto iterMethods = structObj->mMethods.begin(); iterMethods != structObj->mMethods.end(); ++iterMethods)
+            {
+              auto methodObj = (*iterMethods);
+              if (!methodObj->hasModifier(Modifier_Method_Ctor)) continue;
+
+              ss << indentStr << "  static " << structObj->mName << "Ptr create(";
+              if (methodObj->mArguments.size() > 1) ss << "\n" << indentStr << "    ";
+              bool firstArgument = true;
+              for (auto iterParams = methodObj->mArguments.begin(); iterParams != methodObj->mArguments.end(); ++iterParams)
+              {
+                auto argument = (*iterParams);
+                if (!firstArgument) {
+                  ss << ",\n";
+                  ss << indentStr << "    ";
+                }
+                firstArgument = false;
+
+                String typeStr = getWrapperTypeString(argument->hasModifier(Modifier_Optional), argument->mType);
+                ss << typeStr << " " << argument->mName;
+              }
+              if (methodObj->mArguments.size() > 1) ss << "\n" << indentStr << "    ";
+              ss << ");\n";
+
+              foundConstructor = true;
+            }
+            if (!foundConstructor) {
+              ss << indentStr << "  static " << structObj->mName << "Ptr create();\n";
+            }
+            ss << indentStr << "};\n";
+
+            for (auto iterStructs = structObj->mStructs.begin(); iterStructs != structObj->mStructs.end(); ++iterStructs)
+            {
+              auto subStructObj = (*iterStructs).second;
+              generateStruct(subStructObj, indentStr, includedHeaders, includeSS, ss);
+            }
+
+            std::stringstream observerSS;
+            std::stringstream observerMethodsSS;
+
+            bool foundEventHandler = false;
+            bool firstMethod = true;
+            for (auto iterMethods = structObj->mMethods.begin(); iterMethods != structObj->mMethods.end(); ++iterMethods)
+            {
+              auto methodObj = (*iterMethods);
+              if (methodObj->hasModifier(Modifier_Method_Ctor)) continue;
+              if (methodObj->hasModifier(Modifier_Method_EventHandler)) {
+                if (!foundEventHandler) {
+                  observerSS << "\n";
+                  observerSS << indentStr << "ZS_DECLARE_STRUCT_PTR(WrapperObserver);\n";
+                  observerSS << "\n";
+                  observerSS << indentStr << "::zsLib::Lock wrapper_observerLock;\n";
+                  observerSS << indentStr << "WrapperObserverWeakPtr wrapper_observer;\n";
+                  observerSS << "\n";
+                  observerSS << indentStr << "struct WrapperObserver\n";
+                  observerSS << indentStr << "{\n";
+                  observerMethodsSS << indentStr << "};\n\n";
+                  observerMethodsSS << indentStr << "virtual void wrapper_onObserverInstalled() = 0;\n";
+                  observerMethodsSS << indentStr << "void wrapper_installObserver(WrapperObserverPtr observer) { ::zsLib::AutoLock lock(wrapper_observerLock); wrapper_observer = observer; wrapper_onObserverInstalled(); }\n\n";
+                  foundEventHandler = true;
+                }
+                observerSS << indentStr << "  virtual void " << methodObj->mName << "(";
+                observerMethodsSS << indentStr << "void " << methodObj->mName << "(";
+
+                std::stringstream observerMethodsParamsSS;
+                observerMethodsParamsSS << ") { WrapperObserverPtr observer; {  ::zsLib::AutoLock lock(wrapper_observerLock); observer = wrapper_observer.lock(); } if (!observer) return; observer->" << methodObj->mName << "(";
+
+                {
+                  bool firstArgument = true;
+                  for (auto iterParams = methodObj->mArguments.begin(); iterParams != methodObj->mArguments.end(); ++iterParams)
+                  {
+                    auto argument = (*iterParams);
+                    if (!firstArgument) {
+                      observerSS << ", ";
+                      observerMethodsSS << ", ";
+                      observerMethodsParamsSS << ", ";
+                    }
+                    firstArgument = false;
+
+                    String typeStr = getWrapperTypeString(argument->hasModifier(Modifier_Optional), argument->mType);
+                    observerSS << typeStr << " " << argument->mName;
+                    observerMethodsSS << typeStr << " " << argument->mName;
+                    observerMethodsParamsSS << argument->mName;
+                  }
+                }
+                observerSS << ") = 0;\n";
+                observerMethodsSS << observerMethodsParamsSS.str();
+                observerMethodsSS << "); }\n";
+                continue;
+              }
+
+              if (firstMethod) ss << "\n";
+              firstMethod = false;
+
+              ss << indentStr;
+              if (methodObj->hasModifier(Modifier_Method_Static))
+                ss << "static ";
+              else
+                ss << "virtual ";
+
+              ss << getWrapperTypeString(methodObj->hasModifier(Modifier_Optional), methodObj->mResult);
+
+              ss << " " << methodObj->mName << "(";
+
+              // append arguments
+              {
+                bool firstArgument = true;
+                for (auto iterParams = methodObj->mArguments.begin(); iterParams != methodObj->mArguments.end(); ++iterParams)
+                {
+                  auto argument = (*iterParams);
+                  if (!firstArgument) ss << ", ";
+                  firstArgument = false;
+
+                  if (methodObj->mArguments.size() > 1) ss << "\n" << indentStr << "  ";
+
+                  String typeStr = getWrapperTypeString(argument->hasModifier(Modifier_Optional), argument->mType);
+                  ss << typeStr << " " << argument->mName;
+                }
+              }
+
+              if (methodObj->mArguments.size() > 1) ss << "\n" << indentStr << "  ";
+              ss << ") = 0;\n";
+
+              foundConstructor = true;
+            }
+
+            bool isDictionary = structObj->hasModifier(Modifier_Struct_Dictionary);
+            bool firstProperty = true;
+            for (auto iterProperties = structObj->mProperties.begin(); iterProperties != structObj->mProperties.end(); ++iterProperties)
+            {
+              auto propertyObj = (*iterProperties);
+              bool hasGetter = propertyObj->hasModifier(Modifier_Property_Getter);
+              bool hasSetter = propertyObj->hasModifier(Modifier_Property_Setter);
+
+              String typeStr = getWrapperTypeString(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType);
+
+              if (!isDictionary) {
+                if (!((hasGetter) || (hasSetter))) {
+                  hasGetter = hasSetter = true;
+                }
+              }
+
+              if (firstProperty) ss << "\n";
+              firstProperty = false;
+
+              if (!((hasGetter) || (hasSetter))) {
+                ss << indentStr << typeStr << " " << propertyObj->mName << " {";
+                if (propertyObj->mDefaultValue.hasData()) {
+                  String defaultValue = propertyObj->mDefaultValue;
+
+                  {
+                    auto enumType = propertyObj->mType->toEnumType();
+                    if (enumType) {
+                      defaultValue = String("wrapper") + enumType->getPathName() + "_" + defaultValue;
+                    }
+                  }
+                  ss << defaultValue;
+                }
+                ss << "};\n";
+                continue;
+              }
+
+              if (hasGetter) {
+                ss << indentStr << "virtual " << typeStr << " get_" << propertyObj->mName << "() = 0;\n";
+              }
+              if (hasSetter) {
+                ss << indentStr << "virtual void set_" << propertyObj->mName << "(" << typeStr << " value) = 0;\n";
+              }
+            }
+
+            ss << observerSS.str();
+            ss << observerMethodsSS.str();
+
+            indentStr = currentIdentStr;
+            ss << indentStr << "};\n";
+          }
+        };
+
+        //---------------------------------------------------------------------
+        void IDLCompiler::outputStructsHeaders(const String &pathStr) const throw (Failure)
+        {
+          typedef std::stack<NamespacePtr> NamespaceStack;
+          typedef std::stack<String> StringList;
+
+          const ProjectPtr &project = mConfig.mProject;
+          if (!project) return;
+          if (!project->mGlobal) return;
+
+          NamespaceStack namespaceStack;
+
+          namespaceStack.push(project->mGlobal);
+
+          while (namespaceStack.size() > 0)
+          {
+            auto namespaceObj = namespaceStack.top();
+            namespaceStack.pop();
+            if (!namespaceObj) continue;
+            if (namespaceObj->hasModifier(Modifier_Special)) continue;
+
+            for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter)
+            {
+              auto subNamespaceObj = (*iter).second;
+              namespaceStack.push(subNamespaceObj);
+            }
+
+            for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter)
+            {
+              auto structObj = (*iter).second;
+              if (structObj->hasModifier(Modifier_Special)) continue;
+              if (structObj->mGenerics.size() > 0) continue;
+
+              String filename = GenerateStructHeader::getStructFileName(structObj);
+
+              String outputname = fixRelativeFilePath(pathStr, filename);
+
+              std::stringstream ss;
+              std::stringstream includeSS;
+              std::stringstream structSS;
+              StringList endStrings;
+
+              ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
+              ss << "#pragma once\n\n";
+              ss << "#include \"types.h\"\n";
+
+              structSS << "namespace wrapper {\n";
+
+              NamespaceStack parentStack;
+              auto parent = structObj->getParent();
+              while (parent) {
+                auto parentNamespace = parent->toNamespace();
+                if (parentNamespace) {
+                  parentStack.push(parentNamespace);
+                }
+                parent = parent->getParent();
+              }
+
+              String indentStr = "  ";
+
+              while (parentStack.size() > 0)
+              {
+                auto parentNamespace = parentStack.top();
+                parentStack.pop();
+
+                if (parentNamespace->mName.hasData()) {
+                  structSS << indentStr << "namespace " << parentNamespace->mName << " {\n";
+                  {
+                    std::stringstream endSS;
+                    endSS << indentStr << "} // " << parentNamespace->mName << "\n";
+                    endStrings.push(endSS.str());
+                  }
+
+                  indentStr += "  ";
+                }
+              }
+
+              {
+                GenerateStructHeader::StringSet processedHeaders;
+                GenerateStructHeader::generateStruct(structObj, indentStr, processedHeaders, includeSS, structSS);
+              }
+
+              ss << includeSS.str();
+              ss << "\n";
+              ss << structSS.str();
+              ss << "\n";
+              while (endStrings.size() > 0) {
+                ss << endStrings.top();
+                endStrings.pop();
+              }
+              ss << "} // namespace wrapper\n\n";
+
+              writeBinary(outputname, UseHelper::convertToBuffer(ss.str()));
+            }
+          }
+        }
+
+        //---------------------------------------------------------------------
+        struct GenerateStructImplHeader : public IDLCompiler
+        {
+          typedef std::set<String> StringSet;
+
+          //-------------------------------------------------------------------
+          static String getStructFileName(StructPtr structObj)
+          {
+            return String("impl_") + GenerateStructHeader::getStructFileName(structObj);
+          }
+
+          //-------------------------------------------------------------------
+          static const char *getBasicTypeString(BasicTypePtr type)
+          {
+            return GenerateStructHeader::getBasicTypeString(type);
+          }
+
+          //---------------------------------------------------------------------
+          static String makeOptional(bool isOptional, const String &value)
+          {
+            return GenerateStructHeader::makeOptional(isOptional, value);
+          }
+
+          //---------------------------------------------------------------------
+          static String getWrapperTypeString(bool isOptional, TypePtr type)
+          {
+            return GenerateStructHeader::getWrapperTypeString(isOptional, type);
+          }
+
+          //---------------------------------------------------------------------
+          static void outputMethods(
+                                    StructPtr structObj,
+                                    String indentStr,
+                                    std::stringstream &ss,
+                                    bool createConstructors,
+                                    bool &foundEventHandler
+                                    )
+          {
+
+            // output relationships
+            {
+              for (auto iterRelations = structObj->mIsARelationships.begin(); iterRelations != structObj->mIsARelationships.end(); ++iterRelations)
+              {
+                auto relatedObj = (*iterRelations).second;
+
+                {
+                  auto relatedStructObj = relatedObj->toStruct();
+                  if (relatedStructObj) {
+                    outputMethods(relatedStructObj, indentStr, ss, false, foundEventHandler);
+                  }
+                }
+              }
+            }
+
+            bool foundCtor = false;
+            bool firstMethod = true;
+            for (auto iterMethods = structObj->mMethods.begin(); iterMethods != structObj->mMethods.end(); ++iterMethods)
+            {
+              auto methodObj = (*iterMethods);
+              bool isCtor = methodObj->hasModifier(Modifier_Method_Ctor);
+              if (!createConstructors) {
+                if (isCtor) continue;
+              }
+              if (methodObj->hasModifier(Modifier_Method_Static)) continue;
+              if (methodObj->hasModifier(Modifier_Method_EventHandler)) {
+                foundEventHandler = true;
+                continue;
+              }
+
+              if (firstMethod) {
+                ss << "\n";
+                ss << indentStr << "// methods " << structObj->getMappingName() << "\n";
+              }
+              firstMethod = false;
+
+              ss << indentStr;
+              if (!isCtor) {
+                ss << "virtual ";
+                ss << getWrapperTypeString(methodObj->hasModifier(Modifier_Optional), methodObj->mResult);
+                ss << " " << methodObj->mName;
+              } else {
+                foundCtor = true;
+                ss << "void wrapper_init";
+              }
+              
+              ss << "(";
+
+              if (methodObj->mArguments.size() > 1) ss << "\n" << indentStr << "  ";
+
+              bool firstArgument = true;
+              for (auto iterParams = methodObj->mArguments.begin(); iterParams != methodObj->mArguments.end(); ++iterParams)
+              {
+                auto argument = (*iterParams);
+                if (!firstArgument) {
+                  ss << ",\n";
+                  ss << indentStr << "  ";
+                }
+                firstArgument = false;
+
+                String typeStr = getWrapperTypeString(argument->hasModifier(Modifier_Optional), argument->mType);
+                ss << typeStr << " " << argument->mName;
+              }
+              if (methodObj->mArguments.size() > 1) ss << "\n" << indentStr << "  ";
+              ss << ")";
+              if (!isCtor) {
+                ss << " override";
+              }
+              ss << ";\n";
+            }
+
+            if ((createConstructors) && (!foundCtor)) {
+              ss << indentStr << "void wrapper_init();\n";
+            }
+
+            bool isDictionary = structObj->hasModifier(Modifier_Struct_Dictionary);
+            bool firstProperty = true;
+            for (auto iterProperties = structObj->mProperties.begin(); iterProperties != structObj->mProperties.end(); ++iterProperties)
+            {
+              auto propertyObj = (*iterProperties);
+              bool hasGetter = propertyObj->hasModifier(Modifier_Property_Getter);
+              bool hasSetter = propertyObj->hasModifier(Modifier_Property_Setter);
+
+              String typeStr = getWrapperTypeString(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType);
+
+              if (!isDictionary) {
+                if (!((hasGetter) || (hasSetter))) {
+                  hasGetter = hasSetter = true;
+                }
+              }
+
+              if ((!hasGetter) && (!hasSetter)) continue;
+
+              if (firstProperty) {
+                ss << "\n";
+                ss << indentStr << "// properties " << structObj->getMappingName() << "\n";
+              }
+              firstProperty = false;
+
+              if (hasGetter) {
+                ss << indentStr << "virtual " << typeStr << " get_" << propertyObj->mName << "() override;\n";
+              }
+              if (hasSetter) {
+                ss << indentStr << "virtual void set_" << propertyObj->mName << "(" << typeStr << " value) override;\n";
+              }
+            }
+          }
+
+          //---------------------------------------------------------------------
+          static void generateStructHeaderImpl(
+                                               StructPtr structObj,
+                                               String indentStr,
+                                               StringSet &includedHeaders,
+                                               std::stringstream &ss
+                                               )
+          {
+            if (!structObj) return;
+            if (structObj->hasModifier(Modifier_Special)) return;
+            if (structObj->mGenerics.size() > 0) return;
+
+            ss << "\n";
+            ss << indentStr << "struct " << structObj->mName << " : public wrapper" << structObj->getPathName() << "\n";
+            ss << indentStr << "{\n";
+
+            String currentIdentStr = indentStr;
+            indentStr += "  ";
+
+            ss << indentStr << structObj->mName << "WeakPtr mThisWeak;\n\n";
+            ss << indentStr << structObj->mName << "();\n";
+            ss << indentStr << "virtual ~" << structObj->mName << "();\n";
+
+            for (auto iterStructs = structObj->mStructs.begin(); iterStructs != structObj->mStructs.end(); ++iterStructs)
+            {
+              auto subStructObj = (*iterStructs).second;
+              generateStructHeaderImpl(subStructObj, indentStr, includedHeaders, ss);
+            }
+
+            bool foundEventHandler = false;
+            outputMethods(structObj, indentStr, ss, true, foundEventHandler);
+
+            if (foundEventHandler) {
+              ss << "\n";
+              ss << indentStr << "virtual void wrapper_onObserverInstalled() override;\n";
+            }
+
+            indentStr = currentIdentStr;
+            ss << indentStr << "};\n";
+          }
+        };
+
+        //---------------------------------------------------------------------
+        void IDLCompiler::outputStructsImplHeaders(const String &pathStr) const throw (Failure)
+        {
+          typedef std::stack<NamespacePtr> NamespaceStack;
+          typedef std::stack<String> StringList;
+
+          const ProjectPtr &project = mConfig.mProject;
+          if (!project) return;
+          if (!project->mGlobal) return;
+
+          NamespaceStack namespaceStack;
+
+          namespaceStack.push(project->mGlobal);
+
+          while (namespaceStack.size() > 0)
+          {
+            auto namespaceObj = namespaceStack.top();
+            namespaceStack.pop();
+            if (!namespaceObj) continue;
+            if (namespaceObj->hasModifier(Modifier_Special)) continue;
+
+            for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter)
+            {
+              auto subNamespaceObj = (*iter).second;
+              namespaceStack.push(subNamespaceObj);
+            }
+
+            for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter)
+            {
+              auto structObj = (*iter).second;
+              if (structObj->hasModifier(Modifier_Special)) continue;
+              if (structObj->mGenerics.size() > 0) continue;
+
+              String filename = GenerateStructImplHeader::getStructFileName(structObj);
+
+              String outputname = fixRelativeFilePath(pathStr, filename);
+
+              std::stringstream ss;
+              std::stringstream includeSS;
+              std::stringstream structSS;
+              StringList endStrings;
+
+              ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
+              ss << "#pragma once\n\n";
+              ss << "#include \"generated/types.h\"\n";
+
+              includeSS << "#include \"generated/" << GenerateStructHeader::getStructFileName(structObj) << "\"\n";
+
+              structSS << "namespace wrapper {\n";
+              structSS << "  namespace impl {\n";
+
+              NamespaceStack parentStack;
+              auto parent = structObj->getParent();
+              while (parent) {
+                auto parentNamespace = parent->toNamespace();
+                if (parentNamespace) {
+                  parentStack.push(parentNamespace);
+                }
+                parent = parent->getParent();
+              }
+
+              String indentStr = "    ";
+
+              while (parentStack.size() > 0)
+              {
+                auto parentNamespace = parentStack.top();
+                parentStack.pop();
+
+                if (parentNamespace->mName.hasData()) {
+                  structSS << indentStr << "namespace " << parentNamespace->mName << " {\n";
+                  {
+                    std::stringstream endSS;
+                    endSS << indentStr << "} // " << parentNamespace->mName << "\n";
+                    endStrings.push(endSS.str());
+                  }
+
+                  indentStr += "  ";
+                }
+              }
+
+              {
+                GenerateStructImplHeader::StringSet processedHeaders;
+                GenerateStructImplHeader::generateStructHeaderImpl(structObj, indentStr, processedHeaders, structSS);
+              }
+
+              ss << includeSS.str();
+              ss << "\n";
+              ss << structSS.str();
+              ss << "\n";
+              while (endStrings.size() > 0) {
+                ss << endStrings.top();
+                endStrings.pop();
+              }
+              ss << "  } // namespace impl\n";
+              ss << "} // namespace wrapper\n\n";
+
+              writeBinary(outputname, UseHelper::convertToBuffer(ss.str()));
+            }
+          }
+        }
+
+
+        //---------------------------------------------------------------------
+        struct GenerateStructImplCpp : public IDLCompiler
+        {
+          typedef std::set<String> StringSet;
+
+          //-------------------------------------------------------------------
+          static String getStructFileName(StructPtr structObj)
+          {
+            String result = String("impl_") + GenerateStructHeader::getStructFileName(structObj);
+            result = result.substr(0, result.length() - 2);
+            result += ".cpp";
+            return result;
+          }
+          //-------------------------------------------------------------------
+          static const char *getBasicTypeString(BasicTypePtr type)
+          {
+            return GenerateStructHeader::getBasicTypeString(type);
+          }
+
+          //---------------------------------------------------------------------
+          static String makeOptional(bool isOptional, const String &value)
+          {
+            return GenerateStructHeader::makeOptional(isOptional, value);
+          }
+
+          //---------------------------------------------------------------------
+          static String getWrapperTypeString(bool isOptional, TypePtr type)
+          {
+            return GenerateStructHeader::getWrapperTypeString(isOptional, type);
+          }
+
+          //---------------------------------------------------------------------
+          static String getDashedComment(const String &indent)
+          {
+            std::stringstream ss;
+            ss << indent << "//";
+            size_t length = 2 + indent.length();
+            if (length < 80) {
+              for (size_t index = 0; index < (80 - length); ++index) {
+                ss << "-";
+              }
+            }
+            ss << "\n";
+            return ss.str();
+          }
+
+          //---------------------------------------------------------------------
+          static void outputMethods(
+                                    StructPtr structObj,
+                                    std::stringstream &ss,
+                                    bool createConstructors,
+                                    bool &foundEventHandler
+                                    )
+          {
+            String dashedLine = getDashedComment(String());
+
+            // output relationships
+            {
+              for (auto iterRelations = structObj->mIsARelationships.begin(); iterRelations != structObj->mIsARelationships.end(); ++iterRelations)
+              {
+                auto relatedObj = (*iterRelations).second;
+
+                {
+                  auto relatedStructObj = relatedObj->toStruct();
+                  if (relatedStructObj) {
+                    outputMethods(relatedStructObj, ss, false, foundEventHandler);
+                  }
+                }
+              }
+            }
+
+            bool foundCtor = false;
+            for (auto iterMethods = structObj->mMethods.begin(); iterMethods != structObj->mMethods.end(); ++iterMethods)
+            {
+              auto methodObj = (*iterMethods);
+              bool isCtor = methodObj->hasModifier(Modifier_Method_Ctor);
+              if (!createConstructors) {
+                if (isCtor) continue;
+              }
+              if (methodObj->hasModifier(Modifier_Method_Static)) continue;
+              if (methodObj->hasModifier(Modifier_Method_EventHandler)) {
+                foundEventHandler = true;
+                continue;
+              }
+
+              ss << dashedLine;
+              if (!isCtor) {
+                ss << getWrapperTypeString(methodObj->hasModifier(Modifier_Optional), methodObj->mResult);
+                ss << " wrapper::impl" << structObj->getPathName() << "::" << methodObj->mName;
+              }
+              else
+              {
+                foundCtor = true;
+                ss << "void wrapper::impl" << structObj->getPathName() << "::wrapper_init";
+              }
+
+              ss << "(";
+
+              if (methodObj->mArguments.size() > 1) ss << "\n" << "  ";
+
+              bool firstArgument = true;
+              for (auto iterParams = methodObj->mArguments.begin(); iterParams != methodObj->mArguments.end(); ++iterParams)
+              {
+                auto argument = (*iterParams);
+                if (!firstArgument) {
+                  ss << ",\n";
+                  ss << "  ";
+                }
+                firstArgument = false;
+
+                String typeStr = getWrapperTypeString(argument->hasModifier(Modifier_Optional), argument->mType);
+                ss << typeStr << " " << argument->mName;
+              }
+              if (methodObj->mArguments.size() > 1) ss << "\n" << "  ";
+              ss << ")\n";
+              ss << "{\n";
+              ss << "}\n\n";
+            }
+
+            if (createConstructors) {
+              for (auto iterMethods = structObj->mMethods.begin(); iterMethods != structObj->mMethods.end(); ++iterMethods)
+              {
+                auto methodObj = (*iterMethods);
+                bool isCtor = methodObj->hasModifier(Modifier_Method_Ctor);
+                bool isStatic = methodObj->hasModifier(Modifier_Method_Static);
+
+                if ((!isCtor) && (!isStatic)) continue;
+
+                ss << dashedLine;
+                ss << getWrapperTypeString(methodObj->hasModifier(Modifier_Optional), methodObj->mResult);
+                ss << " wrapper" << structObj->getPathName() << "::";
+                if (isCtor) {
+                  ss << "WrapperFactory::create";
+                } else {
+                  ss << methodObj->mName;
+                }
+                ss << "(";
+                if (methodObj->mArguments.size() > 1) ss << "\n  ";
+
+                std::stringstream argsSS;
+
+                bool firstArgument = true;
+                for (auto iterParams = methodObj->mArguments.begin(); iterParams != methodObj->mArguments.end(); ++iterParams)
+                {
+                  auto argument = (*iterParams);
+                  if (!firstArgument) {
+                    ss << ",\n";
+                    ss << "  ";
+                    argsSS << ", ";
+                  }
+                  firstArgument = false;
+
+                  argsSS << argument->mName;
+                  String typeStr = getWrapperTypeString(argument->hasModifier(Modifier_Optional), argument->mType);
+                  ss << typeStr << " " << argument->mName;
+                }
+                if (methodObj->mArguments.size() > 1) ss << "\n" << "  ";
+                ss << ")\n";
+                ss << "{\n";
+                if (isCtor) {
+                  ss << "  auto pThis = ::std::make_shared<wrapper::impl" << structObj->getPathName() << ">();\n";
+                  ss << "  pThis->mThisWeak = pThis;\n";
+                  ss << "  pThis->wrapper_init(" << argsSS.str() << ");\n";
+                  ss << "  return pThis;\n";
+                }
+                ss << "}\n\n";
+              }
+
+              if (!foundCtor) {
+                ss << dashedLine;
+                ss << "void " << "wrapper::impl" << structObj->getPathName() << "::wrapper_init()\n";
+                ss << "{\n";
+                ss << "}\n\n";
+
+                ss << dashedLine;
+                ss << "wrapper" << structObj->getPathName() << "Ptr " << "wrapper::" << structObj->getPathName() << "::WrapperFactory::create()\n";
+                ss << "{\n";
+                ss << "  auto pThis = ::std::make_shared<wrapper::impl" << structObj->getPathName() << ">();\n";
+                ss << "  pThis->mThisWeak = pThis;\n";
+                ss << "  pThis->wrapper_init();\n";
+                ss << "  return pThis;\n";
+                ss << "}\n\n";
+              }
+            }
+
+            bool isDictionary = structObj->hasModifier(Modifier_Struct_Dictionary);
+            for (auto iterProperties = structObj->mProperties.begin(); iterProperties != structObj->mProperties.end(); ++iterProperties)
+            {
+              auto propertyObj = (*iterProperties);
+              bool hasGetter = propertyObj->hasModifier(Modifier_Property_Getter);
+              bool hasSetter = propertyObj->hasModifier(Modifier_Property_Setter);
+
+              String typeStr = getWrapperTypeString(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType);
+
+              if (!isDictionary) {
+                if (!((hasGetter) || (hasSetter))) {
+                  hasGetter = hasSetter = true;
+                }
+              }
+
+              if ((!hasGetter) && (!hasSetter)) continue;
+
+              if (hasGetter) {
+                ss << dashedLine;
+                ss << typeStr << " wrapper::impl" << structObj->getPathName() << "::get_" << propertyObj->mName << "()\n";
+                ss << "{\n";
+                ss << "}\n\n";
+              }
+              if (hasSetter) {
+                ss << dashedLine;
+                ss << "void wrapper::impl" << structObj->getPathName() << "::set_" << propertyObj->mName << "(" << typeStr << " value)\n";
+                ss << "{\n";
+                ss << "}\n\n";
+              }
+            }
+          }
+
+          //---------------------------------------------------------------------
+          static void generateStructCppImpl(
+                                            StructPtr structObj,
+                                            StringSet &includedHeaders,
+                                            std::stringstream &ss
+                                            )
+          {
+            if (!structObj) return;
+            if (structObj->hasModifier(Modifier_Special)) return;
+            if (structObj->mGenerics.size() > 0) return;
+
+            ss << "\n";
+
+            for (auto iterStructs = structObj->mStructs.begin(); iterStructs != structObj->mStructs.end(); ++iterStructs)
+            {
+              auto subStructObj = (*iterStructs).second;
+              generateStructCppImpl(subStructObj, includedHeaders, ss);
+            }
+
+            String dashedLine = getDashedComment(String());
+
+            ss << dashedLine;
+            ss << "wrapper::impl" << structObj->getPathName() << "::" << structObj->mName << "()\n";
+            ss << "{\n";
+            ss << "}\n\n";
+            ss << dashedLine;
+            ss << "wrapper::impl" << structObj->getPathName() << "::~" << structObj->mName << "()\n";
+            ss << "{\n";
+            ss << "}\n\n";
+
+            bool foundEventHandler = false;
+            outputMethods(structObj, ss, true, foundEventHandler);
+
+            if (foundEventHandler) {
+              ss << dashedLine;
+              ss << "void wrapper::impl" << structObj->getPathName() << "::wrapper_onObserverInstalled()\n";
+              ss << "{\n";
+              ss << "}\n\n";
+            }
+          }
+        };
+
+        //---------------------------------------------------------------------
+        void IDLCompiler::outputStructsImplCpp(const String &pathStr) const throw (Failure)
+        {
+          typedef std::stack<NamespacePtr> NamespaceStack;
+          typedef std::stack<String> StringList;
+
+          const ProjectPtr &project = mConfig.mProject;
+          if (!project) return;
+          if (!project->mGlobal) return;
+
+          NamespaceStack namespaceStack;
+
+          namespaceStack.push(project->mGlobal);
+
+          while (namespaceStack.size() > 0)
+          {
+            auto namespaceObj = namespaceStack.top();
+            namespaceStack.pop();
+            if (!namespaceObj) continue;
+            if (namespaceObj->hasModifier(Modifier_Special)) continue;
+
+            for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter)
+            {
+              auto subNamespaceObj = (*iter).second;
+              namespaceStack.push(subNamespaceObj);
+            }
+
+            for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter)
+            {
+              auto structObj = (*iter).second;
+              if (structObj->hasModifier(Modifier_Special)) continue;
+              if (structObj->mGenerics.size() > 0) continue;
+
+              String filename = GenerateStructImplCpp::getStructFileName(structObj);
+
+              String outputname = fixRelativeFilePath(pathStr, filename);
+
+              std::stringstream ss;
+              std::stringstream includeSS;
+              std::stringstream structSS;
+
+              ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
+
+              includeSS << "#include \"" << GenerateStructImplHeader::getStructFileName(structObj) << "\"\n";
+
+              {
+                GenerateStructImplCpp::StringSet processedHeaders;
+                GenerateStructImplCpp::generateStructCppImpl(structObj, processedHeaders, structSS);
+              }
+
+              ss << includeSS.str();
+              ss << "\n";
+              ss << structSS.str();
+              ss << "\n";
+
+              writeBinary(outputname, UseHelper::convertToBuffer(ss.str()));
+            }
+          }
         }
 
         //---------------------------------------------------------------------

@@ -80,7 +80,6 @@ namespace zsLib
 
         Modifier_Struct_Dictionary,       // struct is treated as simple structured dictionary data; properties default without getters/setters
         Modifier_Struct_Exception,        // struct is meant for throws declarations
-        Modifier_Struct_Special,          // struct wrapper is created through special / custom processing
 
         Modifier_Method_Ctor,
         Modifier_Method_Static,
@@ -97,6 +96,7 @@ namespace zsLib
         Modifier_Property_Setter,           // value is not set in wrapper, set in code
         Modifier_Property_Dynamic,          // value might be a derived type
 
+        Modifier_Special,                   // namespace is not output, struct wrapper is created through special / custom processing
         Modifier_Nullable,                  // value of null is legal
         Modifier_Optional,                  // optional type whose value may not be set
         Modifier_Dynamic,                   // type might be of derived type
@@ -109,6 +109,7 @@ namespace zsLib
       static Modifiers toModifier(const char *value) throw (InvalidArgument);
 
       static bool isValidForAll(Modifiers value);
+      static bool isValidForNamespace(Modifiers value);
       static bool isValidForStruct(Modifiers value);
       static bool isValidForMethod(Modifiers value);
       static bool isValidForMethodArgument(Modifiers value);
@@ -373,7 +374,7 @@ namespace zsLib
                                             ElementPtr parentEl
                                             ) throw (InvalidContent);
 
-        virtual TypePtr getTypeBypassingTypedefIfNoop() const {return toType();}
+        virtual TypePtr getOriginalType() const {return toType();}
 
         ElementPtr createReferenceTypeElement() const;
       };
@@ -520,7 +521,7 @@ namespace zsLib
 
         virtual void resolveTypedefs() throw (InvalidContent) override;
 
-        virtual TypePtr getTypeBypassingTypedefIfNoop() const override;
+        virtual TypePtr getOriginalType() const override;
       };
 
       static void createTypedefForwards(
@@ -585,6 +586,8 @@ namespace zsLib
         virtual bool fixTemplateHashMapping() override;
 
         virtual StructPtr toStruct() const override {return ZS_DYNAMIC_PTR_CAST(Struct, toContext());}
+
+        StructPtr getRootStruct() const;
       };
 
       static void createStructForwards(

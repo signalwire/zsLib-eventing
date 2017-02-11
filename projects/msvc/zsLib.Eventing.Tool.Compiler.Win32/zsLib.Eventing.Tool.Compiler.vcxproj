@@ -259,7 +259,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\zsLib\zsLib\cpp\zsLib.events.json" />
-    <None Include="..\..\..\..\zsLib\zsLib\idl\config.json" />
+    <None Include="..\..\..\..\zsLib\zsLib\idl\config.json">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="..\..\..\..\zsLib\zsLib\idl\std.idl">
