@@ -170,7 +170,6 @@ namespace zsLib
           }
 
           output() <<
-          "                                           cx - Generate C++/CX UWP wrapper\n"
           "                                           objc - Generate Objective-C wrapper\n"
           "                                           android - Java on Android\n"
           " -author       \"John Q Public\"           - manifest author.\n"

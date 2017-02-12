@@ -65,6 +65,26 @@ namespace zsLib
           return result.substr(pos + 1);
         }
         
+
+        //---------------------------------------------------------------------
+        String Helper::fixRelativeFilePath(const String &originalFileName, const String &newFileName)
+        {
+          String result(newFileName);
+          result.trim();
+          result.replaceAll("\\", "/");
+          if (0 == result.find('/')) return result;
+
+          String path(originalFileName);
+          path.trim();
+          path.replaceAll("\\", "/");
+          auto pos = path.rfind('/');
+          if (String::npos == pos) return result;
+
+          path = path.substr(0, pos + 1);
+          result = path + result;
+          return result;
+        }
+
         //-----------------------------------------------------------------------
         bool Helper::isLikelyJSON(const char *p)
         {

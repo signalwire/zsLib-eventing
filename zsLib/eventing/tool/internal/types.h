@@ -55,6 +55,12 @@ namespace zsLib
         ZS_DECLARE_CLASS_PTR(EventingCompiler);
         ZS_DECLARE_CLASS_PTR(IDLCompiler);
         ZS_DECLARE_CLASS_PTR(Monitor);
+
+        ZS_DECLARE_STRUCT_PTR(GenerateStructHeader);
+        ZS_DECLARE_STRUCT_PTR(GenerateStructImplHeader);
+        ZS_DECLARE_STRUCT_PTR(GenerateStructImplCpp);
+        ZS_DECLARE_STRUCT_PTR(GenerateStructHeader);
+        ZS_DECLARE_STRUCT_PTR(GenerateStructCx);
       }
     }
   }

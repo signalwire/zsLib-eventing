@@ -31,9 +31,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #pragma once
 
-#include <zsLib/eventing/tool/internal/types.h>
-
-#include <zsLib/eventing/IHelper.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h>
 
 namespace zsLib
 {
@@ -43,53 +41,47 @@ namespace zsLib
     {
       namespace internal
       {
+
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         #pragma mark
-        #pragma mark Helper
+        #pragma mark GenerateStructImplCpp
         #pragma mark
 
-        class Helper : public eventing::IHelper
+        struct GenerateStructImplCpp : public IIDLCompilerTarget,
+                                       public IDLCompiler
         {
-        public:
-          static String fileNameAfterPath(const String &filePath);
-          static String fixRelativeFilePath(const String &originalFileName, const String &newFileName);
+          typedef std::set<String> StringSet;
 
-          static bool isLikelyJSON(const char *p);
+          GenerateStructImplCpp();
+          static GenerateStructImplCppPtr create();
+          static String getStructFileName(StructPtr structObj);
 
-          static bool skipEOL(
-                              const char * &p,
-                              ULONG *currentLine
-                              );
-          static void skipToEOL(const char * &p);
-          static bool skipWhitespaceExceptEOL(const char * &p);
-          
-          static bool skipCComments(
-                                    const char * &p,
-                                    ULONG *lineCount
+          static const char *getBasicTypeString(BasicTypePtr type);
+          static String makeOptional(bool isOptional, const String &value);
+          static String getWrapperTypeString(bool isOptional, TypePtr type);
+          static String getDashedComment(const String &indent);
+          static void outputMethods(
+                                    StructPtr structObj,
+                                    std::stringstream &ss,
+                                    bool createConstructors,
+                                    bool &foundEventHandler
                                     );
-          
-          static bool skipCPPComments(const char * &p);
-          
-          static bool skipQuote(
-                                const char * &p,
-                                ULONG *currentLine
-                                );
-          
-          static bool isQuotes(const String &str);
-
-          static String decodeCEscape(
-                                      const char * &p,
-                                      ULONG lineCount
-                                      ) throw (FailureWithLine);
-          static String decodeQuotes(
-                                     const String &str,
-                                     ULONG lineCount
-                                     ) throw (FailureWithLine);
+          static void generateStructCppImpl(
+                                            StructPtr structObj,
+                                            StringSet &includedHeaders,
+                                            std::stringstream &ss
+                                            );
+          virtual String targetKeyword() override;
+          virtual String targetKeywordHelp() override;
+          virtual void targetOutput(
+                                    const String &inPathStr,
+                                    const ICompilerTypes::Config &config
+                                    ) throw (Failure) override;
         };
-
+       
       } // namespace internal
     } // namespace tool
   } // namespace eventing
