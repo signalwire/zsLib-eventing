@@ -1270,7 +1270,6 @@ namespace zsLib
           auto &pubSS = structFile.mHeaderStructPublicSS;
           auto &cppSS = structFile.mCppBodySS;
           auto &cppIncludeSS = structFile.mCppIncludeSS;
-          auto &headerMethodsSS = structFile.mHeaderStructPrivateMethodsSS;
           auto &observerSS = structFile.mHeaderStructObserverSS;
           auto &observerFinalSS = structFile.mHeaderStructObserverFinalSS;
 
@@ -1349,8 +1348,33 @@ namespace zsLib
             ss << indentStr << "wrapper" << structObj->getPathName() << "::WrapperObserverPtr mObserver;\n";
           }
           ss << "\n";
+          ss << indentStr << "struct WrapperCreate {};\n";
+          ss << indentStr << fixStructName(structObj) << "(const WrapperCreate &) {}\n";
+          ss << "\n";
           ss << indentStr << "static " << fixStructName(structObj) << "^ ToCx(" << getCppType(false, structObj) << " value);\n";
           ss << indentStr << "static " << getCppType(false, structObj) << " FromCx(" << fixStructName(structObj) << "^ value);\n";
+
+          cppSS << dashedStr;
+          cppSS << getCxType(false, structObj) << " " << fixStructName(structObj) << "::ToCx(" << getCppType(false, structObj) << " value)\n";
+          cppSS << "{\n";
+          cppSS << "  if (!value) return nullptr;\n";
+          cppSS << "  auto result = ref new " << fixStructName(structObj) << "(WrapperCreate{});\n";
+          cppSS << "  result->mObserver = make_shared<WrapperObserverImpl>(result);\n";
+          cppSS << "  result->mNative = value;\n";
+          if (hasEvents) {
+            cppSS << "  result->mNative->wrapper_installObserver(mObserver);\n";
+          }
+          cppSS << "  return result;\n";
+          cppSS << "}\n";
+          cppSS << "\n";
+
+          cppSS << dashedStr;
+          cppSS << getCppType(false, structObj) << " " << fixStructName(structObj) << "::FromCx(" << getCxType(false, structObj) << " value)\n";
+          cppSS << "{\n";
+          cppSS << "  if (nullptr == value) return " << getCppType(false, structObj) << "();\n";
+          cppSS << "  return value->mNative;\n";
+          cppSS << "}\n";
+          cppSS << "\n";
 
           if (!hasConstructor) {
             pubSS << indentStr << fixStructName(structObj) << "();";
@@ -1365,7 +1389,7 @@ namespace zsLib
             cppSS << "\n";
             cppSS << "{\n";
             if (hasEvents) {
-              cppSS << "  wrapper_installObserver(mObserver);\n";
+              cppSS << "  mNative->wrapper_installObserver(mObserver);\n";
             }
             cppSS << "  wrapper_init_" << getStructInitName(structObj) << "();\n";
             cppSS << "}\n";
@@ -1381,6 +1405,33 @@ namespace zsLib
             observerFinalSS << indentStr << "};\n";
           }
 
+          {
+            bool foundCast = false;
+            auto found = helperFile.mDerives.find(structObj->getPathName());
+            if (found != helperFile.mDerives.end()) {
+              auto &structSet = (*found).second;
+              for (auto iterSet = structSet.begin(); iterSet != structSet.end(); ++iterSet)
+              {
+                auto foundStruct = (*iterSet);
+                if (foundStruct != structObj) {
+                  pubSS << indentStr << "static " << fixStructName(structObj) << "^ Cast(" << getCxType(false, foundStruct) << " value);\n";
+                  foundCast = true;
+
+                  cppSS << dashedStr;
+                  cppSS << getCxType(false, structObj) << " " << fixNamePath(structObj) << "::Cast(" << getCxType(false, foundStruct) << " value)\n";
+                  cppSS << "{\n";
+                  cppSS << "  if (nullptr == value) return nullptr;\n";
+                  cppSS << "  auto result = std::dynamic_pointer_cast< wrapper" << structObj->getPathName() << " >(value);\n";
+                  cppSS << "  if (!result) return nullptr;\n";
+                  cppSS << "  return ToCx(result);\n";
+                  cppSS << "}\n";
+                  cppSS << "\n";
+                }
+              }
+            }
+            if (foundCast) pubSS << "\n";
+          }
+
           generateStructMethods(helperFile, structFile, structObj, true, hasEvents);
 
           includeSS << "\n";
@@ -1390,10 +1441,6 @@ namespace zsLib
           includeSS << "\n";
           includeSS << observerSS.str() << "\n";
           includeSS << observerFinalSS.str() << "\n";
-          includeSS << "\n";
-          includeSS << headerMethodsSS.str() << "\n";
-          includeSS << "\n";
-
           includeSS << pubSS.str();
 
           includeSS << "\n";

@@ -91,7 +91,6 @@ namespace zsLib
             std::stringstream mHeaderStructPrivateSS;
             std::stringstream mHeaderStructObserverSS;
             std::stringstream mHeaderStructObserverFinalSS;
-            std::stringstream mHeaderStructPrivateMethodsSS;
             std::stringstream mHeaderStructPublicSS;
             std::stringstream mCppIncludeSS;
             std::stringstream mCppBodySS;
