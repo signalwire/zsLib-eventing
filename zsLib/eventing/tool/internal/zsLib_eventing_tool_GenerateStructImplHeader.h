@@ -67,6 +67,7 @@ namespace zsLib
                                     String indentStr,
                                     std::stringstream &ss,
                                     bool createConstructors,
+                                    bool staticOnlyMethods,
                                     bool &foundEventHandler
                                     );
           static void generateStructHeaderImpl(

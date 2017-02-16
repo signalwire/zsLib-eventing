@@ -135,7 +135,13 @@ namespace zsLib
         {
           String dashedLine = getDashedComment(String());
 
+          bool staticOnlyMethods = false;
           if (createConstructors) {
+            staticOnlyMethods = GenerateStructHeader::hasOnlyStaticMethods(structObj);
+          }
+
+          if ((createConstructors) &&
+              (!staticOnlyMethods)) {
             ss << dashedLine;
             ss << "wrapper" << structObj->getPathName() << "Ptr " << "wrapper::" << structObj->getPathName() << "::wrapper_create()\n";
             ss << "{\n";
@@ -250,7 +256,8 @@ namespace zsLib
               }
             }
           } else {
-            if (!foundCtor) {
+            if ((!foundCtor) &&
+                (!staticOnlyMethods)) {
               ss << dashedLine;
               ss << "void " << "wrapper::impl" << structObj->getPathName() << "::wrapper_init_" << getStructInitName(structObj) << "()\n";
               ss << "{\n";

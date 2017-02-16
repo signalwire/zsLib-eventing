@@ -144,10 +144,10 @@ namespace zsLib
                                                      String indentStr,
                                                      std::stringstream &ss,
                                                      bool createConstructors,
+                                                     bool staticOnlyMethods,
                                                      bool &foundEventHandler
                                                      )
         {
-
           // output relationships
           {
             for (auto iterRelations = structObj->mIsARelationships.begin(); iterRelations != structObj->mIsARelationships.end(); ++iterRelations)
@@ -157,7 +157,7 @@ namespace zsLib
               {
                 auto relatedStructObj = relatedObj->toStruct();
                 if (relatedStructObj) {
-                  outputMethods(relatedStructObj, indentStr, ss, false, foundEventHandler);
+                  outputMethods(relatedStructObj, indentStr, ss, false, staticOnlyMethods, foundEventHandler);
                 }
               }
             }
@@ -215,7 +215,7 @@ namespace zsLib
             ss << ") override;\n";
           }
 
-          if ((createConstructors) && (!foundCtor)) {
+          if ((createConstructors) && (!foundCtor) && (!staticOnlyMethods)) {
             ss << indentStr << "virtual void wrapper_init_" << getStructInitName(structObj) << "() override;\n";
           }
 
@@ -264,6 +264,8 @@ namespace zsLib
           if (structObj->hasModifier(Modifier_Special)) return;
           if (structObj->mGenerics.size() > 0) return;
 
+          bool staticOnlyMethods = GenerateStructHeader::hasOnlyStaticMethods(structObj);
+
           ss << "\n";
           ss << indentStr << "struct " << structObj->mName << " : public wrapper" << structObj->getPathName() << "\n";
           ss << indentStr << "{\n";
@@ -271,8 +273,10 @@ namespace zsLib
           String currentIdentStr = indentStr;
           indentStr += "  ";
 
-          ss << indentStr << structObj->mName << "WeakPtr thisWeak_;\n\n";
-          ss << indentStr << structObj->mName << "();\n";
+          if (!staticOnlyMethods) {
+            ss << indentStr << structObj->mName << "WeakPtr thisWeak_;\n\n";
+            ss << indentStr << structObj->mName << "();\n";
+          }
           ss << indentStr << "virtual ~" << structObj->mName << "();\n";
 
           for (auto iterStructs = structObj->mStructs.begin(); iterStructs != structObj->mStructs.end(); ++iterStructs)
@@ -282,7 +286,7 @@ namespace zsLib
           }
 
           bool foundEventHandler = false;
-          outputMethods(structObj, indentStr, ss, true, foundEventHandler);
+          outputMethods(structObj, indentStr, ss, true, staticOnlyMethods, foundEventHandler);
 
           if (foundEventHandler) {
             ss << "\n";

@@ -151,6 +151,32 @@ namespace zsLib
         }
 
         //-------------------------------------------------------------------
+        bool GenerateStructHeader::hasOnlyStaticMethods(StructPtr structObj)
+        {
+          if (!structObj) return true;
+
+          if (structObj->mProperties.size() > 0) return false;
+
+          for (auto iter = structObj->mIsARelationships.begin(); iter != structObj->mIsARelationships.end(); ++iter) {
+            auto relatedObj = (*iter).second;
+            if (!relatedObj) continue;
+
+            auto relatedStruct = relatedObj->toStruct();
+            if (!relatedStruct) continue;
+
+            bool only = hasOnlyStaticMethods(relatedStruct);
+            if (!only) return false;
+          }
+
+          for (auto iter = structObj->mMethods.begin(); iter != structObj->mMethods.end(); ++iter) {
+            auto method = (*iter);
+            if (method->hasModifier(Modifier_Method_Static)) continue;
+            return false;
+          }
+          return true;
+        }
+
+        //-------------------------------------------------------------------
         const char *GenerateStructHeader::getBasicTypeString(BasicTypePtr type)
         {
           if (!type) return "";
@@ -328,6 +354,8 @@ namespace zsLib
           if (structObj->hasModifier(Modifier_Special)) return;
           if (structObj->mGenerics.size() > 0) return;
 
+          bool staticOnlyMethods = hasOnlyStaticMethods(structObj);
+
           auto rootStruct = structObj->getRootStruct();
 
           ss << "\n";
@@ -416,7 +444,9 @@ namespace zsLib
 
           if (outputSubTypes) ss << "\n";
 
-          ss << indentStr << "static " << structObj->mName << "Ptr wrapper_create();\n";
+          if (!staticOnlyMethods) {
+            ss << indentStr << "static " << structObj->mName << "Ptr wrapper_create();\n";
+          }
           ss << indentStr << "virtual ~" << structObj->mName << "() {}\n\n";
 
           for (auto iterStructs = structObj->mStructs.begin(); iterStructs != structObj->mStructs.end(); ++iterStructs)
@@ -548,10 +578,15 @@ namespace zsLib
             }
 
             if (methodObj->mArguments.size() > 1) ss << "\n" << indentStr << "  ";
-            ss << ") = 0;\n";
+            if (methodObj->hasModifier(Modifier_Method_Static)) {
+              ss << ");\n";
+            } else {
+              ss << ") = 0;\n";
+            }
           }
 
-          if (!foundCtor) {
+          if ((!foundCtor) &&
+              (!staticOnlyMethods)) {
             ss << indentStr << "virtual void wrapper_init_" << getStructInitName(structObj) << "() = 0;";
           }
 

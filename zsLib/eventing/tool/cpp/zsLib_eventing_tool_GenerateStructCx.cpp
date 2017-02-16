@@ -1377,23 +1377,27 @@ namespace zsLib
           cppSS << "\n";
 
           if (!hasConstructor) {
-            pubSS << indentStr << fixStructName(structObj) << "();";
+            bool staticOnlyMethods = GenerateStructHeader::hasOnlyStaticMethods(structObj);
 
-            cppSS << dashedStr;
-            cppSS << fixNamePath(structObj) << "::" << fixStructName(structObj) << "\n";
-            cppSS << "  : native_(" << "wrapper" << structObj->getPathName() << "::wrapper_create()" << ")";
-            if (hasEvents) {
-              cppSS << ",\n";
-              cppSS << "    observer_(make_shared<WrapperObserverImpl>(this))";
+            if (!staticOnlyMethods) {
+              pubSS << indentStr << fixStructName(structObj) << "();";
+
+              cppSS << dashedStr;
+              cppSS << fixNamePath(structObj) << "::" << fixStructName(structObj) << "\n";
+              cppSS << "  : native_(" << "wrapper" << structObj->getPathName() << "::wrapper_create()" << ")";
+              if (hasEvents) {
+                cppSS << ",\n";
+                cppSS << "    observer_(make_shared<WrapperObserverImpl>(this))";
+              }
+              cppSS << "\n";
+              cppSS << "{\n";
+              if (hasEvents) {
+                cppSS << "  native_->wrapper_installObserver(observer_);\n";
+              }
+              cppSS << "  wrapper_init_" << getStructInitName(structObj) << "();\n";
+              cppSS << "}\n";
+              cppSS << "\n";
             }
-            cppSS << "\n";
-            cppSS << "{\n";
-            if (hasEvents) {
-              cppSS << "  native_->wrapper_installObserver(observer_);\n";
-            }
-            cppSS << "  wrapper_init_" << getStructInitName(structObj) << "();\n";
-            cppSS << "}\n";
-            cppSS << "\n";
           }
 
           if (hasEvents) {
