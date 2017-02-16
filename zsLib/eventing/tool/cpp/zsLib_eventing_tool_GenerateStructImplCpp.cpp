@@ -140,7 +140,7 @@ namespace zsLib
             ss << "wrapper" << structObj->getPathName() << "Ptr " << "wrapper::" << structObj->getPathName() << "::wrapper_create()\n";
             ss << "{\n";
             ss << "  auto pThis = make_shared<wrapper::impl" << structObj->getPathName() << ">();\n";
-            ss << "  pThis->mThisWeak = pThis;\n";
+            ss << "  pThis->thisWeak_ = pThis;\n";
             ss << "  return pThis;\n";
             ss << "}\n\n";
           }
@@ -175,6 +175,8 @@ namespace zsLib
               continue;
             }
 
+            String wrapperResultType = getWrapperTypeString(methodObj->hasModifier(Modifier_Optional), methodObj->mResult);
+
             ss << dashedLine;
             if (!isCtor) {
               ss << getWrapperTypeString(methodObj->hasModifier(Modifier_Optional), methodObj->mResult);
@@ -183,6 +185,7 @@ namespace zsLib
             else
             {
               foundCtor = true;
+              wrapperResultType = "void";
               ss << "void wrapper::impl" << structObj->getPathName() << "::wrapper_init_" << getStructInitName(structObj);
             }
 
@@ -206,6 +209,10 @@ namespace zsLib
             if (methodObj->mArguments.size() > 1) ss << "\n" << "  ";
             ss << ")\n";
             ss << "{\n";
+            if ("void" != wrapperResultType) {
+              ss << "  " << wrapperResultType << " result {};\n";
+              ss << "  return result;\n";
+            }
             ss << "}\n\n";
           }
 
@@ -231,6 +238,8 @@ namespace zsLib
                 ss << dashedLine;
                 ss << typeStr << " wrapper::impl" << structObj->getPathName() << "::get_" << propertyObj->mName << "()\n";
                 ss << "{\n";
+                ss << "  " << typeStr << " result {};\n";
+                ss << "  return result;\n";
                 ss << "}\n\n";
               }
               if (hasSetter) {

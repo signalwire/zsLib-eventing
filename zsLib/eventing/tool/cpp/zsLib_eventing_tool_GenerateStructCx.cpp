@@ -1343,9 +1343,9 @@ namespace zsLib
 
           indentStr += "  ";
 
-          ss << indentStr << getCppType(false, structObj) << " mNative;\n";
+          ss << indentStr << getCppType(false, structObj) << " native_;\n";
           if (hasEvents) {
-            ss << indentStr << "wrapper" << structObj->getPathName() << "::WrapperObserverPtr mObserver;\n";
+            ss << indentStr << "wrapper" << structObj->getPathName() << "::WrapperObserverPtr observer_;\n";
           }
           ss << "\n";
           ss << indentStr << "struct WrapperCreate {};\n";
@@ -1359,10 +1359,10 @@ namespace zsLib
           cppSS << "{\n";
           cppSS << "  if (!value) return nullptr;\n";
           cppSS << "  auto result = ref new " << fixStructName(structObj) << "(WrapperCreate{});\n";
-          cppSS << "  result->mObserver = make_shared<WrapperObserverImpl>(result);\n";
-          cppSS << "  result->mNative = value;\n";
+          cppSS << "  result->observer_ = make_shared<WrapperObserverImpl>(result);\n";
+          cppSS << "  result->native_ = value;\n";
           if (hasEvents) {
-            cppSS << "  result->mNative->wrapper_installObserver(mObserver);\n";
+            cppSS << "  result->native_->wrapper_installObserver(observer_);\n";
           }
           cppSS << "  return result;\n";
           cppSS << "}\n";
@@ -1372,7 +1372,7 @@ namespace zsLib
           cppSS << getCppType(false, structObj) << " " << fixStructName(structObj) << "::FromCx(" << getCxType(false, structObj) << " value)\n";
           cppSS << "{\n";
           cppSS << "  if (nullptr == value) return " << getCppType(false, structObj) << "();\n";
-          cppSS << "  return value->mNative;\n";
+          cppSS << "  return value->native_;\n";
           cppSS << "}\n";
           cppSS << "\n";
 
@@ -1381,15 +1381,15 @@ namespace zsLib
 
             cppSS << dashedStr;
             cppSS << fixNamePath(structObj) << "::" << fixStructName(structObj) << "\n";
-            cppSS << "  : mNative(" << "wrapper" << structObj->getPathName() << "::wrapper_create()" << ")";
+            cppSS << "  : native_(" << "wrapper" << structObj->getPathName() << "::wrapper_create()" << ")";
             if (hasEvents) {
               cppSS << ",\n";
-              cppSS << "    mObserver(make_shared<WrapperObserverImpl>(this))";
+              cppSS << "    observer_(make_shared<WrapperObserverImpl>(this))";
             }
             cppSS << "\n";
             cppSS << "{\n";
             if (hasEvents) {
-              cppSS << "  mNative->wrapper_installObserver(mObserver);\n";
+              cppSS << "  native_->wrapper_installObserver(observer_);\n";
             }
             cppSS << "  wrapper_init_" << getStructInitName(structObj) << "();\n";
             cppSS << "}\n";
@@ -1399,9 +1399,9 @@ namespace zsLib
           if (hasEvents) {
             observerSS << indentStr << "struct WrapperObserverImpl : public wrapper" << structObj->getPathName() << "::WrapperObserver \n";
             observerSS << indentStr << "{\n";
-            observerSS << indentStr << "  WrapperObserverImpl(" << fixStructName(structObj) << " owner) : mOwner(owner) {}\n";
+            observerSS << indentStr << "  WrapperObserverImpl(" << fixStructName(structObj) << " owner) : owner_(owner) {}\n";
             observerSS << "\n";
-            observerFinalSS << indentStr << "  " << fixStructName(structObj) << "^ mOwner;\n";
+            observerFinalSS << indentStr << "  " << fixStructName(structObj) << "^ owner_;\n";
             observerFinalSS << indentStr << "};\n";
           }
 
@@ -1534,13 +1534,35 @@ namespace zsLib
             }
 
             if (isEvent) {
-              implSS << "mOwner->" << fixName(method->mName) << "(";
+              implSS << "owner_->" << fixName(method->mName) << "(";
             } else {
               if (isCtor) {
-                implSS << "mNative->wrapper_init_" << getStructInitName(structObj) << "(";
+                implSS << "native_->wrapper_init_" << getStructInitName(structObj) << "(";
               } else {
-                implSS << "mNative->" << method->mName << "(";
+                implSS << "native_->" << method->mName << "(";
               }
+            }
+
+            StringList attributes;
+            if (method->hasModifier(Modifier_Method_Default)) {
+              attributes.push_back("Windows::Foundation::Metadata::DefaultOverloadAttribute");
+            }
+            String altName = method->getModifierValue(Modifier_AltName, 0);
+            if (altName.hasData()) {
+              attributes.push_back("Windows::Foundation::Metadata::OverloadAttribute(\"" + fixName(altName) + "\"))");
+            }
+
+            if (attributes.size() > 0) {
+              headerMethodsSS << indentStr << "[";
+              bool firstAttribute = true;
+              while (attributes.size() > 0) {
+                String attributeStr = attributes.front();
+                attributes.pop_front();
+                if (!firstAttribute) headerMethodsSS << ", ";
+                firstAttribute = false;
+                headerMethodsSS << attributeStr;
+              }
+              headerMethodsSS << "]\n";
             }
 
             if (isEvent) {
@@ -1655,19 +1677,19 @@ namespace zsLib
             }
             cppSS << ")";
             if (isCtor) {
-              cppSS << " : mNative(" << "wrapper" << structObj->getPathName() << "::wrapper_create()" << ")";
+              cppSS << " : native_(" << "wrapper" << structObj->getPathName() << "::wrapper_create()" << ")";
               if (hasEvents) {
                 cppSS << ",\n";
-                cppSS << "      mObserver(make_shared<WrapperObserverImpl>(this))";
+                cppSS << "      observer_(make_shared<WrapperObserverImpl>(this))";
               }
             }
 
             cppSS << "\n";
             cppSS << "{\n";
             if ((isCtor) && (hasEvents)) {
-              cppSS << "  wrapper_installObserver(mObserver);\n";
+              cppSS << "  wrapper_installObserver(observer_);\n";
             }
-            cppSS << "  if (" << (isEvent ? "nullptr == mOwner" : "!mNative") << ") {throw ref new Platform::NullReferenceException();}\n";
+            cppSS << "  if (" << (isEvent ? "nullptr == owner_" : "!native_") << ") {throw ref new Platform::NullReferenceException();}\n";
             cppSS << implSS.str();
             cppSS << "}\n";
             cppSS << "\n";
@@ -1711,8 +1733,8 @@ namespace zsLib
               cppSS << dashedStr;
               cppSS << getCxType(property->hasModifier(Modifier_Optional), property->mType) << " " << fixNamePath(property) << "::get()\n";
               cppSS << "{\n";
-              cppSS << "  if (!mNative) {throw ref new Platform::NullReferenceException();}\n";
-              cppSS << "  return ::Internal::Helper::ToCx(mNative->";
+              cppSS << "  if (!native_) {throw ref new Platform::NullReferenceException();}\n";
+              cppSS << "  return ::Internal::Helper::ToCx(native_->";
               if (hasGetter) {
                 cppSS << "get_" << property->mName << "()";
               } else {
@@ -1726,8 +1748,8 @@ namespace zsLib
               cppSS << dashedStr;
               cppSS << "void " << fixNamePath(property) << "::set(" << getCxType(property->hasModifier(Modifier_Optional), property->mType) << " value)\n";
               cppSS << "{\n";
-              cppSS << "  if (!mNative) {throw ref new Platform::NullReferenceException();}\n";
-              cppSS << "  mNative->";
+              cppSS << "  if (!native_) {throw ref new Platform::NullReferenceException();}\n";
+              cppSS << "  native_->";
               if (hasSetter) {
                 cppSS << "set_" << property->mName << "(::Internal::Helper::FromCx(value));";
               } else {

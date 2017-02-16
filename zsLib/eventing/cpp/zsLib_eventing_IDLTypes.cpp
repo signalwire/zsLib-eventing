@@ -479,9 +479,9 @@ namespace zsLib
       auto found = mModifiers.find(toString(modifier));
       if (found == mModifiers.end()) return String();
      
-      auto values = (*found).second;
+      auto &values = (*found).second;
       auto iter = values.begin();
-      for (size_t pos = 0; pos < index && (iter != values.end()); ++pos, ++iter) {
+      for (size_t pos = 0; pos <= index && (iter != values.end()); ++pos, ++iter) {
         if (pos != index) continue;
         return (*iter);
       }

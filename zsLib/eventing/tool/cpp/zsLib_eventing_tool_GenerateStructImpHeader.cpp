@@ -271,7 +271,7 @@ namespace zsLib
           String currentIdentStr = indentStr;
           indentStr += "  ";
 
-          ss << indentStr << structObj->mName << "WeakPtr mThisWeak;\n\n";
+          ss << indentStr << structObj->mName << "WeakPtr thisWeak_;\n\n";
           ss << indentStr << structObj->mName << "();\n";
           ss << indentStr << "virtual ~" << structObj->mName << "();\n";
 
