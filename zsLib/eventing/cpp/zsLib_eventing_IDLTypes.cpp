@@ -108,8 +108,6 @@ namespace zsLib
     {
       switch (value)
       {
-        case IIDLTypes::Modifier_Common_AltName:            return "altname";
-          
         case IIDLTypes::Modifier_Struct_Dictionary:         return "dictionary";
         case IIDLTypes::Modifier_Struct_Exception:          return "exception";
 
@@ -127,6 +125,7 @@ namespace zsLib
         case IIDLTypes::Modifier_Property_Getter:           return "getter";
         case IIDLTypes::Modifier_Property_Setter:           return "setter";
 
+        case IIDLTypes::Modifier_AltName:                   return "altname";
         case IIDLTypes::Modifier_Special:                   return "special";
         case IIDLTypes::Modifier_Nullable:                  return "nullable";
         case IIDLTypes::Modifier_Optional:                  return "optional";
@@ -141,8 +140,6 @@ namespace zsLib
     {
       switch (value)
       {
-        case IIDLTypes::Modifier_Common_AltName:            return 1;
-
         case IIDLTypes::Modifier_Struct_Dictionary:         return 0;
         case IIDLTypes::Modifier_Struct_Exception:          return 0;
 
@@ -160,6 +157,7 @@ namespace zsLib
         case IIDLTypes::Modifier_Property_Getter:           return 0;
         case IIDLTypes::Modifier_Property_Setter:           return 0;
 
+        case IIDLTypes::Modifier_AltName:                   return 1;
         case IIDLTypes::Modifier_Special:                   return 0;
         case IIDLTypes::Modifier_Nullable:                  return 0;
         case IIDLTypes::Modifier_Optional:                  return 0;
@@ -185,7 +183,7 @@ namespace zsLib
     {
       switch (value)
       {
-        case IIDLTypes::Modifier_Common_AltName:
+        case IIDLTypes::Modifier_AltName:
         {
           return true;
         }
@@ -813,8 +811,7 @@ namespace zsLib
                                                     const FindTypeOptions &options
                                                     ) const
     {
-      if (pathStr.hasData()) {
-        if (!mGlobal) return TypePtr();
+      if (mGlobal) {
         return mGlobal->findType(pathStr, typeName, options);
       }
 
@@ -823,7 +820,7 @@ namespace zsLib
 
       return (*found).second;
     }
-    
+
     //-------------------------------------------------------------------------
     void IIDLTypes::Project::resolveTypedefs() throw (InvalidContent)
     {
@@ -1069,7 +1066,7 @@ namespace zsLib
         checkPath = pathStr.substr(2);
       }
       
-      if (pathStr.hasData()) {
+      if (checkPath.hasData()) {
         UseHelper::SplitMap splitPaths;
         UseHelper::split(pathStr, splitPaths, "::");
         
@@ -1121,7 +1118,17 @@ namespace zsLib
 
       if (options.mSearchParents) {
         auto parent = getParent();
-        if (parent) return parent->findType(pathStr, typeName, options);
+        if (parent) {
+          auto project = parent->toProject();
+          if (project) {
+            auto found = project->mBasicTypes.find(typeName);
+            if (found == project->mBasicTypes.end()) return TypePtr();
+
+            return (*found).second;
+          }
+
+          return parent->findType(pathStr, typeName, options);
+        }
       }
 
       return TypePtr();
@@ -1247,6 +1254,17 @@ namespace zsLib
       }
 
       return parentNamespace->findNamespace(pathStr, name);
+    }
+
+    //-------------------------------------------------------------------------
+    bool IIDLTypes::Namespace::isGlobal() const
+    {
+      if (mName.hasData()) return false;
+      auto parent = getParent();
+      if (!parent) return true;
+      auto namespaceObj = parent->toNamespace();
+      if (namespaceObj) return false;
+      return true;
     }
 
     //-------------------------------------------------------------------------

@@ -3094,6 +3094,27 @@ namespace zsLib
                 if (templateTypes.size() > 0) {
                   auto templatedStruct = TemplatedStructType::create(structObj);
                   templatedStruct->mTemplateArguments = templateTypes;
+
+                  if (templatedStruct->mTemplateArguments.size() < structObj->mGenerics.size()) {
+                    // attempt to fill in remaining part of template with defaults
+                    if (structObj->mGenericDefaultTypes.size() > templatedStruct->mTemplateArguments.size()) {
+                      size_t skip = templatedStruct->mTemplateArguments.size();
+                      for (auto iterDefault = structObj->mGenericDefaultTypes.begin(); iterDefault != structObj->mGenericDefaultTypes.end(); ++iterDefault) {
+                        if (skip > 0) {
+                          --skip;
+                          continue;
+                        }
+                        auto type = (*iterDefault);
+                        if (!type) break;
+                        templatedStruct->mTemplateArguments.push_back(type);
+                      }
+                    }
+                  }
+
+                  if (templatedStruct->mTemplateArguments.size() < structObj->mGenerics.size()) {
+                    ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " does not have enough templated parameters");
+                  }
+
                   auto hashID = templatedStruct->calculateTemplateID();
                   
                   auto found = structObj->mTemplatedStructs.find(hashID);

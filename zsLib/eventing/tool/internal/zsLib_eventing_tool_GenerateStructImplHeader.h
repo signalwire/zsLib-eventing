@@ -58,6 +58,7 @@ namespace zsLib
           static GenerateStructImplHeaderPtr create();
           static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure);
           static String getStructFileName(StructPtr structObj);
+          static String getStructInitName(StructPtr structObj);
           static const char *getBasicTypeString(BasicTypePtr type);
           static String makeOptional(bool isOptional, const String &value);
           static String getWrapperTypeString(bool isOptional, TypePtr type);

@@ -60,6 +60,45 @@ namespace zsLib
           typedef std::set<StructPtr> StructSet;
           typedef std::map<NamePath, StructSet> NamePathStructSetMap;
 
+          struct HelperFile
+          {
+            NamespacePtr mGlobal;
+            NamePathStructSetMap mDerives;
+
+            String mHeaderFileName;
+            String mCppFileName;
+
+            String mHeaderIndentStr;
+
+            StringSet mHeaderAlreadyIncluded;
+            StringSet mCppAlreadyIncluded;
+
+            std::stringstream mHeaderIncludeSS;
+            std::stringstream mHeaderStructSS;
+            std::stringstream mHeaderFinalSS;
+            std::stringstream mCppIncludeSS;
+            std::stringstream mCppBodySS;
+
+            void includeHeader(const String &headerFile);
+            void includeCpp(const String &headerFile);
+          };
+
+          struct StructFile
+          {
+            StructPtr mStruct;
+            std::stringstream mHeaderIncludeSS;
+            std::stringstream mHeaderPreStructSS;
+            std::stringstream mHeaderStructPrivateSS;
+            std::stringstream mHeaderStructObserverSS;
+            std::stringstream mHeaderStructObserverFinalSS;
+            std::stringstream mHeaderStructPrivateMethodsSS;
+            std::stringstream mHeaderStructPublicSS;
+            std::stringstream mCppIncludeSS;
+            std::stringstream mCppBodySS;
+            String mHeaderIndentStr;
+            String mHeaderStructIndentStr;
+          };
+
           GenerateStructCx();
 
           static GenerateStructCxPtr create();
@@ -75,20 +114,130 @@ namespace zsLib
                                  );
 
           static String fixName(const String &originalName);
+          static String fixNamePath(ContextPtr context);
+          static String fixStructName(StructPtr structObj);
+          static String fixStructFileName(StructPtr structObj);
+          static String getStructInitName(StructPtr structObj);
+          static String getCxStructInitName(StructPtr structObj);
+          static String fixEnumName(EnumTypePtr enumObj);
+          static String fixArgumentName(const String &originalName);
 
           static void processTypesNamespace(
                                             std::stringstream &ss,
                                             const String &inIndentStr,
-                                            NamespacePtr namespaceObj,
-                                            bool outputEnums
+                                            NamespacePtr namespaceObj
                                             );
+          static void processTypesStruct(
+                                         std::stringstream &ss,
+                                         const String &inIndentStr,
+                                         StructPtr structObj,
+                                         bool &firstFound
+                                         );
+          static bool processTypesEnum(
+                                       std::stringstream &ss,
+                                       const String &inIndentStr,
+                                       ContextPtr context
+                                       );
 
           static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure);
 
-          static void caclculateDerives(
+          static void calculateRelations(
+                                         NamespacePtr namespaceObj,
+                                         NamePathStructSetMap &ioDerivesInfo
+                                         );
+          static void calculateRelations(
+                                         StructPtr structObj,
+                                         NamePathStructSetMap &ioDerivesInfo
+                                         );
+
+          static void insertInto(
+                                 StructPtr structObj,
+                                 const NamePath &namePath,
+                                 NamePathStructSetMap &ioDerivesInfo
+                                 );
+
+          static void generateSpecialHelpers(HelperFile &helperFile);
+          static void generateBasicTypesHelper(HelperFile &helperFile);
+          static void generateExceptionHelper(HelperFile &helperFile);
+          static void generateStringHelper(HelperFile &helperFile);
+          static void generateBinaryHelper(HelperFile &helperFile);
+          static void generateDurationHelper(
+                                             HelperFile &helperFile,
+                                             const String &durationType,
+                                             bool generateFromCx = false
+                                             );
+          static void generateTimeHelper(HelperFile &helperFile);
+          static void generatePromiseHelper(HelperFile &helperFile);
+          static void generatePromiseWithHelper(HelperFile &helperFile);
+          static void generateDefaultPromiseRejections(
+                                                       HelperFile &helperFile,
+                                                       const String &indentStr
+                                                       );
+          static void generatePromiseRejection(
+                                               HelperFile &helperFile,
+                                               const String &indentStr,
+                                               TypePtr rejectionType
+                                               );
+
+          static void generateForNamespace(
+                                           HelperFile &helperFile,
+                                           NamespacePtr namespaceObj,
+                                           const String &inIndentStr
+                                           );
+
+          static void generateForStruct(
+                                        HelperFile &helperFile,
                                         StructPtr structObj,
-                                        NamePathStructSetMap &ioDerivesInfo
+                                        const String &inIndentStr
                                         );
+          static void generateForEnum(
+                                      HelperFile &helperFile,
+                                      EnumTypePtr enumObj
+                                      );
+          static void generateForStandardStruct(
+                                                HelperFile &helperFile,
+                                                StructPtr structObj
+                                                );
+          static void generateStructFile(
+                                         HelperFile &helperFile,
+                                         StructPtr structObj
+                                         );
+          static void generateStructMethods(
+                                            HelperFile &helperFile, 
+                                            StructFile &structFile,
+                                            StructPtr structObj,
+                                            bool createConstructors,
+                                            bool hasEvents
+                                            );
+          static void generateForList(
+                                      HelperFile &helperFile,
+                                      StructPtr structObj
+                                      );
+          static void generateForMap(
+                                     HelperFile &helperFile,
+                                     StructPtr structObj
+                                     );
+          static void generateForSet(
+                                     HelperFile &helperFile,
+                                     StructPtr structObj
+                                     );
+
+          static String getBasicCxTypeString(
+                                             bool isOptional,
+                                             BasicTypePtr type
+                                             );
+          static String makeCxOptional(
+                                       bool isOptional,
+                                       const String &value
+                                       );
+          static String getCppType(
+                                   bool isOptional,
+                                   TypePtr type
+                                   );
+          static String getCxType(
+                                  bool isOptional,
+                                  TypePtr type
+                                  );
 
           //-------------------------------------------------------------------
           #pragma mark
@@ -102,16 +251,6 @@ namespace zsLib
                                     const String &inPathStr,
                                     const ICompilerTypes::Config &config
                                     ) throw (Failure) override;
-
-        protected:
-          struct HelperFile
-          {
-            std::stringstream mHeaderIncludeSS;
-            std::stringstream mHeaderStructSS;
-            std::stringstream mCppIncludeSS;
-            std::stringstream mCppBodySS;
-          };
-
         };
          
       } // namespace internal

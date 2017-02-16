@@ -99,17 +99,10 @@ namespace zsLib
           ss << "#include <zsLib/types.h>\n";
           ss << "#include <zsLib/String.h>\n";
           ss << "#include <zsLib/Promise.h>\n";
+          ss << "#include <zsLib/eventing/types.h>\n";
           ss << "\n";
           ss << "namespace wrapper {\n";
-          ss << "  using ::zsLib::String;\n";
-          ss << "  using ::zsLib::Promise;\n";
-          ss << "  using ::zsLib::PromisePtr;\n";
-          ss << "  using ::zsLib::PromiseWith;\n";
-          ss << "  using ::std::shared_ptr;\n";
-          ss << "  using ::std::weak_ptr;\n";
-          ss << "  using ::std::list;\n";
-          ss << "  using ::std::set;\n";
-          ss << "  using ::std::map;\n";
+          generateUsingTypes(ss, "  ");
           ss << "\n";
 
           GenerateTypesHeader::processTypesNamespace(ss, String(), project->mGlobal, true);
@@ -118,15 +111,43 @@ namespace zsLib
 
           return UseHelper::convertToBuffer(ss.str());
         }
+        
+        //---------------------------------------------------------------------
+        void GenerateStructHeader::generateUsingTypes(
+                                                      std::stringstream &ss,
+                                                      const String &indentStr
+                                                      )
+        {
+          ss << indentStr << "using ::zsLib::String;\n";
+          ss << indentStr << "using ::zsLib::Optional;\n";
+          ss << indentStr << "using ::zsLib::Promise;\n";
+          ss << indentStr << "using ::zsLib::PromisePtr;\n";
+          ss << indentStr << "using ::zsLib::PromiseWith;\n";
+          ss << indentStr << "using ::zsLib::eventing::SecureByteBlock;\n";
+          ss << indentStr << "using ::zsLib::eventing::SecureByteBlockPtr;\n";
+          ss << indentStr << "using ::std::shared_ptr;\n";
+          ss << indentStr << "using ::std::weak_ptr;\n";
+          ss << indentStr << "using ::std::make_shared;\n";
+          ss << indentStr << "using ::std::list;\n";
+          ss << indentStr << "using ::std::set;\n";
+          ss << indentStr << "using ::std::map;\n";
+        }
 
         //-------------------------------------------------------------------
         String GenerateStructHeader::getStructFileName(StructPtr structObj)
         {
-          String filename = structObj->getPathName();
-          filename.replaceAll("::", "_");
+          String filename = getStructInitName(structObj);
           filename += ".h";
-          filename.trim("_");
           return filename;
+        }
+
+        //-------------------------------------------------------------------
+        String GenerateStructHeader::getStructInitName(StructPtr structObj)
+        {
+          String namePathStr = structObj->getPathName();
+          namePathStr.replaceAll("::", "_");
+          namePathStr.trim("_");
+          return namePathStr;
         }
 
         //-------------------------------------------------------------------
@@ -176,10 +197,10 @@ namespace zsLib
             case PredefinedTypedef_float32:     return "float";
             case PredefinedTypedef_float64:     return "double";
 
-            case PredefinedTypedef_pointer:
+            case PredefinedTypedef_pointer:     return "uint64_t";
 
-            case PredefinedTypedef_binary:      return "::zsLib::eventing::SecureByteBlockPtr";
-            case PredefinedTypedef_size:
+            case PredefinedTypedef_binary:      return "eventing::SecureByteBlockPtr";
+            case PredefinedTypedef_size:        return "uint64_t";
 
             case PredefinedTypedef_string:      return "String";
             case PredefinedTypedef_astring:     return "String";
@@ -192,7 +213,7 @@ namespace zsLib
         String GenerateStructHeader::makeOptional(bool isOptional, const String &value)
         {
           if (!isOptional) return value;
-          return "::zsLib::Optional< " + value + " >";
+          return "Optional< " + value + " >";
         }
 
         //---------------------------------------------------------------------
@@ -229,7 +250,15 @@ namespace zsLib
                 if ("::zs::exceptions::NotImplemented" == specialName) return "::zsLib::Exceptions::NotImplemented";
                 if ("::zs::exceptions::NotSupported" == specialName) return "::zsLib::Exceptions::NotSupported";
                 if ("::zs::exceptions::Unexpected" == specialName) return "::zsLib::Exceptions::UnexpectedError";
+                if ("::zs::Time" == specialName) return makeOptional(isOptional, "::zsLib::Time");
+                if ("::zs::Milliseconds" == specialName) return makeOptional(isOptional, "::zsLib::Milliseconds");
+                if ("::zs::Microseconds" == specialName) return makeOptional(isOptional, "::zsLib::Microseconds");
+                if ("::zs::Nanoseconds" == specialName) return makeOptional(isOptional, "::zsLib::Nanoseconds");
+                if ("::zs::Seconds" == specialName) return makeOptional(isOptional, "::zsLib::Seconds");
+                if ("::zs::Minutes" == specialName) return makeOptional(isOptional, "::zsLib::Minutes");
+                if ("::zs::Hours" == specialName) return makeOptional(isOptional, "::zsLib::Hours");
               }
+
               return makeOptional(isOptional, "wrapper" + structType->getPathName() + "Ptr");
             }
           }
@@ -272,8 +301,10 @@ namespace zsLib
               for (auto iter = templatedType->mTemplateArguments.begin(); iter != templatedType->mTemplateArguments.end(); ++iter)
               {
                 auto templateArg = (*iter);
+                String typeStr = getWrapperTypeString(false, templateArg);
+                if ("void" == typeStr) continue;
                 if (!first) templatedTypeStr += ", ";
-                templatedTypeStr += getWrapperTypeString(false, templateArg);
+                templatedTypeStr += typeStr;
                 first = false;
               }
               templatedTypeStr += " >";
@@ -397,12 +428,15 @@ namespace zsLib
           std::stringstream observerSS;
           std::stringstream observerMethodsSS;
 
+          bool foundCtor = false;
           bool foundEventHandler = false;
           bool firstMethod = true;
           for (auto iterMethods = structObj->mMethods.begin(); iterMethods != structObj->mMethods.end(); ++iterMethods)
           {
             auto methodObj = (*iterMethods);
-            if (methodObj->hasModifier(Modifier_Method_Ctor)) continue;
+
+            bool isCtor = methodObj->hasModifier(Modifier_Method_Ctor);
+
             if (methodObj->hasModifier(Modifier_Method_EventHandler)) {
               if (!foundEventHandler) {
                 observerSS << "\n";
@@ -489,9 +523,13 @@ namespace zsLib
             else
               ss << "virtual ";
 
-            ss << getWrapperTypeString(methodObj->hasModifier(Modifier_Optional), methodObj->mResult);
-
-            ss << " " << methodObj->mName << "(";
+            if (isCtor) {
+              ss << "void wrapper_init_" << getStructInitName(structObj) << "(";
+              foundCtor = true;
+            } else {
+              ss << getWrapperTypeString(methodObj->hasModifier(Modifier_Optional), methodObj->mResult);
+              ss << " " << methodObj->mName << "(";
+            }
 
             // append arguments
             {
@@ -511,6 +549,10 @@ namespace zsLib
 
             if (methodObj->mArguments.size() > 1) ss << "\n" << indentStr << "  ";
             ss << ") = 0;\n";
+          }
+
+          if (!foundCtor) {
+            ss << indentStr << "virtual void wrapper_init_" << getStructInitName(structObj) << "() = 0;";
           }
 
           bool isDictionary = structObj->hasModifier(Modifier_Struct_Dictionary);

@@ -70,6 +70,22 @@ namespace zsLib
         #pragma mark GenerateTypesHeader
         #pragma mark
 
+
+        //---------------------------------------------------------------------
+        String GenerateTypesHeader::getDashedComment(const String &indent)
+        {
+          std::stringstream ss;
+          ss << indent << "//";
+          size_t length = 2 + indent.length();
+          if (length < 80) {
+            for (size_t index = 0; index < (80 - length); ++index) {
+              ss << "-";
+            }
+          }
+          ss << "\n";
+          return ss.str();
+        }
+
         //-------------------------------------------------------------------
         void GenerateTypesHeader::insertFirst(
                                               std::stringstream &ss,

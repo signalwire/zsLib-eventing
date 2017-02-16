@@ -115,6 +115,12 @@ namespace zsLib
         }
 
         //-------------------------------------------------------------------
+        String GenerateStructImplHeader::getStructInitName(StructPtr structObj)
+        {
+          return GenerateStructHeader::getStructInitName(structObj);
+        }
+
+        //-------------------------------------------------------------------
         const char *GenerateStructImplHeader::getBasicTypeString(BasicTypePtr type)
         {
           return GenerateStructHeader::getBasicTypeString(type);
@@ -185,9 +191,9 @@ namespace zsLib
               ss << " " << methodObj->mName;
             } else {
               foundCtor = true;
-              ss << "void wrapper_init";
+              ss << "virtual void wrapper_init_" << getStructInitName(structObj);
             }
-              
+
             ss << "(";
 
             if (methodObj->mArguments.size() > 1) ss << "\n" << indentStr << "  ";
@@ -206,15 +212,11 @@ namespace zsLib
               ss << typeStr << " " << argument->mName;
             }
             if (methodObj->mArguments.size() > 1) ss << "\n" << indentStr << "  ";
-            ss << ")";
-            if (!isCtor) {
-              ss << " override";
-            }
-            ss << ";\n";
+            ss << ") override;\n";
           }
 
           if ((createConstructors) && (!foundCtor)) {
-            ss << indentStr << "void wrapper_init();\n";
+            ss << indentStr << "virtual void wrapper_init_" << getStructInitName(structObj) << "() override;\n";
           }
 
           bool isDictionary = structObj->hasModifier(Modifier_Struct_Dictionary);

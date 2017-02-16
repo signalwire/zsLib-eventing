@@ -94,6 +94,13 @@ namespace zsLib
           result += ".cpp";
           return result;
         }
+
+        //-------------------------------------------------------------------
+        String GenerateStructImplCpp::getStructInitName(StructPtr structObj)
+        {
+          return GenerateStructHeader::getStructInitName(structObj);
+        }
+
         //-------------------------------------------------------------------
         const char *GenerateStructImplCpp::getBasicTypeString(BasicTypePtr type)
         {
@@ -115,16 +122,7 @@ namespace zsLib
         //---------------------------------------------------------------------
         String GenerateStructImplCpp::getDashedComment(const String &indent)
         {
-          std::stringstream ss;
-          ss << indent << "//";
-          size_t length = 2 + indent.length();
-          if (length < 80) {
-            for (size_t index = 0; index < (80 - length); ++index) {
-              ss << "-";
-            }
-          }
-          ss << "\n";
-          return ss.str();
+          return GenerateTypesHeader::getDashedComment(indent);
         }
 
         //---------------------------------------------------------------------
@@ -185,7 +183,7 @@ namespace zsLib
             else
             {
               foundCtor = true;
-              ss << "void wrapper::impl" << structObj->getPathName() << "::wrapper_init";
+              ss << "void wrapper::impl" << structObj->getPathName() << "::wrapper_init_" << getStructInitName(structObj);
             }
 
             ss << "(";
@@ -245,7 +243,7 @@ namespace zsLib
           } else {
             if (!foundCtor) {
               ss << dashedLine;
-              ss << "void " << "wrapper::impl" << structObj->getPathName() << "::wrapper_init()\n";
+              ss << "void " << "wrapper::impl" << structObj->getPathName() << "::wrapper_init_" << getStructInitName(structObj) << "()\n";
               ss << "{\n";
               ss << "}\n\n";
             }

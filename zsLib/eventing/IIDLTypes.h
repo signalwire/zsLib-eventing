@@ -76,10 +76,8 @@ namespace zsLib
       {
         Modifier_First,
 
-        Modifier_Common_AltName = Modifier_First,
-
-        Modifier_Struct_Dictionary,       // struct is treated as simple structured dictionary data; properties default without getters/setters
-        Modifier_Struct_Exception,        // struct is meant for throws declarations
+        Modifier_Struct_Dictionary = Modifier_First,  // struct is treated as simple structured dictionary data; properties default without getters/setters
+        Modifier_Struct_Exception,                    // struct is meant for throws declarations
 
         Modifier_Method_Ctor,
         Modifier_Method_Static,
@@ -96,6 +94,7 @@ namespace zsLib
         Modifier_Property_Setter,           // value is not set in wrapper, set in code
         Modifier_Property_Dynamic,          // value might be a derived type
 
+        Modifier_AltName,
         Modifier_Special,                   // namespace is not output, struct wrapper is created through special / custom processing
         Modifier_Nullable,                  // value of null is legal
         Modifier_Optional,                  // optional type whose value may not be set
@@ -341,6 +340,8 @@ namespace zsLib
                                            const String &pathStr,
                                            const String &name
                                            ) const;
+
+        bool isGlobal() const;
       };
 
       static void createNamespaceForwards(

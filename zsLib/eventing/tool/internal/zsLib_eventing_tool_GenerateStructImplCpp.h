@@ -58,6 +58,7 @@ namespace zsLib
           GenerateStructImplCpp();
           static GenerateStructImplCppPtr create();
           static String getStructFileName(StructPtr structObj);
+          static String getStructInitName(StructPtr structObj);
 
           static const char *getBasicTypeString(BasicTypePtr type);
           static String makeOptional(bool isOptional, const String &value);

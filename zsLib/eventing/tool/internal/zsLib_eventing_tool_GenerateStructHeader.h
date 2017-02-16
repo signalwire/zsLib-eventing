@@ -60,8 +60,14 @@ namespace zsLib
           static GenerateStructHeaderPtr create();
 
           static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure);
+          
+          static void generateUsingTypes(
+                                         std::stringstream &ss,
+                                         const String &indentStr
+                                         );
 
           static String getStructFileName(StructPtr structObj);
+          static String getStructInitName(StructPtr structObj);
 
           static const char *getBasicTypeString(BasicTypePtr type);
 

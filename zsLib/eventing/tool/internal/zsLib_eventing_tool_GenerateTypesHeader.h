@@ -53,6 +53,8 @@ namespace zsLib
 
         struct GenerateTypesHeader : public IDLCompiler
         {
+          static String getDashedComment(const String &indent);
+
           static void insertFirst(
                                   std::stringstream &ss,
                                   bool &first
