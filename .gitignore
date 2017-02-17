@@ -8,3 +8,4 @@ ipch/
 *.user
 xcuserdata/
 *.xcuserdatad/
+output/
