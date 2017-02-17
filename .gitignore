@@ -9,3 +9,5 @@ ipch/
 xcuserdata/
 *.xcuserdatad/
 output/
+*.xccheckout
+*.xcscmblueprint
