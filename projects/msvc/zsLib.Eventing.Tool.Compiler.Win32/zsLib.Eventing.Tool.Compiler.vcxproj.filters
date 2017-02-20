@@ -215,6 +215,9 @@
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructCx.cpp">
       <Filter>zsLib\eventing\tool\cpp</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateHelper.cpp">
+      <Filter>zsLib\eventing\tool\cpp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="zsLib">
@@ -556,6 +559,9 @@
       <Filter>zsLib\eventing\tool\internal</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructCx.h">
+      <Filter>zsLib\eventing\tool\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateHelper.h">
       <Filter>zsLib\eventing\tool\internal</Filter>
     </ClInclude>
   </ItemGroup>

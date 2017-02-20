@@ -30,6 +30,7 @@ either expressed or implied, of the FreeBSD Project.
 */
 
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateHelper.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateTypesHeader.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h>
 
@@ -120,6 +121,8 @@ namespace zsLib
         {
           ss << indentStr << "using ::zsLib::String;\n";
           ss << indentStr << "using ::zsLib::Optional;\n";
+          ss << indentStr << "using ::zsLib::Any;\n";
+          ss << indentStr << "using ::zsLib::AnyPtr;\n";
           ss << indentStr << "using ::zsLib::Promise;\n";
           ss << indentStr << "using ::zsLib::PromisePtr;\n";
           ss << indentStr << "using ::zsLib::PromiseWith;\n";
@@ -150,90 +153,6 @@ namespace zsLib
           return namePathStr;
         }
 
-        //-------------------------------------------------------------------
-        bool GenerateStructHeader::hasOnlyStaticMethods(StructPtr structObj)
-        {
-          if (!structObj) return true;
-
-          if (structObj->mProperties.size() > 0) return false;
-
-          for (auto iter = structObj->mIsARelationships.begin(); iter != structObj->mIsARelationships.end(); ++iter) {
-            auto relatedObj = (*iter).second;
-            if (!relatedObj) continue;
-
-            auto relatedStruct = relatedObj->toStruct();
-            if (!relatedStruct) continue;
-
-            bool only = hasOnlyStaticMethods(relatedStruct);
-            if (!only) return false;
-          }
-
-          for (auto iter = structObj->mMethods.begin(); iter != structObj->mMethods.end(); ++iter) {
-            auto method = (*iter);
-            if (method->hasModifier(Modifier_Method_Static)) continue;
-            return false;
-          }
-          return true;
-        }
-
-        //-------------------------------------------------------------------
-        const char *GenerateStructHeader::getBasicTypeString(BasicTypePtr type)
-        {
-          if (!type) return "";
-          switch (type->mBaseType)
-          {
-            case PredefinedTypedef_void:        return "void";
-            case PredefinedTypedef_bool:        return "bool";
-            case PredefinedTypedef_uchar:       return "unsigned char";
-            case PredefinedTypedef_char:        return "char";
-            case PredefinedTypedef_schar:       return "signed char";
-            case PredefinedTypedef_ushort:      return "unsigned short";
-            case PredefinedTypedef_short:       return "short";
-            case PredefinedTypedef_sshort:      return "signed short";
-            case PredefinedTypedef_uint:        return "unsigned int";
-            case PredefinedTypedef_int:         return "int";
-            case PredefinedTypedef_sint:        return "signed int";
-            case PredefinedTypedef_ulong:       return "unsigned long";
-            case PredefinedTypedef_long:        return "long";
-            case PredefinedTypedef_slong:       return "signed long";
-            case PredefinedTypedef_ulonglong:   return "unsigned long long";
-            case PredefinedTypedef_longlong:    return "long long";
-            case PredefinedTypedef_slonglong:   return "signed long long";
-            case PredefinedTypedef_uint8:       return "uint8_t";
-            case PredefinedTypedef_int8:        return "int8_t";
-            case PredefinedTypedef_sint8:       return "int8_t";
-            case PredefinedTypedef_uint16:      return "uint16_t";
-            case PredefinedTypedef_int16:       return "int16_t";
-            case PredefinedTypedef_sint16:      return "int16_t";
-            case PredefinedTypedef_uint32:      return "uint32_t";
-            case PredefinedTypedef_int32:       return "int32_t";
-            case PredefinedTypedef_sint32:      return "int32_t";
-            case PredefinedTypedef_uint64:      return "uint64_t";
-            case PredefinedTypedef_int64:       return "int64_t";
-            case PredefinedTypedef_sint64:      return "int64_t";
-
-            case PredefinedTypedef_byte:        return "uint8_t";
-            case PredefinedTypedef_word:        return "uint16_t";
-            case PredefinedTypedef_dword:       return "uint32_t";
-            case PredefinedTypedef_qword:       return "uint64_t";
-
-            case PredefinedTypedef_float:       return "float";
-            case PredefinedTypedef_double:      return "double";
-            case PredefinedTypedef_ldouble:     return "long double";
-            case PredefinedTypedef_float32:     return "float";
-            case PredefinedTypedef_float64:     return "double";
-
-            case PredefinedTypedef_pointer:     return "uint64_t";
-
-            case PredefinedTypedef_binary:      return "eventing::SecureByteBlockPtr";
-            case PredefinedTypedef_size:        return "uint64_t";
-
-            case PredefinedTypedef_string:      return "String";
-            case PredefinedTypedef_astring:     return "String";
-            case PredefinedTypedef_wstring:     return "::std::wstring";
-          }
-          return "";
-        }
 
         //---------------------------------------------------------------------
         String GenerateStructHeader::makeOptional(bool isOptional, const String &value)
@@ -259,7 +178,7 @@ namespace zsLib
           {
             auto basicType = type->toBasicType();
             if (basicType) {
-              return makeOptional(isOptional, String(getBasicTypeString(basicType)));
+              return makeOptional(isOptional, GenerateHelper::getBasicTypeString(basicType));
             }
           }
 
@@ -269,13 +188,14 @@ namespace zsLib
               if (structType->mGenerics.size() > 0) return String();
               if (structType->hasModifier(Modifier_Special)) {
                 String specialName = structType->getPathName();
+                if ("::zs::Any" == specialName) return "AnyPtr";
                 if ("::zs::Promise" == specialName) return "PromisePtr";
                 if ("::zs::exceptions::Exception" == specialName) return "::zsLib::Exception";
-                if ("::zs::exceptions::InvalidParameters" == specialName) return "::zsLib::Exceptions::InvalidArgument";
-                if ("::zs::exceptions::InvalidState" == specialName) return "::zsLib::Exceptions::BadState";
+                if ("::zs::exceptions::InvalidArgument" == specialName) return "::zsLib::Exceptions::InvalidArgument";
+                if ("::zs::exceptions::BadState" == specialName) return "::zsLib::Exceptions::BadState";
                 if ("::zs::exceptions::NotImplemented" == specialName) return "::zsLib::Exceptions::NotImplemented";
                 if ("::zs::exceptions::NotSupported" == specialName) return "::zsLib::Exceptions::NotSupported";
-                if ("::zs::exceptions::Unexpected" == specialName) return "::zsLib::Exceptions::UnexpectedError";
+                if ("::zs::exceptions::UnexpectedError" == specialName) return "::zsLib::Exceptions::UnexpectedError";
                 if ("::zs::Time" == specialName) return makeOptional(isOptional, "::zsLib::Time");
                 if ("::zs::Milliseconds" == specialName) return makeOptional(isOptional, "::zsLib::Milliseconds");
                 if ("::zs::Microseconds" == specialName) return makeOptional(isOptional, "::zsLib::Microseconds");
@@ -351,10 +271,8 @@ namespace zsLib
                                                   )
         {
           if (!structObj) return;
-          if (structObj->hasModifier(Modifier_Special)) return;
+          if (GenerateHelper::isBuiltInType(structObj)) return;
           if (structObj->mGenerics.size() > 0) return;
-
-          bool staticOnlyMethods = hasOnlyStaticMethods(structObj);
 
           auto rootStruct = structObj->getRootStruct();
 
@@ -415,7 +333,7 @@ namespace zsLib
           {
             auto subStructObj = (*iterSubStruct).second;
             if (!subStructObj) continue;
-            if (subStructObj->hasModifier(Modifier_Special)) continue;
+            if (GenerateHelper::isBuiltInType(subStructObj)) continue;
             if (subStructObj->mGenerics.size() > 0) continue;
             ss << indentStr << "ZS_DECLARE_STRUCT_PTR(" << subStructObj->mName << ");\n";
             outputSubTypes = true;
@@ -444,7 +362,7 @@ namespace zsLib
 
           if (outputSubTypes) ss << "\n";
 
-          if (!staticOnlyMethods) {
+          if (!structObj->hasModifier(Modifier_Static)) {
             ss << indentStr << "static " << structObj->mName << "Ptr wrapper_create();\n";
           }
           ss << indentStr << "virtual ~" << structObj->mName << "() {}\n\n";
@@ -464,6 +382,8 @@ namespace zsLib
           for (auto iterMethods = structObj->mMethods.begin(); iterMethods != structObj->mMethods.end(); ++iterMethods)
           {
             auto methodObj = (*iterMethods);
+
+            if (methodObj->hasModifier(Modifier_Method_Delete)) continue;
 
             bool isCtor = methodObj->hasModifier(Modifier_Method_Ctor);
 
@@ -488,7 +408,7 @@ namespace zsLib
                 observerMethodsSS << indentStr << "    ::zsLib::AutoLock lock(wrapper_observerLock);\n";
                 observerMethodsSS << indentStr << "    WrapperObserverWeakListPtr oldList;\n";
                 observerMethodsSS << indentStr << "    WrapperObserverWeakListPtr newList(make_shared<WrapperObserverWeakList>());\n";
-                observerMethodsSS << indentStr << "    if (observer) { newList->push_back(observer) };\n";
+                observerMethodsSS << indentStr << "    if (observer) { newList->push_back(observer); }\n";
                 observerMethodsSS << indentStr << "    for (auto iter = oldList->begin(); iter != oldList->end(); ++iter) {\n";
                 observerMethodsSS << indentStr << "      WrapperObserverPtr existingObserver = (*iter).lock();\n";
                 observerMethodsSS << indentStr << "      if (observer) { newList->push_back(existingObserver); }\n";
@@ -498,7 +418,7 @@ namespace zsLib
                 observerMethodsSS << indentStr << "  }\n";
                 observerMethodsSS << indentStr << "  wrapper_onObserverCountChanged(count);\n";
                 observerMethodsSS << indentStr << "}\n";
-                observerMethodsSS << indentStr << "void wrapper_observerClean() { wrapper_observerInstall(WrapperObserverPtr()); }\n\n";
+                observerMethodsSS << indentStr << "void wrapper_observerClean() { wrapper_installObserver(WrapperObserverPtr()); }\n\n";
                 foundEventHandler = true;
               }
               observerSS << indentStr << "  virtual void " << methodObj->mName << "(";
@@ -507,7 +427,7 @@ namespace zsLib
               std::stringstream observerMethodsParamsSS;
               observerMethodsParamsSS << ")\n";
               observerMethodsParamsSS << indentStr << "{\n";
-              observerMethodsParamsSS << indentStr << "  WrapperObserverWeakList observers;\n";
+              observerMethodsParamsSS << indentStr << "  WrapperObserverWeakListPtr observers;\n";
               observerMethodsParamsSS << indentStr << "  { ::zsLib::AutoLock lock(wrapper_observerLock); observers = wrapper_observers; }\n";
               observerMethodsParamsSS << indentStr << "  bool clean {false};\n";
               observerMethodsParamsSS << indentStr << "  for (auto iter = observers->begin(); iter != observers->end(); ++iter) {\n";
@@ -548,7 +468,7 @@ namespace zsLib
             firstMethod = false;
 
             ss << indentStr;
-            if (methodObj->hasModifier(Modifier_Method_Static))
+            if (methodObj->hasModifier(Modifier_Static))
               ss << "static ";
             else
               ss << "virtual ";
@@ -578,16 +498,19 @@ namespace zsLib
             }
 
             if (methodObj->mArguments.size() > 1) ss << "\n" << indentStr << "  ";
-            if (methodObj->hasModifier(Modifier_Method_Static)) {
+            if (methodObj->hasModifier(Modifier_Static)) {
               ss << ");\n";
             } else {
-              ss << ") = 0;\n";
+              if (isCtor) {
+                ss << ") {}\n";
+              } else {
+                ss << ") = 0;\n";
+              }
             }
           }
 
-          if ((!foundCtor) &&
-              (!staticOnlyMethods)) {
-            ss << indentStr << "virtual void wrapper_init_" << getStructInitName(structObj) << "() = 0;";
+          if (GenerateHelper::needsDefaultConstructor(structObj)) {
+            ss << indentStr << "virtual void wrapper_init_" << getStructInitName(structObj) << "() {}\n";
           }
 
           bool isDictionary = structObj->hasModifier(Modifier_Struct_Dictionary);
@@ -608,6 +531,20 @@ namespace zsLib
 
             if (firstProperty) ss << "\n";
             firstProperty = false;
+
+            if (propertyObj->hasModifier(Modifier_Static)) {
+              if (!((hasGetter) || (hasSetter))) {
+                hasGetter = hasSetter = true;
+              }
+
+              if (hasGetter) {
+                ss << indentStr << "static " << typeStr << " get_" << propertyObj->mName << "();\n";
+              }
+              if (hasSetter) {
+                ss << indentStr << "static void set_" << propertyObj->mName << "(" << typeStr << " value);\n";
+              }
+              continue;
+            }
 
             if (!((hasGetter) || (hasSetter))) {
               ss << indentStr << typeStr << " " << propertyObj->mName << " {";
@@ -712,7 +649,7 @@ namespace zsLib
             for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter)
             {
               auto structObj = (*iter).second;
-              if (structObj->hasModifier(Modifier_Special)) continue;
+              if (GenerateHelper::isBuiltInType(structObj)) continue;
               if (structObj->mGenerics.size() > 0) continue;
 
               String filename = GenerateStructHeader::getStructFileName(structObj);

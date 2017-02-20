@@ -30,6 +30,7 @@ either expressed or implied, of the FreeBSD Project.
 */
 
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplCpp.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateHelper.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateTypesHeader.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplHeader.h>
@@ -87,6 +88,15 @@ namespace zsLib
         }
 
         //-------------------------------------------------------------------
+        void GenerateStructImplCpp::generateUsingTypes(
+                                                       std::stringstream &ss,
+                                                       const String &indentStr
+                                                       )
+        {
+          return GenerateStructHeader::generateUsingTypes(ss, indentStr);
+        }
+
+        //-------------------------------------------------------------------
         String GenerateStructImplCpp::getStructFileName(StructPtr structObj)
         {
           String result = String("impl_") + GenerateStructHeader::getStructFileName(structObj);
@@ -99,12 +109,6 @@ namespace zsLib
         String GenerateStructImplCpp::getStructInitName(StructPtr structObj)
         {
           return GenerateStructHeader::getStructInitName(structObj);
-        }
-
-        //-------------------------------------------------------------------
-        const char *GenerateStructImplCpp::getBasicTypeString(BasicTypePtr type)
-        {
-          return GenerateStructHeader::getBasicTypeString(type);
         }
 
         //---------------------------------------------------------------------
@@ -120,48 +124,26 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructImplCpp::getDashedComment(const String &indent)
-        {
-          return GenerateTypesHeader::getDashedComment(indent);
-        }
-
-        //---------------------------------------------------------------------
         void GenerateStructImplCpp::outputMethods(
+                                                  StructPtr derivedStructObj,
                                                   StructPtr structObj,
                                                   std::stringstream &ss,
-                                                  bool createConstructors,
                                                   bool &foundEventHandler
                                                   )
         {
-          String dashedLine = getDashedComment(String());
+          if (!structObj) return;
 
-          bool staticOnlyMethods = false;
-          if (createConstructors) {
-            staticOnlyMethods = GenerateStructHeader::hasOnlyStaticMethods(structObj);
-          }
-
-          if ((createConstructors) &&
-              (!staticOnlyMethods)) {
-            ss << dashedLine;
-            ss << "wrapper" << structObj->getPathName() << "Ptr " << "wrapper::" << structObj->getPathName() << "::wrapper_create()\n";
-            ss << "{\n";
-            ss << "  auto pThis = make_shared<wrapper::impl" << structObj->getPathName() << ">();\n";
-            ss << "  pThis->thisWeak_ = pThis;\n";
-            ss << "  return pThis;\n";
-            ss << "}\n\n";
-          }
+          String dashedLine = GenerateHelper::getDashedComment(String());
 
           // output relationships
-          if (!createConstructors) {
-            for (auto iterRelations = structObj->mIsARelationships.begin(); iterRelations != structObj->mIsARelationships.end(); ++iterRelations)
-            {
-              auto relatedObj = (*iterRelations).second;
+          for (auto iterRelations = structObj->mIsARelationships.begin(); iterRelations != structObj->mIsARelationships.end(); ++iterRelations)
+          {
+            auto relatedObj = (*iterRelations).second;
 
-              {
-                auto relatedStructObj = relatedObj->toStruct();
-                if (relatedStructObj) {
-                  outputMethods(relatedStructObj, ss, false, foundEventHandler);
-                }
+            {
+              auto relatedStructObj = relatedObj->toStruct();
+              if (relatedStructObj) {
+                outputMethods(derivedStructObj, relatedStructObj, ss, foundEventHandler);
               }
             }
           }
@@ -170,12 +152,13 @@ namespace zsLib
           for (auto iterMethods = structObj->mMethods.begin(); iterMethods != structObj->mMethods.end(); ++iterMethods)
           {
             auto methodObj = (*iterMethods);
+            if (methodObj->hasModifier(Modifier_Method_Delete)) continue;
+
             bool isCtor = methodObj->hasModifier(Modifier_Method_Ctor);
-            if (!createConstructors) {
-              if ((isCtor) || (methodObj->hasModifier(Modifier_Method_Static))) continue;
-            } else {
-              if (!((isCtor) || (methodObj->hasModifier(Modifier_Method_Static)))) continue;
+            if (derivedStructObj != structObj) {
+              if ((isCtor) || (methodObj->hasModifier(Modifier_Static))) continue;
             }
+
             if (methodObj->hasModifier(Modifier_Method_EventHandler)) {
               foundEventHandler = true;
               continue;
@@ -186,13 +169,11 @@ namespace zsLib
             ss << dashedLine;
             if (!isCtor) {
               ss << getWrapperTypeString(methodObj->hasModifier(Modifier_Optional), methodObj->mResult);
-              ss << " wrapper::impl" << structObj->getPathName() << "::" << methodObj->mName;
-            }
-            else
-            {
+              ss << " wrapper" << (methodObj->hasModifier(Modifier_Static) ? "" : "::impl") << derivedStructObj->getPathName() << "::" << methodObj->mName;
+            } else {
               foundCtor = true;
               wrapperResultType = "void";
-              ss << "void wrapper::impl" << structObj->getPathName() << "::wrapper_init_" << getStructInitName(structObj);
+              ss << "void wrapper::impl" << derivedStructObj->getPathName() << "::wrapper_init_" << getStructInitName(derivedStructObj);
             }
 
             ss << "(";
@@ -222,48 +203,38 @@ namespace zsLib
             ss << "}\n\n";
           }
 
-          if (!createConstructors) {
-            bool isDictionary = structObj->hasModifier(Modifier_Struct_Dictionary);
-            for (auto iterProperties = structObj->mProperties.begin(); iterProperties != structObj->mProperties.end(); ++iterProperties)
-            {
-              auto propertyObj = (*iterProperties);
-              bool hasGetter = propertyObj->hasModifier(Modifier_Property_Getter);
-              bool hasSetter = propertyObj->hasModifier(Modifier_Property_Setter);
+          bool isDictionary = structObj->hasModifier(Modifier_Struct_Dictionary);
+          for (auto iterProperties = structObj->mProperties.begin(); iterProperties != structObj->mProperties.end(); ++iterProperties)
+          {
+            auto propertyObj = (*iterProperties);
+            bool hasGetter = propertyObj->hasModifier(Modifier_Property_Getter);
+            bool hasSetter = propertyObj->hasModifier(Modifier_Property_Setter);
+            bool isStatic = propertyObj->hasModifier(Modifier_Static);
 
-              String typeStr = getWrapperTypeString(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType);
+            String typeStr = getWrapperTypeString(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType);
 
-              if (!isDictionary) {
-                if (!((hasGetter) || (hasSetter))) {
-                  hasGetter = hasSetter = true;
-                }
-              }
-
-              if ((!hasGetter) && (!hasSetter)) continue;
-
-              if (hasGetter) {
-                ss << dashedLine;
-                ss << typeStr << " wrapper::impl" << structObj->getPathName() << "::get_" << propertyObj->mName << "()\n";
-                ss << "{\n";
-                ss << "  " << typeStr << " result {};\n";
-                ss << "  return result;\n";
-                ss << "}\n\n";
-              }
-              if (hasSetter) {
-                ss << dashedLine;
-                ss << "void wrapper::impl" << structObj->getPathName() << "::set_" << propertyObj->mName << "(" << typeStr << " value)\n";
-                ss << "{\n";
-                ss << "}\n\n";
+            if ((!isDictionary) || (isStatic)) {
+              if (!((hasGetter) || (hasSetter))) {
+                hasGetter = hasSetter = true;
               }
             }
-          } else {
-            if ((!foundCtor) &&
-                (!staticOnlyMethods)) {
+
+            if ((!hasGetter) && (!hasSetter)) continue;
+
+            if (hasGetter) {
               ss << dashedLine;
-              ss << "void " << "wrapper::impl" << structObj->getPathName() << "::wrapper_init_" << getStructInitName(structObj) << "()\n";
+              ss << typeStr << " wrapper" << (isStatic ? "" : "::impl") << derivedStructObj->getPathName() << "::get_" << propertyObj->mName << "()\n";
+              ss << "{\n";
+              ss << "  " << typeStr << " result {};\n";
+              ss << "  return result;\n";
+              ss << "}\n\n";
+            }
+            if (hasSetter) {
+              ss << dashedLine;
+              ss << "void wrapper" << (isStatic ? "" : "::impl") << derivedStructObj->getPathName() << "::set_" << propertyObj->mName << "(" << typeStr << " value)\n";
               ss << "{\n";
               ss << "}\n\n";
             }
-            outputMethods(structObj, ss, false, foundEventHandler);
           }
         }
 
@@ -275,8 +246,10 @@ namespace zsLib
                                                           )
         {
           if (!structObj) return;
-          if (structObj->hasModifier(Modifier_Special)) return;
+          if (GenerateHelper::isBuiltInType(structObj)) return;
           if (structObj->mGenerics.size() > 0) return;
+
+          bool needsDefaultConstructor = GenerateHelper::needsDefaultConstructor(structObj);
 
           ss << "\n";
 
@@ -286,19 +259,38 @@ namespace zsLib
             generateStructCppImpl(subStructObj, includedHeaders, ss);
           }
 
-          String dashedLine = getDashedComment(String());
+          String dashedLine = GenerateHelper::getDashedComment(String());
 
-          ss << dashedLine;
-          ss << "wrapper::impl" << structObj->getPathName() << "::" << structObj->mName << "()\n";
-          ss << "{\n";
-          ss << "}\n\n";
+          if (!structObj->hasModifier(Modifier_Static)) {
+            ss << dashedLine;
+            ss << "wrapper::impl" << structObj->getPathName() << "::" << structObj->mName << "()\n";
+            ss << "{\n";
+            ss << "}\n";
+            ss << "\n";
+
+            ss << dashedLine;
+            ss << "wrapper" << structObj->getPathName() << "Ptr " << "wrapper" << structObj->getPathName() << "::wrapper_create()\n";
+            ss << "{\n";
+            ss << "  auto pThis = make_shared<wrapper::impl" << structObj->getPathName() << ">();\n";
+            ss << "  pThis->thisWeak_ = pThis;\n";
+            ss << "  return pThis;\n";
+            ss << "}\n\n";
+          }
+
           ss << dashedLine;
           ss << "wrapper::impl" << structObj->getPathName() << "::~" << structObj->mName << "()\n";
           ss << "{\n";
           ss << "}\n\n";
 
+          if (needsDefaultConstructor) {
+            ss << dashedLine;
+            ss << "void " << "wrapper::impl" << structObj->getPathName() << "::wrapper_init_" << getStructInitName(structObj) << "()\n";
+            ss << "{\n";
+            ss << "}\n\n";
+          }
+
           bool foundEventHandler = false;
-          outputMethods(structObj, ss, true, foundEventHandler);
+          outputMethods(structObj, structObj, ss, foundEventHandler);
 
           if (foundEventHandler) {
             ss << dashedLine;
@@ -375,7 +367,7 @@ namespace zsLib
             for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter)
             {
               auto structObj = (*iter).second;
-              if (structObj->hasModifier(Modifier_Special)) continue;
+              if (GenerateHelper::isBuiltInType(structObj)) continue;
               if (structObj->mGenerics.size() > 0) continue;
 
               String filename = GenerateStructImplCpp::getStructFileName(structObj);
@@ -390,7 +382,7 @@ namespace zsLib
 
               includeSS << "#include \"" << GenerateStructImplHeader::getStructFileName(structObj) << "\"\n";
 
-              structSS << "using std::make_shared;\n";
+              generateUsingTypes(structSS, String());
 
               {
                 GenerateStructImplCpp::StringSet processedHeaders;

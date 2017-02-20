@@ -31,6 +31,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructCx.h>
 //#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplCpp.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateHelper.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateTypesHeader.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h>
 //#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplHeader.h>
@@ -103,6 +104,25 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         #pragma mark
+        #pragma mark GenerateStructCx::StructFile
+        #pragma mark
+
+        //---------------------------------------------------------------------
+        void GenerateStructCx::StructFile::includeCpp(const String &headerFile)
+        {
+          auto &ss = mCppIncludeSS;
+
+          if (mCppAlreadyIncluded.end() != mCppAlreadyIncluded.find(headerFile)) return;
+          mCppAlreadyIncluded.insert(headerFile);
+
+          ss << "#include " << headerFile << "\n";
+        }
+
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
         #pragma mark GenerateStructCx
         #pragma mark
 
@@ -116,24 +136,6 @@ namespace zsLib
         GenerateStructCxPtr GenerateStructCx::create()
         {
           return make_shared<GenerateStructCx>();
-        }
-
-        //-------------------------------------------------------------------
-        void GenerateStructCx::insertFirst(
-                                           std::stringstream &ss,
-                                           bool &first
-                                           )
-        {
-          GenerateTypesHeader::insertFirst(ss, first);
-        }
-
-        //-------------------------------------------------------------------
-        void GenerateStructCx::insertLast(
-                                          std::stringstream &ss,
-                                          bool &first
-                                          )
-        {
-          GenerateTypesHeader::insertLast(ss, first);
         }
 
         //---------------------------------------------------------------------
@@ -207,6 +209,29 @@ namespace zsLib
             name += fixName(structObj->mName);
           }
           return name;
+        }
+
+        //---------------------------------------------------------------------
+        String GenerateStructCx::fixMethodDeclaration(ContextPtr context)
+        {
+          String result = fixNamePath(context);
+          if ("::" == result.substr(0, 2)) {
+            return result.substr(2);
+          }
+          return result;
+        }
+
+        //---------------------------------------------------------------------
+        String GenerateStructCx::fixMethodDeclaration(StructPtr derivedStruct, ContextPtr context)
+        {
+          String result = fixMethodDeclaration(derivedStruct);
+          if (!context) return result;
+
+          if (result.hasData()) {
+            result += "::";
+          }
+          result += fixName(context->mName);
+          return result;
         }
 
         //---------------------------------------------------------------------
@@ -339,7 +364,7 @@ namespace zsLib
             processTypesStruct(ss, indentStr, structObj, firstStruct);
           }
           if (namespaceObj->mStructs.size() > 0) {
-            insertLast(ss, firstStruct);
+            GenerateHelper::insertLast(ss, firstStruct);
           }
 
           indentStr = initialIndentStr;
@@ -358,10 +383,10 @@ namespace zsLib
                                                   )
         {
           if (!structObj) return;
-          if (structObj->hasModifier(Modifier_Special)) return;
+          if (GenerateHelper::isBuiltInType(structObj)) return;
           if (structObj->mGenerics.size() > 0) return;
 
-          insertFirst(ss, firstFound);
+          GenerateHelper::insertFirst(ss, firstFound);
           if (structObj->hasModifier(Modifier_Struct_Dictionary)) {
             ss << indentStr << "ref struct " << fixStructName(structObj) << ";\n";
           } else {
@@ -396,11 +421,13 @@ namespace zsLib
             auto enumObj = (*iter).second;
             found = true;
             ss << "\n";
+            ss << GenerateHelper::getDocumentation(indentStr + "/// ", enumObj, 80);
             ss << indentStr << "public enum class " << fixEnumName(enumObj) << "\n";
             ss << indentStr << "{\n";
             for (auto iterValue = enumObj->mValues.begin(); iterValue != enumObj->mValues.end(); ++iterValue)
             {
               auto valueObj = (*iterValue);
+              ss << GenerateHelper::getDocumentation(indentStr + "  /// ", valueObj, 80);
               ss << indentStr << "  " << fixName(valueObj->mName);
               if (valueObj->mValue.hasData()) {
                 ss << " = " << valueObj->mValue;
@@ -423,7 +450,7 @@ namespace zsLib
 
           ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
           ss << "#pragma once\n\n";
-          ss << "#include \"../types.h\"\n";
+          ss << "#include \"wrapper/generated/types.h\"\n";
           ss << "\n";
 
           processTypesNamespace(ss, String(), project->mGlobal);
@@ -519,6 +546,7 @@ namespace zsLib
           helperFile.includeCpp("<zsLib/date.h>");
           helperFile.includeCpp("<zsLib/helpers.h>");
           helperFile.includeHeader("<zsLib/eventing/types.h>");
+          helperFile.includeHeader("<zsLib/Exception.h>");
 
           generateBasicTypesHelper(helperFile);
 
@@ -542,10 +570,12 @@ namespace zsLib
             generateDurationHelper(helperFile, "Microseconds");
           }
           if (derives.end() != derives.find("::zs::Nanoseconds")) {
-            generateDurationHelper(helperFile, "Nanoseconds", true);
+            generateDurationHelper(helperFile, "Nanoseconds");
           }
           if (derives.end() != derives.find("::zs::Time")) {
             generateTimeHelper(helperFile);
+          }
+          if (derives.end() != derives.find("::zs::Any")) {
           }
           if (derives.end() != derives.find("::zs::Promise")) {
             generatePromiseHelper(helperFile);
@@ -561,26 +591,26 @@ namespace zsLib
           auto &ss = helperFile.mHeaderStructSS;
           auto &cppSS = helperFile.mCppBodySS;
           auto &indentStr = helperFile.mHeaderIndentStr;
-          auto dashedStr = GenerateTypesHeader::getDashedComment(String());
+          auto dashedStr = GenerateHelper::getDashedComment(String());
 
           auto &derives = helperFile.mDerives;
           if (derives.end() != derives.find("::zs::exceptions::Exception")) {
-            ss << helperFile.mHeaderIndentStr << "static Platform::FailureException^ ToCx(const ::zsLib::Exception &e) { return ref new Platform::FailureException(ToCx(e.message())); }\n";
+            ss << helperFile.mHeaderIndentStr << "static Platform::FailureException^ ToCx(const ::zsLib::Exception &e) { return ref new Platform::FailureException(ToCx_String(e.message())); }\n";
           }
-          if (derives.end() != derives.find("::zs::exceptions::InvalidParameters")) {
-            ss << helperFile.mHeaderIndentStr << "static Platform::InvalidArgumentException^ ToCx(const ::zsLib::InvalidParameters &e) { return ref new Platform::InvalidArgumentException(ToCx(e.message())); }\n";
+          if (derives.end() != derives.find("::zs::exceptions::InvalidArgument")) {
+            ss << helperFile.mHeaderIndentStr << "static Platform::InvalidArgumentException^ ToCx(const ::zsLib::Exceptions::InvalidArgument &e) { return ref new Platform::InvalidArgumentException(ToCx_String(e.message())); }\n";
           }
-          if (derives.end() != derives.find("::zs::exceptions::InvalidState")) {
-            ss << helperFile.mHeaderIndentStr << "static Platform::COMException^ ToCx(const ::zsLib::InvalidState &e) { return ref new Platform::COMException(E_NOT_VALID_STATE, ToCx(e.message())); }\n";
+          if (derives.end() != derives.find("::zs::exceptions::BadState")) {
+            ss << helperFile.mHeaderIndentStr << "static Platform::COMException^ ToCx(const ::zsLib::Exceptions::BadState &e) { return ref new Platform::COMException(E_NOT_VALID_STATE, ToCx_String(e.message())); }\n";
           }
           if (derives.end() != derives.find("::zs::exceptions::NotImplemented")) {
-            ss << helperFile.mHeaderIndentStr << "static Platform::NotImplementedException^ ToCx(const ::zsLib::NotImplemented &e) { return ref new Platform::NotImplementedException(ToCx(e.message())); }\n";
+            ss << helperFile.mHeaderIndentStr << "static Platform::NotImplementedException^ ToCx(const ::zsLib::Exceptions::NotImplemented &e) { return ref new Platform::NotImplementedException(ToCx_String(e.message())); }\n";
           }
           if (derives.end() != derives.find("::zs::exceptions::NotSupported")) {
-            ss << helperFile.mHeaderIndentStr << "static Platform::COMException^ ToCx(const ::zsLib::NotSupported &e) { return ref new Platform::COMException(CO_E_NOT_SUPPORTED, ToCx(e.message())); }\n";
+            ss << helperFile.mHeaderIndentStr << "static Platform::COMException^ ToCx(const ::zsLib::Exceptions::NotSupported &e) { return ref new Platform::COMException(CO_E_NOT_SUPPORTED, ToCx_String(e.message())); }\n";
           }
-          if (derives.end() != derives.find("::zs::exceptions::Unexpected")) {
-            ss << helperFile.mHeaderIndentStr << "static Platform::COMException^ ToCx(const ::zsLib::Unexpected &e) { return ref new Platform::COMException(E_UNEXPECTED, ToCx(e.message())); }\n";
+          if (derives.end() != derives.find("::zs::exceptions::UnexpectedError")) {
+            ss << helperFile.mHeaderIndentStr << "static Platform::COMException^ ToCx(const ::zsLib::Exceptions::UnexpectedError &e) { return ref new Platform::COMException(E_UNEXPECTED, ToCx_String(e.message())); }\n";
           }
           ss << "\n";
         }
@@ -591,60 +621,84 @@ namespace zsLib
           auto &ss = helperFile.mHeaderStructSS;
           auto &cppSS = helperFile.mCppBodySS;
           auto &indentStr = helperFile.mHeaderIndentStr;
-          auto dashedStr = GenerateTypesHeader::getDashedComment(String());
+          auto dashedStr = GenerateHelper::getDashedComment(String());
 
-          typedef std::map<String, String> StringMap;
+          struct WrapperInfo
+          {
+            String cxTypeCpp_;
+            String cxTypeHeader_;
+            String cppType_;
+
+            WrapperInfo() {}
+            WrapperInfo(const WrapperInfo &info) { (*this) = info; }
+            WrapperInfo(
+                        const String &cxTypeCpp,
+                        const String &cxTypeHeader,
+                        const String &cppType
+            ) :
+              cxTypeCpp_(cxTypeCpp),
+              cxTypeHeader_(cxTypeHeader),
+              cppType_(cppType)
+            {
+            }
+          };
+          typedef std::map<String, WrapperInfo> StringMap;
 
           StringMap basicTypes;
 
-          basicTypes["Platform::Boolean"] = "bool";
-          basicTypes["int8"] = "signed char";
-          basicTypes["uint8"] = "unsigned char";
-          basicTypes["int16"] = "signed short";
-          basicTypes["uint16"] = "unsigned short";
-          basicTypes["int32"] = "signed int";
-          basicTypes["uint32"] = "unsigned int";
-          basicTypes["int64"] = "signed long";
-          basicTypes["uint64"] = "unsigned long";
-          basicTypes["int64"] = "signed long long";
-          basicTypes["uint64"] = "unsigned long long";
-          basicTypes["float32"] = "float";
-          basicTypes["float64"] = "double";
+          basicTypes["Boolean"] = WrapperInfo("Platform::Boolean", "Platform::Boolean", "bool");
+          basicTypes["Char16"] = WrapperInfo("char16", "char16", "signed char");
+          basicTypes["Uint8"] = WrapperInfo("uint8", "uint8", "unsigned char");
+          basicTypes["Int16"] = WrapperInfo("int16", "int16", "int16_t");
+          basicTypes["Uint16"] = WrapperInfo("uint16", "uint16", "uint16_t");
+          basicTypes["Int32"] = WrapperInfo("int32", "int32", "int32_t");
+          basicTypes["Uint32"] = WrapperInfo("uint32", "uint32", "uint32_t");
+          basicTypes["Int64"] = WrapperInfo("int64", "int64", "int64_t");
+          basicTypes["Uint64"] = WrapperInfo("uint64", "uint64", "uint64_t");
+          basicTypes["Int64"] = WrapperInfo("int64", "int64", "int64_t");
+          basicTypes["Uint64"] = WrapperInfo("uint64", "uint64", "uint64_t");
+          basicTypes["HelperLong"] = WrapperInfo("Internal::Helper::HelperLong", "HelperLong", "long");
+          basicTypes["HelperULong"] = WrapperInfo("Internal::Helper::HelperULong", "HelperULong", "unsigned long");
+          basicTypes["Float32"] = WrapperInfo("float32", "float32", "float");
+          basicTypes["HelperFloat"] = WrapperInfo("Internal::Helper::HelperFloat", "HelperFloat", "float");
+          basicTypes["Float64"] = WrapperInfo("float64", "float64", "double");
 
           for (auto iter = basicTypes.begin(); iter != basicTypes.end(); ++iter)
           {
-            String cxType = (*iter).first;
-            String cppType = (*iter).second;
+            String wrapperName = (*iter).first;
+            String cxTypeCpp = (*iter).second.cxTypeCpp_;
+            String cxType = (*iter).second.cxTypeHeader_;
+            String cppType = (*iter).second.cppType_;
 
             bool safeIntType = true;
             if ((cxType == "Platform::Boolean") ||
-              (cxType == "float32") ||
-              (cxType == "float64")) {
+                (cxType == "float32") ||
+                (cxType == "float64") ||
+                (cxType == "HelperFloat")) {
               safeIntType = false;
             }
 
             bool isFloat64 = false;
             if (cxType == "float64") isFloat64 = true;
 
-            ss << indentStr << "static " << cxType << " ToCx(" << cppType << " value);\n";
+            ss << indentStr << "static " << cxType << " ToCx_" << wrapperName << "(" << cppType << " value);\n";
             if (isFloat64) {
-              ss << indentStr << "static " << cxType << " ToCx(long double value);\n";
+              ss << indentStr << "static " << cxType << " ToCx_" << wrapperName << "(long double value);\n";
             }
-            ss << indentStr << "static " << cppType << " FromCx(" << cxType << " value);\n";
-            ss << indentStr << "static Platform::IBox<" << cxType << ">^ ToCx(const Optional<" << cppType << "> &value);\n";
+            ss << indentStr << "static " << cppType << " FromCx_" << wrapperName << "(" << cxType << " value);\n";
+            ss << indentStr << "static Platform::IBox<" << cxType << ">^ ToCx_" << wrapperName << "(const Optional<" << cppType << "> &value);\n";
             if (isFloat64) {
-              ss << indentStr << "static Platform::IBox<" << cxType << ">^ ToCx(const Optional<long double> &value);\n";
+              ss << indentStr << "static Platform::IBox<" << cxType << ">^ ToCx_" << wrapperName << "(const Optional<long double> &value);\n";
             }
-            ss << indentStr << "static Optional<" << cppType << "> FromCx(Platform::IBox<" << cxType << ">^ value);\n";
+            ss << indentStr << "static Optional<" << cppType << "> FromCx_" << wrapperName << "(Platform::IBox<" << cxType << ">^ value);\n";
             ss << "\n";
 
             cppSS << dashedStr;
-            cppSS << cxType << " Internal::Helper::ToCx(" << cppType << " value)\n";
+            cppSS << cxTypeCpp << " Internal::Helper::ToCx_" << wrapperName << "(" << cppType << " value)\n";
             cppSS << "{\n";
             if (safeIntType) {
-              cppSS << "  return SafeInt<" << cxType << ">(value)\n";
-            }
-            else {
+              cppSS << "  return SafeInt<" << cxType << ">(value);\n";
+            } else {
               cppSS << "  return value;\n";
             }
             cppSS << "}\n";
@@ -652,7 +706,7 @@ namespace zsLib
 
             if (isFloat64) {
               cppSS << dashedStr;
-              cppSS << cxType << " Internal::Helper::ToCx(long double value)\n";
+              cppSS << cxTypeCpp << " Internal::Helper::ToCx_"<< wrapperName << "(long double value)\n";
               cppSS << "{\n";
               cppSS << "  return value;\n";
               cppSS << "}\n";
@@ -660,19 +714,18 @@ namespace zsLib
             }
 
             cppSS << dashedStr;
-            cppSS << cppType << " Internal::Helper::FromCx(" << cxType << " value)\n";
+            cppSS << cppType << " Internal::Helper::FromCx_" << wrapperName << "(" << cxType << " value)\n";
             cppSS << "{\n";
             if (safeIntType) {
               cppSS << "  return SafeInt<" << cppType << ">(value);\n";
-            }
-            else {
+            } else {
               cppSS << "  return (" << cppType << ")value;\n";
             }
             cppSS << "}\n";
             cppSS << "\n";
 
             cppSS << dashedStr;
-            cppSS << "Platform::IBox<" << cxType << ">^ Internal::Helper::ToCx(const Optional<" << cppType << "> &value)\n";
+            cppSS << "Platform::IBox<" << cxTypeCpp << ">^ Internal::Helper::ToCx_" << wrapperName << "(const Optional<" << cppType << "> &value)\n";
             cppSS << "{\n";
             cppSS << "  if (!value.hasValue()) return nullptr;\n";
             if (safeIntType) {
@@ -686,13 +739,12 @@ namespace zsLib
 
             if (isFloat64) {
               cppSS << dashedStr;
-              cppSS << "Platform::IBox<" << cxType << ">^ Internal::Helper::ToCx(const Optional<long double> &value)\n";
+              cppSS << "Platform::IBox<" << cxTypeCpp << ">^ Internal::Helper::ToCx_" << wrapperName << "(const Optional<long double> &value)\n";
               cppSS << "{\n";
               cppSS << "  if (!value.hasValue()) return nullptr;\n";
               if (safeIntType) {
                 cppSS << "  return ref new Platform::Box<" << cxType << ">(SafeInt<" << cxType << ">(value.value()));\n";
-              }
-              else {
+              } else {
                 cppSS << "  return ref new Platform::Box<" << cxType << ">(value.value());\n";
               }
               cppSS << "}\n";
@@ -700,15 +752,14 @@ namespace zsLib
             }
 
             cppSS << dashedStr;
-            cppSS << "Optional<" << cppType << "> Internal::Helper::FromCx(Platform::IBox<" << cxType << ">^ value)\n";
+            cppSS << "Optional<" << cppType << "> Internal::Helper::FromCx_" << wrapperName << "(Platform::IBox<" << cxType << ">^ value)\n";
             cppSS << "{\n";
             cppSS << "  Optional<" << cppType << "> result;\n";
             cppSS << "  if (nullptr == value) return result;\n";
             if (safeIntType) {
-              cppSS << "  result = SafeInt<" << cppType << ">(input->Value);\n";
-            }
-            else {
-              cppSS << "  result = (" << cppType << ")input->Value;\n";
+              cppSS << "  result = SafeInt<" << cppType << ">(value->Value);\n";
+            } else {
+              cppSS << "  result = (" << cppType << ")value->Value;\n";
             }
             cppSS << "  return result;\n";
             cppSS << "}\n";
@@ -722,40 +773,41 @@ namespace zsLib
           auto &ss = helperFile.mHeaderStructSS;
           auto &cppSS = helperFile.mCppBodySS;
           auto &indentStr = helperFile.mHeaderIndentStr;
-          auto dashedStr = GenerateTypesHeader::getDashedComment(String());
+          auto dashedStr = GenerateHelper::getDashedComment(String());
 
-          ss << indentStr << "static Platform::Array<byte>^ ToCx(const SecureByteBlock &value);\n";
-          ss << indentStr << "static Platform::Array<byte>^ ToCx(SecureByteBlockPtr value);\n";
-          ss << indentStr << "static Platform::Array<byte>^ ToCx(const Optional<SecureByteBlockPtr> &value);\n";
-          ss << indentStr << "static SecureByteBlockPtr FromCx(Platform::Array<byte>^ value);\n";
+          ss << indentStr << "static Platform::Array<byte>^ ToCx_Binary(const SecureByteBlock &value);\n";
+          ss << indentStr << "static Platform::Array<byte>^ ToCx_Binary(SecureByteBlockPtr value);\n";
+          ss << indentStr << "static Platform::Array<byte>^ ToCx_Binary(const Optional<SecureByteBlockPtr> &value);\n";
+          ss << indentStr << "static SecureByteBlockPtr FromCx_Binary(const Platform::Array<byte>^ value);\n";
           ss << "\n";
 
           cppSS << dashedStr;
-          cppSS << "Platform::Array<byte>^ Internal::Helper::ToCx(const SecureByteBlock &value)\n";
+          cppSS << "Platform::Array<byte>^ Internal::Helper::ToCx_Binary(const SecureByteBlock &value)\n";
           cppSS << "{\n";
-          cppSS << "  return ref new Platform::Array(value->BytePtr(), value->SizeInBytes());\n";
+          cppSS << "  if (!value.BytePtr()) return nullptr;\n";
+          cppSS << "  return ref new Platform::Array<byte>((unsigned char *)value.BytePtr(), value.SizeInBytes());\n";
           cppSS << "}\n";
           cppSS << "\n";
 
           cppSS << dashedStr;
-          cppSS << "Platform::Array<byte>^ Internal::Helper::ToCx(SecureByteBlockPtr value)\n";
+          cppSS << "Platform::Array<byte>^ Internal::Helper::ToCx_Binary(SecureByteBlockPtr value)\n";
           cppSS << "{\n";
           cppSS << "  if (!value) return nullptr;\n";
-          cppSS << "  return ToCx(*value);\n";
+          cppSS << "  return ToCx_Binary(*value);\n";
           cppSS << "}\n";
           cppSS << "\n";
 
           cppSS << dashedStr;
-          cppSS << "Platform::Array<byte>^ Internal::Helper::ToCx(const Optional<SecureByteBlockPtr> &value)\n";
+          cppSS << "Platform::Array<byte>^ Internal::Helper::ToCx_Binary(const Optional<SecureByteBlockPtr> &value)\n";
           cppSS << "{\n";
           cppSS << "  if (!value.hasValue()) return nullptr;\n";
           cppSS << "  if (!value.value()) return nullptr;\n";
-          cppSS << "  return ToCx(value.value());\n";
+          cppSS << "  return ToCx_Binary(value.value());\n";
           cppSS << "}\n";
           cppSS << "\n";
 
           cppSS << dashedStr;
-          cppSS << "SecureByteBlockPtr Internal::Helper::FromCx(Platform::Array<byte>^ value)\n";
+          cppSS << "SecureByteBlockPtr Internal::Helper::FromCx_Binary(const Platform::Array<byte>^ value)\n";
           cppSS << "{\n";
           cppSS << "  if (nullptr == value) return SecureByteBlockPtr();\n";
           cppSS << "  return make_shared<SecureByteBlock>(value->Data, value->Length);\n";
@@ -769,72 +821,61 @@ namespace zsLib
           auto &ss = helperFile.mHeaderStructSS;
           auto &cppSS = helperFile.mCppBodySS;
           auto &indentStr = helperFile.mHeaderIndentStr;
-          auto dashedStr = GenerateTypesHeader::getDashedComment(String());
+          auto dashedStr = GenerateHelper::getDashedComment(String());
 
-          ss << indentStr << "static Platform::String^ ToCx(const std::string &value);\n";
-          ss << indentStr << "static Platform::String^ ToCx(const Optional<std::string> &value);\n";
-          ss << indentStr << "static Platform::String^ ToCx(const Optional<String> &value);\n";
-          ss << indentStr << "static Platform::String^ ToCx(const std::wstring &value);\n";
-          ss << indentStr << "static Platform::String^ ToCx(const Optional<std::wstring> &value);\n";
-          ss << indentStr << "static std::string FromCx(Platform::String^ value);\n";
-          ss << indentStr << "static Optional<String> FromCx(Platform::IBox<Platform::String^>^ value);\n";
+          ss << indentStr << "static Platform::String^ ToCx_String(const std::string &value);\n";
+          ss << indentStr << "static Platform::String^ ToCx_String(const Optional<std::string> &value);\n";
+          ss << indentStr << "static Platform::String^ ToCx_String(const Optional<String> &value);\n";
+          ss << indentStr << "static Platform::String^ ToCx_String(const std::wstring &value);\n";
+          ss << indentStr << "static Platform::String^ ToCx_String(const Optional<std::wstring> &value);\n";
+          ss << indentStr << "static String FromCx_String(Platform::String^ value);\n";
           ss << "\n";
 
           cppSS << dashedStr;
-          cppSS << "Platform::String^ Internal::Helper::ToCx(const std::string &value)\n";
+          cppSS << "Platform::String^ Internal::Helper::ToCx_String(const std::string &value)\n";
           cppSS << "{\n";
           cppSS << "  return ref new Platform::String(String(value).wstring().c_str());\n";
           cppSS << "}\n";
           cppSS << "\n";
 
           cppSS << dashedStr;
-          cppSS << "Platform::IBox<Platform::String^>^ Internal::Helper::ToCx(const Optional< std::string > &value)\n";
+          cppSS << "Platform::String^ Internal::Helper::ToCx_String(const Optional< std::string > &value)\n";
           cppSS << "{\n";
           cppSS << "  if (!value.hasValue()) return nullptr;\n";
-          cppSS << "  return ref new Platform::Box<Platform::Sring^>(ToCx(value.value()));\n";
+          cppSS << "  return ToCx_String(value.value());\n";
           cppSS << "}\n";
           cppSS << "\n";
 
           cppSS << dashedStr;
-          cppSS << "Platform::IBox<Platform::String^>^ Internal::Helper::ToCx(const Optional< String > &value)\n";
+          cppSS << "Platform::String^ Internal::Helper::ToCx_String(const Optional< String > &value)\n";
           cppSS << "{\n";
           cppSS << "  if (!value.hasValue()) return nullptr;\n";
-          cppSS << "  return ref new Platform::Box<Platform::Sring^>(ToCx(value.value()));\n";
+          cppSS << "  return ToCx_String(value.value());\n";
           cppSS << "}\n";
           cppSS << "\n";
 
           cppSS << dashedStr;
-          cppSS << "Platform::String^ Internal::Helper::ToCx(const std::wstring &value)\n";
+          cppSS << "Platform::String^ Internal::Helper::ToCx_String(const std::wstring &value)\n";
           cppSS << "{\n";
-          cppSS << "  return ref new Platform::String(value.wstring().c_str());\n";
+          cppSS << "  return ref new Platform::String(value.c_str());\n";
           cppSS << "}\n";
           cppSS << "\n";
 
           cppSS << dashedStr;
-          cppSS << "Platform::IBox<Platform::String^>^ Internal::Helper::ToCx(const Optional< std::wstring > &value)\n";
+          cppSS << "Platform::String^ Internal::Helper::ToCx_String(const Optional< std::wstring > &value)\n";
           cppSS << "{\n";
           cppSS << "  if (!value.hasValue()) return nullptr;\n";
-          cppSS << "  return ref new Platform::Box<Platform::Sring^>(ToCx(value.value()));\n";
+          cppSS << "  return ToCx_String(value.value());\n";
           cppSS << "}\n";
           cppSS << "\n";
 
           cppSS << dashedStr;
-          cppSS << "std::string Internal::Helper::FromCx(Platform::String^ value)\n";
+          cppSS << "String Internal::Helper::FromCx_String(Platform::String^ value)\n";
           cppSS << "{\n";
-          cppSS << "  if (nullptr == value) return std::string();\n";
+          cppSS << "  if (nullptr == value) return String();\n";
           cppSS << "  auto dataStr = value->Data();\n";
-          cppSS << "  if (!dataStr) return std::string();\n";
+          cppSS << "  if (!dataStr) return String();\n";
           cppSS << "  return String(std::wstring(dataStr));\n";
-          cppSS << "}\n";
-          cppSS << "\n";
-
-          cppSS << dashedStr;
-          cppSS << "Optional<String> Internal::Helper::FromCx(Platform::IBox<Platform::String^>^ value)\n";
-          cppSS << "{\n";
-          cppSS << "  Optional<String> result;\n";
-          cppSS << "  if (!value) return result;\n";
-          cppSS << "  result = value->Value;\n";
-          cppSS << "  return result;\n";
           cppSS << "}\n";
           cppSS << "\n";
         }
@@ -842,27 +883,24 @@ namespace zsLib
         //---------------------------------------------------------------------
         void GenerateStructCx::generateDurationHelper(
                                                       HelperFile &helperFile,
-                                                      const String &durationType,
-                                                      bool generateFromCx
+                                                      const String &durationType
                                                       )
         {
           auto &ss = helperFile.mHeaderStructSS;
           auto &cppSS = helperFile.mCppBodySS;
           auto &indentStr = helperFile.mHeaderIndentStr;
-          auto dashedStr = GenerateTypesHeader::getDashedComment(String());
+          auto dashedStr = GenerateHelper::getDashedComment(String());
 
           bool isNanoseconds = "Nanoseconds" == durationType;
 
-          ss << indentStr << "static Windows::Foundation::TimeSpan ToCx(const ::zsLib::" << durationType << " &value);\n";
-          ss << indentStr << "static Platform::IBox<Windows::Foundation::TimeSpan>^ ToCx(const Optional<::zsLib::" << durationType << "> &value);\n";
-          if (generateFromCx) {
-            ss << indentStr << "static ::zsLib::" << durationType << " FromCx(Windows::Foundation::TimeSpan value);\n";
-            ss << indentStr << "static Optional<::zsLib::" << durationType << "> FromCx(Platform::IBox<Windows::Foundation::TimeSpan>^ value);\n";
-          }
+          ss << indentStr << "static Windows::Foundation::TimeSpan ToCx_" << durationType << "(const ::zsLib::" << durationType << " &value);\n";
+          ss << indentStr << "static Platform::IBox<Windows::Foundation::TimeSpan>^ ToCx_" << durationType << "(const Optional<::zsLib::" << durationType << "> &value);\n";
+          ss << indentStr << "static ::zsLib::" << durationType << " FromCx_" << durationType << "(Windows::Foundation::TimeSpan value);\n";
+          ss << indentStr << "static Optional<::zsLib::" << durationType << "> FromCx_" << durationType << "(Platform::IBox<Windows::Foundation::TimeSpan>^ value);\n";
           ss << "\n";
 
           cppSS << dashedStr;
-          cppSS << "Windows::Foundation::TimeSpan Internal::Helper::ToCx(const ::zsLib::" << durationType << " &value)\n";
+          cppSS << "Windows::Foundation::TimeSpan Internal::Helper::ToCx_" << durationType << "(const ::zsLib::" << durationType << " &value)\n";
           cppSS << "{\n";
           cppSS << "  Windows::Foundation::TimeSpan result {};\n";
           cppSS << "  result.Duration = " << (isNanoseconds ? "value.count()" : "::zsLib::toNanoseconds(value).count()") << " / static_cast<::zsLib::Nanoseconds::rep>(100);\n";
@@ -871,37 +909,35 @@ namespace zsLib
           cppSS << "\n";
 
           cppSS << dashedStr;
-          cppSS << "Platform::IBox<Windows::Foundation::TimeSpan>^ Internal::Helper::ToCx(const Optional<::zsLib::" << durationType << "> &value)\n";
+          cppSS << "Platform::IBox<Windows::Foundation::TimeSpan>^ Internal::Helper::ToCx_" << durationType << "(const Optional<::zsLib::" << durationType << "> &value)\n";
           cppSS << "{\n";
           cppSS << "  if (!value.hasValue()) return nullptr;\n";
-          cppSS << "  return ref new Platform::Box<Windows::Foundation::TimeSpan>(ToCx(value.value());\n";
+          cppSS << "  return ref new Platform::Box<Windows::Foundation::TimeSpan>(ToCx_" << durationType << "(value.value()));\n";
           cppSS << "}\n";
           cppSS << "\n";
 
-          if (generateFromCx) {
-            cppSS << dashedStr;
-            cppSS << "::zsLib::" << durationType << " Internal::Helper::FromCx(Windows::Foundation::TimeSpan value)\n";
-            cppSS << "{\n";
-            cppSS << "  ::zsLib::Nanoseconds::rep result {};\n";
-            cppSS << "  result = SafeInt<::zsLib::Nanoseconds::rep>(value.Duration) * static_cast<::zsLib::Nanoseconds::rep>(100);\n";
-            if (isNanoseconds) {
-              cppSS << "  return ::zsLib::Nanoseconds(result);\n";
-            } else {
-              cppSS << "  return ::zsLib::to" << durationType << "(::zsLib::Nanoseconds(result));\n";
-            }
-            cppSS << "}\n";
-            cppSS << "\n";
-
-            cppSS << dashedStr;
-            cppSS << "Optional<::zsLib::" << durationType << "> Internal::Helper::FromCx(Platform::IBox<Windows::Foundation::TimeSpan>^ value)\n";
-            cppSS << "{\n";
-            cppSS << "  Optional<::zsLib::" << durationType << "> result;\n";
-            cppSS << "  if (!value) return result;\n";
-            cppSS << "  result = ToCx(value->Value);\n";
-            cppSS << "  return result;\n";
-            cppSS << "}\n";
-            cppSS << "\n";
+          cppSS << dashedStr;
+          cppSS << "::zsLib::" << durationType << " Internal::Helper::FromCx_" << durationType << "(Windows::Foundation::TimeSpan value)\n";
+          cppSS << "{\n";
+          cppSS << "  ::zsLib::Nanoseconds::rep result {};\n";
+          cppSS << "  result = SafeInt<::zsLib::Nanoseconds::rep>(value.Duration) * static_cast<::zsLib::Nanoseconds::rep>(100);\n";
+          if (isNanoseconds) {
+            cppSS << "  return ::zsLib::Nanoseconds(result);\n";
+          } else {
+            cppSS << "  return ::zsLib::to" << durationType << "(::zsLib::Nanoseconds(result));\n";
           }
+          cppSS << "}\n";
+          cppSS << "\n";
+
+          cppSS << dashedStr;
+          cppSS << "Optional<::zsLib::" << durationType << "> Internal::Helper::FromCx_" << durationType << "(Platform::IBox<Windows::Foundation::TimeSpan>^ value)\n";
+          cppSS << "{\n";
+          cppSS << "  Optional<::zsLib::" << durationType << "> result;\n";
+          cppSS << "  if (!value) return result;\n";
+          cppSS << "  result = FromCx_" << durationType << "(value->Value);\n";
+          cppSS << "  return result;\n";
+          cppSS << "}\n";
+          cppSS << "\n";
         }
 
         //---------------------------------------------------------------------
@@ -910,7 +946,7 @@ namespace zsLib
           auto &ss = helperFile.mHeaderStructSS;
           auto &cppSS = helperFile.mCppBodySS;
           auto &indentStr = helperFile.mHeaderIndentStr;
-          auto dashedStr = GenerateTypesHeader::getDashedComment(String());
+          auto dashedStr = GenerateHelper::getDashedComment(String());
 
           ss << indentStr << "static Windows::Foundation::DateTime ToCx(const ::zsLib::Time &value);\n";
           ss << indentStr << "static Platform::IBox<Windows::Foundation::DateTime>^ ToCx(const Optional<::zsLib::Time> &value);\n";
@@ -936,7 +972,7 @@ namespace zsLib
           cppSS << "Platform::IBox<Windows::Foundation::DateTime>^ Internal::Helper::ToCx(const Optional<::zsLib::Time> &value)\n";
           cppSS << "{\n";
           cppSS << "  if (!value.hasValue()) return nullptr;\n";
-          cppSS << "  return ref new Platform::Box<Windows::Foundation::DateTime>(ToCx(value.value());\n";
+          cppSS << "  return ref new Platform::Box<Windows::Foundation::DateTime>(ToCx(value.value()));\n";
           cppSS << "}\n";
           cppSS << "\n";
 
@@ -961,7 +997,7 @@ namespace zsLib
           auto &ss = helperFile.mHeaderStructSS;
           auto &cppSS = helperFile.mCppBodySS;
           auto &indentStr = helperFile.mHeaderIndentStr;
-          auto dashedStr = GenerateTypesHeader::getDashedComment(String());
+          auto dashedStr = GenerateHelper::getDashedComment(String());
 
           ss << indentStr << "static Windows::Foundation::IAsyncAction^ ToCx(::zsLib::PromisePtr promise);\n";
 
@@ -970,24 +1006,24 @@ namespace zsLib
           cppSS << "{\n";
           cppSS << "  struct Observer : public ::zsLib::IPromiseResolutionDelegate\n";
           cppSS << "  {\n";
-          cppSS << "    Observer(Concurrency::task_completion_event<void> tce) : mTce(tce) {}\n";
+          cppSS << "    Observer(Concurrency::task_completion_event<void> tce) : tce_(tce) {}\n";
           cppSS << "\n";
-          cppSS << "    virtual void onPromiseResolved(PromisePtr promise) override { mTce.set(); }\n";
+          cppSS << "    virtual void onPromiseResolved(PromisePtr promise) override { tce_.set(); }\n";
           cppSS << "\n";
           cppSS << "    virtual void onPromiseRejected(PromisePtr promise) override\n";
           cppSS << "    {\n";
           cppSS << "      if (!promise) {\n";
-          cppSS << "        mTce.set_exception(ref new Platform::Exception(E_INVALIDARG));\n";
+          cppSS << "        tce_.set_exception(ref new Platform::Exception(E_INVALIDARG));\n";
           cppSS << "        return;\n";
           cppSS << "      }\n";
 
           generateDefaultPromiseRejections(helperFile, "      ");
 
-          cppSS << "      mTce.set_exception(ref new Platform::Exception(E_NOINTERFACE));\n";
+          cppSS << "      tce_.set_exception(ref new Platform::Exception(E_NOINTERFACE));\n";
           cppSS << "    }\n";
           cppSS << "\n";
           cppSS << "  private:\n";
-          cppSS << "    Concurrency::task_completion_event<void> mTce;\n";
+          cppSS << "    Concurrency::task_completion_event<void> tce_;\n";
           cppSS << "  };\n";
           cppSS << "\n";
           cppSS << "  Windows::Foundation::IAsyncAction^ result = Concurrency::create_async([promise]()\n";
@@ -998,13 +1034,13 @@ namespace zsLib
           cppSS << "    promise->then(observer);\n";
           cppSS << "    promise->background();\n";
           cppSS << "\n";
+          cppSS << "    auto tceTask = Concurrency::task<void>(tce);";
           cppSS << "    return tceTask.get();\n";
           cppSS << "  });\n";
           cppSS << "  return result;\n";
           cppSS << "}\n";
           cppSS << "\n";
         }
-
 
         //---------------------------------------------------------------------
         void GenerateStructCx::generatePromiseWithHelper(HelperFile &helperFile)
@@ -1014,7 +1050,7 @@ namespace zsLib
           auto &ss = helperFile.mHeaderStructSS;
           auto &cppSS = helperFile.mCppBodySS;
           auto &indentStr = helperFile.mHeaderIndentStr;
-          auto dashedStr = GenerateTypesHeader::getDashedComment(String());
+          auto dashedStr = GenerateHelper::getDashedComment(String());
 
           auto foundType = helperFile.mGlobal->toContext()->findType("::zs::PromiseWith");
           if (foundType) {
@@ -1037,33 +1073,34 @@ namespace zsLib
                   if (foundType != templatedStruct->mTemplateArguments.end()) rejectType = *foundType;
                 }
 
-                ss << indentStr << "static " << getCxType(false, templatedStruct) << " ToCx(PromiseWith< " << getCppType(false, resolveType) << " > promise);\n";
+                ss << indentStr << "static " << getCxType(false, templatedStruct, true) << " " << getToCxName(templatedStruct) << "(shared_ptr< PromiseWith< " << getCppType(false, resolveType) << " > > promise);\n";
 
                 cppSS << dashedStr;
-                cppSS << getCxType(false, templatedStruct) << " Internal::Helper::ToCx(PromiseWith< " << getCppType(false, resolveType) << " > promise)\n";
+                cppSS << getCxType(false, templatedStruct, true) << " Internal::Helper::" << getToCxName(templatedStruct) << "(shared_ptr< PromiseWith< " << getCppType(false, resolveType) << " > > promise)\n";
                 cppSS << "{\n";
                 cppSS << "  struct Observer : public ::zsLib::IPromiseResolutionDelegate\n";
                 cppSS << "  {\n";
-                cppSS << "    Observer(Concurrency::task_completion_event<void> tce) : mTce(tce) {}\n";
+                cppSS << "    Observer(Concurrency::task_completion_event< " << getCxType(false, resolveType) << " > tce) : tce_(tce) {}\n";
                 cppSS << "\n";
                 cppSS << "    virtual void onPromiseResolved(PromisePtr promise) override\n";
                 cppSS << "    {\n";
                 cppSS << "      if (!promise) {\n";
-                cppSS << "        mTce.set_exception(ref new Platform::Exception(E_INVALIDARG));\n";
+                cppSS << "        tce_.set_exception(ref new Platform::Exception(E_INVALIDARG));\n";
                 cppSS << "        return;\n";
                 cppSS << "      }\n";
                 cppSS << "      {\n";
                 cppSS << "        auto reasonHolder = promise->value< ::zsLib::AnyHolder< " << getCppType(false, resolveType) << " > >();\n";
                 cppSS << "        if (reasonHolder) {\n";
-                cppSS << "          mTce.set(::Internal::Helper::ToCx(reasonHolder->mValue));\n";
+                cppSS << "          tce_.set(::Internal::Helper::" << getToCxName(resolveType) << "(reasonHolder->value_));\n";
+                cppSS << "        }\n";
                 cppSS << "      }\n";
-                cppSS << "      mTce.set_exception(ref new Platform::Exception(E_NOINTERFACE));\n";
+                cppSS << "      tce_.set_exception(ref new Platform::Exception(E_NOINTERFACE));\n";
                 cppSS << "    }\n";
                 cppSS << "\n";
                 cppSS << "    virtual void onPromiseRejected(PromisePtr promise) override\n";
                 cppSS << "    {\n";
                 cppSS << "      if (!promise) {\n";
-                cppSS << "        mTce.set_exception(ref new Platform::Exception(E_INVALIDARG));\n";
+                cppSS << "        tce_.set_exception(ref new Platform::Exception(E_INVALIDARG));\n";
                 cppSS << "        return;\n";
                 cppSS << "      }\n";
 
@@ -1075,11 +1112,11 @@ namespace zsLib
                 }
                 generateDefaultPromiseRejections(helperFile, "      ");
 
-                cppSS << "      mTce.set_exception(ref new Platform::Exception(E_NOINTERFACE));\n";
+                cppSS << "      tce_.set_exception(ref new Platform::Exception(E_NOINTERFACE));\n";
                 cppSS << "    }\n";
                 cppSS << "\n";
                 cppSS << "  private:\n";
-                cppSS << "    Concurrency::task_completion_event< " << getCxType(false, resolveType) << " > mTce;\n";
+                cppSS << "    Concurrency::task_completion_event< " << getCxType(false, resolveType) << " > tce_;\n";
                 cppSS << "  };\n";
                 cppSS << "\n";
                 cppSS << "  " << getCxType(false, templatedStruct) << " result = Concurrency::create_async([promise]()\n";
@@ -1090,6 +1127,7 @@ namespace zsLib
                 cppSS << "    promise->then(observer);\n";
                 cppSS << "    promise->background();\n";
                 cppSS << "\n";
+                cppSS << "    auto tceTask = Concurrency::task< " << getCxType(false, resolveType) << " >(tce);\n";
                 cppSS << "    return tceTask.get();\n";
                 cppSS << "  });\n";
                 cppSS << "  return result;\n";
@@ -1139,7 +1177,7 @@ namespace zsLib
           cppSS << indentStr << "{\n";
           cppSS << indentStr << "  auto reasonHolder = promise->reason< ::zsLib::AnyHolder< " << getCppType(false, rejectionType) << " > >();\n";
           cppSS << indentStr << "  if (reasonHolder) {\n";
-          cppSS << indentStr << "    mTce.set_exception(::Internal::Helper::ToCx(reasonHolder->mValue));\n";
+          cppSS << indentStr << "    tce_.set_exception(::Internal::Helper::" << getToCxName(rejectionType) << "(reasonHolder->value_));\n";
           cppSS << indentStr << "  }\n";
           cppSS << indentStr << "}\n";
         }
@@ -1196,7 +1234,7 @@ namespace zsLib
           }
 
           if ((structObj->mGenerics.size() < 1) &&
-              (!structObj->hasModifier(Modifier_Special))) {
+              (!GenerateHelper::isBuiltInType(structObj))) {
             generateForStandardStruct(helperFile, structObj);
           }
 
@@ -1221,28 +1259,35 @@ namespace zsLib
           auto &ss = helperFile.mHeaderStructSS;
           auto &cppSS = helperFile.mCppBodySS;
           auto &indentStr = helperFile.mHeaderIndentStr;
-          auto dashedStr = GenerateTypesHeader::getDashedComment(String());
+          auto dashedStr = GenerateHelper::getDashedComment(String());
 
           helperFile.includeCpp(String("\"") + fixStructFileName(structObj) + ".h\"");
 
-          ss << indentStr << "static " << getCxType(false, structObj) << " ToCx(" << getCppType(false, structObj) << " value);\n";
-          ss << indentStr << "static " << getCppType(false, structObj) << " FromCx(" << getCxType(false, structObj) << " value);\n";
+          ss << indentStr << "static " << getCxType(false, structObj, true) << " " << getToCxName(structObj) << "(" << getCppType(false, structObj) << " value);\n";
+          ss << indentStr << "static " << getCppType(false, structObj) << " " << getFromCxName(structObj) << "(" << getCxType(false, structObj) << " value);\n";
 
-          ss << indentStr << "static " << getCxType(true, structObj) << ">^ ToCx(" << getCppType(true, structObj) << "  &value) { if (!value.hasValue()) return nullptr; return ref new Platform::Box< " << getCxType(false, structObj) << " >(ToCx(value.value())); }\n";
-          ss << indentStr << "static " << getCppType(true, structObj) << " FromCx(" << getCxType(true, structObj) << " >^ value) { " << getCppType(true, structObj) << " > result; if (!value) return result; result = FromCx(value->Value); return result; }\n";
+          ss << indentStr << "static " << getCxType(false, structObj, true) << " " << getToCxName(structObj) << "(const " << getCppType(true, structObj) << "  &value);\n";
           ss << "\n";
 
           cppSS << dashedStr;
-          cppSS << getCxType(false, structObj) << " Internal::Helper::ToCx(" << getCppType(false, structObj) << " value)\n";
+          cppSS << getCxType(false, structObj, true) << " Internal::Helper::" << getToCxName(structObj) << "(" << getCppType(false, structObj) << " value)\n";
           cppSS << "{\n";
           cppSS << "  return " << fixNamePath(structObj) << "::ToCx(value);\n";
           cppSS << "}\n";
           cppSS << "\n";
 
           cppSS << dashedStr;
-          cppSS << getCppType(false, structObj) << " Internal::Helper::FromCx(" << getCxType(false, structObj) << " value)\n";
+          cppSS << getCppType(false, structObj) << " Internal::Helper::" << getFromCxName(structObj) << "(" << getCxType(false, structObj) << " value)\n";
           cppSS << "{\n";
           cppSS << "  return " << fixNamePath(structObj) << "::FromCx(value);\n";
+          cppSS << "}\n";
+          cppSS << "\n";
+
+          cppSS << dashedStr;
+          cppSS << getCxType(false, structObj, true) << " Internal::Helper::" << getToCxName(structObj) << "(const " << getCppType(true, structObj) << " &value)\n";
+          cppSS << "{\n";
+          cppSS << "  if (!value.hasValue()) return nullptr;\n";
+          cppSS << "  return " << getToCxName(structObj) << "(value.value());\n";
           cppSS << "}\n";
           cppSS << "\n";
 
@@ -1257,7 +1302,7 @@ namespace zsLib
         {
           if (!structObj) return;
 
-          auto dashedStr = GenerateTypesHeader::getDashedComment(String());
+          auto dashedStr = GenerateHelper::getDashedComment(String());
 
           String filename = fixStructFileName(structObj);
 
@@ -1279,10 +1324,23 @@ namespace zsLib
           includeSS << "#pragma once\n\n";
           includeSS << "#include \"types.h\"\n";
 
+          String ifdefName = (structObj->hasModifier(Modifier_Special) ? "CX_USE_GENERATED_" : "CX_USE_CUSTOM_") + getCxStructInitName(structObj);
+          ifdefName.toUpper();
+
+          includeSS << "\n";
+          includeSS << "#" << (structObj->hasModifier(Modifier_Special) ? "ifndef" : "ifdef") << " " << ifdefName << "\n";
+          includeSS << "#include <wrapper/cx/" << filename << ".h>\n";
+          includeSS << "#else // " << ifdefName << "\n";
+
           cppIncludeSS << "// " ZS_EVENTING_GENERATED_BY "\n\n";
-          cppIncludeSS << "#include \"cx_Helpers.h\"\n";
-          cppIncludeSS << "#include \"" << filename << ".h\"\n";
+
           cppIncludeSS << "\n";
+          cppIncludeSS << "#" << (structObj->hasModifier(Modifier_Special) ? "ifndef" : "ifdef") << " " << ifdefName << "\n";
+          cppIncludeSS << "#include \"" << filename << ".h\"\n";
+          cppIncludeSS << "#else // " << ifdefName << "\n";
+
+          structFile.includeCpp("\"cx_Helpers.h\"");
+          structFile.includeCpp("\"" + filename + ".h\"");
 
           NamespaceList namespaceParents;
           StringList endingStrs;
@@ -1307,7 +1365,7 @@ namespace zsLib
               }
               parent = parent->getParent();
             }
-            includeSS << "#include \"../" << GenerateStructHeader::getStructFileName(parentStruct) << "\"\n";
+            includeSS << "#include <wrapper/generated/" << GenerateStructHeader::getStructFileName(parentStruct) << ">\n";
             includeSS << "\n";
           }
 
@@ -1333,6 +1391,22 @@ namespace zsLib
           }
 
           ss << "\n";
+
+          bool foundWebHidden = false;
+
+          if (structObj->hasModifier(Modifier_Platform)) {
+            StringList values;
+            structObj->getModifierValues(Modifier_Platform, values);
+            for (auto iter = values.begin(); iter != values.end(); ++iter) {
+              auto &value = (*iter);
+              if ("webhidden" == value) foundWebHidden = true;
+            }
+          }
+
+          if (foundWebHidden) {
+            ss << indentStr << "[Windows::Foundation::Metadata::WebHostHiddenAttribute]\n";
+          }
+
           ss << indentStr << "public ref " << (structObj->hasModifier(Modifier_Struct_Dictionary) ? "struct" : "class") << " " << fixStructName(structObj) << " sealed\n";
           ss << indentStr << "{\n";
           ss << indentStr << "internal:\n";
@@ -1355,55 +1429,51 @@ namespace zsLib
           ss << indentStr << "static " << getCppType(false, structObj) << " FromCx(" << fixStructName(structObj) << "^ value);\n";
 
           cppSS << dashedStr;
-          cppSS << getCxType(false, structObj) << " " << fixStructName(structObj) << "::ToCx(" << getCppType(false, structObj) << " value)\n";
+          cppSS << getCxType(false, structObj, true) << " " << fixMethodDeclaration(structObj) << "::ToCx(" << getCppType(false, structObj) << " value)\n";
           cppSS << "{\n";
           cppSS << "  if (!value) return nullptr;\n";
           cppSS << "  auto result = ref new " << fixStructName(structObj) << "(WrapperCreate{});\n";
-          cppSS << "  result->observer_ = make_shared<WrapperObserverImpl>(result);\n";
           cppSS << "  result->native_ = value;\n";
           if (hasEvents) {
-            cppSS << "  result->native_->wrapper_installObserver(observer_);\n";
+            cppSS << "  result->observer_ = make_shared<WrapperObserverImpl>(result);\n";
+            cppSS << "  result->native_->wrapper_installObserver(result->observer_);\n";
           }
           cppSS << "  return result;\n";
           cppSS << "}\n";
           cppSS << "\n";
 
           cppSS << dashedStr;
-          cppSS << getCppType(false, structObj) << " " << fixStructName(structObj) << "::FromCx(" << getCxType(false, structObj) << " value)\n";
+          cppSS << getCppType(false, structObj) << " " << fixMethodDeclaration(structObj) << "::FromCx(" << getCxType(false, structObj) << " value)\n";
           cppSS << "{\n";
           cppSS << "  if (nullptr == value) return " << getCppType(false, structObj) << "();\n";
           cppSS << "  return value->native_;\n";
           cppSS << "}\n";
           cppSS << "\n";
 
-          if (!hasConstructor) {
-            bool staticOnlyMethods = GenerateStructHeader::hasOnlyStaticMethods(structObj);
+          if (GenerateHelper::needsDefaultConstructor(structObj)) {
+            pubSS << indentStr << fixStructName(structObj) << "();\n";
 
-            if (!staticOnlyMethods) {
-              pubSS << indentStr << fixStructName(structObj) << "();";
-
-              cppSS << dashedStr;
-              cppSS << fixNamePath(structObj) << "::" << fixStructName(structObj) << "\n";
-              cppSS << "  : native_(" << "wrapper" << structObj->getPathName() << "::wrapper_create()" << ")";
-              if (hasEvents) {
-                cppSS << ",\n";
-                cppSS << "    observer_(make_shared<WrapperObserverImpl>(this))";
-              }
-              cppSS << "\n";
-              cppSS << "{\n";
-              if (hasEvents) {
-                cppSS << "  native_->wrapper_installObserver(observer_);\n";
-              }
-              cppSS << "  wrapper_init_" << getStructInitName(structObj) << "();\n";
-              cppSS << "}\n";
-              cppSS << "\n";
+            cppSS << dashedStr;
+            cppSS << fixMethodDeclaration(structObj) << "::" << fixStructName(structObj) << "()\n";
+            cppSS << "  : native_(" << "wrapper" << structObj->getPathName() << "::wrapper_create()" << ")";
+            if (hasEvents) {
+              cppSS << ",\n";
+              cppSS << "    observer_(make_shared<WrapperObserverImpl>(this))";
             }
+            cppSS << "\n";
+            cppSS << "{\n";
+            if (hasEvents) {
+              cppSS << "  native_->wrapper_installObserver(observer_);\n";
+            }
+            cppSS << "  native_->wrapper_init_" << getStructInitName(structObj) << "();\n";
+            cppSS << "}\n";
+            cppSS << "\n";
           }
 
           if (hasEvents) {
             observerSS << indentStr << "struct WrapperObserverImpl : public wrapper" << structObj->getPathName() << "::WrapperObserver \n";
             observerSS << indentStr << "{\n";
-            observerSS << indentStr << "  WrapperObserverImpl(" << fixStructName(structObj) << " owner) : owner_(owner) {}\n";
+            observerSS << indentStr << "  WrapperObserverImpl(" << fixStructName(structObj) << "^ owner) : owner_(owner) {}\n";
             observerSS << "\n";
             observerFinalSS << indentStr << "  " << fixStructName(structObj) << "^ owner_;\n";
             observerFinalSS << indentStr << "};\n";
@@ -1418,14 +1488,21 @@ namespace zsLib
               {
                 auto foundStruct = (*iterSet);
                 if (foundStruct != structObj) {
+                  includeCppForType(structFile, foundStruct);
+                  pubSS << indentStr << "[";
+                  if (!foundCast) {
+                    pubSS << "Windows::Foundation::Metadata::DefaultOverloadAttribute, ";
+                  }
+                  pubSS << "Windows::Foundation::Metadata::OverloadAttribute(\"CastAs" << fixStructName(foundStruct);
+                  pubSS << "\")]\n";
                   pubSS << indentStr << "static " << fixStructName(structObj) << "^ Cast(" << getCxType(false, foundStruct) << " value);\n";
                   foundCast = true;
 
                   cppSS << dashedStr;
-                  cppSS << getCxType(false, structObj) << " " << fixNamePath(structObj) << "::Cast(" << getCxType(false, foundStruct) << " value)\n";
+                  cppSS << getCxType(false, structObj, true) << " " << fixNamePath(structObj) << "::Cast(" << getCxType(false, foundStruct) << " value)\n";
                   cppSS << "{\n";
                   cppSS << "  if (nullptr == value) return nullptr;\n";
-                  cppSS << "  auto result = std::dynamic_pointer_cast< wrapper" << structObj->getPathName() << " >(value);\n";
+                  cppSS << "  auto result = std::dynamic_pointer_cast< wrapper" << structObj->getPathName() << " >(value->native_);\n";
                   cppSS << "  if (!result) return nullptr;\n";
                   cppSS << "  return ToCx(result);\n";
                   cppSS << "}\n";
@@ -1436,7 +1513,7 @@ namespace zsLib
             if (foundCast) pubSS << "\n";
           }
 
-          generateStructMethods(helperFile, structFile, structObj, true, hasEvents);
+          generateStructMethods(helperFile, structFile, structObj, structObj, true, hasEvents);
 
           includeSS << "\n";
           includeSS << prestructDelegateSS.str();
@@ -1456,9 +1533,13 @@ namespace zsLib
             }
           }
 
+          includeSS << "#endif //" << (structObj->hasModifier(Modifier_Special) ? "ifdef" : "ifndef") << " " << ifdefName << "\n";
+
+
           cppIncludeSS << "\n";
           cppIncludeSS << cppSS.str();
           cppIncludeSS << "\n";
+          cppIncludeSS << "#endif //" << (structObj->hasModifier(Modifier_Special) ? "ifdef" : "ifndef") << " " << ifdefName << "\n";
 
           String outputnameHeader = UseHelper::fixRelativeFilePath(helperFile.mHeaderFileName, filename + ".h");
           String outputnameCpp = UseHelper::fixRelativeFilePath(helperFile.mHeaderFileName, filename + ".cpp");
@@ -1470,6 +1551,7 @@ namespace zsLib
         void GenerateStructCx::generateStructMethods(
                                                      HelperFile &helperFile,
                                                      StructFile &structFile,
+                                                     StructPtr derivedStructObj,
                                                      StructPtr structObj,
                                                      bool createConstructors,
                                                      bool hasEvents
@@ -1477,7 +1559,7 @@ namespace zsLib
         {
           if (!structObj) return;
 
-          auto dashedStr = GenerateTypesHeader::getDashedComment(String());
+          auto dashedStr = GenerateHelper::getDashedComment(String());
 
           auto &headerMethodsSS = structFile.mHeaderStructPublicSS;
           auto &prestructDelegateSS = structFile.mHeaderPreStructSS;
@@ -1493,7 +1575,7 @@ namespace zsLib
             {
               auto subStructObj = relatedType->toStruct();
               if (subStructObj) {
-                generateStructMethods(helperFile, structFile, subStructObj, false, hasEvents);
+                generateStructMethods(helperFile, structFile, derivedStructObj, subStructObj, false, hasEvents);
               }
             }
           }
@@ -1503,9 +1585,14 @@ namespace zsLib
           for (auto iter = structObj->mMethods.begin(); iter != structObj->mMethods.end(); ++iter)
           {
             auto method = (*iter);
-            
+
+            if (method->hasModifier(Modifier_Method_Delete)) continue;
+
             bool isCtor = method->hasModifier(Modifier_Method_Ctor);
             bool isEvent = method->hasModifier(Modifier_Method_EventHandler);
+            bool isToString = ("ToString" == fixName(method->mName)) && ("::string" == method->mResult->getPathName()) && (0 == method->mArguments.size());
+            bool isStatic = method->hasModifier(Modifier_Static);
+
             String delegateName;
 
             std::stringstream implSS;
@@ -1524,15 +1611,17 @@ namespace zsLib
 
             String methodImplIndentStr = "  ";
 
+            includeCppForType(structFile, method->mResult);
+
             if (hasResult) {
-              implSS << methodImplIndentStr << getCxType(method->hasModifier(Modifier_Optional), method->mResult) << " result {};\n";
+              implSS << methodImplIndentStr << getCxType(method->hasModifier(Modifier_Optional), method->mResult, true) << " result {};\n";
             }
             if (method->mThrows.size() > 0) {
               implSS << methodImplIndentStr << "try {\n";
               methodImplIndentStr += "  ";
             }
             if (hasResult) {
-              implSS << methodImplIndentStr << "result = ::Internal::Helper::ToCx(";
+              implSS << methodImplIndentStr << "result = ::Internal::Helper::" << getToCxName(method->mResult) << "(";
             } else {
               implSS << methodImplIndentStr;
             }
@@ -1543,7 +1632,11 @@ namespace zsLib
               if (isCtor) {
                 implSS << "native_->wrapper_init_" << getStructInitName(structObj) << "(";
               } else {
-                implSS << "native_->" << method->mName << "(";
+                if (isStatic) {
+                  implSS << "wrapper" << method->getPathName() << "(";
+                } else {
+                  implSS << "native_->" << method->mName << "(";
+                }
               }
             }
 
@@ -1553,7 +1646,7 @@ namespace zsLib
             }
             String altName = method->getModifierValue(Modifier_AltName, 0);
             if (altName.hasData()) {
-              attributes.push_back("Windows::Foundation::Metadata::OverloadAttribute(\"" + fixName(altName) + "\"))");
+              attributes.push_back("Windows::Foundation::Metadata::OverloadAttribute(\"" + fixName(altName) + "\")");
             }
 
             if (attributes.size() > 0) {
@@ -1576,13 +1669,16 @@ namespace zsLib
               cppSS << dashedStr;
               cppSS << "void " << fixNamePath(structObj) << "::WrapperObserverImpl::" << method->mName << "(";
 
-              delegateName = fixStructName(structObj) + "_";
-              if (method->hasModifier(Modifier_AltName)) {
-                delegateName += fixName(method->getModifierValue(Modifier_AltName, 0));
-              } else {
-                delegateName += fixName(method->mName);
+              String delegateName = fixName(method->getModifierValue(Modifier_Method_EventHandler, 0));
+              if (!delegateName.hasData()) {
+                delegateName = fixStructName(structObj) + "_";
+                if (method->hasModifier(Modifier_AltName)) {
+                  delegateName += fixName(method->getModifierValue(Modifier_AltName, 0));
+                } else {
+                  delegateName += fixName(method->mName);
+                }
+                delegateName += "Delegate";
               }
-              delegateName += "Delegate";
               prestructDelegateSS << structFile.mHeaderIndentStr << "public delegate void " << delegateName << "(";
               if (method->mArguments.size() > 1) {
                 observerSS << "\n";
@@ -1597,12 +1693,14 @@ namespace zsLib
             } else {
               cppSS << dashedStr;
 
-              headerMethodsSS << indentStr;
+              headerMethodsSS << indentStr << (method->hasModifier(Modifier_Static) ? "static " : "");
               if (!isCtor) {
-                cppSS << getCxType(method->hasModifier(Modifier_Optional), method->mResult) << " ";
-                headerMethodsSS << getCxType(method->hasModifier(Modifier_Optional), method->mResult) << " ";
+                includeCppForType(structFile, method->mResult);
+
+                cppSS << getCxType(method->hasModifier(Modifier_Optional), method->mResult, true) << " ";
+                headerMethodsSS << (isToString ? "virtual " : "") << getCxType(method->hasModifier(Modifier_Optional), method->mResult, true) << " ";
               }
-              cppSS << fixNamePath(method) << "(";
+              cppSS << fixMethodDeclaration(derivedStructObj, method) << "(";
               headerMethodsSS << fixName(method->mName) << "(";
               if (method->mArguments.size() > 1) {
                 cppSS << "\n";
@@ -1618,9 +1716,9 @@ namespace zsLib
               auto arg = (*iterArgs);
               if (!firstArg) {
                 implSS << ", ";
+                cppSS << ",\n";
+                cppSS << "  ";
                 if (isEvent) {
-                  cppSS << ",\n";
-                  cppSS << "  ";
                   observerSS << ",\n";
                   observerSS << indentStr << "  ";
                   prestructDelegateSS << ",\n";
@@ -1631,7 +1729,8 @@ namespace zsLib
                 }
               }
               firstArg = false;
-              implSS << "::Internal::Helper::" << (isEvent ? "ToCx" : "FromCx") << "(" << fixArgumentName(arg->mName) << ")";
+              implSS << "::Internal::Helper::" << (isEvent ? getToCxName(arg->mType) : getFromCxName(arg->mType)) << "(" << fixArgumentName(arg->mName) << ")";
+              includeCppForType(structFile, arg->mType);
               if (isEvent) {
                 cppSS << getCppType(arg->hasModifier(Modifier_Optional), arg->mType) << " " << fixArgumentName(arg->mName);
                 observerSS << getCppType(arg->hasModifier(Modifier_Optional), arg->mType) << " " << fixArgumentName(arg->mName);
@@ -1650,7 +1749,7 @@ namespace zsLib
               auto throwType = (*iterThrows);
               if (!throwType) continue;
               implSS << "  } catch(const " << getCppType(false, throwType) << " &e) {\n";
-              implSS << "    throw ToCx(e);\n";
+              implSS << "    throw ::Internal::Helper::" << getToCxName(throwType) << "(e);\n";
             }
             if (method->mThrows.size() > 0) {
               implSS << "  }\n";
@@ -1677,23 +1776,25 @@ namespace zsLib
                 headerMethodsSS << "\n";
                 headerMethodsSS << indentStr << "  ";
               }
-              headerMethodsSS << ");\n";
+              headerMethodsSS << ")" << (isToString ? " override" : "") << ";\n";
             }
             cppSS << ")";
             if (isCtor) {
-              cppSS << " : native_(" << "wrapper" << structObj->getPathName() << "::wrapper_create()" << ")";
+              cppSS << "\n : native_(" << "wrapper" << structObj->getPathName() << "::wrapper_create()" << ")";
               if (hasEvents) {
                 cppSS << ",\n";
-                cppSS << "      observer_(make_shared<WrapperObserverImpl>(this))";
+                cppSS << "   observer_(make_shared<WrapperObserverImpl>(this))";
               }
             }
 
             cppSS << "\n";
             cppSS << "{\n";
-            if ((isCtor) && (hasEvents)) {
-              cppSS << "  wrapper_installObserver(observer_);\n";
+            if (!isStatic) {
+              cppSS << "  if (" << (isEvent ? "nullptr == owner_" : "!native_") << ") {throw ref new Platform::NullReferenceException();}\n";
             }
-            cppSS << "  if (" << (isEvent ? "nullptr == owner_" : "!native_") << ") {throw ref new Platform::NullReferenceException();}\n";
+            if ((isCtor) && (hasEvents)) {
+              cppSS << "  native_->wrapper_installObserver(observer_);\n";
+            }
             cppSS << implSS.str();
             cppSS << "}\n";
             cppSS << "\n";
@@ -1709,6 +1810,12 @@ namespace zsLib
             bool hasSet = true;
             bool hasGetter = property->hasModifier(Modifier_Property_Getter);
             bool hasSetter = property->hasModifier(Modifier_Property_Setter);
+            bool isStatic = property->hasModifier(Modifier_Static);
+
+            if ((!structObj->hasModifier(Modifier_Struct_Dictionary)) || (isStatic))
+            {
+              if ((!hasGetter) && (!hasSetter)) hasGetter = hasSetter = true;
+            }
 
             if (hasGetter) {
               if (!hasSetter) hasSet = false;
@@ -1716,7 +1823,9 @@ namespace zsLib
               if (hasSetter) hasGet = false;
             }
 
-            headerMethodsSS << indentStr << "property " << getCxType(property->hasModifier(Modifier_Optional), property->mType) << " " << fixName(property->mName);
+            includeCppForType(structFile, property->mType);
+
+            headerMethodsSS << indentStr << (isStatic ? "static " : "") << "property " << getCxType(property->hasModifier(Modifier_Optional), property->mType, true) << " " << fixName(property->mName);
             if (hasGet) {
               if (hasSet) {
                 headerMethodsSS << "\n";
@@ -1725,7 +1834,7 @@ namespace zsLib
                 headerMethodsSS << indentStr << "  void set(" << getCxType(property->hasModifier(Modifier_Optional), property->mType) << " value);\n";
                 headerMethodsSS << indentStr << "}\n";
               } else {
-                headerMethodsSS << " { " << getCxType(property->hasModifier(Modifier_Optional), property->mType) << " get(); }\n";
+                headerMethodsSS << " { " << getCxType(property->hasModifier(Modifier_Optional), property->mType, true) << " get(); }\n";
               }
             } else {
               if (hasGet) {
@@ -1735,10 +1844,12 @@ namespace zsLib
 
             if (hasGet) {
               cppSS << dashedStr;
-              cppSS << getCxType(property->hasModifier(Modifier_Optional), property->mType) << " " << fixNamePath(property) << "::get()\n";
+              cppSS << getCxType(property->hasModifier(Modifier_Optional), property->mType, true) << " " << fixMethodDeclaration(derivedStructObj, property) << "::get()\n";
               cppSS << "{\n";
-              cppSS << "  if (!native_) {throw ref new Platform::NullReferenceException();}\n";
-              cppSS << "  return ::Internal::Helper::ToCx(native_->";
+              if (!isStatic) {
+                cppSS << "  if (!native_) {throw ref new Platform::NullReferenceException();}\n";
+              }
+              cppSS << "  return ::Internal::Helper::" << getToCxName(property->mType) << "(" << (isStatic ? String("wrapper" + structObj->getPathName() + "::") : String("native_->"));
               if (hasGetter) {
                 cppSS << "get_" << property->mName << "()";
               } else {
@@ -1750,14 +1861,19 @@ namespace zsLib
             }
             if (hasSet) {
               cppSS << dashedStr;
-              cppSS << "void " << fixNamePath(property) << "::set(" << getCxType(property->hasModifier(Modifier_Optional), property->mType) << " value)\n";
+              cppSS << "void " << fixMethodDeclaration(derivedStructObj, property) << "::set(" << getCxType(property->hasModifier(Modifier_Optional), property->mType) << " value)\n";
               cppSS << "{\n";
-              cppSS << "  if (!native_) {throw ref new Platform::NullReferenceException();}\n";
-              cppSS << "  native_->";
-              if (hasSetter) {
-                cppSS << "set_" << property->mName << "(::Internal::Helper::FromCx(value));";
+              if (!isStatic) {
+                cppSS << "  if (!native_) {throw ref new Platform::NullReferenceException();}\n";
+                cppSS << "  native_->";
               } else {
-                cppSS << property->mName << " = " << "::Internal::Helper::FromCx(value);";
+                cppSS << "  wrapper" << structObj->getPathName() << "::";
+              }
+
+              if (hasSetter) {
+                cppSS << "set_" << property->mName << "(::Internal::Helper::" << getFromCxName(property->mType) << "(value));";
+              } else {
+                cppSS << property->mName << " = " << "::Internal::Helper::" << getFromCxName(property->mType) << "(value);";
               }
               cppSS << "\n";
               cppSS << "}\n";
@@ -1773,14 +1889,34 @@ namespace zsLib
                                                )
         {
           auto &ss = helperFile.mHeaderStructSS;
+          auto &cppSS = helperFile.mCppBodySS;
           auto &indentStr = helperFile.mHeaderIndentStr;
+          auto dashedStr = GenerateHelper::getDashedComment(String());
 
-          ss << indentStr << "static " << getCxType(false, enumObj) << " ToCx(" << getCppType(false, enumObj) << " value) { return (" << getCxType(false, enumObj) << ")value; }\n";
-          ss << indentStr << "static " << getCppType(false, enumObj) << " FromCx(" << getCxType(false, enumObj) << " value) { return (" << getCppType(false, enumObj) << ")value; }\n";
+          ss << indentStr << "static " << getCxType(false, enumObj, true) << " " << getToCxName(enumObj) << "(" << getCppType(false, enumObj) << " value) { return (" << getCxType(false, enumObj) << ")value; }\n";
+          ss << indentStr << "static " << getCppType(false, enumObj) << " " << getFromCxName(enumObj) << "(" << getCxType(false, enumObj) << " value) { return (" << getCppType(false, enumObj) << ")value; }\n";
 
-          ss << indentStr << "static " << getCxType(true, enumObj) << ">^ ToCx(" << getCppType(true, enumObj) << "  &value) { if (!value.hasValue()) return nullptr; return ref new Platform::Box< " << getCxType(false, enumObj) << " >(ToCx(value.value())); }\n";
-          ss << indentStr << "static " << getCppType(true, enumObj) << " FromCx(" << getCxType(true, enumObj) << " >^ value) { " << getCppType(true, enumObj) << " > result; if (!value) return result; result = FromCx(value->Value); return result; }\n";
+          ss << indentStr << "static " << getCxType(true, enumObj, true) << " " << getToCxName(enumObj) << "(" << getCppType(true, enumObj) << "  &value);\n";
+          ss << indentStr << "static " << getCppType(true, enumObj) << " " << getFromCxName(enumObj) << "(" << getCxType(true, enumObj) << " value);\n";
           ss << "\n";
+
+          cppSS << dashedStr;
+          cppSS << getCxType(true, enumObj, true) << " Internal::Helper::" << getToCxName(enumObj) << "(" << getCppType(true, enumObj) << "  &value)\n";
+          cppSS << "{\n";
+          cppSS << "  if (!value.hasValue()) return nullptr;\n";
+          cppSS << "  return ref new Platform::Box< " << getCxType(false, enumObj) << " >(" << getToCxName(enumObj) << "(value.value()));\n";
+          cppSS << "}\n";
+          cppSS << "\n";
+
+          cppSS << dashedStr;
+          cppSS << getCppType(true, enumObj) << " Internal::Helper::" << getFromCxName(enumObj) << "(" << getCxType(true, enumObj) << " value)\n";
+          cppSS << "{\n";
+          cppSS << "  " << getCppType(true, enumObj) << " result;\n";
+          cppSS << "  if (!value) return result;\n";
+          cppSS << "  result = " << getFromCxName(enumObj) << "(value->Value);\n";
+          cppSS << "  return result\n;";
+          cppSS << "}\n";
+          cppSS << "\n";
         }
 
         //---------------------------------------------------------------------
@@ -1794,7 +1930,7 @@ namespace zsLib
           auto &ss = helperFile.mHeaderStructSS;
           auto &cppSS = helperFile.mCppBodySS;
           auto &indentStr = helperFile.mHeaderIndentStr;
-          auto dashedStr = GenerateTypesHeader::getDashedComment(String());
+          auto dashedStr = GenerateHelper::getDashedComment(String());
 
           for (auto iter = structObj->mTemplatedStructs.begin(); iter != structObj->mTemplatedStructs.end(); ++iter)
           {
@@ -1806,32 +1942,33 @@ namespace zsLib
             }
 
             TypePtr foundType = (*found);
-            ss << indentStr << "static Windows::Foundation::Collections::IVector< " << getCxType(false, foundType) << " >^ ToCx(shared_ptr< std::list< " << getCppType(false, foundType) << " > > values);\n";
-            ss << indentStr << "static shared_ptr< std::list<" << getCppType(false, foundType) << "> > FromCx(Windows::Foundation::Collections::IVector< " << getCxType(false, foundType) << " >^ values);\n";
+            ss << indentStr << "static Windows::Foundation::Collections::IVector< " << getCxType(false, foundType, true) << " >^ " << getToCxName(templatedStruct) << "(shared_ptr< std::list< " << getCppType(false, foundType) << " > > values);\n";
+            ss << indentStr << "static shared_ptr< std::list< " << getCppType(false, foundType) << "> > " << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IVector< " << getCxType(false, foundType) << " >^ values);\n";
             ss << "\n";
 
             cppSS << dashedStr;
-            cppSS << "Windows::Foundation::Collections::IVector< " << getCxType(false, foundType) << " >^ Internal::Helper::ToCx(shared_ptr< std::list< " << getCppType(false, foundType) << " > > values)\n";
+            cppSS << "Windows::Foundation::Collections::IVector< " << getCxType(false, foundType, true) << " >^ Internal::Helper::" << getToCxName(templatedStruct) << "(shared_ptr< std::list< " << getCppType(false, foundType) << " > > values)\n";
             cppSS << "{\n";
-            cppSS << "  if (!value) return nullptr;\n";
+            cppSS << "  if (!values) return nullptr;\n";
             cppSS << "  auto result = ref new Platform::Collections::Vector< " << getCxType(false, foundType) << " >();\n";
-            cppSS << "  for (auto iter = value->begin(); iter != value.end(); ++iter)\n";
+            cppSS << "  for (auto iter = values->begin(); iter != values->end(); ++iter)\n";
             cppSS << "  {\n";
-            cppSS << "    result->Append(ToCx(*iter));\n";
+            cppSS << "    result->Append(" << getToCxName(foundType) << "(*iter));\n";
             cppSS << "  }\n";
             cppSS << "  return result;\n";
             cppSS << "}\n";
             cppSS << "\n";
 
             cppSS << dashedStr;
-            cppSS << "shared_ptr< std::list<" << getCppType(false, foundType) << "> > Internal::Helper::FromCx(Windows::Foundation::Collections::IVector< " << getCxType(false, foundType) << " >^ values)\n";
+            cppSS << "shared_ptr< std::list<" << getCppType(false, foundType) << "> > Internal::Helper::" << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IVector< " << getCxType(false, foundType) << " >^ values)\n";
             cppSS << "{\n";
-            cppSS << "  if (!value) return shared_ptr< std::list< " << getCppType(false, foundType) << " > >();\n";
+            cppSS << "  if (!values) return shared_ptr< std::list< " << getCppType(false, foundType) << " > >();\n";
             cppSS << "  auto result = make_shared< std::list< " << getCppType(false, foundType) << " > >();\n";
             cppSS << "  for (" << getCxType(false, foundType) << " value : values)\n";
             cppSS << "  {\n";
-            cppSS << "    result->push_back(FromCx(value));\n";
+            cppSS << "    result->push_back(" << getFromCxName(foundType) << "(value));\n";
             cppSS << "  }\n";
+            cppSS << "  return result;\n";
             cppSS << "}\n";
             cppSS << "\n";
           }
@@ -1848,7 +1985,7 @@ namespace zsLib
           auto &ss = helperFile.mHeaderStructSS;
           auto &cppSS = helperFile.mCppBodySS;
           auto &indentStr = helperFile.mHeaderIndentStr;
-          auto dashedStr = GenerateTypesHeader::getDashedComment(String());
+          auto dashedStr = GenerateHelper::getDashedComment(String());
 
           for (auto iter = structObj->mTemplatedStructs.begin(); iter != structObj->mTemplatedStructs.end(); ++iter)
           {
@@ -1867,32 +2004,33 @@ namespace zsLib
             }
             TypePtr valueType = (*found);
 
-            ss << indentStr << "static Windows::Foundation::Collections::IMap< " << getCxType(false, keyType) << ", " << getCxType(false, valueType)  << " >^ ToCx(shared_ptr< std::map< " << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > > values);\n";
-            ss << indentStr << "static shared_ptr< std::map<" << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > > FromCx(Windows::Foundation::Collections::IMap< " << getCxType(false, keyType) << ", " << getCxType(false, valueType) << " >^ values);\n";
+            ss << indentStr << "static Windows::Foundation::Collections::IMap< " << getCxType(false, keyType, true) << ", " << getCxType(false, valueType, true)  << " >^ " << getToCxName(templatedStruct) << "(shared_ptr< std::map< " << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > > values);\n";
+            ss << indentStr << "static shared_ptr< std::map<" << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > > " << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IMap< " << getCxType(false, keyType) << ", " << getCxType(false, valueType) << " >^ values);\n";
             ss << "\n";
 
             cppSS << dashedStr;
-            cppSS << "Windows::Foundation::Collections::IMap< " << getCxType(false, keyType) << ", " << getCxType(false, valueType) << " >^ Internal::Helper::ToCx(shared_ptr< std::map< " << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > > values)\n";
+            cppSS << "Windows::Foundation::Collections::IMap< " << getCxType(false, keyType, true) << ", " << getCxType(false, valueType, true) << " >^ Internal::Helper::" << getToCxName(templatedStruct) << "(shared_ptr< std::map< " << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > > values)\n";
             cppSS << "{\n";
-            cppSS << "  if (!value) return nullptr;\n";
+            cppSS << "  if (!values) return nullptr;\n";
             cppSS << "  auto result = ref new Platform::Collections::Map< " << getCxType(false, keyType) << ", " << getCxType(false, valueType)  << " >();\n";
-            cppSS << "  for (auto iter = value->begin(); iter != value.end(); ++iter)\n";
+            cppSS << "  for (auto iter = values->begin(); iter != values->end(); ++iter)\n";
             cppSS << "  {\n";
-            cppSS << "    result->Insert(ToCx((*iter).first), ToCx((*iter).second));\n";
+            cppSS << "    result->Insert(" << getToCxName(keyType) << "((*iter).first), " << getToCxName(valueType) << "((*iter).second));\n";
             cppSS << "  }\n";
             cppSS << "  return result;\n";
             cppSS << "}\n";
             cppSS << "\n";
 
             cppSS << dashedStr;
-            cppSS << "shared_ptr< std::map<" << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > > Internal::Helper::FromCx(Windows::Foundation::Collections::IMap< " << getCxType(false, keyType) << ", " << getCxType(false, valueType) << " >^ values)\n";
+            cppSS << "shared_ptr< std::map<" << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > > Internal::Helper::" << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IMap< " << getCxType(false, keyType) << ", " << getCxType(false, valueType) << " >^ values)\n";
             cppSS << "{\n";
-            cppSS << "  if (!value) return shared_ptr< std::map< " << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > >();\n";
+            cppSS << "  if (!values) return shared_ptr< std::map< " << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > >();\n";
             cppSS << "  auto result = make_shared< std::map<" << getCppType(false, keyType) << ", " << getCppType(false, valueType) << "> >();\n";
             cppSS << "  std::for_each(Windows::Foundation::Collections::begin(values), Windows::Foundation::Collections::end(values), [](Windows::Foundation::Collections::IKeyValuePair< " << getCxType(false, keyType) << ", " << getCxType(false, valueType) << " >^ pair)\n";
             cppSS << "  {\n";
-            cppSS << "    result[FromCx(pair->Key)] = FromCx[pair->Value];\n";
+            cppSS << "    result[" << getFromCxName(keyType) << "(pair->Key)] = " << getFromCxName(valueType) << "[pair->Value];\n";
             cppSS << "  }\n";
+            cppSS << "  return result;\n";
             cppSS << "}\n";
             cppSS << "\n";
           }
@@ -1909,7 +2047,7 @@ namespace zsLib
           auto &ss = helperFile.mHeaderStructSS;
           auto &cppSS = helperFile.mCppBodySS;
           auto &indentStr = helperFile.mHeaderIndentStr;
-          auto dashedStr = GenerateTypesHeader::getDashedComment(String());
+          auto dashedStr = GenerateHelper::getDashedComment(String());
 
           for (auto iter = structObj->mTemplatedStructs.begin(); iter != structObj->mTemplatedStructs.end(); ++iter)
           {
@@ -1922,32 +2060,33 @@ namespace zsLib
 
             TypePtr keyType = (*found);
 
-            ss << indentStr << "static Windows::Foundation::Collections::IMap< " << getCxType(false, keyType) << ", Platform::Object^ >^ ToCx(shared_ptr< std::set< " << getCppType(false, keyType) << " > > values);\n";
-            ss << indentStr << "static shared_ptr< std::set<" << getCppType(false, keyType) << " > > FromCx(Windows::Foundation::Collections::IMap< " << getCxType(false, keyType) << ", Platform::Object^ >^ values);\n";
+            ss << indentStr << "static Windows::Foundation::Collections::IMap< " << getCxType(false, keyType, true) << ", Platform::Object^ >^ " << getToCxName(templatedStruct) << "(shared_ptr< std::set< " << getCppType(false, keyType) << " > > values);\n";
+            ss << indentStr << "static shared_ptr< std::set< " << getCppType(false, keyType) << " > > " << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IMap< " << getCxType(false, keyType) << ", Platform::Object^ >^ values);\n";
             ss << "\n";
 
             cppSS << dashedStr;
-            cppSS << "Windows::Foundation::Collections::IMap< " << getCxType(false, keyType) << ", Platform::Object^ >^ Internal::Helper::ToCx(shared_ptr< std::set< " << getCppType(false, keyType) << " > > values)\n";
+            cppSS << "Windows::Foundation::Collections::IMap< " << getCxType(false, keyType, true) << ", Platform::Object^ >^ Internal::Helper::" << getToCxName(templatedStruct) << "(shared_ptr< std::set< " << getCppType(false, keyType) << " > > values)\n";
             cppSS << "{\n";
-            cppSS << "  if (!value) return nullptr;\n";
+            cppSS << "  if (!values) return nullptr;\n";
             cppSS << "  auto result = ref new Platform::Collections::Map< " << getCxType(false, keyType) << ", Platform::Object^ >();\n";
-            cppSS << "  for (auto iter = value->begin(); iter != value.end(); ++iter)\n";
+            cppSS << "  for (auto iter = values->begin(); iter != values->end(); ++iter)\n";
             cppSS << "  {\n";
-            cppSS << "    result->Insert(ToCx(*iter), nullptr);\n";
+            cppSS << "    result->Insert(" << getToCxName(keyType) << "(*iter), nullptr);\n";
             cppSS << "  }\n";
             cppSS << "  return result;\n";
             cppSS << "}\n";
             cppSS << "\n";
 
             cppSS << dashedStr;
-            cppSS << "shared_ptr< std::set<" << getCppType(false, keyType) << " > > Internal::Helper::FromCx(Windows::Foundation::Collections::IMap< " << getCxType(false, keyType) << ", Platform::Object^ >^ values)\n";
+            cppSS << "shared_ptr< std::set< " << getCppType(false, keyType) << " > > Internal::Helper::" << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IMap< " << getCxType(false, keyType) << ", Platform::Object^ >^ values)\n";
             cppSS << "{\n";
-            cppSS << "  if (!value) return shared_ptr< std::set< " << getCppType(false, keyType) << " > >();\n";
+            cppSS << "  if (!values) return shared_ptr< std::set< " << getCppType(false, keyType) << " > >();\n";
             cppSS << "  auto result = make_shared< std::set<" << getCppType(false, keyType) << "> >();\n";
-            cppSS << "  std::for_each(Windows::Foundation::Collections::begin(values), Windows::Foundation::Collections::end(values), [](Windows::Foundation::Collections::IKeyValuePair< " << getCxType(false, keyType) << ", Platform::Object^ >^ pair)\n";
+            cppSS << "  std::for_each(Windows::Foundation::Collections::begin(values), Windows::Foundation::Collections::end(values), [result](Windows::Foundation::Collections::IKeyValuePair< " << getCxType(false, keyType) << ", Platform::Object^ >^ pair)\n";
             cppSS << "  {\n";
-            cppSS << "    result.insert(FromCx(pair->Key));\n";
-            cppSS << "  }\n";
+            cppSS << "    result->insert(" << getFromCxName(keyType) << "(pair->Key));\n";
+            cppSS << "  });\n";
+            cppSS << "  return result;\n";
             cppSS << "}\n";
             cppSS << "\n";
           }
@@ -1956,7 +2095,8 @@ namespace zsLib
         //---------------------------------------------------------------------
         String GenerateStructCx::getBasicCxTypeString(
                                                       bool isOptional,
-                                                      BasicTypePtr type
+                                                      BasicTypePtr type,
+                                                      bool isReturnType
                                                       )
         {
           if (!type) return String();
@@ -1968,17 +2108,17 @@ namespace zsLib
 
             case IEventingTypes::PredefinedTypedef_uchar:     return makeCxOptional(isOptional, "uint8");
             case IEventingTypes::PredefinedTypedef_char:
-            case IEventingTypes::PredefinedTypedef_schar:     return makeCxOptional(isOptional, "int8");
+            case IEventingTypes::PredefinedTypedef_schar:     return makeCxOptional(isOptional, "char16");
             case IEventingTypes::PredefinedTypedef_ushort:    return makeCxOptional(isOptional, "uint16");
             case IEventingTypes::PredefinedTypedef_short:
             case IEventingTypes::PredefinedTypedef_sshort:    return makeCxOptional(isOptional, "int16");
             case IEventingTypes::PredefinedTypedef_uint:      return makeCxOptional(isOptional, "uint32");
             case IEventingTypes::PredefinedTypedef_int:
             case IEventingTypes::PredefinedTypedef_sint:      return makeCxOptional(isOptional, "int32");
-            case IEventingTypes::PredefinedTypedef_ulong:     return makeCxOptional(isOptional, "uint64");
+            case IEventingTypes::PredefinedTypedef_ulong:     return makeCxOptional(isOptional, "Internal::Helper::HelperULong");
             case IEventingTypes::PredefinedTypedef_long:
-            case IEventingTypes::PredefinedTypedef_slong:     return makeCxOptional(isOptional, "int64");
-            case IEventingTypes::PredefinedTypedef_ulonglong: return makeCxOptional(isOptional, "uint64");
+            case IEventingTypes::PredefinedTypedef_slong:     return makeCxOptional(isOptional, "Internal::Helper::HelperLong");
+            case IEventingTypes::PredefinedTypedef_ulonglong: return makeCxOptional(isOptional, "int64");
             case IEventingTypes::PredefinedTypedef_longlong:
             case IEventingTypes::PredefinedTypedef_slonglong: return makeCxOptional(isOptional, "int64");
             case IEventingTypes::PredefinedTypedef_uint8:     return makeCxOptional(isOptional, "uint8");
@@ -1999,7 +2139,7 @@ namespace zsLib
             case IEventingTypes::PredefinedTypedef_dword:     return makeCxOptional(isOptional, "uint32");
             case IEventingTypes::PredefinedTypedef_qword:     return makeCxOptional(isOptional, "uint64");
 
-            case IEventingTypes::PredefinedTypedef_float:     return makeCxOptional(isOptional, "float32");
+            case IEventingTypes::PredefinedTypedef_float:     return makeCxOptional(isOptional, "Internal::Helper::HelperFloat");
             case IEventingTypes::PredefinedTypedef_double:
             case IEventingTypes::PredefinedTypedef_ldouble:   return makeCxOptional(isOptional, "float64");
             case IEventingTypes::PredefinedTypedef_float32:   return makeCxOptional(isOptional, "float32");
@@ -2007,12 +2147,12 @@ namespace zsLib
 
             case IEventingTypes::PredefinedTypedef_pointer:   return makeCxOptional(isOptional, "uint64");
 
-            case IEventingTypes::PredefinedTypedef_binary:    return "Platform::Array<byte>^";
+            case IEventingTypes::PredefinedTypedef_binary:    return isReturnType ? "Platform::Array<byte>^" : "const Platform::Array<byte>^";
             case IEventingTypes::PredefinedTypedef_size:      return makeCxOptional(isOptional, "uint64");
 
             case IEventingTypes::PredefinedTypedef_string:
             case IEventingTypes::PredefinedTypedef_astring:
-            case IEventingTypes::PredefinedTypedef_wstring:   return makeCxOptional(isOptional, "Platform::String^");
+            case IEventingTypes::PredefinedTypedef_wstring:   return makeCxOptional(false, "Platform::String^");
           }
           return String();
         }
@@ -2034,7 +2174,11 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCx::getCxType(bool isOptional, TypePtr type)
+        String GenerateStructCx::getCxType(
+                                           bool isOptional,
+                                           TypePtr type,
+                                           bool isReturnType
+                                           )
         {
           if (!type) return String();
 
@@ -2050,10 +2194,9 @@ namespace zsLib
           {
             auto basicType = type->toBasicType();
             if (basicType) {
-              return getBasicCxTypeString(isOptional, basicType);
+              return getBasicCxTypeString(isOptional, basicType, isReturnType);
             }
           }
-
 
           {
             auto structType = type->toStruct();
@@ -2061,13 +2204,14 @@ namespace zsLib
               if (structType->mGenerics.size() > 0) return String();
               if (structType->hasModifier(Modifier_Special)) {
                 String specialName = structType->getPathName();
+                if ("::zs::Any" == specialName) return "Platform::Object^";
                 if ("::zs::Promise" == specialName) return "Windows::Foundation::IAsyncAction^";
                 if ("::zs::exceptions::Exception" == specialName) return "Platform::FailureException^";
-                if ("::zs::exceptions::InvalidParameters" == specialName) return "Platform::InvalidArgumentException^";
-                if ("::zs::exceptions::InvalidState" == specialName) return "Platform::COMException^";
+                if ("::zs::exceptions::InvalidArgument" == specialName) return "Platform::InvalidArgumentException^";
+                if ("::zs::exceptions::BadState" == specialName) return "Platform::COMException^";
                 if ("::zs::exceptions::NotImplemented" == specialName) return "Platform::NotImplementedException^";
                 if ("::zs::exceptions::NotSupported" == specialName) return "Platform::COMException^";
-                if ("::zs::exceptions::Unexpected" == specialName) return "Platform::COMException^";
+                if ("::zs::exceptions::UnexpectedError" == specialName) return "Platform::COMException^";
                 if ("::zs::Time" == specialName) return makeCxOptional(isOptional, "Windows::Foundation::DateTime");
                 if ("::zs::Milliseconds" == specialName) return makeCxOptional(isOptional, "Windows::Foundation::TimeSpan");
                 if ("::zs::Microseconds" == specialName) return makeCxOptional(isOptional, "Windows::Foundation::TimeSpan");
@@ -2076,7 +2220,7 @@ namespace zsLib
                 if ("::zs::Minutes" == specialName) return makeCxOptional(isOptional, "Windows::Foundation::TimeSpan");
                 if ("::zs::Hours" == specialName) return makeCxOptional(isOptional, "Windows::Foundation::TimeSpan");
               }
-              return makeCxOptional(isOptional, fixNamePath(structType) + "^");
+              return makeCxOptional(false, fixNamePath(structType) + "^");
             }
           }
 
@@ -2103,7 +2247,7 @@ namespace zsLib
                       specialName = parentStruct->getPathName();
                       if ("::std::set" == specialName) {
                         templatedTypeStr = "Windows::Foundation::Collections::IMap< ";
-                        specialTemplatePost = ", Platform::Boolean";
+                        specialTemplatePost = ", Platform::Object^";
                       }
                       if ("::std::list" == specialName) templatedTypeStr = "Windows::Foundation::Collections::IVector< ";
                       if ("::std::map" == specialName) templatedTypeStr = "Windows::Foundation::Collections::IMap< ";
@@ -2120,19 +2264,282 @@ namespace zsLib
               for (auto iter = templatedType->mTemplateArguments.begin(); iter != templatedType->mTemplateArguments.end(); ++iter)
               {
                 auto templateArg = (*iter);
-                String typeStr = getCxType(false, templateArg);
+                String typeStr = getCxType(false, templateArg, isReturnType);
                 if ("void" == typeStr) continue;
                 if (!first) templatedTypeStr += ", ";
                 templatedTypeStr += typeStr;
                 first = false;
               }
               templatedTypeStr += specialTemplatePost + " >^";
-              return makeCxOptional(isOptional, templatedTypeStr);
+              return makeCxOptional(false, templatedTypeStr);
             }
           }
           return String();
         }
 
+        //---------------------------------------------------------------------
+        String GenerateStructCx::getToFromCxName(TypePtr type)
+        {
+          if (!type) return String();
+
+          type = type->getOriginalType();
+
+          {
+            auto basicType = type->toBasicType();
+            if (basicType) {
+              switch (basicType->mBaseType) {
+              case IEventingTypes::PredefinedTypedef_bool:      return "Boolean";
+
+              case IEventingTypes::PredefinedTypedef_binary:    return "Binary";
+
+              case IEventingTypes::PredefinedTypedef_ulong:     return "HelperULong";
+              case IEventingTypes::PredefinedTypedef_long:
+              case IEventingTypes::PredefinedTypedef_slong:     return "HelperLong";
+
+              case IEventingTypes::PredefinedTypedef_float:     return "HelperFloat";
+
+              case IEventingTypes::PredefinedTypedef_string:
+              case IEventingTypes::PredefinedTypedef_astring:
+              case IEventingTypes::PredefinedTypedef_wstring:   return "String";
+              }
+              auto result = getBasicCxTypeString(false, basicType);
+              return fixName(result);
+            }
+          }
+
+          {
+            auto structType = type->toStruct();
+            if (structType) {
+              String specialName = type->getPathName();
+
+              if ("::zs::Any" == specialName) return String();
+              if ("::zs::Promise" == specialName) return String();
+              if ("::zs::exceptions::Exception" == specialName) return String();
+              if ("::zs::exceptions::InvalidArgument" == specialName) return String();
+              if ("::zs::exceptions::BadState" == specialName) return String();
+              if ("::zs::exceptions::NotImplemented" == specialName) return String();
+              if ("::zs::exceptions::NotSupported" == specialName) return String();
+              if ("::zs::exceptions::UnexpectedError" == specialName) return String();
+              if ("::zs::Time" == specialName) return String();
+              if ("::zs::Milliseconds" == specialName) return String("Milliseconds");
+              if ("::zs::Microseconds" == specialName) return String("Microseconds");
+              if ("::zs::Nanoseconds" == specialName) return String("Nanoseconds");
+              if ("::zs::Seconds" == specialName) return String("Seconds");
+              if ("::zs::Minutes" == specialName) return String("Minutes");
+              if ("::zs::Hours" == specialName) return String("Hours");
+
+              if ("::zs::PromiseWith" == specialName) return String("PromiseWith");
+              if ("::std::set" == specialName) return String("Set");
+              if ("::std::list" == specialName) return String("List");
+              if ("::std::map" == specialName) return String("Map");
+
+              String namePath = fixNamePath(structType);
+              namePath.replaceAll("::", "_");
+              namePath.trim("_");
+              return namePath;
+            }
+          }
+
+          {
+            String result;
+            auto templatedType = type->toTemplatedStructType();
+            if (templatedType) {
+              auto parent = templatedType->getParent();
+              if (parent) {
+                result = getToFromCxName(parent->toType());
+              }
+
+              for (auto iter = templatedType->mTemplateArguments.begin(); iter != templatedType->mTemplateArguments.end(); ++iter) {
+                String typeResult = getToFromCxName(*iter);
+                if (typeResult.isEmpty()) continue;
+                if (result.hasData()) result += "_";
+                result += typeResult;
+              }
+            }
+            return result;
+          }
+          return String();
+        }
+
+        //---------------------------------------------------------------------
+        String GenerateStructCx::getToCxName(TypePtr type)
+        {
+          if (!type) return "ToCx";
+          String result = getToFromCxName(type);
+          if (result.hasData()) return "ToCx_" + result;
+          return "ToCx";
+        }
+
+        //---------------------------------------------------------------------
+        String GenerateStructCx::getFromCxName(TypePtr type)
+        {
+          if (!type) return "FromCx";
+          String result = getToFromCxName(type);
+          if (result.hasData()) return "FromCx_" + result;
+          return "FromCx";
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructCx::includeCppForType(
+                                                 StructFile &structFile,
+                                                 TypePtr type
+                                                 )
+        {
+          IncludeProcessedInfo info;
+          includeCppForType(info, structFile, type);
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructCx::includeCppForType(
+                                                 IncludeProcessedInfo &processed,
+                                                 StructFile &structFile,
+                                                 TypePtr type
+                                                 )
+        {
+          if (!type) return;
+
+          type = type->getOriginalType();
+
+          String path = type->getPathName();
+          auto found = processed.processedTypes_.find(path);
+          if (found != processed.processedTypes_.end()) return;
+
+          processed.processedTypes_.insert(path);
+
+          {
+            auto structObj = type->toStruct();
+            if (structObj) {
+              String specialName = type->getPathName();
+
+              includeTemplatedStructForType(processed, structFile, structObj);
+
+              if ("::zs::Any" == specialName) return;
+              if ("::zs::Promise" == specialName) return;
+              if ("::zs::exceptions::Exception" == specialName) return;
+              if ("::zs::exceptions::InvalidArgument" == specialName) return;
+              if ("::zs::exceptions::BadState" == specialName) return;
+              if ("::zs::exceptions::NotImplemented" == specialName) return;
+              if ("::zs::exceptions::NotSupported" == specialName) return;
+              if ("::zs::exceptions::UnexpectedError" == specialName) return;
+              if ("::zs::Time" == specialName) return;
+              if ("::zs::Milliseconds" == specialName) return;
+              if ("::zs::Microseconds" == specialName) return;
+              if ("::zs::Nanoseconds" == specialName) return;
+              if ("::zs::Seconds" == specialName) return;
+              if ("::zs::Minutes" == specialName) return;
+              if ("::zs::Hours" == specialName) return;
+
+              if ("::std::list" == specialName) return;
+              if ("::std::map" == specialName) return;
+              if ("::std::set" == specialName) return;
+              if ("::zs::PromiseWith" == specialName) return;
+
+              structFile.includeCpp(String("\"") + fixStructFileName(structObj) + ".h\"");
+              return;
+            }
+          }
+
+          {
+            auto templatedType = type->toTemplatedStructType();
+            if (templatedType) {
+              for (auto iter = templatedType->mTemplateArguments.begin(); iter != templatedType->mTemplateArguments.end(); ++iter) {
+                includeCppForType(processed, structFile, *iter);
+              }
+              auto parent = templatedType->getParent();
+              if (!parent) return;
+              includeCppForType(processed, structFile, parent->toStruct());
+            }
+          }
+        }
+        
+        //---------------------------------------------------------------------
+        void GenerateStructCx::includeTemplatedStructForType(
+                                                             IncludeProcessedInfo &processed,
+                                                             StructFile &structFile,
+                                                             StructPtr structObj
+                                                             )
+        {
+          if (!structObj) return;
+
+          String path = structObj->getPathName();
+          auto found = processed.structProcessedTypes_.find(path);
+          if (found != processed.structProcessedTypes_.end()) return;
+
+          processed.structProcessedTypes_.insert(path);
+
+          for (auto iter = structObj->mTemplatedStructs.begin(); iter != structObj->mTemplatedStructs.end(); ++iter)
+          {
+            auto templatedType = (*iter).second;
+            if (!templatedType) continue;
+            includeTemplatedStructForType(processed, structFile, templatedType->toTemplatedStructType());
+          }
+
+          for (auto iter = structObj->mIsARelationships.begin(); iter != structObj->mIsARelationships.end(); ++iter)
+          {
+            auto relatedType = (*iter).second;
+            if (!relatedType) continue;
+            includeTemplatedStructForType(processed, structFile, relatedType->toStruct());
+            includeTemplatedStructForType(processed, structFile, relatedType->toTemplatedStructType());
+          }
+
+          for (auto iter = structObj->mMethods.begin(); iter != structObj->mMethods.end(); ++iter) {
+            auto method = (*iter);
+
+            if (method->mResult) {
+              includeTemplatedStructForType(processed, structFile, method->mResult->toStruct());
+              includeTemplatedStructForType(processed, structFile, method->mResult->toTemplatedStructType());
+            }
+            for (auto iterArg = method->mArguments.begin(); iterArg != method->mArguments.end(); ++iterArg)
+            {
+              auto argType = (*iterArg);
+              if (!argType) continue;
+              if (!argType->mType) continue;
+              includeTemplatedStructForType(processed, structFile, argType->mType->toStruct());
+              includeTemplatedStructForType(processed, structFile, argType->mType->toTemplatedStructType());
+            }
+          }
+
+          for (auto iter = structObj->mProperties.begin(); iter != structObj->mProperties.end(); ++iter) {
+            auto property = (*iter);
+            if (!property->mType) continue;
+
+            includeTemplatedStructForType(processed, structFile, property->mType->toStruct());
+            includeTemplatedStructForType(processed, structFile, property->mType->toTemplatedStructType());
+          }
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructCx::includeTemplatedStructForType(
+                                                             IncludeProcessedInfo &processed,
+                                                             StructFile &structFile,
+                                                             TemplatedStructTypePtr templatedStructObj
+                                                             )
+        {
+          if (!templatedStructObj) return;
+
+          String path = templatedStructObj->getPathName();
+          auto found = processed.templatedProcessedTypes_.find(path);
+          if (found != processed.templatedProcessedTypes_.end()) return;
+
+          processed.templatedProcessedTypes_.insert(path);
+
+          for (auto iter = templatedStructObj->mTemplateArguments.begin(); iter != templatedStructObj->mTemplateArguments.end(); ++iter) {
+            auto argType = (*iter);
+            if (!argType) continue;
+
+            auto argStructType = argType->toStruct();
+
+            includeCppForType(processed, structFile, argStructType);
+            includeTemplatedStructForType(processed, structFile, argStructType);
+            includeTemplatedStructForType(processed, structFile, argType->toTemplatedStructType());
+          }
+
+          auto parent = templatedStructObj->getParent();
+          if (!parent) return;
+
+          includeTemplatedStructForType(processed, structFile, parent->toStruct());
+          includeTemplatedStructForType(processed, structFile, parent->toTemplatedStructType());
+        }
 
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
@@ -2220,6 +2627,7 @@ namespace zsLib
           {
             auto &ss = helperFile.mCppBodySS;
             GenerateStructHeader::generateUsingTypes(ss, "");
+            ss << "using namespace date;\n";
             ss << "\n";
           }
 
@@ -2233,11 +2641,22 @@ namespace zsLib
             GenerateStructHeader::generateUsingTypes(ss, indentStr);
             ss << "\n";
             ss << indentStr << "struct Helper {\n";
-            ss << indentStr << "internal:\n";
             finalSS << indentStr << "};\n\n";
             finalSS << "} // namespace Internal\n";
 
             indentStr += "  ";
+
+            ss << "\n";
+            ss << "#ifdef _WIN64\n";
+            ss << indentStr << "typedef float64 HelperFloat;\n";
+            ss << indentStr << "typedef int64 HelperLong;\n";
+            ss << indentStr << "typedef uint64 HelperULong;\n";
+            ss << "#else //_WIN64\n";
+            ss << indentStr << "typedef float32 HelperFloat;\n";
+            ss << indentStr << "typedef int32 HelperLong;\n";
+            ss << indentStr << "typedef uint32 HelperULong;\n";
+            ss << "#endif //_WIN64\n";
+            ss << "\n";
             generateSpecialHelpers(helperFile);
           }
 

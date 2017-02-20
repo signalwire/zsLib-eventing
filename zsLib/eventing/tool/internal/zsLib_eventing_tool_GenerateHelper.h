@@ -48,17 +48,36 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         #pragma mark
-        #pragma mark GenerateTypesHeader
+        #pragma mark GenerateHelper
         #pragma mark
 
-        struct GenerateTypesHeader : public IDLCompiler
+        struct GenerateHelper : public IDLCompiler
         {
-          static void processTypesNamespace(
-                                            std::stringstream &ss,
-                                            const String &inIndentStr,
-                                            NamespacePtr namespaceObj,
-                                            bool outputEnums
-                                            );
+          static String getDashedComment(const String &indent);
+
+          static String getDocumentation(
+                                         const String &linePrefix,
+                                         ContextPtr context,
+                                         size_t maxLineLength
+                                         );
+
+          static void insertFirst(
+                                  std::stringstream &ss,
+                                  bool &first
+                                 );
+          static void insertLast(
+                                 std::stringstream &ss,
+                                 bool &first
+                                 );
+
+          static bool isBuiltInType(TypePtr type);
+
+          static bool hasOnlyStaticMethods(StructPtr structObj);
+
+          static bool needsDefaultConstructor(StructPtr structObj);
+          static bool needsDefaultConstructor(TemplatedStructTypePtr templateObj);
+
+          static String getBasicTypeString(BasicTypePtr type);
         };
 
       } // namespace internal

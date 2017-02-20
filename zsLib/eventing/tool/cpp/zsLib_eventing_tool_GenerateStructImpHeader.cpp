@@ -31,6 +31,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplHeader.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateTypesHeader.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateHelper.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h>
 
@@ -120,12 +121,6 @@ namespace zsLib
           return GenerateStructHeader::getStructInitName(structObj);
         }
 
-        //-------------------------------------------------------------------
-        const char *GenerateStructImplHeader::getBasicTypeString(BasicTypePtr type)
-        {
-          return GenerateStructHeader::getBasicTypeString(type);
-        }
-
         //---------------------------------------------------------------------
         String GenerateStructImplHeader::makeOptional(bool isOptional, const String &value)
         {
@@ -140,26 +135,22 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         void GenerateStructImplHeader::outputMethods(
+                                                     StructPtr derivedStructObj,
                                                      StructPtr structObj,
                                                      String indentStr,
                                                      std::stringstream &ss,
-                                                     bool createConstructors,
-                                                     bool staticOnlyMethods,
+                                                     bool needsDefaultConstructor,
                                                      bool &foundEventHandler
                                                      )
         {
+          if (!structObj) return;
+
           // output relationships
           {
             for (auto iterRelations = structObj->mIsARelationships.begin(); iterRelations != structObj->mIsARelationships.end(); ++iterRelations)
             {
               auto relatedObj = (*iterRelations).second;
-
-              {
-                auto relatedStructObj = relatedObj->toStruct();
-                if (relatedStructObj) {
-                  outputMethods(relatedStructObj, indentStr, ss, false, staticOnlyMethods, foundEventHandler);
-                }
-              }
+              outputMethods(derivedStructObj, relatedObj->toStruct(), indentStr, ss, needsDefaultConstructor, foundEventHandler);
             }
           }
 
@@ -168,11 +159,16 @@ namespace zsLib
           for (auto iterMethods = structObj->mMethods.begin(); iterMethods != structObj->mMethods.end(); ++iterMethods)
           {
             auto methodObj = (*iterMethods);
+
+            if (methodObj->hasModifier(Modifier_Method_Delete)) continue;
+            if (methodObj->hasModifier(Modifier_Static)) continue;
+
             bool isCtor = methodObj->hasModifier(Modifier_Method_Ctor);
-            if (!createConstructors) {
+            
+            if (derivedStructObj != structObj) {
               if (isCtor) continue;
             }
-            if (methodObj->hasModifier(Modifier_Method_Static)) continue;
+
             if (methodObj->hasModifier(Modifier_Method_EventHandler)) {
               foundEventHandler = true;
               continue;
@@ -215,7 +211,7 @@ namespace zsLib
             ss << ") override;\n";
           }
 
-          if ((createConstructors) && (!foundCtor) && (!staticOnlyMethods)) {
+          if ((derivedStructObj == structObj) && (needsDefaultConstructor)) {
             ss << indentStr << "virtual void wrapper_init_" << getStructInitName(structObj) << "() override;\n";
           }
 
@@ -224,6 +220,9 @@ namespace zsLib
           for (auto iterProperties = structObj->mProperties.begin(); iterProperties != structObj->mProperties.end(); ++iterProperties)
           {
             auto propertyObj = (*iterProperties);
+
+            if (propertyObj->hasModifier(Modifier_Static)) continue;
+
             bool hasGetter = propertyObj->hasModifier(Modifier_Property_Getter);
             bool hasSetter = propertyObj->hasModifier(Modifier_Property_Setter);
 
@@ -261,10 +260,8 @@ namespace zsLib
                                                                 )
         {
           if (!structObj) return;
-          if (structObj->hasModifier(Modifier_Special)) return;
+          if (GenerateHelper::isBuiltInType(structObj)) return;
           if (structObj->mGenerics.size() > 0) return;
-
-          bool staticOnlyMethods = GenerateStructHeader::hasOnlyStaticMethods(structObj);
 
           ss << "\n";
           ss << indentStr << "struct " << structObj->mName << " : public wrapper" << structObj->getPathName() << "\n";
@@ -273,7 +270,7 @@ namespace zsLib
           String currentIdentStr = indentStr;
           indentStr += "  ";
 
-          if (!staticOnlyMethods) {
+          if (!structObj->hasModifier(Modifier_Static)) {
             ss << indentStr << structObj->mName << "WeakPtr thisWeak_;\n\n";
             ss << indentStr << structObj->mName << "();\n";
           }
@@ -286,7 +283,7 @@ namespace zsLib
           }
 
           bool foundEventHandler = false;
-          outputMethods(structObj, indentStr, ss, true, staticOnlyMethods, foundEventHandler);
+          outputMethods(structObj, structObj, indentStr, ss, GenerateHelper::needsDefaultConstructor(structObj), foundEventHandler);
 
           if (foundEventHandler) {
             ss << "\n";
@@ -352,7 +349,7 @@ namespace zsLib
             for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter)
             {
               auto structObj = (*iter).second;
-              if (structObj->hasModifier(Modifier_Special)) continue;
+              if (GenerateHelper::isBuiltInType(structObj)) continue;
               if (structObj->mGenerics.size() > 0) continue;
 
               String filename = GenerateStructImplHeader::getStructFileName(structObj);

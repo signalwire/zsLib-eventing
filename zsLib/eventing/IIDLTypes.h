@@ -80,9 +80,9 @@ namespace zsLib
         Modifier_Struct_Exception,                    // struct is meant for throws declarations
 
         Modifier_Method_Ctor,
-        Modifier_Method_Static,
         Modifier_Method_EventHandler,
         Modifier_Method_Default,
+        Modifier_Method_Delete,
 
         Modifier_Method_Argument_In,
         Modifier_Method_Argument_Out,
@@ -94,8 +94,10 @@ namespace zsLib
         Modifier_Property_Setter,           // value is not set in wrapper, set in code
         Modifier_Property_Dynamic,          // value might be a derived type
 
+        Modifier_Static,                    // method or property is static
         Modifier_AltName,
         Modifier_Special,                   // namespace is not output, struct wrapper is created through special / custom processing
+        Modifier_Platform,                  // platform specific extensions
         Modifier_Nullable,                  // value of null is legal
         Modifier_Optional,                  // optional type whose value may not be set
         Modifier_Dynamic,                   // type might be of derived type

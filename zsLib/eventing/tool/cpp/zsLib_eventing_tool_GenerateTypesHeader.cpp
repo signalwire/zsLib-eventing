@@ -30,6 +30,7 @@ either expressed or implied, of the FreeBSD Project.
 */
 
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateTypesHeader.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateHelper.h>
 //#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h>
 //
 #include <zsLib/eventing/tool/OutputStream.h>
@@ -69,42 +70,6 @@ namespace zsLib
         #pragma mark
         #pragma mark GenerateTypesHeader
         #pragma mark
-
-
-        //---------------------------------------------------------------------
-        String GenerateTypesHeader::getDashedComment(const String &indent)
-        {
-          std::stringstream ss;
-          ss << indent << "//";
-          size_t length = 2 + indent.length();
-          if (length < 80) {
-            for (size_t index = 0; index < (80 - length); ++index) {
-              ss << "-";
-            }
-          }
-          ss << "\n";
-          return ss.str();
-        }
-
-        //-------------------------------------------------------------------
-        void GenerateTypesHeader::insertFirst(
-                                              std::stringstream &ss,
-                                              bool &first
-                                              )
-        {
-          if (!first) return;
-          first = false;
-          ss << "\n";
-        }
-        //-------------------------------------------------------------------
-        void GenerateTypesHeader::insertLast(
-                                             std::stringstream &ss,
-                                             bool &first
-                                             )
-        {
-          if (first) return;
-          ss << "\n";
-        }
 
         //-------------------------------------------------------------------
         void GenerateTypesHeader::processTypesNamespace(
@@ -159,7 +124,7 @@ namespace zsLib
             for (auto iter = namespaceObj->mEnums.begin(); iter != namespaceObj->mEnums.end(); ++iter)
             {
               auto enumObj = (*iter).second;
-              insertFirst(ss, firstEnum);
+              GenerateHelper::insertFirst(ss, firstEnum);
               ss << indentStr << "enum " << enumObj->mName << " {\n";
               for (auto iterValue = enumObj->mValues.begin(); iterValue != enumObj->mValues.end(); ++iterValue)
               {
@@ -172,20 +137,20 @@ namespace zsLib
               }
               ss << indentStr << "};\n";
             }
-            insertLast(ss, firstEnum);
+            GenerateHelper::insertLast(ss, firstEnum);
           }
 
           bool firstStruct {firstEnum};
           for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter)
           {
             auto structObj = (*iter).second;
-            if (structObj->hasModifier(Modifier_Special)) continue;
+            if (GenerateHelper::isBuiltInType(structObj)) continue;
             if (structObj->mGenerics.size() > 0) continue;
-            insertFirst(ss, firstStruct);
+            GenerateHelper::insertFirst(ss, firstStruct);
             ss << indentStr << "ZS_DECLARE_STRUCT_PTR(" << structObj->mName << ");\n";
           }
           if (namespaceObj->mStructs.size() > 0) {
-            insertLast(ss, firstStruct);
+            GenerateHelper::insertLast(ss, firstStruct);
           }
 
           indentStr = initialIndentStr;
@@ -194,7 +159,6 @@ namespace zsLib
             ss << indentStr << "} // namespace " << namespaceObj->mName << "\n";
           }
         }
-
       } // namespace internal
     } // namespace tool
   } // namespace eventing

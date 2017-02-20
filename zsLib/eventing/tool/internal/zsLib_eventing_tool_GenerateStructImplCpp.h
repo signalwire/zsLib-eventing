@@ -57,17 +57,21 @@ namespace zsLib
 
           GenerateStructImplCpp();
           static GenerateStructImplCppPtr create();
+
+          static void generateUsingTypes(
+                                         std::stringstream &ss,
+                                         const String &indentStr
+                                         );
+
           static String getStructFileName(StructPtr structObj);
           static String getStructInitName(StructPtr structObj);
 
-          static const char *getBasicTypeString(BasicTypePtr type);
           static String makeOptional(bool isOptional, const String &value);
           static String getWrapperTypeString(bool isOptional, TypePtr type);
-          static String getDashedComment(const String &indent);
           static void outputMethods(
+                                    StructPtr derivedStructObj,
                                     StructPtr structObj,
                                     std::stringstream &ss,
-                                    bool createConstructors,
                                     bool &foundEventHandler
                                     );
           static void generateStructCppImpl(

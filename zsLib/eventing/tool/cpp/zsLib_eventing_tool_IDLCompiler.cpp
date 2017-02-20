@@ -1034,6 +1034,8 @@ namespace zsLib
           auto &project = mConfig.mProject;
           if (!project) return;
 
+          project->fixTemplateHashMapping();
+
 //          if (project->mUniqueHash.isEmpty()) {
 //            project->mUniqueHash = project->uniqueEventingHash();
 //          }
@@ -1730,8 +1732,8 @@ namespace zsLib
           const char *what = "modifiers";
           
           auto token = peekNextToken(what);
-          if (TokenType_SquareBrace != token->mTokenType) return false;
-          
+          if (!token->isOpenBrace(TokenType_SquareBrace)) return false;
+
           TokenList allModifierTokens;
           extractToClosingBraceToken(what, allModifierTokens);
 
@@ -1788,7 +1790,7 @@ namespace zsLib
                 }
                 popTokens(); // modifierParamTokens
               } else {
-                if (0 != totalParams) {
+                if (totalParams > 0) {
                   ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting parameters");
                 }
               }
@@ -3111,11 +3113,12 @@ namespace zsLib
                     }
                   }
 
-                  if (templatedStruct->mTemplateArguments.size() < structObj->mGenerics.size()) {
+                  if (structObj->mGenerics.size() < templatedStruct->mTemplateArguments.size()) {
                     ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " does not have enough templated parameters");
                   }
 
                   auto hashID = templatedStruct->calculateTemplateID();
+                  templatedStruct->mName = hashID;
                   
                   auto found = structObj->mTemplatedStructs.find(hashID);
                   if (found == structObj->mTemplatedStructs.end()) {

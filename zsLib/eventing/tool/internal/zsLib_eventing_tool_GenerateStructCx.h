@@ -70,14 +70,14 @@ namespace zsLib
 
             String mHeaderIndentStr;
 
-            StringSet mHeaderAlreadyIncluded;
-            StringSet mCppAlreadyIncluded;
-
             std::stringstream mHeaderIncludeSS;
             std::stringstream mHeaderStructSS;
             std::stringstream mHeaderFinalSS;
             std::stringstream mCppIncludeSS;
             std::stringstream mCppBodySS;
+
+            StringSet mHeaderAlreadyIncluded;
+            StringSet mCppAlreadyIncluded;
 
             void includeHeader(const String &headerFile);
             void includeCpp(const String &headerFile);
@@ -96,25 +96,24 @@ namespace zsLib
             std::stringstream mCppBodySS;
             String mHeaderIndentStr;
             String mHeaderStructIndentStr;
+
+            StringSet mCppAlreadyIncluded;
+
+            void includeCpp(const String &headerFile);
           };
 
           GenerateStructCx();
 
           static GenerateStructCxPtr create();
 
-          static void insertFirst(
-                                  std::stringstream &ss,
-                                  bool &first
-                                  );
-
-          static void insertLast(
-                                 std::stringstream &ss,
-                                 bool &first
-                                 );
-
           static String fixName(const String &originalName);
           static String fixNamePath(ContextPtr context);
           static String fixStructName(StructPtr structObj);
+          static String fixMethodDeclaration(ContextPtr context);
+          static String fixMethodDeclaration(
+                                             StructPtr derivedStruct,
+                                             ContextPtr context
+                                             );
           static String fixStructFileName(StructPtr structObj);
           static String getStructInitName(StructPtr structObj);
           static String getCxStructInitName(StructPtr structObj);
@@ -162,8 +161,7 @@ namespace zsLib
           static void generateBinaryHelper(HelperFile &helperFile);
           static void generateDurationHelper(
                                              HelperFile &helperFile,
-                                             const String &durationType,
-                                             bool generateFromCx = false
+                                             const String &durationType
                                              );
           static void generateTimeHelper(HelperFile &helperFile);
           static void generatePromiseHelper(HelperFile &helperFile);
@@ -204,6 +202,7 @@ namespace zsLib
           static void generateStructMethods(
                                             HelperFile &helperFile, 
                                             StructFile &structFile,
+                                            StructPtr derivedStructObj,
                                             StructPtr structObj,
                                             bool createConstructors,
                                             bool hasEvents
@@ -223,7 +222,8 @@ namespace zsLib
 
           static String getBasicCxTypeString(
                                              bool isOptional,
-                                             BasicTypePtr type
+                                             BasicTypePtr type,
+                                             bool isReturnType = false
                                              );
           static String makeCxOptional(
                                        bool isOptional,
@@ -235,8 +235,39 @@ namespace zsLib
                                    );
           static String getCxType(
                                   bool isOptional,
-                                  TypePtr type
+                                  TypePtr type,
+                                  bool isReturnType = false
                                   );
+          static String getToFromCxName(TypePtr type);
+          static String getToCxName(TypePtr type);
+          static String getFromCxName(TypePtr type);
+          static void includeCppForType(
+                                        StructFile &structFile,
+                                        TypePtr type
+                                        );
+
+          struct IncludeProcessedInfo
+          {
+            StringSet processedTypes_;
+            StringSet structProcessedTypes_;
+            StringSet templatedProcessedTypes_;
+          };
+
+          static void includeCppForType(
+                                        IncludeProcessedInfo &processed,
+                                        StructFile &structFile,
+                                        TypePtr type
+                                        );
+          static void includeTemplatedStructForType(
+                                                    IncludeProcessedInfo &processed,
+                                                    StructFile &structFile,
+                                                    StructPtr structObj
+                                                    );
+          static void includeTemplatedStructForType(
+                                                    IncludeProcessedInfo &processed,
+                                                    StructFile &structFile,
+                                                    TemplatedStructTypePtr templatedStructObj
+                                                    );
 
           //-------------------------------------------------------------------
           #pragma mark

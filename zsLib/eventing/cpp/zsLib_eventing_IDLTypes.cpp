@@ -112,10 +112,10 @@ namespace zsLib
         case IIDLTypes::Modifier_Struct_Exception:          return "exception";
 
         case IIDLTypes::Modifier_Method_Ctor:               return "constructor";
-        case IIDLTypes::Modifier_Method_Static:             return "static";
         case IIDLTypes::Modifier_Method_EventHandler:       return "event";
         case IIDLTypes::Modifier_Method_Default:            return "default";
-
+        case IIDLTypes::Modifier_Method_Delete:             return "delete";
+          
         case IIDLTypes::Modifier_Method_Argument_In:        return "in";
         case IIDLTypes::Modifier_Method_Argument_Out:       return "out";
         case IIDLTypes::Modifier_Method_Argument_Grouping:  return "grouping";
@@ -125,8 +125,10 @@ namespace zsLib
         case IIDLTypes::Modifier_Property_Getter:           return "getter";
         case IIDLTypes::Modifier_Property_Setter:           return "setter";
 
+        case IIDLTypes::Modifier_Static:                    return "static";
         case IIDLTypes::Modifier_AltName:                   return "altname";
         case IIDLTypes::Modifier_Special:                   return "special";
+        case IIDLTypes::Modifier_Platform:                  return "platform";
         case IIDLTypes::Modifier_Nullable:                  return "nullable";
         case IIDLTypes::Modifier_Optional:                  return "optional";
         case IIDLTypes::Modifier_Dynamic:                   return "dynamic";
@@ -144,9 +146,9 @@ namespace zsLib
         case IIDLTypes::Modifier_Struct_Exception:          return 0;
 
         case IIDLTypes::Modifier_Method_Ctor:               return 0;
-        case IIDLTypes::Modifier_Method_Static:             return 0;
-        case IIDLTypes::Modifier_Method_EventHandler:       return 0;
+        case IIDLTypes::Modifier_Method_EventHandler:       return -1;
         case IIDLTypes::Modifier_Method_Default:            return 0;
+        case IIDLTypes::Modifier_Method_Delete:             return 0;
 
         case IIDLTypes::Modifier_Method_Argument_In:        return 0;
         case IIDLTypes::Modifier_Method_Argument_Out:       return 0;
@@ -157,8 +159,10 @@ namespace zsLib
         case IIDLTypes::Modifier_Property_Getter:           return 0;
         case IIDLTypes::Modifier_Property_Setter:           return 0;
 
+        case IIDLTypes::Modifier_Static:                    return 0;
         case IIDLTypes::Modifier_AltName:                   return 1;
         case IIDLTypes::Modifier_Special:                   return 0;
+        case IIDLTypes::Modifier_Platform:                  return -1;
         case IIDLTypes::Modifier_Nullable:                  return 0;
         case IIDLTypes::Modifier_Optional:                  return 0;
         case IIDLTypes::Modifier_Dynamic:                   return 0;
@@ -184,6 +188,7 @@ namespace zsLib
       switch (value)
       {
         case IIDLTypes::Modifier_AltName:
+        case IIDLTypes::Modifier_Platform:
         {
           return true;
         }
@@ -219,6 +224,7 @@ namespace zsLib
       {
         case IIDLTypes::Modifier_Struct_Dictionary:
         case IIDLTypes::Modifier_Struct_Exception:
+        case IIDLTypes::Modifier_Static:
         case IIDLTypes::Modifier_Special:
         {
           return true;
@@ -237,9 +243,10 @@ namespace zsLib
       switch (value)
       {
         case IIDLTypes::Modifier_Method_Ctor:
-        case IIDLTypes::Modifier_Method_Static:
         case IIDLTypes::Modifier_Method_EventHandler:
         case IIDLTypes::Modifier_Method_Default:
+        case IIDLTypes::Modifier_Method_Delete:
+        case IIDLTypes::Modifier_Static:
         case IIDLTypes::Modifier_Nullable:
         case IIDLTypes::Modifier_Dynamic:
         {
@@ -284,6 +291,7 @@ namespace zsLib
         case IIDLTypes::Modifier_Property_WriteOnly:
         case IIDLTypes::Modifier_Property_Getter:
         case IIDLTypes::Modifier_Property_Setter:
+        case IIDLTypes::Modifier_Static:
         case IIDLTypes::Modifier_Nullable:
         case IIDLTypes::Modifier_Optional:
         case IIDLTypes::Modifier_Dynamic:
@@ -1052,7 +1060,7 @@ namespace zsLib
                                                       ) const
     {
       String checkPath = pathStr;
-      
+
       if ("::" == checkPath.substr(0, 2)) {
         auto parent = getParent();
         if (!parent) return TypePtr();
@@ -1095,7 +1103,11 @@ namespace zsLib
         }
         
         auto parent = getParent();
-        if (parent) return parent->findType(pathStr, typeName, options);
+        if (parent) {
+          if (!parent->toProject()) {
+            return parent->findType(pathStr, typeName, options);
+          }
+        }
 
         // type not found
         return TypePtr();
@@ -1161,6 +1173,7 @@ namespace zsLib
       bool didFix = false;
       for (auto iter_doNotUse = mNamespaces.begin(); iter_doNotUse != mNamespaces.end(); ) {
         auto current = iter_doNotUse;
+        ++iter_doNotUse;
 
         auto obj = (*current).second;
         if (obj->fixTemplateHashMapping()) didFix = true;
@@ -2485,9 +2498,10 @@ namespace zsLib
 
         String calculatedID = obj->calculateTemplateID();
 
+        obj->mName = calculatedID;
+
         if (name == calculatedID) continue;
 
-        obj->mName = calculatedID;
         mTemplatedStructs.erase(current);
         mTemplatedStructs[calculatedID] = obj;
 

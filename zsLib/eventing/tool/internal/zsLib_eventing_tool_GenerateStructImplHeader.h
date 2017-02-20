@@ -59,23 +59,22 @@ namespace zsLib
           static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure);
           static String getStructFileName(StructPtr structObj);
           static String getStructInitName(StructPtr structObj);
-          static const char *getBasicTypeString(BasicTypePtr type);
           static String makeOptional(bool isOptional, const String &value);
           static String getWrapperTypeString(bool isOptional, TypePtr type);
           static void outputMethods(
+                                    StructPtr derivedStructObj,
                                     StructPtr structObj,
                                     String indentStr,
                                     std::stringstream &ss,
-                                    bool createConstructors,
-                                    bool staticOnlyMethods,
+                                    bool needsDefaultConstructor,
                                     bool &foundEventHandler
                                     );
           static void generateStructHeaderImpl(
-                                                StructPtr structObj,
-                                                String indentStr,
-                                                StringSet &includedHeaders,
-                                                std::stringstream &ss
-                                                );
+                                               StructPtr structObj,
+                                               String indentStr,
+                                               StringSet &includedHeaders,
+                                               std::stringstream &ss
+                                               );
           virtual String targetKeyword() override;
           virtual String targetKeywordHelp() override;
           virtual void targetOutput(

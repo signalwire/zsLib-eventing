@@ -68,9 +68,6 @@ namespace zsLib
 
           static String getStructFileName(StructPtr structObj);
           static String getStructInitName(StructPtr structObj);
-          static bool hasOnlyStaticMethods(StructPtr structObj);
-
-          static const char *getBasicTypeString(BasicTypePtr type);
 
           static String makeOptional(bool isOptional, const String &value);
 
