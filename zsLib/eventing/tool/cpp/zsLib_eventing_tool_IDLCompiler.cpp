@@ -178,6 +178,8 @@ namespace zsLib
           
           p += 3;
 
+          if (' ' == *p) ++p;
+
           const char *start = p;
           Helper::skipToEOL(p);
           
@@ -185,7 +187,7 @@ namespace zsLib
           
           auto result = make_shared<Token>();
           result->mTokenType = IDLCompiler::TokenType_Documentation;
-          result->mToken = str;
+          result->mToken = str + "\n";
           result->mLineCount = ioLineCount;
 
           Helper::skipEOL(p, &ioLineCount);

@@ -238,6 +238,11 @@ namespace zsLib
                                   TypePtr type,
                                   bool isReturnType = false
                                   );
+          static String getCxAttributes(const StringList &attributes);
+          static String getCxAttributesLine(
+                                            const String &linePrefix,
+                                            const StringList &attributes
+                                            );
           static String getToFromCxName(TypePtr type);
           static String getToCxName(TypePtr type);
           static String getFromCxName(TypePtr type);

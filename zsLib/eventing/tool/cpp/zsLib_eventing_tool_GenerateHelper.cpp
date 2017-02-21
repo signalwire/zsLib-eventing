@@ -102,7 +102,18 @@ namespace zsLib
           while (childEl)
           {
             auto xmlStr = UseHelper::toString(childEl, false);
+
             if (xmlStr.hasData()) {
+              if (String::npos != xmlStr.find("<code>")) {
+                UseHelper::SplitMap split;
+                UseHelper::split(xmlStr, split, "\n");
+                for (auto iter = split.begin(); iter != split.end(); ++iter)
+                {
+                  ss << linePrefix << (*iter).second << "\n";
+                }
+                return ss.str();
+              }
+
               auto startElPos = xmlStr.find('>');
               auto endElPos = xmlStr.rfind('<');
               if ((String::npos != startElPos) &&
@@ -153,6 +164,8 @@ namespace zsLib
                 }
 
                 ss << linePrefix << endElStr << "\n";
+              } else {
+                ss << linePrefix << xmlStr << "\n";
               }
             }
             childEl = childEl->getNextSiblingElement();

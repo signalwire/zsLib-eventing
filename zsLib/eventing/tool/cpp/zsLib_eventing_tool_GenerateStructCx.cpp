@@ -30,26 +30,14 @@ either expressed or implied, of the FreeBSD Project.
 */
 
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructCx.h>
-//#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplCpp.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateHelper.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateTypesHeader.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h>
-//#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplHeader.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h>
 
 #include <zsLib/eventing/tool/OutputStream.h>
 
-//#include <zsLib/eventing/IHelper.h>
-//#include <zsLib/eventing/IHasher.h>
-//#include <zsLib/eventing/IEventingTypes.h>
-//
-//#include <zsLib/Exception.h>
-//#include <zsLib/Numeric.h>
-//
 #include <sstream>
-//#include <list>
-//#include <set>
-//#include <cctype>
 
 #define ZS_WRAPPER_COMPILER_DIRECTIVE_EXCLUSIZE "EXCLUSIVE"
 
@@ -1403,9 +1391,17 @@ namespace zsLib
             }
           }
 
+          ss << GenerateHelper::getDocumentation(indentStr + "/// ", structObj, 80);
+
+          StringList attributes;
           if (foundWebHidden) {
-            ss << indentStr << "[Windows::Foundation::Metadata::WebHostHiddenAttribute]\n";
+            attributes.push_back("Windows::Foundation::Metadata::WebHostHiddenAttribute");
           }
+          if (structObj->hasModifier(Modifier_Obsolete)) {
+            attributes.push_back("Windows::Foundation::Metadata::Deprecated(" + structObj->getModifierValue(Modifier_Obsolete, 0) + ", Windows::Foundation::Metadata::DeprecationType::Deprecate, 0)");
+          }
+
+          ss << getCxAttributesLine(indentStr, attributes);
 
           ss << indentStr << "public ref " << (structObj->hasModifier(Modifier_Struct_Dictionary) ? "struct" : "class") << " " << fixStructName(structObj) << " sealed\n";
           ss << indentStr << "{\n";
@@ -1489,6 +1485,10 @@ namespace zsLib
                 auto foundStruct = (*iterSet);
                 if (foundStruct != structObj) {
                   includeCppForType(structFile, foundStruct);
+
+                  pubSS << indentStr << "/// <summary>\n";
+                  pubSS << indentStr << "/// Cast from " << fixStructName(foundStruct) << " to " << fixStructName(structObj) << "\n";
+                  pubSS << indentStr << "/// </summary>\n";
                   pubSS << indentStr << "[";
                   if (!foundCast) {
                     pubSS << "Windows::Foundation::Metadata::DefaultOverloadAttribute, ";
@@ -1602,7 +1602,7 @@ namespace zsLib
             }
 
             if (firstOutput) {
-              headerMethodsSS << indentStr << "// " << structObj->getPathName() << "\n";
+              headerMethodsSS << indentStr << "// " << structObj->getPathName() << "\n\n";
               firstOutput = false;
             }
 
@@ -1648,19 +1648,18 @@ namespace zsLib
             if (altName.hasData()) {
               attributes.push_back("Windows::Foundation::Metadata::OverloadAttribute(\"" + fixName(altName) + "\")");
             }
-
-            if (attributes.size() > 0) {
-              headerMethodsSS << indentStr << "[";
-              bool firstAttribute = true;
-              while (attributes.size() > 0) {
-                String attributeStr = attributes.front();
-                attributes.pop_front();
-                if (!firstAttribute) headerMethodsSS << ", ";
-                firstAttribute = false;
-                headerMethodsSS << attributeStr;
-              }
-              headerMethodsSS << "]\n";
+            if (method->hasModifier(Modifier_Obsolete)) {
+              attributes.push_back("Windows::Foundation::Metadata::Deprecated(" + method->getModifierValue(Modifier_Obsolete, 0) + ", Windows::Foundation::Metadata::DeprecationType::Deprecate, 0)");
             }
+
+            headerMethodsSS << GenerateHelper::getDocumentation(indentStr + "/// ", method, 80);
+            for (auto iterArgs = method->mArguments.begin(); iterArgs != method->mArguments.end(); ++iterArgs)
+            {
+              auto arg = (*iterArgs);
+              headerMethodsSS << GenerateHelper::getDocumentation(indentStr + "/// ", arg, 80);
+            }
+
+            headerMethodsSS << getCxAttributesLine(indentStr, attributes);
 
             if (isEvent) {
               hasResult = false;
@@ -1825,6 +1824,15 @@ namespace zsLib
 
             includeCppForType(structFile, property->mType);
 
+            headerMethodsSS << GenerateHelper::getDocumentation(indentStr + "/// ", property, 80);
+
+            StringList attributes;
+            if (property->hasModifier(Modifier_Obsolete)) {
+              attributes.push_back("Windows::Foundation::Metadata::Deprecated(" + property->getModifierValue(Modifier_Obsolete, 0) + ", Windows::Foundation::Metadata::DeprecationType::Deprecate, 0)");
+            }
+
+            headerMethodsSS << getCxAttributesLine(indentStr, attributes);
+
             headerMethodsSS << indentStr << (isStatic ? "static " : "") << "property " << getCxType(property->hasModifier(Modifier_Optional), property->mType, true) << " " << fixName(property->mName);
             if (hasGet) {
               if (hasSet) {
@@ -1837,8 +1845,8 @@ namespace zsLib
                 headerMethodsSS << " { " << getCxType(property->hasModifier(Modifier_Optional), property->mType, true) << " get(); }\n";
               }
             } else {
-              if (hasGet) {
-                headerMethodsSS << " { void set(" << getCxType(property->hasModifier(Modifier_Optional), property->mType) << "); }\n";
+              if (hasSet) {
+                headerMethodsSS << " { void set(" << getCxType(property->hasModifier(Modifier_Optional), property->mType) << " value); }\n";
               }
             }
 
@@ -2275,6 +2283,38 @@ namespace zsLib
             }
           }
           return String();
+        }
+
+        //---------------------------------------------------------------------
+        String GenerateStructCx::getCxAttributes(const StringList &attributes)
+        {
+          if (attributes.size() < 1) return String();
+
+          std::stringstream ss;
+
+          ss << "[";
+
+          bool firstAttribute = true;
+          for (auto iter = attributes.begin(); iter != attributes.end(); ++iter)
+          {
+            String attributeStr = (*iter);
+            if (!firstAttribute) ss << ", ";
+            firstAttribute = false;
+            ss << attributeStr;
+          }
+          ss << "]";
+
+          return ss.str();
+        }
+
+        //---------------------------------------------------------------------
+        String GenerateStructCx::getCxAttributesLine(
+                                                     const String &linePrefix,
+                                                     const StringList &attributes
+                                                     )
+        {
+          if (attributes.size() < 1) return String();
+          return linePrefix + getCxAttributes(attributes) + "\n";
         }
 
         //---------------------------------------------------------------------

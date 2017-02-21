@@ -132,6 +132,7 @@ namespace zsLib
         case IIDLTypes::Modifier_Nullable:                  return "nullable";
         case IIDLTypes::Modifier_Optional:                  return "optional";
         case IIDLTypes::Modifier_Dynamic:                   return "dynamic";
+        case IIDLTypes::Modifier_Obsolete:                  return "obsolete";
       }
 
       return "unknown";
@@ -166,6 +167,7 @@ namespace zsLib
         case IIDLTypes::Modifier_Nullable:                  return 0;
         case IIDLTypes::Modifier_Optional:                  return 0;
         case IIDLTypes::Modifier_Dynamic:                   return 0;
+        case IIDLTypes::Modifier_Obsolete:                  return 1;
       }
 
       return -1;
@@ -206,6 +208,7 @@ namespace zsLib
       switch (value)
       {
         case IIDLTypes::Modifier_Special:
+        case IIDLTypes::Modifier_Obsolete:
         {
           return true;
         }
@@ -226,6 +229,7 @@ namespace zsLib
         case IIDLTypes::Modifier_Struct_Exception:
         case IIDLTypes::Modifier_Static:
         case IIDLTypes::Modifier_Special:
+        case IIDLTypes::Modifier_Obsolete:
         {
           return true;
         }
@@ -249,6 +253,7 @@ namespace zsLib
         case IIDLTypes::Modifier_Static:
         case IIDLTypes::Modifier_Nullable:
         case IIDLTypes::Modifier_Dynamic:
+        case IIDLTypes::Modifier_Obsolete:
         {
           return true;
         }
@@ -295,6 +300,7 @@ namespace zsLib
         case IIDLTypes::Modifier_Nullable:
         case IIDLTypes::Modifier_Optional:
         case IIDLTypes::Modifier_Dynamic:
+        case IIDLTypes::Modifier_Obsolete:
         {
           return true;
         }

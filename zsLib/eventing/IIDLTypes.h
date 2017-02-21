@@ -101,8 +101,9 @@ namespace zsLib
         Modifier_Nullable,                  // value of null is legal
         Modifier_Optional,                  // optional type whose value may not be set
         Modifier_Dynamic,                   // type might be of derived type
+        Modifier_Obsolete,                  // method, property, namespace or struct is marked as obsolete
 
-        Modifier_Last = Modifier_Dynamic,
+        Modifier_Last = Modifier_Obsolete,
       };
 
       static const char *toString(Modifiers value);
