@@ -123,9 +123,11 @@ namespace zsLib
           ss << indentStr << "using ::zsLib::Optional;\n";
           ss << indentStr << "using ::zsLib::Any;\n";
           ss << indentStr << "using ::zsLib::AnyPtr;\n";
+          ss << indentStr << "using ::zsLib::AnyHolder;\n";
           ss << indentStr << "using ::zsLib::Promise;\n";
           ss << indentStr << "using ::zsLib::PromisePtr;\n";
-          ss << indentStr << "using ::zsLib::PromiseWith;\n";
+          ss << indentStr << "using ::zsLib::PromiseWithHolder;\n";
+          ss << indentStr << "using ::zsLib::PromiseWithHolderPtr;\n";
           ss << indentStr << "using ::zsLib::eventing::SecureByteBlock;\n";
           ss << indentStr << "using ::zsLib::eventing::SecureByteBlockPtr;\n";
           ss << indentStr << "using ::std::shared_ptr;\n";
@@ -233,13 +235,24 @@ namespace zsLib
                       if ("::std::set" == specialName) templatedTypeStr = "shared_ptr< set< ";
                       if ("::std::list" == specialName) templatedTypeStr = "shared_ptr< list< ";
                       if ("::std::map" == specialName) templatedTypeStr = "shared_ptr< map< ";
-                      if ("::zs::PromiseWith" == specialName) templatedTypeStr = "shared_ptr< PromiseWith< ";
+                      if ("::zs::PromiseWith" == specialName) {
+                        auto firstArg = templatedType->mTemplateArguments.begin();
+                        if (firstArg != templatedType->mTemplateArguments.end()) {
+                          auto typePtr = (*firstArg);
+                          if (typePtr->toBasicType()) {
+                            templatedTypeStr = "shared_ptr< PromiseWithHolder< ";
+                          }
+                        }
+                        if (templatedTypeStr.isEmpty()) {
+                          templatedTypeStr = "shared_ptr< PromiseWithHolderPtr< ";
+                        }
+                      }
                       specialTemplate = templatedTypeStr.hasData();
                     }
                   }
                 }
               }
-                
+
               if (templatedTypeStr.isEmpty()) {
                 templatedTypeStr = "wrapper" + templatedType->getPathName() + "< ";
               }

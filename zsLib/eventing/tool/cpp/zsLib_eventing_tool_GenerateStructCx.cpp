@@ -1061,10 +1061,15 @@ namespace zsLib
                   if (foundType != templatedStruct->mTemplateArguments.end()) rejectType = *foundType;
                 }
 
-                ss << indentStr << "static " << getCxType(false, templatedStruct, true) << " " << getToCxName(templatedStruct) << "(shared_ptr< PromiseWith< " << getCppType(false, resolveType) << " > > promise);\n";
+                String promiseWithStr = "PromiseWithHolderPtr";
+                if (resolveType->toBasicType()) {
+                  promiseWithStr = "PromiseWithHolder";
+                }
+
+                ss << indentStr << "static " << getCxType(false, templatedStruct, true) << " " << getToCxName(templatedStruct) << "(shared_ptr< " << promiseWithStr << "< " << getCppType(false, resolveType) << " > > promise);\n";
 
                 cppSS << dashedStr;
-                cppSS << getCxType(false, templatedStruct, true) << " Internal::Helper::" << getToCxName(templatedStruct) << "(shared_ptr< PromiseWith< " << getCppType(false, resolveType) << " > > promise)\n";
+                cppSS << getCxType(false, templatedStruct, true) << " Internal::Helper::" << getToCxName(templatedStruct) << "(shared_ptr< " << promiseWithStr << "< " << getCppType(false, resolveType) << " > > promise)\n";
                 cppSS << "{\n";
                 cppSS << "  struct Observer : public ::zsLib::IPromiseResolutionDelegate\n";
                 cppSS << "  {\n";
