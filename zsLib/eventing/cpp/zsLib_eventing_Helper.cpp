@@ -242,7 +242,7 @@ namespace zsLib
 #ifdef _WIN32
       int error = _mkdir(pathStr);
 #else
-      int error = mkdir(pathStr, S_IRWXU | S_IRWXG | S_IRWXO);
+      int error = ::mkdir(pathStr, S_IRWXU | S_IRWXG | S_IRWXO);
 #endif //_WIN32
       if (0 != error) {
         error = errno;
