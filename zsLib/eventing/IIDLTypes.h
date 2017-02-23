@@ -92,7 +92,6 @@ namespace zsLib
         Modifier_Property_WriteOnly,        // value can be set but not fetched
         Modifier_Property_Getter,           // value is not stored in wrapper, fetched from code
         Modifier_Property_Setter,           // value is not set in wrapper, set in code
-        Modifier_Property_Dynamic,          // value might be a derived type
 
         Modifier_Static,                    // method or property is static
         Modifier_AltName,

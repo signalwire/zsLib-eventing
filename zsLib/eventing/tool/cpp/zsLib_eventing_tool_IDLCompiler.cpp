@@ -1096,7 +1096,7 @@ namespace zsLib
         //---------------------------------------------------------------------
         void IDLCompiler::parseNamespaceContents(NamespacePtr namespaceObj) throw (FailureWithLine)
         {
-          const char *what = "namespace";
+          //const char *what = "namespace";
           while (hasMoreTokens()) {
             if (parseDocumentation()) continue;
             if (parseSemiColon()) continue;
