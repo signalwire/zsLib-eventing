@@ -477,7 +477,7 @@ namespace zsLib
         
       public:
         static EnumTypeValuePtr create(ContextPtr context);
-        static EnumTypeValuePtr create(ContextPtr context, const ElementPtr &el);
+        static EnumTypeValuePtr create(ContextPtr context, const ElementPtr &el) throw (InvalidContent);
 
         virtual EnumTypeValuePtr toEnumTypeValue() const override {return ZS_DYNAMIC_PTR_CAST(EnumTypeValue, toContext());}
         
