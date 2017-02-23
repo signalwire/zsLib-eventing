@@ -31,16 +31,37 @@ either expressed or implied, of the FreeBSD Project.
 
 #pragma once
 
-#include <zsLib/eventing/tool/tool.h>
-
-#include <zsLib/eventing/tool/internal/types.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_CommandLine.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_EventingCompiler.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Monitor.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateHelper.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructCx.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplCpp.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplHeader.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateTypesHeader.h>
+
+namespace zsLib
+{
+  namespace eventing
+  {
+    namespace tool
+    {
+      namespace internal
+      {
+        
+
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
+        #pragma mark GenerateTypesHeader
+        #pragma mark
+
+        struct GenerateTypesHeader : public IDLCompiler
+        {
+          static void processTypesNamespace(
+                                            std::stringstream &ss,
+                                            const String &inIndentStr,
+                                            NamespacePtr namespaceObj,
+                                            bool outputEnums
+                                            );
+        };
+
+      } // namespace internal
+    } // namespace tool
+  } // namespace eventing
+} // namespace zsLib

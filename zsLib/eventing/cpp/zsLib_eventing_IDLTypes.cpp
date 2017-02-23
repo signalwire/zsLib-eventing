@@ -108,29 +108,31 @@ namespace zsLib
     {
       switch (value)
       {
-        case IIDLTypes::Modifier_Common_AltName:            return "altname";
-          
-        case IIDLTypes::Modifier_Struct_StructuredData:     return "struct";
-        case IIDLTypes::Modifier_Struct_Interface:          return "class";
+        case IIDLTypes::Modifier_Struct_Dictionary:         return "dictionary";
         case IIDLTypes::Modifier_Struct_Exception:          return "exception";
 
         case IIDLTypes::Modifier_Method_Ctor:               return "constructor";
-        case IIDLTypes::Modifier_Method_Static:             return "static";
-        case IIDLTypes::Modifier_Method_Dynamic:            return "dynamic";
-        case IIDLTypes::Modifier_Method_EventHandler:       return "eventhandler";
-
+        case IIDLTypes::Modifier_Method_EventHandler:       return "event";
+        case IIDLTypes::Modifier_Method_Default:            return "default";
+        case IIDLTypes::Modifier_Method_Delete:             return "delete";
+          
         case IIDLTypes::Modifier_Method_Argument_In:        return "in";
         case IIDLTypes::Modifier_Method_Argument_Out:       return "out";
         case IIDLTypes::Modifier_Method_Argument_Grouping:  return "grouping";
-          
-        case IIDLTypes::Modifier_Property_Nullable:         return "nullable";
+
         case IIDLTypes::Modifier_Property_ReadOnly:         return "readonly";
         case IIDLTypes::Modifier_Property_WriteOnly:        return "writeonly";
         case IIDLTypes::Modifier_Property_Getter:           return "getter";
         case IIDLTypes::Modifier_Property_Setter:           return "setter";
 
-        case IIDLTypes::Modifier_:                          return "_";
-
+        case IIDLTypes::Modifier_Static:                    return "static";
+        case IIDLTypes::Modifier_AltName:                   return "altname";
+        case IIDLTypes::Modifier_Special:                   return "special";
+        case IIDLTypes::Modifier_Platform:                  return "platform";
+        case IIDLTypes::Modifier_Nullable:                  return "nullable";
+        case IIDLTypes::Modifier_Optional:                  return "optional";
+        case IIDLTypes::Modifier_Dynamic:                   return "dynamic";
+        case IIDLTypes::Modifier_Obsolete:                  return "obsolete";
       }
 
       return "unknown";
@@ -141,28 +143,31 @@ namespace zsLib
     {
       switch (value)
       {
-        case IIDLTypes::Modifier_Common_AltName:            return 1;
-
-        case IIDLTypes::Modifier_Struct_StructuredData:     return 0;
-        case IIDLTypes::Modifier_Struct_Interface:          return 0;
+        case IIDLTypes::Modifier_Struct_Dictionary:         return 0;
         case IIDLTypes::Modifier_Struct_Exception:          return 0;
 
         case IIDLTypes::Modifier_Method_Ctor:               return 0;
-        case IIDLTypes::Modifier_Method_Static:             return 0;
-        case IIDLTypes::Modifier_Method_Dynamic:            return 0;
-        case IIDLTypes::Modifier_Method_EventHandler:       return 0;
+        case IIDLTypes::Modifier_Method_EventHandler:       return -1;
+        case IIDLTypes::Modifier_Method_Default:            return 0;
+        case IIDLTypes::Modifier_Method_Delete:             return 0;
 
         case IIDLTypes::Modifier_Method_Argument_In:        return 0;
         case IIDLTypes::Modifier_Method_Argument_Out:       return 0;
         case IIDLTypes::Modifier_Method_Argument_Grouping:  return 1;
 
-        case IIDLTypes::Modifier_Property_Nullable:         return 0;
         case IIDLTypes::Modifier_Property_ReadOnly:         return 0;
         case IIDLTypes::Modifier_Property_WriteOnly:        return 0;
         case IIDLTypes::Modifier_Property_Getter:           return 0;
         case IIDLTypes::Modifier_Property_Setter:           return 0;
 
-        case IIDLTypes::Modifier_:                          return 0;
+        case IIDLTypes::Modifier_Static:                    return 0;
+        case IIDLTypes::Modifier_AltName:                   return 1;
+        case IIDLTypes::Modifier_Special:                   return 0;
+        case IIDLTypes::Modifier_Platform:                  return -1;
+        case IIDLTypes::Modifier_Nullable:                  return 0;
+        case IIDLTypes::Modifier_Optional:                  return 0;
+        case IIDLTypes::Modifier_Dynamic:                   return 0;
+        case IIDLTypes::Modifier_Obsolete:                  return 1;
       }
 
       return -1;
@@ -184,7 +189,8 @@ namespace zsLib
     {
       switch (value)
       {
-        case IIDLTypes::Modifier_Common_AltName:
+        case IIDLTypes::Modifier_AltName:
+        case IIDLTypes::Modifier_Platform:
         {
           return true;
         }
@@ -193,6 +199,25 @@ namespace zsLib
       return false;
     }
     
+    
+    //-------------------------------------------------------------------------
+    bool IIDLTypes::isValidForNamespace(Modifiers value)
+    {
+      if (isValidForAll(value)) return true;
+      
+      switch (value)
+      {
+        case IIDLTypes::Modifier_Special:
+        case IIDLTypes::Modifier_Obsolete:
+        {
+          return true;
+        }
+        default:                                              break;
+      }
+      
+      return false;
+    }
+
     //-------------------------------------------------------------------------
     bool IIDLTypes::isValidForStruct(Modifiers value)
     {
@@ -200,9 +225,11 @@ namespace zsLib
       
       switch (value)
       {
-        case IIDLTypes::Modifier_Struct_StructuredData:
-        case IIDLTypes::Modifier_Struct_Interface:
+        case IIDLTypes::Modifier_Struct_Dictionary:
         case IIDLTypes::Modifier_Struct_Exception:
+        case IIDLTypes::Modifier_Static:
+        case IIDLTypes::Modifier_Special:
+        case IIDLTypes::Modifier_Obsolete:
         {
           return true;
         }
@@ -220,9 +247,13 @@ namespace zsLib
       switch (value)
       {
         case IIDLTypes::Modifier_Method_Ctor:
-        case IIDLTypes::Modifier_Method_Static:
-        case IIDLTypes::Modifier_Method_Dynamic:
         case IIDLTypes::Modifier_Method_EventHandler:
+        case IIDLTypes::Modifier_Method_Default:
+        case IIDLTypes::Modifier_Method_Delete:
+        case IIDLTypes::Modifier_Static:
+        case IIDLTypes::Modifier_Nullable:
+        case IIDLTypes::Modifier_Dynamic:
+        case IIDLTypes::Modifier_Obsolete:
         {
           return true;
         }
@@ -242,6 +273,9 @@ namespace zsLib
         case IIDLTypes::Modifier_Method_Argument_In:
         case IIDLTypes::Modifier_Method_Argument_Out:
         case IIDLTypes::Modifier_Method_Argument_Grouping:
+        case IIDLTypes::Modifier_Nullable:
+        case IIDLTypes::Modifier_Optional:
+        case IIDLTypes::Modifier_Dynamic:
         {
           return true;
         }
@@ -258,11 +292,15 @@ namespace zsLib
       
       switch (value)
       {
-        case IIDLTypes::Modifier_Property_Nullable:
         case IIDLTypes::Modifier_Property_ReadOnly:
         case IIDLTypes::Modifier_Property_WriteOnly:
         case IIDLTypes::Modifier_Property_Getter:
         case IIDLTypes::Modifier_Property_Setter:
+        case IIDLTypes::Modifier_Static:
+        case IIDLTypes::Modifier_Nullable:
+        case IIDLTypes::Modifier_Optional:
+        case IIDLTypes::Modifier_Dynamic:
+        case IIDLTypes::Modifier_Obsolete:
         {
           return true;
         }
@@ -369,8 +407,11 @@ namespace zsLib
         {
           auto namespaceObj = parent->toNamespace();
           if (namespaceObj) {
-            pathStr += "::";
-            pathStr += namespaceObj->getMappingName();
+            String mappingName = namespaceObj->getMappingName();
+            if (mappingName.hasData()) {
+              pathStr += "::";
+              pathStr += mappingName;
+            }
             goto next;
           }
         }
@@ -392,6 +433,14 @@ namespace zsLib
       if (pathStr.isEmpty()) return String("::");
 
       return pathStr;
+    }
+
+    //-------------------------------------------------------------------------
+    String IIDLTypes::Context::getPathName() const
+    {
+      String path = getPath();
+      if ("::" == path) return path + getMappingName();
+      return path + "::" + getMappingName();
     }
     
     //-------------------------------------------------------------------------
@@ -444,9 +493,9 @@ namespace zsLib
       auto found = mModifiers.find(toString(modifier));
       if (found == mModifiers.end()) return String();
      
-      auto values = (*found).second;
+      auto &values = (*found).second;
       auto iter = values.begin();
-      for (size_t pos = 0; pos < index && (iter != values.end()); ++pos, ++iter) {
+      for (size_t pos = 0; pos <= index && (iter != values.end()); ++pos, ++iter) {
         if (pos != index) continue;
         return (*iter);
       }
@@ -567,7 +616,11 @@ namespace zsLib
     void IIDLTypes::Context::parse(const ElementPtr &rootEl) throw (InvalidContent)
     {
       if (!rootEl) return;
-      
+
+      if (!mName.hasData()) {
+        mName = UseHelper::getElementTextAndDecode(rootEl->findLastChildElement("name"));
+      }
+
       auto docEl = rootEl->findFirstChildElement("documentation");
       if (docEl) {
         mDocumentation = docEl->clone()->toElement();
@@ -713,16 +766,16 @@ namespace zsLib
         }
       }
 
-      auto context = toContext();
-      
-      Context::parse(rootEl);
-      
       ElementPtr namespaceEl = rootEl->findFirstChildElement("namespace");
       if (namespaceEl) {
-        mGlobal = Namespace::createForwards(toContext(), namespaceEl);
-        mGlobal->parse(namespaceEl);
+        if (!mGlobal) {
+          mGlobal = Namespace::createForwards(toContext(), namespaceEl);
+          mGlobal->parse(namespaceEl);
+        }
       } else {
-        mGlobal = Namespace::create(context);
+        if (!mGlobal) {
+          mGlobal = Namespace::create(toContext());
+        }
       }
     }
 
@@ -772,8 +825,7 @@ namespace zsLib
                                                     const FindTypeOptions &options
                                                     ) const
     {
-      if (pathStr.hasData()) {
-        if (!mGlobal) return TypePtr();
+      if (mGlobal) {
         return mGlobal->findType(pathStr, typeName, options);
       }
 
@@ -782,7 +834,7 @@ namespace zsLib
 
       return (*found).second;
     }
-    
+
     //-------------------------------------------------------------------------
     void IIDLTypes::Project::resolveTypedefs() throw (InvalidContent)
     {
@@ -1014,7 +1066,7 @@ namespace zsLib
                                                       ) const
     {
       String checkPath = pathStr;
-      
+
       if ("::" == checkPath.substr(0, 2)) {
         auto parent = getParent();
         if (!parent) return TypePtr();
@@ -1028,7 +1080,7 @@ namespace zsLib
         checkPath = pathStr.substr(2);
       }
       
-      if (pathStr.hasData()) {
+      if (checkPath.hasData()) {
         UseHelper::SplitMap splitPaths;
         UseHelper::split(pathStr, splitPaths, "::");
         
@@ -1057,7 +1109,11 @@ namespace zsLib
         }
         
         auto parent = getParent();
-        if (parent) return parent->findType(pathStr, typeName, options);
+        if (parent) {
+          if (!parent->toProject()) {
+            return parent->findType(pathStr, typeName, options);
+          }
+        }
 
         // type not found
         return TypePtr();
@@ -1080,7 +1136,17 @@ namespace zsLib
 
       if (options.mSearchParents) {
         auto parent = getParent();
-        if (parent) return parent->findType(pathStr, typeName, options);
+        if (parent) {
+          auto project = parent->toProject();
+          if (project) {
+            auto found = project->mBasicTypes.find(typeName);
+            if (found == project->mBasicTypes.end()) return TypePtr();
+
+            return (*found).second;
+          }
+
+          return parent->findType(pathStr, typeName, options);
+        }
       }
 
       return TypePtr();
@@ -1113,6 +1179,7 @@ namespace zsLib
       bool didFix = false;
       for (auto iter_doNotUse = mNamespaces.begin(); iter_doNotUse != mNamespaces.end(); ) {
         auto current = iter_doNotUse;
+        ++iter_doNotUse;
 
         auto obj = (*current).second;
         if (obj->fixTemplateHashMapping()) didFix = true;
@@ -1186,7 +1253,7 @@ namespace zsLib
         if (!parent) return NamespacePtr();
         
         parentNamespace = parent->toNamespace();
-        if (!parentNamespace) NamespacePtr();
+        if (!parentNamespace) return NamespacePtr();
 
         return parentNamespace->findNamespace(pathStr, name);
       }
@@ -1201,11 +1268,22 @@ namespace zsLib
         if (!parent) return NamespacePtr();
         
         parentNamespace = parent->toNamespace();
-        if (!parentNamespace) NamespacePtr();
+        if (!parentNamespace) return NamespacePtr();
 
       }
 
       return parentNamespace->findNamespace(pathStr, name);
+    }
+
+    //-------------------------------------------------------------------------
+    bool IIDLTypes::Namespace::isGlobal() const
+    {
+      if (mName.hasData()) return false;
+      auto parent = getParent();
+      if (!parent) return true;
+      auto namespaceObj = parent->toNamespace();
+      if (namespaceObj) return false;
+      return true;
     }
 
     //-------------------------------------------------------------------------
@@ -1868,12 +1946,10 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::TypePtr IIDLTypes::TypedefType::getTypeBypassingTypedefIfNoop() const
+    IIDLTypes::TypePtr IIDLTypes::TypedefType::getOriginalType() const
     {
-      if (mModifiers.size() < 1) {
-        auto originalType = mOriginalType.lock();
-        if (originalType) return originalType;
-      }
+      auto originalType = mOriginalType.lock();
+      if (originalType) return originalType;
 
       return toType();
     }
@@ -2024,20 +2100,11 @@ namespace zsLib
       if (mIsARelationships.size() > 0) {
         ElementPtr relationshipsEl = Element::create("relationships");
         for (auto iter = mIsARelationships.begin(); iter != mIsARelationships.end(); ++iter) {
-          auto structType = (*iter).second;
+          auto baseType = (*iter).second;
 
           auto relationshipEl = Element::create("relationsip");
 
-          auto pathStr = structType->getPath();
-          if (pathStr.hasData()) {
-            relationshipEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("path", pathStr));
-          }
-
-          auto nameStr = structType->getMappingName();
-          if (nameStr.hasData()) {
-            relationshipEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("base", nameStr));
-          }
-
+          relationshipEl->adoptAsLastChild(baseType->createReferenceTypeElement());
           relationshipsEl->adoptAsLastChild(relationshipEl);
         }
         rootEl->adoptAsLastChild(relationshipsEl);
@@ -2147,12 +2214,12 @@ namespace zsLib
               auto pathStr = aliasLookup(UseHelper::getElementTextAndDecode(relationshipEl->findFirstChildElement("path")));
               auto baseStr = aliasLookup(UseHelper::getElementTextAndDecode(relationshipEl->findFirstChildElement("base")));
 
-              auto foundType = findType(pathStr, baseStr, options);
+              auto foundType = Type::createReferencedType(context, relationshipEl);
               if (!foundType) {
                 ZS_THROW_CUSTOM(InvalidContent, String("Relationship struct type was not found, path=") + pathStr + ", base=" + baseStr);
               }
 
-              mIsARelationships[foundType->getMappingName()] = foundType;
+              mIsARelationships[foundType->getPathName()] = foundType;
             }
 
             relationshipEl = relationshipEl->findNextSiblingElement("relationship");
@@ -2296,8 +2363,8 @@ namespace zsLib
 
           for (auto iter = mIsARelationships.begin(); iter != mIsARelationships.end(); ++iter)
           {
-            auto checkName = (*iter).first;
             auto baseType = (*iter).second;
+            auto checkName = baseType->getMappingName();
 
             baseType->findType(pathStr, typeName, baseOptions);
             if (checkName == searchPath) {
@@ -2350,9 +2417,7 @@ namespace zsLib
 
         for (auto iter = mIsARelationships.begin(); iter != mIsARelationships.end(); ++iter)
         {
-          auto checkName = (*iter).first;
           auto baseType = (*iter).second;
-
           baseType->findType(String(), typeName, baseOptions);
         }
       }
@@ -2403,7 +2468,7 @@ namespace zsLib
         TypePtr obj = (*current);
         if (!obj) continue;
         
-        TypePtr bypassType = obj->getTypeBypassingTypedefIfNoop();
+        TypePtr bypassType = obj->getOriginalType();
         if (bypassType == obj) continue;
 
         mGenericDefaultTypes.insert(current, bypassType);
@@ -2439,9 +2504,10 @@ namespace zsLib
 
         String calculatedID = obj->calculateTemplateID();
 
+        obj->mName = calculatedID;
+
         if (name == calculatedID) continue;
 
-        obj->mName = calculatedID;
         mTemplatedStructs.erase(current);
         mTemplatedStructs[calculatedID] = obj;
 
@@ -2449,6 +2515,23 @@ namespace zsLib
       }
 
       return didFix;
+    }
+
+    //-------------------------------------------------------------------------
+    IIDLTypes::StructPtr IIDLTypes::Struct::getRootStruct() const
+    {
+      StructPtr structObj = toStruct();
+
+      do
+      {
+        auto parent = structObj->getParent();
+        if (!parent) return structObj;
+        auto parentStruct = parent->toStruct();
+        if (!parentStruct) break;
+        structObj = parentStruct;
+      } while (true);
+
+      return structObj;
     }
 
     //-------------------------------------------------------------------------
@@ -2752,7 +2835,7 @@ namespace zsLib
         TypePtr obj = (*current);
         if (!obj) continue;
 
-        TypePtr bypassType = obj->getTypeBypassingTypedefIfNoop();
+        TypePtr bypassType = obj->getOriginalType();
         if (bypassType == obj) continue;
 
         mTemplateArguments.insert(current, bypassType);
@@ -2925,7 +3008,7 @@ namespace zsLib
     void IIDLTypes::Property::resolveTypedefs() throw (InvalidContent)
     {
       if (mType) {
-        mType = mType->getTypeBypassingTypedefIfNoop();
+        mType = mType->getOriginalType();
       }
     }
 
@@ -3116,7 +3199,7 @@ namespace zsLib
         TypePtr type = (*current);
         if (!type) continue;
 
-        TypePtr bypassType = type->getTypeBypassingTypedefIfNoop();
+        TypePtr bypassType = type->getOriginalType();
         if (type == bypassType) continue;
 
         mThrows.insert(current, bypassType);

@@ -30,6 +30,7 @@ either expressed or implied, of the FreeBSD Project.
 */
 
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_EventingCompiler.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_CommandLine.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h>
 
@@ -2244,9 +2245,9 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         SecureByteBlockPtr EventingCompiler::generateXPlatformEventsHeader(
-                                                                   const String &outputNameXPlatform,
-                                                                   const String &outputNameWindows
-                                                                   ) const throw (Failure)
+                                                                           const String &outputNameXPlatform,
+                                                                           const String &outputNameWindows
+                                                                           ) const throw (Failure)
         {
           std::stringstream ss;
 
@@ -2636,10 +2637,10 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         SecureByteBlockPtr EventingCompiler::generateWindowsEventsHeader(
-                                                                 const String &outputNameXPlatform,
-                                                                 const String &outputNameWindows,
-                                                                 const String &outputNameWindowsETW
-                                                                 ) const throw (Failure)
+                                                                         const String &outputNameXPlatform,
+                                                                         const String &outputNameWindows,
+                                                                         const String &outputNameWindowsETW
+                                                                         ) const throw (Failure)
         {
           std::stringstream ss;
 
@@ -3024,30 +3025,6 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      ICompilerTypes::IDLOutputs ICompilerTypes::toIDLOutput(const char *value) throw (InvalidArgument)
-      {
-        String str(value);
-        for (ICompilerTypes::IDLOutputs index = ICompilerTypes::IDLOutput_First; index <= ICompilerTypes::IDLOutput_Last; index = static_cast<ICompilerTypes::IDLOutputs>(static_cast<std::underlying_type<ICompilerTypes::IDLOutputs>::type>(index) + 1)) {
-          if (0 == str.compareNoCase(ICompilerTypes::toString(index))) return index;
-        }
-        
-        ZS_THROW_INVALID_ARGUMENT(String("idl output is not understood:") + value);
-        return ICompilerTypes::IDLOutput_First;
-      }
-
-      //-----------------------------------------------------------------------
-      const char *ICompilerTypes::toString(IDLOutputs value)
-      {
-        switch (value)
-        {
-          case IDLOutput_CX:          return "cx";
-          case IDLOutput_ObjectiveC:  return "objc";
-          case IDLOutput_JavaAndroid: return "android";
-        }
-        return "unknown";
-      }
-
-      //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
@@ -3056,11 +3033,17 @@ namespace zsLib
       #pragma mark
 
       //-----------------------------------------------------------------------
+      void ICompiler::installTarget(IIDLCompilerTargetPtr target)
+      {
+        tool::internal::installIDLTarget(target);
+      }
+
+      //-----------------------------------------------------------------------
       ICompilerPtr ICompiler::create(const Config &config)
       {
         switch (config.mMode) {
           case ICompilerTypes::Mode_Eventing:   break;
-          case ICompilerTypes::Mode_IDL:        internal::IDLCompiler::create(config);
+          case ICompilerTypes::Mode_IDL:        return internal::IDLCompiler::create(config);
         }
         return internal::EventingCompiler::create(config);
       }

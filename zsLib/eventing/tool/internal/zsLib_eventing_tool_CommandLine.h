@@ -43,7 +43,7 @@ namespace zsLib
     {
       namespace internal
       {
-
+        void installIDLTarget(IIDLCompilerTargetPtr target);
       } // namespace internal
     } // namespace tool
   } // namespace eventing

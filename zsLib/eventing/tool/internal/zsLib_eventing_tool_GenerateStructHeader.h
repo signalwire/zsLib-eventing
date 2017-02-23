@@ -31,9 +31,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #pragma once
 
-#include <zsLib/eventing/tool/internal/types.h>
-
-#include <zsLib/eventing/IHelper.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h>
 
 namespace zsLib
 {
@@ -43,53 +41,59 @@ namespace zsLib
     {
       namespace internal
       {
+        
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         #pragma mark
-        #pragma mark Helper
+        #pragma mark GenerateStructHeader
         #pragma mark
 
-        class Helper : public eventing::IHelper
+        struct GenerateStructHeader : public IIDLCompilerTarget,
+                                      public IDLCompiler
         {
-        public:
-          static String fileNameAfterPath(const String &filePath);
-          static String fixRelativeFilePath(const String &originalFileName, const String &newFileName);
+          typedef std::set<String> StringSet;
 
-          static bool isLikelyJSON(const char *p);
+          GenerateStructHeader();
 
-          static bool skipEOL(
-                              const char * &p,
-                              ULONG *currentLine
-                              );
-          static void skipToEOL(const char * &p);
-          static bool skipWhitespaceExceptEOL(const char * &p);
-          
-          static bool skipCComments(
-                                    const char * &p,
-                                    ULONG *lineCount
-                                    );
-          
-          static bool skipCPPComments(const char * &p);
-          
-          static bool skipQuote(
-                                const char * &p,
-                                ULONG *currentLine
-                                );
-          
-          static bool isQuotes(const String &str);
+          static GenerateStructHeaderPtr create();
 
-          static String decodeCEscape(
-                                      const char * &p,
-                                      ULONG lineCount
-                                      ) throw (FailureWithLine);
-          static String decodeQuotes(
-                                     const String &str,
-                                     ULONG lineCount
-                                     ) throw (FailureWithLine);
+          static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure);
+          
+          static void generateUsingTypes(
+                                         std::stringstream &ss,
+                                         const String &indentStr
+                                         );
+
+          static String getStructFileName(StructPtr structObj);
+          static String getStructInitName(StructPtr structObj);
+
+          static String makeOptional(bool isOptional, const String &value);
+
+          static String getWrapperTypeString(bool isOptional, TypePtr type);
+          static void generateStruct(
+                                     StructPtr structObj,
+                                     String indentStr,
+                                     StringSet &includedHeaders,
+                                     std::stringstream &includeSS,
+                                     std::stringstream &ss
+                                     );
+          //-------------------------------------------------------------------
+          #pragma mark
+          #pragma mark GenerateStructHeader::IIDLCompilerTarget
+          #pragma mark
+
+          //-------------------------------------------------------------------
+          virtual String targetKeyword() override;
+          virtual String targetKeywordHelp() override;
+          virtual void targetOutput(
+                                    const String &inPathStr,
+                                    const ICompilerTypes::Config &config
+                                    ) throw (Failure) override;
+
         };
-
+         
       } // namespace internal
     } // namespace tool
   } // namespace eventing

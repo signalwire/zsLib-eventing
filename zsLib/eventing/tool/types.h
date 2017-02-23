@@ -46,6 +46,7 @@ namespace zsLib
 
       ZS_DECLARE_INTERACTION_PTR(ICompiler);
       ZS_DECLARE_INTERACTION_PTR(ICommandLine);
+      ZS_DECLARE_INTERACTION_PTR(IIDLCompilerTarget);
 
       ZS_DECLARE_INTERACTION_PTR(IOutputDelegate);
 

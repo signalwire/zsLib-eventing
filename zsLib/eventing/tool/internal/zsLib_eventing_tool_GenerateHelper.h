@@ -31,9 +31,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #pragma once
 
-#include <zsLib/eventing/tool/internal/types.h>
-
-#include <zsLib/eventing/IHelper.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h>
 
 namespace zsLib
 {
@@ -43,51 +41,43 @@ namespace zsLib
     {
       namespace internal
       {
+        
+
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         #pragma mark
-        #pragma mark Helper
+        #pragma mark GenerateHelper
         #pragma mark
 
-        class Helper : public eventing::IHelper
+        struct GenerateHelper : public IDLCompiler
         {
-        public:
-          static String fileNameAfterPath(const String &filePath);
-          static String fixRelativeFilePath(const String &originalFileName, const String &newFileName);
+          static String getDashedComment(const String &indent);
 
-          static bool isLikelyJSON(const char *p);
+          static String getDocumentation(
+                                         const String &linePrefix,
+                                         ContextPtr context,
+                                         size_t maxLineLength
+                                         );
 
-          static bool skipEOL(
-                              const char * &p,
-                              ULONG *currentLine
-                              );
-          static void skipToEOL(const char * &p);
-          static bool skipWhitespaceExceptEOL(const char * &p);
-          
-          static bool skipCComments(
-                                    const char * &p,
-                                    ULONG *lineCount
-                                    );
-          
-          static bool skipCPPComments(const char * &p);
-          
-          static bool skipQuote(
-                                const char * &p,
-                                ULONG *currentLine
-                                );
-          
-          static bool isQuotes(const String &str);
+          static void insertFirst(
+                                  std::stringstream &ss,
+                                  bool &first
+                                 );
+          static void insertLast(
+                                 std::stringstream &ss,
+                                 bool &first
+                                 );
 
-          static String decodeCEscape(
-                                      const char * &p,
-                                      ULONG lineCount
-                                      ) throw (FailureWithLine);
-          static String decodeQuotes(
-                                     const String &str,
-                                     ULONG lineCount
-                                     ) throw (FailureWithLine);
+          static bool isBuiltInType(TypePtr type);
+
+          static bool hasOnlyStaticMethods(StructPtr structObj);
+
+          static bool needsDefaultConstructor(StructPtr structObj);
+          static bool needsDefaultConstructor(TemplatedStructTypePtr templateObj);
+
+          static String getBasicTypeString(BasicTypePtr type);
         };
 
       } // namespace internal
