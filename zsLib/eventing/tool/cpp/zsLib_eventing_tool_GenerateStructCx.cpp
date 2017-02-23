@@ -577,8 +577,6 @@ namespace zsLib
         void GenerateStructCx::generateExceptionHelper(HelperFile &helperFile)
         {
           auto &ss = helperFile.mHeaderStructSS;
-          auto &cppSS = helperFile.mCppBodySS;
-          auto &indentStr = helperFile.mHeaderIndentStr;
           auto dashedStr = GenerateHelper::getDashedComment(String());
 
           auto &derives = helperFile.mDerives;
@@ -1137,7 +1135,6 @@ namespace zsLib
                                                                 const String &indentStr
                                                                 )
         {
-          auto &cppSS = helperFile.mCppBodySS;
           auto foundType = helperFile.mGlobal->toContext()->findType("::zs::PromiseRejectionReason");
           if (foundType) {
             auto rejectionStruct = foundType->toStruct();
