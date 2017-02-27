@@ -2518,6 +2518,22 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
+    bool IIDLTypes::Struct::hasExistingNonForwardedData() const
+    {
+      if (mGenerics.size() > 0) return true;
+      if (mGenericDefaultTypes.size() > 0) return true;
+      if (mTemplatedStructs.size() > 0) return true;
+      if (mIsARelationships.size() > 0) return true;
+      if (mEnums.size() > 0) return true;
+      if (mStructs.size() > 0) return true;
+      if (mTypedefs.size() > 0) return true;
+      if (mProperties.size() > 0) return true;
+      if (mMethods.size() > 0) return true;
+
+      return false;
+    }
+
+    //-------------------------------------------------------------------------
     IIDLTypes::StructPtr IIDLTypes::Struct::getRootStruct() const
     {
       StructPtr structObj = toStruct();

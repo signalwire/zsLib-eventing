@@ -1249,7 +1249,12 @@ namespace zsLib
           bool created {};
           auto newStruct = processStructForward(context, structName, &created);
           if (!created) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " struct/interface was not created: " + structName);
+            if (!newStruct) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " struct/interface was not created: " + structName);
+            }
+            if (newStruct->hasExistingNonForwardedData()) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " struct/interface already has a definition: " + structName);
+            }
           }
 
           tool::output() << "[Info] Found struct: " << getPathName(newStruct) << (foundTemplate ? " (template)" : "") << "\n";

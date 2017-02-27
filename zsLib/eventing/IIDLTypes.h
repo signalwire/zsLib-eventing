@@ -590,6 +590,8 @@ namespace zsLib
 
         virtual StructPtr toStruct() const override {return ZS_DYNAMIC_PTR_CAST(Struct, toContext());}
 
+        bool hasExistingNonForwardedData() const;
+
         StructPtr getRootStruct() const;
       };
 
