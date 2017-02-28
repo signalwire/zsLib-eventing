@@ -419,7 +419,7 @@ namespace zsLib
                 observerMethodsSS << indentStr << "  size_t count {};\n";
                 observerMethodsSS << indentStr << "  {\n";
                 observerMethodsSS << indentStr << "    ::zsLib::AutoLock lock(wrapper_observerLock);\n";
-                observerMethodsSS << indentStr << "    WrapperObserverWeakListPtr oldList;\n";
+                observerMethodsSS << indentStr << "    WrapperObserverWeakListPtr oldList = wrapper_observers;\n";
                 observerMethodsSS << indentStr << "    WrapperObserverWeakListPtr newList(make_shared<WrapperObserverWeakList>());\n";
                 observerMethodsSS << indentStr << "    if (observer) { newList->push_back(observer); }\n";
                 observerMethodsSS << indentStr << "    for (auto iter = oldList->begin(); iter != oldList->end(); ++iter) {\n";
