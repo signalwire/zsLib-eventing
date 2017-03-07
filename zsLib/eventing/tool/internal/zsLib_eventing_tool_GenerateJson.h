@@ -31,17 +31,51 @@ either expressed or implied, of the FreeBSD Project.
 
 #pragma once
 
-#include <zsLib/eventing/tool/tool.h>
-
-#include <zsLib/eventing/tool/internal/types.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_CommandLine.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_EventingCompiler.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Monitor.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateHelper.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateJson.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructCx.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplCpp.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplHeader.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateTypesHeader.h>
+
+namespace zsLib
+{
+  namespace eventing
+  {
+    namespace tool
+    {
+      namespace internal
+      {
+        
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
+        #pragma mark GenerateJson
+        #pragma mark
+
+        struct GenerateJson : public IIDLCompilerTarget,
+                              public IDLCompiler
+        {
+          typedef std::set<String> StringSet;
+
+          GenerateJson();
+
+          static GenerateJsonPtr create();
+          static SecureByteBlockPtr generateJson(ProjectPtr project) throw (Failure);
+
+          //-------------------------------------------------------------------
+          #pragma mark
+          #pragma mark GenerateJson::IIDLCompilerTarget
+          #pragma mark
+
+          //-------------------------------------------------------------------
+          virtual String targetKeyword() override;
+          virtual String targetKeywordHelp() override;
+          virtual void targetOutput(
+                                    const String &inPathStr,
+                                    const ICompilerTypes::Config &config
+                                    ) throw (Failure) override;
+
+        };
+         
+      } // namespace internal
+    } // namespace tool
+  } // namespace eventing
+} // namespace zsLib

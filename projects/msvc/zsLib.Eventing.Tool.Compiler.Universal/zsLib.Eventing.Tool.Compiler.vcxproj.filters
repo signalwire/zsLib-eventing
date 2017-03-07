@@ -271,6 +271,9 @@
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateHelper.cpp">
       <Filter>zsLib\eventing\tool\cpp</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateJson.cpp">
+      <Filter>zsLib\eventing\tool\cpp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -559,6 +562,9 @@
       <Filter>zsLib\eventing\tool\internal</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateHelper.h">
+      <Filter>zsLib\eventing\tool\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateJson.h">
       <Filter>zsLib\eventing\tool\internal</Filter>
     </ClInclude>
   </ItemGroup>

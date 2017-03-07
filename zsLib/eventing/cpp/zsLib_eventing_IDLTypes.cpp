@@ -730,6 +730,7 @@ namespace zsLib
           aliasEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("out", (*iter).second));
           aliasesEl->adoptAsLastChild(aliasEl);
         }
+        rootEl->adoptAsLastChild(aliasesEl);
       }
       
       if (mDefinedExclusives.size() > 0) {
@@ -738,6 +739,7 @@ namespace zsLib
           auto exclusiveStr = (*iter);
           exclusivesEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("exclusive", exclusiveStr));
         }
+        rootEl->adoptAsLastChild(exclusivesEl);
       }
 
       if (mGlobal) {
@@ -1779,9 +1781,9 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     IIDLTypes::TypedefTypePtr IIDLTypes::TypedefType::createForwards(
-                                                                             ContextPtr context,
-                                                                             const ElementPtr &el
-                                                                             ) throw (InvalidContent)
+                                                                     ContextPtr context,
+                                                                     const ElementPtr &el
+                                                                     ) throw (InvalidContent)
     {
       auto pThis(make_shared<TypedefType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2042,9 +2044,9 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     IIDLTypes::StructPtr IIDLTypes::Struct::createForwards(
-                                                                   ContextPtr context,
-                                                                   const ElementPtr &el
-                                                                   ) throw (InvalidContent)
+                                                           ContextPtr context,
+                                                           const ElementPtr &el
+                                                           ) throw (InvalidContent)
     {
       auto pThis(make_shared<Struct>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2069,6 +2071,7 @@ namespace zsLib
 
           genericsEl->adoptAsLastChild(genericType->createElement());
         }
+        rootEl->adoptAsLastChild(genericsEl);
       }
 
       if (mGenericDefaultTypes.size() > 0) {
@@ -2086,6 +2089,7 @@ namespace zsLib
           }
           templateDefaultsEl->adoptAsLastChild(templateEl);
         }
+        rootEl->adoptAsLastChild(templateDefaultsEl);
       }
 
       if (mGenerics.size() > 0) {
@@ -2095,6 +2099,7 @@ namespace zsLib
           auto templatedStruct = (*iter).second;
           templateStructsEl->adoptAsLastChild(templatedStruct->createElement());
         }
+        rootEl->adoptAsLastChild(templateStructsEl);
       }
 
       if (mIsARelationships.size() > 0) {
@@ -2764,6 +2769,8 @@ namespace zsLib
       
       ElementPtr rootEl = Element::create(objectName);
 
+      Context::write(rootEl);
+
       if (mTemplateArguments.size() > 0) {
         ElementPtr templateArgumentsEl = Element::create("templateArguments");
 
@@ -2779,6 +2786,7 @@ namespace zsLib
           }
           templateArgumentsEl->adoptAsLastChild(templateArgumentEl);
         }
+        rootEl->adoptAsLastChild(templateArgumentsEl);
       }
 
       return rootEl;
@@ -2986,6 +2994,8 @@ namespace zsLib
       
       ElementPtr rootEl = Element::create(objectName);
 
+      Context::write(rootEl);
+
       if (mDefaultValue.hasData()) {
         rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("default", mDefaultValue));
       }
@@ -3132,6 +3142,8 @@ namespace zsLib
       
       ElementPtr rootEl = Element::create(objectName);
 
+      Context::write(rootEl);
+
       if (mResult) {
         auto resultEl = Element::create("result");
         resultEl->adoptAsLastChild(mResult->createReferenceTypeElement());
@@ -3144,6 +3156,7 @@ namespace zsLib
           auto propertyObj = (*iter);
           argumentsEl->adoptAsLastChild(propertyObj->createElement("argument"));
         }
+        rootEl->adoptAsLastChild(argumentsEl);
       }
 
       if (mThrows.size() > 0) {
@@ -3154,6 +3167,7 @@ namespace zsLib
           throwEl->adoptAsLastChild(throwObj->createReferenceTypeElement());
           throwsEl->adoptAsLastChild(throwEl);
         }
+        rootEl->adoptAsLastChild(throwsEl);
       }
 
       return rootEl;

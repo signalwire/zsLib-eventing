@@ -57,6 +57,7 @@ namespace zsLib
         ZS_DECLARE_CLASS_PTR(Monitor);
 
         ZS_DECLARE_STRUCT_PTR(GenerateHelper);
+        ZS_DECLARE_STRUCT_PTR(GenerateJson);
         ZS_DECLARE_STRUCT_PTR(GenerateStructHeader);
         ZS_DECLARE_STRUCT_PTR(GenerateStructImplHeader);
         ZS_DECLARE_STRUCT_PTR(GenerateStructImplCpp);
