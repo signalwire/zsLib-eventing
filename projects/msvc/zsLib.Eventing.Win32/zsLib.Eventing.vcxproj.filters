@@ -48,6 +48,12 @@
     <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_RemoteEventing.h">
       <Filter>zsLib\eventing\internal</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_IDLTypes.h">
+      <Filter>zsLib\eventing\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\IIDLTypes.h">
+      <Filter>zsLib\eventing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing.cpp">
@@ -63,6 +69,9 @@
       <Filter>zsLib\eventing\cpp</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_RemoteEventing.cpp">
+      <Filter>zsLib\eventing\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_IDLTypes.cpp">
       <Filter>zsLib\eventing\cpp</Filter>
     </ClCompile>
   </ItemGroup>

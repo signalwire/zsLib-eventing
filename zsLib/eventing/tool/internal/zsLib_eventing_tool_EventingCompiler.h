@@ -35,14 +35,6 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <zsLib/eventing/tool/ICompiler.h>
 
-#define ZS_EVENTING_TOOL_INVALID_CONTENT (-2)
-#define ZS_EVENTING_TOOL_FILE_FAILED_TO_LOAD (-3)
-#define ZS_EVENTING_TOOL_METHOD_NOT_UNDERSTOOD (-4)
-#define ZS_EVENTING_TOOL_SYSTEM_ERROR (-5)
-#define ZS_EVENTING_TOOL_INTERNAL_ERROR (-99)
-
-#define ZS_EVENTING_TOTAL_BUILT_IN_EVENT_DATA (3)
-
 namespace zsLib
 {
   namespace eventing
@@ -56,34 +48,34 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         #pragma mark
-        #pragma mark Compiler
+        #pragma mark EventingCompiler
         #pragma mark
 
-        class Compiler : public ICompiler
+        class EventingCompiler : public ICompiler
         {
           struct make_private {};
 
         public:
           //-------------------------------------------------------------------
-          Compiler(
-                  const make_private &,
-                  const Config &config
-                  );
-          ~Compiler();
+          EventingCompiler(
+                           const make_private &,
+                           const Config &config
+                           );
+          ~EventingCompiler();
 
           //-------------------------------------------------------------------
           #pragma mark
-          #pragma mark Compiler => ICompiler
+          #pragma mark EventingCompiler => ICompiler
           #pragma mark
 
-          static CompilerPtr create(const Config &config);
+          static EventingCompilerPtr create(const Config &config);
 
           virtual void process() throw (Failure, FailureWithLine);
 
         protected:
           //-------------------------------------------------------------------
           #pragma mark
-          #pragma mark Compiler => (internal)
+          #pragma mark EventingCompiler => (internal)
           #pragma mark
 
           void outputMacros();
@@ -110,10 +102,10 @@ namespace zsLib
         private:
           //-------------------------------------------------------------------
           #pragma mark
-          #pragma mark Compiler => (data)
+          #pragma mark EventingCompiler => (data)
           #pragma mark
 
-          CompilerWeakPtr mThisWeak;
+          EventingCompilerWeakPtr mThisWeak;
 
           Config mConfig;
         };

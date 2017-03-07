@@ -31,7 +31,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #pragma once
 
-#include <zsLib/eventing/types.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h>
 
 namespace zsLib
 {
@@ -39,20 +39,43 @@ namespace zsLib
   {
     namespace tool
     {
+      namespace internal
+      {
+        
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
+        #pragma mark GenerateJson
+        #pragma mark
 
-      typedef zsLib::Exceptions::InvalidArgument InvalidArgument;
+        struct GenerateJson : public IIDLCompilerTarget,
+                              public IDLCompiler
+        {
+          typedef std::set<String> StringSet;
 
-      using namespace zsLib::XML;
+          GenerateJson();
 
-      ZS_DECLARE_INTERACTION_PTR(ICompiler);
-      ZS_DECLARE_INTERACTION_PTR(ICommandLine);
-      ZS_DECLARE_INTERACTION_PTR(IIDLCompilerTarget);
+          static GenerateJsonPtr create();
+          static SecureByteBlockPtr generateJson(ProjectPtr project) throw (Failure);
 
-      ZS_DECLARE_INTERACTION_PTR(IOutputDelegate);
+          //-------------------------------------------------------------------
+          #pragma mark
+          #pragma mark GenerateJson::IIDLCompilerTarget
+          #pragma mark
 
-      ZS_DECLARE_CLASS_PTR(StdOutputStream);
-      ZS_DECLARE_CLASS_PTR(DebugOutputStream);
-    }
-  }
-}
+          //-------------------------------------------------------------------
+          virtual String targetKeyword() override;
+          virtual String targetKeywordHelp() override;
+          virtual void targetOutput(
+                                    const String &inPathStr,
+                                    const ICompilerTypes::Config &config
+                                    ) throw (Failure) override;
 
+        };
+         
+      } // namespace internal
+    } // namespace tool
+  } // namespace eventing
+} // namespace zsLib

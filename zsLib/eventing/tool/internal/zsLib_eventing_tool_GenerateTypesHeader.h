@@ -31,7 +31,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #pragma once
 
-#include <zsLib/eventing/types.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h>
 
 namespace zsLib
 {
@@ -39,20 +39,29 @@ namespace zsLib
   {
     namespace tool
     {
+      namespace internal
+      {
+        
 
-      typedef zsLib::Exceptions::InvalidArgument InvalidArgument;
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
+        #pragma mark GenerateTypesHeader
+        #pragma mark
 
-      using namespace zsLib::XML;
+        struct GenerateTypesHeader : public IDLCompiler
+        {
+          static void processTypesNamespace(
+                                            std::stringstream &ss,
+                                            const String &inIndentStr,
+                                            NamespacePtr namespaceObj,
+                                            bool outputEnums
+                                            );
+        };
 
-      ZS_DECLARE_INTERACTION_PTR(ICompiler);
-      ZS_DECLARE_INTERACTION_PTR(ICommandLine);
-      ZS_DECLARE_INTERACTION_PTR(IIDLCompilerTarget);
-
-      ZS_DECLARE_INTERACTION_PTR(IOutputDelegate);
-
-      ZS_DECLARE_CLASS_PTR(StdOutputStream);
-      ZS_DECLARE_CLASS_PTR(DebugOutputStream);
-    }
-  }
-}
-
+      } // namespace internal
+    } // namespace tool
+  } // namespace eventing
+} // namespace zsLib

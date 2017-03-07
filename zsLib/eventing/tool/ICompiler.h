@@ -34,6 +34,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/tool/types.h>
 
 #include <zsLib/eventing/IEventingTypes.h>
+#include <zsLib/eventing/IIDLTypes.h>
 
 namespace zsLib
 {
@@ -51,17 +52,38 @@ namespace zsLib
 
       interaction ICompilerTypes
       {
+        ZS_DECLARE_STRUCT_PTR(Config);
         ZS_DECLARE_TYPEDEF_PTR(IEventingTypes::Provider, Provider);
+        ZS_DECLARE_TYPEDEF_PTR(IIDLTypes::Project, Project);
+
+        typedef String IDLTargetKeyword;
+        typedef std::map<IDLTargetKeyword, IIDLCompilerTargetPtr> IDLCompilerTargetMap;
+
+        enum Modes
+        {
+          Mode_First,
+          
+          Mode_Eventing = Mode_First,
+          Mode_IDL,
+          
+          Mode_Last = Mode_IDL,
+        };
+
+        static const char *toString(Modes value);
+        static Modes toMode(const char *value) throw (InvalidArgument);
 
         struct Config
         {
-          String      mConfigFile;
+          Modes                 mMode {Mode_First};
+          IDLCompilerTargetMap  mIDLOutputs;
+          String                mConfigFile;
 
-          StringList  mSourceFiles;
-          String      mOutputName;
-          String      mAuthor;
+          StringList            mSourceFiles;
+          String                mOutputName;
+          String                mAuthor;
 
-          ProviderPtr mProvider;
+          ProviderPtr           mProvider;
+          ProjectPtr            mProject;
         };
       };
 
@@ -70,14 +92,35 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       #pragma mark
-      #pragma mark IProcess
+      #pragma mark ICompiler
       #pragma mark
 
       interaction ICompiler : public ICompilerTypes
       {
+        static void installTarget(IIDLCompilerTargetPtr target);
+
         static ICompilerPtr create(const Config &config);
 
         virtual void process() throw (Failure, FailureWithLine) = 0;
+      };
+
+      //-----------------------------------------------------------------------
+      //-----------------------------------------------------------------------
+      //-----------------------------------------------------------------------
+      //-----------------------------------------------------------------------
+      #pragma mark
+      #pragma mark IDLCompilerTarget
+      #pragma mark
+
+      interaction IIDLCompilerTarget
+      {
+        virtual String targetKeyword() = 0;
+        virtual String targetKeywordHelp() = 0;
+
+        virtual void targetOutput(
+                                  const String &path,
+                                  const ICompilerTypes::Config &config
+                                  ) throw (Failure) = 0;
       };
     }
   }

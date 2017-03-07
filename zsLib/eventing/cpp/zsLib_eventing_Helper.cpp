@@ -41,6 +41,11 @@ either expressed or implied, of the FreeBSD Project.
 #include <cryptopp/base64.h>
 #include <cryptopp/osrng.h>
 
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include <sys/stat.h>
+#endif //_WIN32
 
 namespace zsLib { namespace eventing { ZS_DECLARE_SUBSYSTEM(zsLib_eventing); } }
 
@@ -223,6 +228,28 @@ namespace zsLib
       auto result = fclose(file);
       if (0 != result) {
         ZS_THROW_CUSTOM_PROPERTIES_1(StdError, errno, String("Failed to write entire file: written=") + string(written) + ", buffer size=" + string(buffer.SizeInBytes()));
+      }
+    }
+
+    //-------------------------------------------------------------------------
+    void IHelper::mkdir(const char *path, bool ignoreExists) throw (StdError)
+    {
+      String pathStr(path);
+#ifdef _WIN32
+      pathStr.replaceAll("/", "\\");
+#endif //_WIN32
+
+#ifdef _WIN32
+      int error = _mkdir(pathStr);
+#else
+      int error = ::mkdir(pathStr, S_IRWXU | S_IRWXG | S_IRWXO);
+#endif //_WIN32
+      if (0 != error) {
+        error = errno;
+        if (ignoreExists) {
+          if (EEXIST == error) return;
+        }
+        ZS_THROW_CUSTOM_PROPERTIES_1(StdError, error, String("Path could not be created: ") + path);
       }
     }
 

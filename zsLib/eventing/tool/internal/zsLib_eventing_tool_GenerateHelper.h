@@ -31,9 +31,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #pragma once
 
-#include <zsLib/eventing/tool/internal/types.h>
-
-#include <zsLib/eventing/tool/ICommandLine.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h>
 
 namespace zsLib
 {
@@ -43,7 +41,45 @@ namespace zsLib
     {
       namespace internal
       {
-        void installIDLTarget(IIDLCompilerTargetPtr target);
+        
+
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
+        #pragma mark GenerateHelper
+        #pragma mark
+
+        struct GenerateHelper : public IDLCompiler
+        {
+          static String getDashedComment(const String &indent);
+
+          static String getDocumentation(
+                                         const String &linePrefix,
+                                         ContextPtr context,
+                                         size_t maxLineLength
+                                         );
+
+          static void insertFirst(
+                                  std::stringstream &ss,
+                                  bool &first
+                                 );
+          static void insertLast(
+                                 std::stringstream &ss,
+                                 bool &first
+                                 );
+
+          static bool isBuiltInType(TypePtr type);
+
+          static bool hasOnlyStaticMethods(StructPtr structObj);
+
+          static bool needsDefaultConstructor(StructPtr structObj);
+          static bool needsDefaultConstructor(TemplatedStructTypePtr templateObj);
+
+          static String getBasicTypeString(BasicTypePtr type);
+        };
+
       } // namespace internal
     } // namespace tool
   } // namespace eventing

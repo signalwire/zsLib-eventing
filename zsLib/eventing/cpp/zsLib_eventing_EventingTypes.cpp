@@ -48,8 +48,6 @@ namespace zsLib
   {
     ZS_DECLARE_TYPEDEF_PTR(eventing::IHelper, UseEventingHelper);
 
-    typedef CryptoPP::SHA256 SHA256;
-
     namespace internal
     {
     } // namespace internal
@@ -237,6 +235,8 @@ namespace zsLib
     {
       switch (type)
       {
+        case PredefinedTypedef_void:      return "void";
+
         case PredefinedTypedef_bool:      return "bool";
 
         case PredefinedTypedef_uchar:     return "uchar";
@@ -378,6 +378,7 @@ namespace zsLib
         case PredefinedTypedef_float32:
         case PredefinedTypedef_float64:   return BaseType_Float;
 
+        case PredefinedTypedef_void:
         case PredefinedTypedef_pointer:   return BaseType_Pointer;
 
         case PredefinedTypedef_binary:    return BaseType_Binary;
@@ -396,6 +397,7 @@ namespace zsLib
     {
       switch (type)
       {
+        case PredefinedTypedef_void:
         case PredefinedTypedef_bool:
 
         case PredefinedTypedef_uchar:
@@ -493,7 +495,8 @@ namespace zsLib
         case PredefinedTypedef_float32:   return 4;
         case PredefinedTypedef_float64:   return 8;
 
-        case PredefinedTypedef_pointer:   return sizeof(int);
+        case PredefinedTypedef_void:
+        case PredefinedTypedef_pointer:   return sizeof(unsigned long);
 
         case PredefinedTypedef_binary:    return 0;
         case PredefinedTypedef_size:      return sizeof(int);
@@ -553,6 +556,7 @@ namespace zsLib
         case PredefinedTypedef_float32:   return 4;
         case PredefinedTypedef_float64:   return 8;
 
+        case PredefinedTypedef_void:
         case PredefinedTypedef_pointer:   return sizeof(long long);
 
         case PredefinedTypedef_binary:    return 0;
@@ -757,6 +761,24 @@ namespace zsLib
       createDataTemplates(rootEl->findFirstChildElement("templates"), mDataTemplates, mTypedefs, &mAliases);
       createEvents(rootEl->findFirstChildElement("events"), mEvents, mChannels, mOpCodes, mTasks, mKeywords, mDataTemplates, &mAliases);
       createSubsystems(rootEl->findFirstChildElement("subsystems"), mSubsystems, &mAliases);
+      
+      {
+        for (auto iter_doNotUse = mDataTemplates.begin(); iter_doNotUse != mDataTemplates.end();)
+        {
+          auto current = iter_doNotUse;
+          ++iter_doNotUse;
+
+          String key = (*current).first;
+          DataTemplatePtr templateObj = (*current).second;
+          auto hash = templateObj->uniqueID();
+          auto uniqueID = templateObj->hash();
+
+          if (hash == uniqueID) continue;
+          if (key == hash) continue;
+
+          mDataTemplates.erase(current);
+        }
+      }
     }
 
     //-------------------------------------------------------------------------
@@ -1032,6 +1054,8 @@ namespace zsLib
           }
 
           processedTypedefs[type] = String();
+
+          type = (*found).second;
         } while (true);
       }
     }
@@ -1596,6 +1620,7 @@ namespace zsLib
                                                const AliasMap *aliases
                                                ) throw (InvalidContent)
     {
+      mID = UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("id"));
     }
 
     //-------------------------------------------------------------------------
@@ -1606,6 +1631,10 @@ namespace zsLib
       auto templateEl = Element::create("template");
 
       if (mDataTypes.size() > 0) {
+        String id = hash(); // do not use the provided unique ID, generate a new ID
+
+        templateEl->adoptAsLastChild(UseEventingHelper::createElementWithTextAndJSONEncode("id", id));
+        
         ElementPtr dataTypesEl = Element::create("dataTypes");
         for (auto iter = mDataTypes.begin(); iter != mDataTypes.end(); ++iter)
         {
@@ -1618,6 +1647,13 @@ namespace zsLib
       }
 
       return templateEl;
+    }
+
+    //-------------------------------------------------------------------------
+    String IEventingTypes::DataTemplate::uniqueID() const
+    {
+      if (mID.hasData()) return mID;
+      return hash();
     }
 
     //-------------------------------------------------------------------------
@@ -1656,7 +1692,16 @@ namespace zsLib
         ElementPtr typesEl = templateEl->findFirstChildElement("dataTypes");
         createDataTypes(typesEl, templateObj->mDataTypes, typedefs, aliases);
 
+        String uniqueID = templateObj->uniqueID();
         String hash = templateObj->hash();
+
+        {
+          auto found = outDataTemplates.find(uniqueID);
+          if (found == outDataTemplates.end()) {
+            // only insert the data template if it's not been inserted before
+            outDataTemplates[uniqueID] = templateObj;
+          }
+        }
 
         {
           auto found = outDataTemplates.find(hash);

@@ -43,6 +43,9 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/Singleton.h>
 #include <zsLib/IWakeDelegate.h>
 
+#define ZS_EVENTING_TOTAL_BUILT_IN_EVENT_DATA (3)
+
+
 namespace zsLib
 {
   namespace eventing

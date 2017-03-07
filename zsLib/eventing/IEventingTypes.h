@@ -169,7 +169,7 @@ namespace zsLib
 
       //-----------------------------------------------------------------------
       #pragma mark
-      #pragma mark IEventingTypes::BaseTypedefs
+      #pragma mark IEventingTypes::BaseTypes
       #pragma mark
 
       enum BaseTypes
@@ -197,8 +197,10 @@ namespace zsLib
       enum PredefinedTypedefs
       {
         PredefinedTypedef_First,
+        
+        PredefinedTypedef_void = PredefinedTypedef_First,
 
-        PredefinedTypedef_bool = PredefinedTypedef_First,
+        PredefinedTypedef_bool,
 
         PredefinedTypedef_uchar,
         PredefinedTypedef_char,
@@ -536,6 +538,7 @@ namespace zsLib
 
       struct DataTemplate
       {
+        String mID;
         DataTypeList mDataTypes;
 
         DataTemplate() {}
@@ -552,6 +555,7 @@ namespace zsLib
 
         ElementPtr createElement(const char *objectName = NULL) const;
 
+        String uniqueID() const;
         String hash() const;
       };
 

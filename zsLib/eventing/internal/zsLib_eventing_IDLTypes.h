@@ -31,28 +31,11 @@ either expressed or implied, of the FreeBSD Project.
 
 #pragma once
 
-#include <zsLib/eventing/types.h>
+#include <zsLib/eventing/IIDLTypes.h>
 
 namespace zsLib
 {
   namespace eventing
   {
-    namespace tool
-    {
-
-      typedef zsLib::Exceptions::InvalidArgument InvalidArgument;
-
-      using namespace zsLib::XML;
-
-      ZS_DECLARE_INTERACTION_PTR(ICompiler);
-      ZS_DECLARE_INTERACTION_PTR(ICommandLine);
-      ZS_DECLARE_INTERACTION_PTR(IIDLCompilerTarget);
-
-      ZS_DECLARE_INTERACTION_PTR(IOutputDelegate);
-
-      ZS_DECLARE_CLASS_PTR(StdOutputStream);
-      ZS_DECLARE_CLASS_PTR(DebugOutputStream);
-    }
   }
 }
-

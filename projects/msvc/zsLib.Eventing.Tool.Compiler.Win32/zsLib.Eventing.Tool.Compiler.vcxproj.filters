@@ -167,9 +167,6 @@
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_CommandLine.cpp">
       <Filter>zsLib\eventing\tool\cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_Compiler.cpp">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool.cpp">
       <Filter>zsLib\eventing\tool\cpp</Filter>
     </ClCompile>
@@ -189,6 +186,39 @@
       <Filter>zsLib\eventing\cpp</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_Monitor.cpp">
+      <Filter>zsLib\eventing\tool\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_IDLTypes.cpp">
+      <Filter>zsLib\eventing\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_EventingCompiler.cpp">
+      <Filter>zsLib\eventing\tool\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_IDLCompiler.cpp">
+      <Filter>zsLib\eventing\tool\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_Helper.cpp">
+      <Filter>zsLib\eventing\tool\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructHeader.cpp">
+      <Filter>zsLib\eventing\tool\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateTypesHeader.cpp">
+      <Filter>zsLib\eventing\tool\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructImpHeader.cpp">
+      <Filter>zsLib\eventing\tool\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructImplCpp.cpp">
+      <Filter>zsLib\eventing\tool\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructCx.cpp">
+      <Filter>zsLib\eventing\tool\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateHelper.cpp">
+      <Filter>zsLib\eventing\tool\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateJson.cpp">
       <Filter>zsLib\eventing\tool\cpp</Filter>
     </ClCompile>
   </ItemGroup>
@@ -228,6 +258,9 @@
     </Filter>
     <Filter Include="zsLib\eventing\tool\internal">
       <UniqueIdentifier>{04d58746-12cb-4d5b-bb8b-4a655d058a9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="zsLib\idl">
+      <UniqueIdentifier>{9be6eed1-12d7-4799-bf84-ecf9295e7542}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -432,9 +465,6 @@
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_CommandLine.h">
       <Filter>zsLib\eventing\tool\internal</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_Compiler.h">
-      <Filter>zsLib\eventing\tool\internal</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\types.h">
       <Filter>zsLib\eventing\tool\internal</Filter>
     </ClInclude>
@@ -442,9 +472,6 @@
       <Filter>zsLib\eventing\tool</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\zsLib\eventing\tool\tool.h">
-      <Filter>zsLib\eventing\tool</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\types.h">
       <Filter>zsLib\eventing\tool</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\zsLib\eventing\tool\ICommandLine.h">
@@ -504,6 +531,45 @@
     <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\internal\zsLib_eventing_EventTypes.h">
       <Filter>zsLib\eventing\internal</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_IDLTypes.h">
+      <Filter>zsLib\eventing\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\IIDLTypes.h">
+      <Filter>zsLib\eventing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_IDLCompiler.h">
+      <Filter>zsLib\eventing\tool\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_EventingCompiler.h">
+      <Filter>zsLib\eventing\tool\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_Helper.h">
+      <Filter>zsLib\eventing\tool\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\types.h">
+      <Filter>zsLib\eventing\tool</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructHeader.h">
+      <Filter>zsLib\eventing\tool\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateTypesHeader.h">
+      <Filter>zsLib\eventing\tool\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructImplHeader.h">
+      <Filter>zsLib\eventing\tool\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructImplCpp.h">
+      <Filter>zsLib\eventing\tool\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructCx.h">
+      <Filter>zsLib\eventing\tool\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateHelper.h">
+      <Filter>zsLib\eventing\tool\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateJson.h">
+      <Filter>zsLib\eventing\tool\internal</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\..\..\zsLib\zsLib\license.txt">
@@ -514,5 +580,16 @@
     <None Include="..\..\..\..\zsLib\zsLib\cpp\zsLib.events.json">
       <Filter>zsLib\cpp</Filter>
     </None>
+    <None Include="..\..\..\..\zsLib\zsLib\idl\config.json">
+      <Filter>zsLib\idl</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="..\..\..\..\zsLib\zsLib\idl\std.idl">
+      <Filter>zsLib\idl</Filter>
+    </Midl>
+    <Midl Include="..\..\..\..\zsLib\zsLib\idl\zsLib.idl">
+      <Filter>zsLib\idl</Filter>
+    </Midl>
   </ItemGroup>
 </Project>
