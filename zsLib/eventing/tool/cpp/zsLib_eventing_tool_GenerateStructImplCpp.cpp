@@ -148,7 +148,6 @@ namespace zsLib
             }
           }
 
-          bool foundCtor = false;
           for (auto iterMethods = structObj->mMethods.begin(); iterMethods != structObj->mMethods.end(); ++iterMethods)
           {
             auto methodObj = (*iterMethods);
@@ -171,7 +170,6 @@ namespace zsLib
               ss << getWrapperTypeString(methodObj->hasModifier(Modifier_Optional), methodObj->mResult);
               ss << " wrapper" << (methodObj->hasModifier(Modifier_Static) ? "" : "::impl") << derivedStructObj->getPathName() << "::" << methodObj->mName;
             } else {
-              foundCtor = true;
               wrapperResultType = "void";
               ss << "void wrapper::impl" << derivedStructObj->getPathName() << "::wrapper_init_" << getStructInitName(derivedStructObj);
             }

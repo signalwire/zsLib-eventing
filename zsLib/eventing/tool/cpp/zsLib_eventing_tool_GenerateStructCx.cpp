@@ -1372,12 +1372,10 @@ namespace zsLib
             }
           }
 
-          bool hasConstructor = false;
           bool hasEvents = false;
           for (auto iter = structObj->mMethods.begin(); iter != structObj->mMethods.end(); ++iter) {
             auto method = (*iter);
             if (method->hasModifier(Modifier_Method_EventHandler)) hasEvents = true;
-            if (method->hasModifier(Modifier_Method_Ctor)) hasConstructor = true;
           }
 
           ss << "\n";

@@ -389,7 +389,6 @@ namespace zsLib
           std::stringstream observerSS;
           std::stringstream observerMethodsSS;
 
-          bool foundCtor = false;
           bool foundEventHandler = false;
           bool firstMethod = true;
           for (auto iterMethods = structObj->mMethods.begin(); iterMethods != structObj->mMethods.end(); ++iterMethods)
@@ -488,7 +487,6 @@ namespace zsLib
 
             if (isCtor) {
               ss << "void wrapper_init_" << getStructInitName(structObj) << "(";
-              foundCtor = true;
             } else {
               ss << getWrapperTypeString(methodObj->hasModifier(Modifier_Optional), methodObj->mResult);
               ss << " " << methodObj->mName << "(";

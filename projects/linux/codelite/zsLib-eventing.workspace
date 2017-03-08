@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<CodeLite_Workspace Name="zsLib-eventing" Database="">
+<CodeLite_Workspace Name="zsLib-eventing" Database="" Version="10.0.0">
   <Project Name="zsLib" Path="../../../../zsLib/projects/linux/codelite/zsLib/zsLib.project" Active="No"/>
   <Project Name="zsLib-eventing" Path="zsLib-eventing/zsLib-eventing.project"/>
   <Project Name="zsLib-eventing-tool" Path="zsLib-eventing-tool/zsLib-eventing-tool.project"/>

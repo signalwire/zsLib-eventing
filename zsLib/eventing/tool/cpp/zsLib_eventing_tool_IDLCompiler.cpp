@@ -44,6 +44,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <zsLib/Exception.h>
 #include <zsLib/Numeric.h>
+#include <zsLib/SafeInt.h>
 
 #include <sstream>
 #include <list>
@@ -250,8 +251,6 @@ namespace zsLib
           const char *start = p;
           
           bool foundNegative = false;
-          bool foundDot = false;
-          bool foundExponent = false;
 
           if ('-' == *start) {
             foundNegative = true;
@@ -304,7 +303,6 @@ namespace zsLib
               case '.': {
                 if (10 != base) goto check_exponent;
                 ++p;
-                foundDot = true;
                 continue;
               }
               case '0':
@@ -364,7 +362,6 @@ namespace zsLib
             }
             if (10 != base) goto check_postfix;
 
-            foundExponent = true;
             ++p;
             
             bool foundExponentNumber = false;
@@ -1804,7 +1801,7 @@ namespace zsLib
               }
               
               if (-1 != totalParams) {
-                if (totalParams != values.size()) {
+                if (totalParams != SafeInt<decltype(totalParams)>(values.size())) {
                   ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting total parameter mismatch: " + string(totalParams) + ", found=" + string(values.size()));
                 }
               }
