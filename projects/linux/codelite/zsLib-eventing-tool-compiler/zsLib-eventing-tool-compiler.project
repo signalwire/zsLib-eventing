@@ -244,7 +244,7 @@
         <Library Value="cryptopp"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Debug" Command="/home/robin/Documents/dialpad/sfu/ortc/xplatform/zsLib-eventing/projects/linux/codelite/zsLib-eventing-tool-compiler/Debug/zsLib-eventing-tool-compiler" CommandArguments="-c services.events.json -o ../internal/services.events" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="/home/robin/Documents/dialpad/sfu/ortc/xplatform/ortclib-services-cpp/ortc/services/cpp" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Debug" Command="$(IntermediateDirectory)/$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
       <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
