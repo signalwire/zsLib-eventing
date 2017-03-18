@@ -364,9 +364,7 @@ namespace zsLib
     //-------------------------------------------------------------------------
     IIDLTypes::ContextPtr IIDLTypes::Context::getRoot() const
     {
-      auto parent = getParent();
-      if (!parent) return ContextPtr();
-      
+      auto parent = toContext();
       while (true)
       {
         auto temp = parent->mContext.lock();
@@ -374,6 +372,7 @@ namespace zsLib
 
         parent = temp;
       }
+      return parent;
     }
 
     //-------------------------------------------------------------------------

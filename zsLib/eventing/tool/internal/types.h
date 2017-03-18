@@ -62,6 +62,7 @@ namespace zsLib
         ZS_DECLARE_STRUCT_PTR(GenerateStructImplHeader);
         ZS_DECLARE_STRUCT_PTR(GenerateStructImplCpp);
         ZS_DECLARE_STRUCT_PTR(GenerateStructHeader);
+        ZS_DECLARE_STRUCT_PTR(GenerateStructC);
         ZS_DECLARE_STRUCT_PTR(GenerateStructCx);
       }
     }
