@@ -161,6 +161,14 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
+        String GenerateStructC::fixBasicType(IEventingTypes::PredefinedTypedefs type)
+        {
+          String result = GenerateHelper::getBasicTypeString(type);
+          result.replaceAll(" ", "_");
+          return result;
+        }
+
+        //---------------------------------------------------------------------
         String GenerateStructC::fixCType(IEventingTypes::PredefinedTypedefs type)
         {
           switch (type)
@@ -169,9 +177,9 @@ namespace zsLib
 
             case PredefinedTypedef_bool:      return "bool_t";
 
-            case PredefinedTypedef_uchar:     return "schar_t";
+            case PredefinedTypedef_uchar:     return "uchar_t";
             case PredefinedTypedef_char:
-            case PredefinedTypedef_schar:     return "uchar_t";
+            case PredefinedTypedef_schar:     return "char_t";
             case PredefinedTypedef_ushort:    return "ushort_t";
             case PredefinedTypedef_short:
             case PredefinedTypedef_sshort:    return "sshort_t";
@@ -344,6 +352,92 @@ namespace zsLib
         }
         
         //---------------------------------------------------------------------
+        String GenerateStructC::getToHandleMethod(
+                                                  bool isOptional,
+                                                  TypePtr type
+                                                  )
+        {
+          if (!type) return String();
+
+          {
+            auto basicType = type->toBasicType();
+            if (basicType) {
+              if (isOptional) {
+                return "wrapper::box_" + fixBasicType(basicType->mBaseType) + "_wrapperToHandle";
+              }
+              String cTypeStr = fixCType(basicType);
+              if ("string_t" == cTypeStr) return "wrapper::string_t_wrapperToHandle";
+              if ("binary_t" == cTypeStr) return "wrapper::wrapper_t_wrapperToHandle";
+              return String();
+            }
+          }
+          {
+            auto enumType = type->toEnumType();
+            if (enumType) {
+              if (isOptional) {
+                return "box_" + fixBasicType(enumType->mBaseType) + "_wrapperToHandle";
+              }
+              return String("SafeInt<") + fixCType(enumType->mBaseType) + ">";
+            }
+          }
+          {
+            if (GenerateHelper::isBuiltInType(type)) {
+              auto structObj = type->toStruct();
+              if (!structObj) {
+                auto templatedStructObj = type->toTemplatedStructType();
+                if (templatedStructObj) {
+                  auto parentObj = templatedStructObj->getParent();
+                  if (parentObj) structObj = parentObj->toStruct();
+                }
+              }
+
+              if (!structObj) return String();
+
+              String specialName = structObj->getPathName();
+
+              if ("::zs::Any" == specialName) return "wrapper::zs_Any_wrapperToHandle";
+              if ("::zs::Promise" == specialName) return "wrapper::zs_Promise_wrapperToHandle";
+              if ("::zs::PromiseWith" == specialName) return "wrapper::zs_Promise_wrapperToHandle";
+              if ("::zs::PromiseRejectionReason" == specialName) return String();
+              if ("::zs::exceptions::Exception" == specialName) return "wrapper::exception_Exception_wrapperToHandle";
+              if ("::zs::exceptions::InvalidArgument" == specialName) return "wrapper::exception_InvalidArgument_wrapperToHandle";
+              if ("::zs::exceptions::BadState" == specialName) return "wrapper::exception_BadState_wrapperToHandle";
+              if ("::zs::exceptions::NotImplemented" == specialName) return "wrapper::exception_NotImplemented_wrapperToHandle";
+              if ("::zs::exceptions::NotSupported" == specialName) return "wrapper::exception_NotSupported_wrapperToHandle";
+              if ("::zs::exceptions::UnexpectedError" == specialName) return "wrapper::exception_UnexpectedError_wrapperToHandle";
+              if ("::zs::Time" == specialName) return "wrapper::zs_Time_wrapperToHandle";
+              if ("::zs::Milliseconds" == specialName) return "wrapper::zs_Milliseconds_wrapperToHandle";
+              if ("::zs::Microseconds" == specialName) return "wrapper::zs_Microseconds_wrapperToHandle";
+              if ("::zs::Nanoseconds" == specialName) return "wrapper::zs_Nanoseconds_wrapperToHandle";
+              if ("::zs::Seconds" == specialName) return "wrapper::zs_Seconds_wrapperToHandle";
+              if ("::zs::Minutes" == specialName) return "wrapper::zs_Minutes_wrapperToHandle";
+              if ("::zs::Hours" == specialName) return "wrapper::zs_Hours_wrapperToHandle";
+              if ("::std::set" == specialName) return String("wrapper::") + fixType(type) + "_wrapperToHandle";
+              if ("::std::list" == specialName) return String("wrapper::") + fixType(type) + "_wrapperToHandle";
+              if ("::std::map" == specialName) return String("wrapper::") + fixType(type) + "_wrapperToHandle";
+            }
+          }
+          {
+            auto structObj = type->toStruct();
+            if (structObj) {
+              return String("wrapper::") + fixType(structObj) + "_wrapperToHandle";
+            }
+          }
+          return String();
+        }
+
+        //---------------------------------------------------------------------
+        String GenerateStructC::getFromHandleMethod(
+                                                    bool isOptional,
+                                                    TypePtr type
+                                                    )
+        {
+          auto result = getToHandleMethod(isOptional, type);
+          result.replaceAll("_wrapperToHandle", "_wrapperFromHandle");
+          return result;
+        }
+
+        //---------------------------------------------------------------------
         void GenerateStructC::includeType(
                                           HelperFile &helperFile,
                                           TypePtr type
@@ -373,6 +467,35 @@ namespace zsLib
           }
         }
 
+        //---------------------------------------------------------------------
+        void GenerateStructC::includeType(
+                                          StructFile &structFile,
+                                          TypePtr type
+                                          )
+        {
+          if (!type) return;
+          if (type->toBasicType()) return;
+          if (type->toEnumType()) return;
+          
+          {
+            auto templatedType = type->toTemplatedStructType();
+            if (templatedType) {
+              for (auto iter = templatedType->mTemplateArguments.begin(); iter != templatedType->mTemplateArguments.end(); ++iter) {
+                auto subType = (*iter);
+                includeType(structFile, subType);
+              }
+              return;
+            }
+          }
+
+          {
+            auto structType = type->toStruct();
+            if (structType) {
+              String fileName = "\"" + fixType(type) + ".h\"";
+              structFile.includeC(fileName);
+            }
+          }
+        }
         //---------------------------------------------------------------------
         void GenerateStructC::calculateRelations(
                                                   NamespacePtr namespaceObj,
@@ -519,7 +642,10 @@ namespace zsLib
           }
 
           prepareHelperCallback(helperFile);
+          prepareHelperExceptions(helperFile);
+          prepareHelperBoxing(helperFile);
           prepareHelperString(helperFile);
+          prepareHelperBinary(helperFile);
 
           prepareHelperDuration(helperFile, "Time");
           prepareHelperDuration(helperFile, "Days");
@@ -563,17 +689,18 @@ namespace zsLib
 
           {
             auto &ss = helperFile.headerCFunctionsSS_;
-            ss << getApiGuardDefine(helperFile.global_) << "\n";
             ss << "\n";
-            ss << "typedef void (ORTC_WRAPPER_C_CALLING_CONVENTION *wrapperCallback)(uintptr_t);\n";
+            ss << "/* void wrapperCallbackFunction(callback_event_t handle); */\n";
+            ss << "typedef void (ORTC_WRAPPER_C_CALLING_CONVENTION *wrapperCallbackFunction)(uintptr_t);\n";
             ss << "\n";
-            ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " callback_wrapperInstall(wrapperCallback function);\n";
+            ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " callback_wrapperInstall(wrapperCallbackFunction function);\n";
             ss << "\n";
-            ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " callback_wrapperDestroy(uintptr_t handle);\n";
-            ss << getApiExportDefine(helperFile.global_) << " const char * " << getApiCallingDefine(helperFile.global_) << " callback_get_class(uintptr_t handle);\n";
-            ss << getApiExportDefine(helperFile.global_) << " const char * " << getApiCallingDefine(helperFile.global_) << " callback_get_method(uintptr_t handle);\n";
-            ss << getApiExportDefine(helperFile.global_) << " uintptr_t " << getApiCallingDefine(helperFile.global_) << " callback_get_event_source(uintptr_t handle);\n";
-            ss << getApiExportDefine(helperFile.global_) << " uintptr_t " << getApiCallingDefine(helperFile.global_) << " callback_get_event_data(uintptr_t handle, int argumentIndex);\n";
+            ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " callback_event_wrapperDestroy(callback_event_t handle);\n";
+            ss << getApiExportDefine(helperFile.global_) << " const char * " << getApiCallingDefine(helperFile.global_) << " callback_event_get_namespace(callback_event_t handle);\n";
+            ss << getApiExportDefine(helperFile.global_) << " const char * " << getApiCallingDefine(helperFile.global_) << " callback_event_get_class(callback_event_t handle);\n";
+            ss << getApiExportDefine(helperFile.global_) << " const char * " << getApiCallingDefine(helperFile.global_) << " callback_event_get_method(callback_event_t handle);\n";
+            ss << getApiExportDefine(helperFile.global_) << " generic_handle_t " << getApiCallingDefine(helperFile.global_) << " callback_event_get_source(callback_event_t handle);\n";
+            ss << getApiExportDefine(helperFile.global_) << " generic_handle_t " << getApiCallingDefine(helperFile.global_) << " callback_event_get_data(callback_event_t handle, int argumentIndex);\n";
 
             ss << "\n";
           }
@@ -596,22 +723,22 @@ namespace zsLib
           {
             auto &ss = helperFile.cFunctionsSS_;
             ss << dash;
-            ss << "static wrapperCallback &callback_get_singleton()\n";
+            ss << "static wrapperCallbackFunction &callback_get_singleton()\n";
             ss << "{\n";
-            ss << "  static wrapperCallback function {};\n";
+            ss << "  static wrapperCallbackFunction function {};\n";
             ss << "  return function;\n";
             ss << "}\n";
             ss << "\n";
 
             ss << dash;
-            ss << "void callback_wrapperInstall(wrapperCallback function)\n";
+            ss << "void callback_wrapperInstall(wrapperCallbackFunction function)\n";
             ss << "{\n";
             ss << "  callback_get_singleton() = function;\n";
             ss << "}\n";
             ss << "\n";
 
             ss << dash;
-            ss << "void callback_wrapperDestroy(uintptr_t handle)\n";
+            ss << "void callback_wrapperDestroy(callback_event_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperCallbackPtr * IWrapperCallbackPtrRawPtr;\n";
             ss << "  if (0 == handle) return;\n";
@@ -620,37 +747,46 @@ namespace zsLib
             ss << "\n";
 
             ss << dash;
-            ss << "const char *callback_get_class(uintptr_t handle)\n";
+            ss << "const char *callback_event_get_namespace(callback_event_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperCallbackPtr * IWrapperCallbackPtrRawPtr;\n";
-            ss << "  if (0 == handle) return;\n";
+            ss << "  if (0 == handle) return reinterpret_cast<const char *>(NULL);\n";
+            ss << "  return (*reinterpret_cast<IWrapperCallbackPtrRawPtr>(handle))->getNamespace();\n";
+            ss << "}\n";
+            ss << "\n";
+
+            ss << dash;
+            ss << "const char *callback_event_get_class(callback_event_t handle)\n";
+            ss << "{\n";
+            ss << "  typedef IWrapperCallbackPtr * IWrapperCallbackPtrRawPtr;\n";
+            ss << "  if (0 == handle) return reinterpret_cast<const char *>(NULL);\n";
             ss << "  return (*reinterpret_cast<IWrapperCallbackPtrRawPtr>(handle))->getClass();\n";
             ss << "}\n";
             ss << "\n";
 
             ss << dash;
-            ss << "const char *callback_get_method(uintptr_t handle)\n";
+            ss << "const char *callback_event_get_method(callback_event_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperCallbackPtr * IWrapperCallbackPtrRawPtr;\n";
-            ss << "  if (0 == handle) return;\n";
+            ss << "  if (0 == handle) return reinterpret_cast<const char *>(NULL);\n";
             ss << "  return (*reinterpret_cast<IWrapperCallbackPtrRawPtr>(handle))->getMethod();\n";
             ss << "}\n";
             ss << "\n";
 
             ss << dash;
-            ss << "uintptr_t callback_get_event_source(uintptr_t handle)\n";
+            ss << "generic_handle_t callback_event_get_source(callback_event_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperCallbackPtr * IWrapperCallbackPtrRawPtr;\n";
-            ss << "  if (0 == handle) return;\n";
+            ss << "  if (0 == handle) return 0;\n";
             ss << "  return (*reinterpret_cast<IWrapperCallbackPtrRawPtr>(handle))->getSource();\n";
             ss << "}\n";
             ss << "\n";
 
             ss << dash;
-            ss << "uintptr_t callback_get_event_data(uintptr_t handle)\n";
+            ss << "generic_handle_t callback_event_get_data(callback_event_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperCallbackPtr * IWrapperCallbackPtrRawPtr;\n";
-            ss << "  if (0 == handle) return;\n";
+            ss << "  if (0 == handle) return 0;\n";
             ss << "  return (*reinterpret_cast<IWrapperCallbackPtrRawPtr>(handle))->getEventData();\n";
             ss << "}\n";
             ss << "\n";
@@ -668,6 +804,358 @@ namespace zsLib
             ss << "    singleton(handle);\n";
             ss << "  }\n";
             ss << "\n";
+          }
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructC::prepareHelperExceptions(HelperFile &helperFile)
+        {
+          auto dash = GenerateHelper::getDashedComment(String());
+          auto dash2 = GenerateHelper::getDashedComment(String("  "));
+
+          {
+            auto &ss = helperFile.headerCFunctionsSS_;
+            ss << getApiExportDefine(helperFile.global_) << " exception_handle_t " << getApiCallingDefine(helperFile.global_) << " exception_wrapperCreate_exception();\n";
+            ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " exception_wrapperDestroy(exception_handle_t handle);\n";
+            ss << getApiExportDefine(helperFile.global_) << " bool " << getApiCallingDefine(helperFile.global_) << " exception_hasException(exception_handle_t handle);\n";
+            ss << "\n";
+          }
+          {
+            auto &ss = helperFile.headerCppFunctionsSS_;
+            ss << "  void exception_set_Exception(exception_handle_t handle, shared_ptr<::zsLib::Exception> exception);\n";
+            ss << "\n";
+          }
+          {
+            auto &ss = helperFile.cFunctionsSS_;
+            ss << dash;
+            ss << "exception_handle_t exception_wrapperCreate_exception()\n";
+            ss << "{\n";
+            ss << "  typedef ::zsLib::Exception ExceptionType;\n";
+            ss << "  typedef shared_ptr<ExceptionType> ExceptionTypePtr;\n";
+            ss << "  typedef ExceptionTypePtr * ExceptionTypePtrRawPtr;\n";
+            ss << "  return reinterpret_cast<exception_handle_t>(new ExceptionTypePtr());\n";
+            ss << "}\n";
+            ss << "\n";
+
+            ss << dash;
+            ss << "void exception_wrapperDestroy(exception_handle_t handle)\n";
+            ss << "{\n";
+            ss << "  typedef ::zsLib::Exception ExceptionType;\n";
+            ss << "  typedef shared_ptr<ExceptionType> ExceptionTypePtr;\n";
+            ss << "  typedef ExceptionTypePtr * ExceptionTypePtrRawPtr;\n";
+            ss << "  if (0 == handle) return;\n";
+            ss << "  delete reinterpret_cast<ExceptionTypePtrRawPtr>(handle);\n";
+            ss << "}\n";
+            ss << "\n";
+
+            ss << dash;
+            ss << "bool exception_hasException(exception_handle_t handle);\n";
+            ss << "{\n";
+            ss << "  typedef ::zsLib::Exception ExceptionType;\n";
+            ss << "  typedef shared_ptr<ExceptionType> ExceptionTypePtr;\n";
+            ss << "  typedef ExceptionTypePtr * ExceptionTypePtrRawPtr;\n";
+            ss << "  if (0 == handle) return;\n";
+            ss << "  return (*reinterpret_cast<ExceptionTypePtrRawPtr>(handle));\n";
+            ss << "}\n";
+            ss << "\n";
+          }
+
+          {
+            auto &ss = helperFile.cppFunctionsSS_;
+            ss << dash2;
+            ss << "  void exception_set_Exception(exception_handle_t handle, shared_ptr<::zsLib::Exception> exception)\n";
+            ss << "  {\n";
+            ss << "    typedef ::zsLib::Exception ExceptionType;\n";
+            ss << "    typedef shared_ptr<ExceptionType> ExceptionTypePtr;\n";
+            ss << "    typedef ExceptionTypePtr * ExceptionTypePtrRawPtr;\n";
+            ss << "    if (0 == handle) return;\n";
+            ss << "    auto ptr = (*reinterpret_cast<ExceptionTypePtrRawPtr>(handle));\n";
+            ss << "    ptr = exception;\n";
+            ss << "  }\n";
+            ss << "\n";
+          }
+
+          prepareHelperExceptions(helperFile, "Exception");
+          prepareHelperExceptions(helperFile, "InvalidArgument");
+          prepareHelperExceptions(helperFile, "BadState");
+          prepareHelperExceptions(helperFile, "NotImplemented");
+          prepareHelperExceptions(helperFile, "NotSupported");
+          prepareHelperExceptions(helperFile, "UnexpectedError");
+
+          {
+            auto &ss = helperFile.headerCFunctionsSS_;
+            ss << "\n";
+          }
+          {
+            auto &ss = helperFile.headerCppFunctionsSS_;
+            ss << "\n";
+          }
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructC::prepareHelperExceptions(
+                                                      HelperFile &helperFile,
+                                                      const String &exceptionName
+                                                      )
+        {
+          auto context = helperFile.global_->toContext()->findType("::zs::exceptions::" + exceptionName);
+          if (!context) return;
+
+          auto contextStruct = context->toStruct();
+          if (!contextStruct) return;
+
+          auto dash = GenerateHelper::getDashedComment(String());
+          auto dash2 = GenerateHelper::getDashedComment(String("  "));
+
+          {
+            auto &ss = helperFile.headerCFunctionsSS_;
+            ss << getApiExportDefine(helperFile.global_) << " bool " << getApiCallingDefine(helperFile.global_) << " exception_is_" << exceptionName << "(exception_handle_t handle);\n";
+          }
+          {
+            auto &ss = helperFile.cFunctionsSS_;
+
+            ss << dash;
+            ss << "bool exception_is_" << exceptionName << "(exception_handle_t handle)n";
+            ss << "{\n";
+            ss << "  typedef ::zsLib::Exception ExceptionType;\n";
+            ss << "  typedef shared_ptr<ExceptionType> ExceptionTypePtr;\n";
+            ss << "  typedef ExceptionTypePtr * ExceptionTypePtrRawPtr;\n";
+            ss << "  if (0 == handle) return;\n";
+            ss << "  return std::dynamic_pointer_cast<::zsLib::" << ("Exception" == exceptionName ? "" : "exceptions::" ) << exceptionName << "(*reinterpret_cast<ExceptionTypePtrRawPtr>(handle));\n";
+            ss << "}\n";
+            ss << "\n";
+          }
+          {
+            auto &ss = helperFile.headerCppFunctionsSS_;
+            ss << "  exception_handle_t exception_" << exceptionName << "_wrapperToHandle(const ::zsLib::" << (exceptionName == "Exception" ? "" : "exceptions::") << exceptionName << " &value);\n";
+          }
+          {
+            auto &ss = helperFile.cppFunctionsSS_;
+
+            ss << dash2;
+            ss << "  exception_handle_t exception_" << exceptionName << "_wrapperToHandle(const ::zsLib::" << (exceptionName == "Exception" ? "" : "exceptions::") << exceptionName << " &value)\n";
+            ss << "  {\n";
+            ss << "    typedef ::zsLib::" << (exceptionName == "Exception" ? "" : "exceptions::") << exceptionName << " ExceptionType;\n";
+            ss << "    auto handle = exception_wrapperCreate_exception();\n";
+            ss << "    exception_set_Exception(handle, make_shared<ExceptionType>(e));\n";
+            ss << "    return handle;\n";
+            ss << "  }\n";
+            ss << "\n";
+          }
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructC::prepareHelperBoxing(HelperFile &helperFile)
+        {
+
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_bool);
+
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_uchar);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_char);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_schar);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_ushort);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_short);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_sshort);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_uint);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_int);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_sint);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_ulong);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_long);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_slong);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_ulonglong);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_longlong);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_slonglong);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_uint8);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_int8);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_sint8);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_uint16);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_int16);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_sint16);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_uint32);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_int32);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_sint32);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_uint64);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_int64);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_sint64);
+
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_byte);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_word);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_dword);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_qword);
+
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_float);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_double);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_ldouble);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_float32);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_float64);
+
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_pointer);
+
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_binary);
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_size);
+
+          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_string);
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructC::prepareHelperBoxing(
+                                                  HelperFile &helperFile,
+                                                  const IEventingTypes::PredefinedTypedefs basicType
+                                                  )
+        {
+          bool isBinary = IEventingTypes::PredefinedTypedef_binary == basicType;
+          bool isString = IEventingTypes::PredefinedTypedef_string == basicType;
+          bool isSpecial = isBinary || isString;
+
+          String cTypeStr = fixCType(basicType);
+          String boxedTypeStr = "box_" + cTypeStr;
+
+          auto dash = GenerateHelper::getDashedComment(String());
+          auto dash2 = GenerateHelper::getDashedComment(String("  "));
+
+          {
+            {
+              auto &ss = helperFile.headerCFunctionsSS_;
+              ss << getApiExportDefine(helperFile.global_) << " " << boxedTypeStr << " " << getApiCallingDefine(helperFile.global_) << " box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "();\n";
+              ss << getApiExportDefine(helperFile.global_) << " " << boxedTypeStr << " " << getApiCallingDefine(helperFile.global_) << " box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "WithValue(" << cTypeStr << " value);\n";
+              ss << getApiExportDefine(helperFile.global_) << " " << "void " << getApiCallingDefine(helperFile.global_) << " box_" << cTypeStr << "_wrapperDestroy(" << boxedTypeStr << " handle);\n";
+              ss << getApiExportDefine(helperFile.global_) << " " << "bool " << getApiCallingDefine(helperFile.global_) << " box_" << cTypeStr << "_has_value(" << boxedTypeStr << " handle);\n";
+              ss << getApiExportDefine(helperFile.global_) << " " << cTypeStr << " " << getApiCallingDefine(helperFile.global_) << " box_" << cTypeStr << "_get_value(" << boxedTypeStr << " handle);\n";
+              ss << getApiExportDefine(helperFile.global_) << " " << "void " << getApiCallingDefine(helperFile.global_) << " box_" << cTypeStr << "_set_value(" << boxedTypeStr << " handle, " << cTypeStr << " value);\n";
+              ss << "\n";
+            }
+            {
+              auto &ss = helperFile.headerCppFunctionsSS_;
+              ss << "  " << boxedTypeStr << " box_" << fixBasicType(basicType) << "_wrapperToHandle(Optional< " << GenerateHelper::getBasicTypeString(basicType) << " > value);\n";
+              ss << "  Optional< " << GenerateHelper::getBasicTypeString(basicType) << " > box_" << fixBasicType(basicType) << "_wrapperFromHandle(" << boxedTypeStr << " handle);\n";
+              ss << "\n";
+            }
+          }
+          {
+            String sharedPtrStr = "typedef shared_ptr< BasicType > BasicTypePtr;";
+            if (isBinary) {
+              sharedPtrStr = "typedef BasicType BasicTypePtr;";
+            }
+            {
+              auto &ss = helperFile.cFunctionsSS_;
+              ss << dash;
+              ss << boxedTypeStr << " box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "()\n";
+              ss << "{\n";
+              ss << "  typedef " << boxedTypeStr << " CBoxType;\n";
+              ss << "  typedef " << GenerateHelper::getBasicTypeString(basicType) << " BasicType;\n";
+              ss << "  " << sharedPtrStr << "\n";
+              ss << "  return reinterpret_cast<CType>(new BasicTypePtr());\n";
+              ss << "}\n";
+              ss << "\n";
+
+              ss << dash;
+              ss << boxedTypeStr << " box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "WithValue(" << cTypeStr << " value)\n";
+              ss << "{\n";
+              ss << "  typedef " << boxedTypeStr << " CBoxType;\n";
+              ss << "  typedef " << GenerateHelper::getBasicTypeString(basicType) << " BasicType;\n";
+              ss << "  " << sharedPtrStr << "\n";
+              ss << "  return reinterpret_cast<CType>(new BasicTypePtr(value))";
+              ss << "}\n";
+              ss << "\n";
+
+              ss << dash;
+              ss << "void box_" << cTypeStr << "_wrapperDestroy(" << boxedTypeStr << " handle)\n";
+              ss << "{\n";
+              ss << "  typedef " << boxedTypeStr << " CBoxType;\n";
+              ss << "  typedef " << GenerateHelper::getBasicTypeString(basicType) << " BasicType;\n";
+              ss << "  " << sharedPtrStr << "\n";
+              ss << "  typedef BasicTypePtr * BasicTypePtrRawPtr;\n";
+              ss << "  if (0 == handle) return;\n";
+              ss << "  delete reinterpret_cast<BasicTypePtrRawPtr>(handle);\n";
+              ss << "}\n";
+              ss << "\n";
+
+              ss << dash;
+              ss << "bool box_" << cTypeStr << "_has_value(" << boxedTypeStr << " handle)\n";
+              ss << "{\n";
+              ss << "  typedef " << boxedTypeStr << " CBoxType;\n";
+              ss << "  typedef " << GenerateHelper::getBasicTypeString(basicType) << " BasicType;\n";
+              ss << "  " << sharedPtrStr << "\n";
+              ss << "  typedef BasicTypePtr * BasicTypePtrRawPtr;\n";
+              ss << "  if (0 == handle) return false;\n";
+              ss << "  BasicTypePtr ptr = (*reinterpret_cast<BasicTypePtrRawPtr>(handle));\n";
+              ss << "  return ((bool)ptr);\n";
+              ss << "}\n";
+              ss << "\n";
+
+              ss << dash;
+              ss << cTypeStr << " box_" << cTypeStr << "_get_value(" << boxedTypeStr << " handle)\n";
+              ss << "{\n";
+              ss << "  typedef " << boxedTypeStr << " CBoxType;\n";
+              ss << "  typedef " << GenerateHelper::getBasicTypeString(basicType) << " BasicType;\n";
+              ss << "  " << sharedPtrStr << "\n";
+              ss << "  typedef BasicTypePtr * BasicTypePtrRawPtr;\n";
+              ss << "  if (0 == handle) throw std::invalid_argument(\"null pointer exception\");\n";
+              ss << "  BasicTypePtr ptr = (*reinterpret_cast<BasicTypePtrRawPtr>(handle));\n";
+              if (isBinary) {
+                ss << "  return wrapper::binary_t_wrapperToHandle(ptr);\n";
+              } else if (isString) {
+                ss << "  return wrapper::string_t_wrapperToHandle(*ptr);\n";
+              } else {
+                ss << "  return *ptr;\n";
+              }
+              ss << "}\n";
+              ss << "\n";
+
+              ss << dash;
+              ss << "void box_" << cTypeStr << "_set_value(" << boxedTypeStr << " handle, " << cTypeStr << " value)\n";
+              ss << "{\n";
+              ss << "  typedef " << boxedTypeStr << " CBoxType;\n";
+              ss << "  typedef " << GenerateHelper::getBasicTypeString(basicType) << " BasicType;\n";
+              ss << "  " << sharedPtrStr << "\n";
+              ss << "  typedef BasicTypePtr * BasicTypePtrRawPtr;\n";
+              ss << "  if (0 == handle) throw std::invalid_argument(\"null pointer exception\");\n";
+              ss << "  BasicTypePtr &ptr = (*reinterpret_cast<BasicTypePtrRawPtr>(handle));\n";
+              if (isBinary) {
+                ss << "  ptr = wrapper::binary_t_wrapperFromHandle(value);\n";
+              } else if (isString) {
+                ss << "  ptr = wrapper::string_t_wrapperFromHandle(value);\n";
+              } else {
+                ss << "  *ptr = value;\n";
+              }
+              ss << "}\n";
+              ss << "\n";
+            }
+            {
+              auto &ss = helperFile.cppFunctionsSS_;
+              ss << dash2;
+              ss << "  " << boxedTypeStr << " box_" << fixBasicType(basicType) << "_wrapperToHandle(Optional< " << GenerateHelper::getBasicTypeString(basicType) << " > value)\n";
+              ss << "  {\n";
+              ss << "    if (!value.hasValue()) return box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "();\n";
+              if (isBinary) {
+                ss << "    return box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "WithValue(binary_t_wrapperToHandle(value.value()));\n";
+              } else if (isString) {
+                ss << "    return box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "WithValue(string_t_wrapperToHandle(value.value()));\n";
+              } else {
+                ss << "    return box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "WithValue(value.value());\n";
+              }
+              ss << "  }\n";
+              ss << "\n";
+
+              ss << dash2;
+              ss << "  Optional< " << GenerateHelper::getBasicTypeString(basicType) << " > box_" << fixBasicType(basicType) << "_wrapperFromHandle(" << boxedTypeStr << " handle)\n";
+              ss << "  {\n";
+              ss << "    typedef " << boxedTypeStr << " CBoxType;\n";
+              ss << "    typedef " << GenerateHelper::getBasicTypeString(basicType) << " BasicType;\n";
+              ss << "    " << sharedPtrStr << "\n";
+              ss << "    typedef BasicTypePtr * BasicTypePtrRawPtr;\n";
+              ss << "    if (0 == handle) return Optional< " << GenerateHelper::getBasicTypeString(basicType) << " >();\n";
+              ss << "    if (!box_" << cTypeStr << "_has_value(handle)) return Optional< " << GenerateHelper::getBasicTypeString(basicType) << " >();\n";
+              if (isBinary) {
+                ss << "    return Optional< " << GenerateHelper::getBasicTypeString(basicType) << " >(binary_t_wrapperFromHandle(box_binary_t_get_value(handle));\n";
+              } else if (isString) {
+                ss << "    return Optional< " << GenerateHelper::getBasicTypeString(basicType) << " >(string_t_wrapperFromHandle(box_string_t_get_value(handle));\n";
+              } else {
+                ss << "    return Optional< " << GenerateHelper::getBasicTypeString(basicType) << " >(box_" << cTypeStr <<"_get_value(handle));\n";
+              }
+              ss << "  }\n";
+              ss << "\n";
+            }
           }
         }
 
@@ -730,7 +1218,7 @@ namespace zsLib
               ss << dash;
               ss << "void string_t_set_value(string_t_ handle, const char *value)\n";
               ss << "{\n";
-              ss << "  if (0 == handle) throw std::runtime_error(\"null pointer exception\");\n";
+              ss << "  if (0 == handle) throw std::invalid_argument(\"null pointer exception\");\n";
               ss << "  (*reinterpret_cast<::zsLib::String *>(handle)) = ::zsLib::String(value);\n";
               ss << "}\n";
               ss << "\n";
@@ -749,6 +1237,105 @@ namespace zsLib
               ss << "  {\n";
               ss << "    if (0 == handle) return ::zsLib::String();\n";
               ss << "    return (*reinterpret_cast<::zsLib::String *>(handle));\n";
+              ss << "  }\n";
+              ss << "\n";
+            }
+          }
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructC::prepareHelperBinary(HelperFile &helperFile)
+        {
+          auto dash = GenerateHelper::getDashedComment(String());
+          auto dash2 = GenerateHelper::getDashedComment(String("  "));
+
+          {
+            {
+              auto &ss = helperFile.headerCFunctionsSS_;
+              ss << getApiExportDefine(helperFile.global_) << " binary_t " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperCreate_binary_t();\n";
+              ss << getApiExportDefine(helperFile.global_) << " binary_t " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperCreate_binary_tWithValue(const uint8_t *value, size_t size);\n";
+              ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperDestroy(string_t handle);\n";
+              ss << getApiExportDefine(helperFile.global_) << " const uint8_t * " << getApiCallingDefine(helperFile.global_) << " binary_t_get_value(string_t_ handle);\n";
+              ss << getApiExportDefine(helperFile.global_) << " size_t * " << getApiCallingDefine(helperFile.global_) << " binary_t_get_size(string_t_ handle);\n";
+              ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " binary_t_set_value(string_t_ handle, const uint8_t *value, size_t size);\n";
+              ss << "\n";
+            }
+            {
+              auto &ss = helperFile.headerCppFunctionsSS_;
+              ss << "  binary_t string_t_wrapperToHandle(SecureBytePtr value);\n";
+              ss << "  SecureBytePtr string_t_wrapperFromHandle(binary_t handle);\n";
+              ss << "\n";
+            }
+          }
+          {
+            {
+              auto &ss = helperFile.cFunctionsSS_;
+              ss << dash;
+              ss << getApiExportDefine(helperFile.global_) << " binary_t " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperCreate_binary_t()\n";
+              ss << "{\n";
+              ss << "  return reinterpret_cast<binary_t>(new SecureByteBlockPtr());\n";
+              ss << "}\n";
+              ss << "\n";
+
+              ss << dash;
+              ss << "binary_t binary_t_wrapperCreate_binary_tWithValue(const uint8_t *value, size_t size)\n";
+              ss << "{\n";
+              ss << "  if ((NULL == value) || (0 == size)) return reinterpret_cast<binary_t>(new SecureByteBlockPtr());\n";
+              ss << "  return reinterpret_cast<binary_t>(new SecureByteBlockPtr(make_shared<SecureByteBlock>(value, size)));\n";
+              ss << "}\n";
+              ss << "\n";
+
+              ss << dash;
+              ss << "void binary_t_wrapperDestroy(binary_t_ handle)\n";
+              ss << "{\n";
+              ss << "  if (0 == handle) return;\n";
+              ss << "  delete reinterpret_cast<SecureByteBlockPtr *>(handle);\n";
+              ss << "}\n";
+              ss << "\n";
+
+              ss << dash;
+              ss << "const uint8_t *binary_t_get_value(binary_t handle)\n";
+              ss << "{\n";
+              ss << "  if (0 == handle) return reinterpret_cast<const char *>(NULL);\n";
+              ss << "  SecureByteBlockPtr ptr = (*reinterpret_cast<SecureByteBlockPtr *>(handle));\n";
+              ss << "  if (!ptr) return reinterpret_cast<const char *>(NULL);\n";
+              ss << "  return ptr->BytePtr();\n";
+              ss << "}\n";
+              ss << "\n";
+
+              ss << dash;
+              ss << "size_t binary_t_get_size(binary_t handle)\n";
+              ss << "{\n";
+              ss << "  if (0 == handle) return reinterpret_cast<const char *>(NULL);\n";
+              ss << "  SecureByteBlockPtr ptr = (*reinterpret_cast<SecureByteBlockPtr *>(handle));\n";
+              ss << "  if (!ptr) return reinterpret_cast<const char *>(NULL);\n";
+              ss << "  return ptr->BytePtr();\n";
+              ss << "}\n";
+              ss << "\n";
+
+              ss << dash;
+              ss << "void binary_t_set_value(binary_t_ handle, const uint8_t *value, size_t size)\n";
+              ss << "{\n";
+              ss << "  if (0 == handle) throw std::invalid_argument(\"null pointer exception\");\n";
+              ss << "  if ((NULL == value) || (0 == size)) { (*reinterpret_cast<SecureByteBlockPtr *>(handle)) = SecureByteBlockPtr(); return; }\n";
+              ss << "  (*reinterpret_cast<SecureByteBlockPtr *>(handle)) = make_shared<SecureByteBlock>(value, size);\n";
+              ss << "}\n";
+              ss << "\n";
+            }
+            {
+              auto &ss = helperFile.cppFunctionsSS_;
+              ss << dash2;
+              ss << "  binary_t binary_t_wrapperToHandle(SecureByteBlockPtr value)\n";
+              ss << "  {\n";
+              ss << "    return reinterpret_cast<binary_t>(new SecureByteBlockPtr(value));\n";
+              ss << "  }\n";
+              ss << "\n";
+
+              ss << dash2;
+              ss << "  SecureByteBlockPtr binary_t_wrapperFromHandle(binary_t handle)\n";
+              ss << "  {\n";
+              ss << "    if (0 == handle) return SecureByteBlockPtr();\n";
+              ss << "    return (*reinterpret_cast<SecureByteBlockPtr *>(handle));\n";
               ss << "  }\n";
               ss << "\n";
             }
@@ -847,7 +1434,7 @@ namespace zsLib
               ss << "  typedef " << zsDurationType << " DurationType;\n";
               ss << "  typedef DurationType * DurationTypeRawPtr;\n";
               ss << "  typedef DurationType::rep DurationTypeRep;\n";
-              ss << "  if (0 == handle) throw std::runtime_error(\"null pointer exception\");\n";
+              ss << "  if (0 == handle) throw std::invalid_argument(\"null pointer exception\");\n";
               if (isTime) {
                 ss << "  typedef DurationType::duration TimeDurationType;\n";
                 ss << "  (*reinterpret_cast<DurationTypeRawPtr>(handle)) = DurationType(TimeDurationType(SafeInt<DurationTypeRep>(value)));\n";
@@ -997,7 +1584,7 @@ namespace zsLib
                 ss << "void " << fixType(templatedStructType) << "_insert(" << fixCType(templatedStructType) << " handle, " << fixCType(listType) << " value)\n";
                 ss << "{\n";
                 ss << typedefsSS.str();
-                ss << "  if (0 == handle) throw std::runtime_error(\"null pointer exception\");\n";
+                ss << "  if (0 == handle) throw std::invalid_argument(\"null pointer exception\");\n";
 
                 String keyTypeStr;
                 String listTypeStr;
@@ -1031,7 +1618,7 @@ namespace zsLib
                 ss << "uintptr_t " << fixType(templatedStructType) << "_wrapperIterBegin(" << fixCType(templatedStructType) << " handle)\n";
                 ss << "{\n";
                 ss << typedefsWithIterSS.str();
-                ss << "  if (0 == handle) throw std::runtime_error(\"null pointer exception\");\n";
+                ss << "  if (0 == handle) throw std::invalid_argument(\"null pointer exception\");\n";
                 ss << "  return reinterpret_cast<uintptr_t>(new WrapperTypeListIterator((*reinterpret_cast<WrapperTypeListPtrRawPtr>(handle))->begin()));\n";
                 ss << "}\n";
                 ss << "\n";
@@ -1040,7 +1627,7 @@ namespace zsLib
                 ss << "void " << fixType(templatedStructType) << "_wrapperIterNext(uintptr_t iterHandle)\n";
                 ss << "{\n";
                 ss << typedefsWithIterSS.str();
-                ss << "  if (0 == iterHandle) throw std::runtime_error(\"null pointer exception\");\n";
+                ss << "  if (0 == iterHandle) throw std::invalid_argument(\"null pointer exception\");\n";
                 ss << "  ++(*reinterpret_cast<WrapperTypeListPtrRawPtr>(iterHandle));\n";
                 ss << "}\n";
                 ss << "\n";
@@ -1049,8 +1636,8 @@ namespace zsLib
                 ss << "bool " << fixType(templatedStructType) << "_wrapperIterIsEnd(" << fixCType(templatedStructType) << " handle, uintptr_t iterHandle)\n";
                 ss << "{\n";
                 ss << typedefsWithIterSS.str();
-                ss << "  if (0 == handle) throw std::runtime_error(\"null pointer exception\");\n";
-                ss << "  if (0 == iterHandle) throw std::runtime_error(\"null pointer exception\");\n";
+                ss << "  if (0 == handle) throw std::invalid_argument(\"null pointer exception\");\n";
+                ss << "  if (0 == iterHandle) throw std::invalid_argument(\"null pointer exception\");\n";
                 ss << "  auto iterRawPtr = reinterpret_cast<WrapperTypeListIteratorRawPtr>(iterHandle);\n";
                 ss << "  bool isEnd = (*iterRawPtr) == (*reinterpret_cast<WrapperTypeListPtrRawPtr>(handle))->end();\n";
                 ss << "  if (isEnd) delete iterRawPtr;\n";
@@ -1063,7 +1650,7 @@ namespace zsLib
                   ss << fixCType(keyType) << " " << fixType(templatedStructType) << "_wrapperIterKey(uintptr_t iterHandle)\n";
                   ss << "{\n";
                   ss << typedefsWithIterSS.str();
-                  ss << "  if (0 == iterHandle) throw std::runtime_error(\"null pointer exception\");\n";
+                  ss << "  if (0 == iterHandle) throw std::invalid_argument(\"null pointer exception\");\n";
                   if (((keyType->toBasicType()) ||
                     (keyType->toEnumType())) &&
                     ("string_t" != fixCType(keyType))) {
@@ -1080,7 +1667,7 @@ namespace zsLib
                 ss << fixCType(listType) << " " << fixType(templatedStructType) << "_wrapperIterValue(uintptr_t iterHandle)\n";
                 ss << "{\n";
                 ss << typedefsWithIterSS.str();
-                ss << "  if (0 == iterHandle) throw std::runtime_error(\"null pointer exception\");\n";
+                ss << "  if (0 == iterHandle) throw std::invalid_argument(\"null pointer exception\");\n";
                 if (((listType->toBasicType()) ||
                      (listType->toEnumType())) &&
                    ("string_t" != fixCType(listType))) {
@@ -1177,7 +1764,7 @@ namespace zsLib
                 ss << "{\n";
                 ss << "  typedef " << specialName << "Ptr WrapperType;\n";
                 ss << "  typedef WrapperType * WrapperTypeRawPtr;\n";
-                ss << "  if (0 == handle) return false;\n";
+                ss << "  if (0 == handle) return;\n";
                 ss << "  wrapper::zs_" << specialName << "_wrapperObserveEvents((*reinterpret_cast<WrapperTypeRawPtr>(handle)));\n";
                 ss << "}\n";
                 ss << "\n";
@@ -1187,7 +1774,7 @@ namespace zsLib
                 ss << "{\n";
                 ss << "  typedef " << specialName << "Ptr WrapperType;\n";
                 ss << "  typedef WrapperType * WrapperTypeRawPtr;\n";
-                ss << "  if (0 == handle) return false;\n";
+                ss << "  if (0 == handle) return 0;\n";
                 ss << "  return SafeInt<uint64_t>((*reinterpret_cast<WrapperTypeRawPtr>(handle))->getID());\n";
                 ss << "}\n";
                 ss << "\n";
@@ -1237,7 +1824,7 @@ namespace zsLib
                 ss << "  ZS_DECLARE_CLASS_PTR(PromiseCallback);\n";
                 ss << "\n";
                 ss << "  class PromiseCallback : public IWrapperCallback,\n";
-                ss << "                          public zsLib::IPromiseSettledDelegate\n";
+                ss << "                          public ::zsLib::IPromiseSettledDelegate\n";
                 ss << "  {\n";
                 ss << "  public:\n";
                 ss << "    PromiseCallback(PromisePtr promise) : promise_(promise) {}\n";
@@ -1253,9 +1840,10 @@ namespace zsLib
                 ss << "      return pThis;\n";
                 ss << "    }\n";
                 ss << "\n";
-                ss << "    virtual const char *getClass()  {return \"zs_Promise\";}\n";
-                ss << "    virtual const char *getMethod() {return \"onSettled\";}\n";
-                ss << "    virtual uintptr_t getSource()   {return zs_Promise_wrapperToHandle(promise_);}\n";
+                ss << "    virtual const char *getNamespace()  {return \"zs\";}\n";
+                ss << "    virtual const char *getClass()      {return \"Promise\";}\n";
+                ss << "    virtual const char *getMethod()     {return \"onSettled\";}\n";
+                ss << "    virtual uintptr_t getSource()       {return zs_Promise_wrapperToHandle(promise_);}\n";
                 ss << "    virtual uintptr_t getEventData(int argumentIndex) {return 0;}\n";
                 ss << "\n";
                 ss << "    virtual void onPromiseSettled(PromisePtr promise)\n";
@@ -1281,7 +1869,6 @@ namespace zsLib
               ss << "  {\n";
               ss << "    typedef " << specialName << "Ptr WrapperType;\n";
               ss << "    typedef WrapperType * WrapperTypeRawPtr;\n";
-              ss << "    if (0 == handle) return 0;\n";
               ss << "    if (!value) return 0;\n";
               ss << "    return reinterpret_cast<CType>(new DurationType(value));\n";
               ss << "  }\n";
@@ -1432,6 +2019,468 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
+        void GenerateStructC::processNamespace(
+                                               HelperFile &helperFile,
+                                               NamespacePtr namespaceObj
+                                               )
+        {
+          if (!namespaceObj) return;
+
+          for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter) {
+            auto subNamespaceObj = (*iter).second;
+            processNamespace(helperFile, subNamespaceObj);
+          }
+
+          for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter) {
+            auto subStructObj = (*iter).second;
+            processStruct(helperFile, subStructObj);
+          }
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructC::processStruct(
+                                            HelperFile &helperFile,
+                                            StructPtr structObj
+                                            )
+        {
+          if (!structObj) return;
+          if (GenerateHelper::isBuiltInType(structObj)) return;
+          if (structObj->mGenerics.size() > 0) return;
+
+          StructFile structFile;
+          structFile.cppFileName_ = UseHelper::fixRelativeFilePath(helperFile.cppFileName_, fixType(structObj) + ".cpp");
+          structFile.headerFileName_ = UseHelper::fixRelativeFilePath(helperFile.headerFileName_, fixType(structObj) + ".h");
+
+          {
+            auto &ss = structFile.headerCIncludeSS_;
+            ss << "/* " ZS_EVENTING_GENERATED_BY " */\n\n";
+            ss << "#pragma once\n\n";
+            ss << "#include \"types.h\"\n";
+            ss << "\n";
+          }
+
+          {
+            auto &ss = structFile.headerCFunctionsSS_;
+            ss << getApiGuardDefine(helperFile.global_) << "\n";
+            ss << "\n";
+          }
+
+          {
+            auto &ss = structFile.cIncludeSS_;
+            ss << "/* " ZS_EVENTING_GENERATED_BY " */\n\n";
+            ss << "\n";
+            ss << "#include \"c_helpers.h\"\n";
+            ss << "#include <zsLib/types.h>\n";
+            ss << "#include <zsLib/eventing/types.h>\n";
+            ss << "#include <zsLib/SafeInt.h>\n";
+            ss << "\n";
+          }
+          {
+            auto &ss = structFile.cFunctionsSS_;
+            ss << "using namespace wrapper;\n\n";
+          }
+
+          {
+            auto &ss = structFile.headerCppFunctionsSS_;
+            ss << "\n";
+            ss << getApiGuardDefine(helperFile.global_, true) << "\n";
+            ss << "\n";
+
+            ss << "#ifdef __cplusplus\n";
+            ss << "namespace wrapper\n";
+            ss << "{\n";
+          }
+
+          {
+            auto &ss = structFile.cppFunctionsSS_;
+
+            ss << "namespace wrapper\n";
+            ss << "{\n";
+          }
+
+          processStruct(helperFile, structFile, structObj, structObj);
+
+          {
+            auto &ss = structFile.headerCppFunctionsSS_;
+
+            ss << "\n";
+            ss << "} /* namespace wrapper */\n";
+            ss << "#endif /* __cplusplus */\n";
+          }
+
+          {
+            auto &ss = structFile.cppFunctionsSS_;
+
+            ss << "\n";
+            ss << "} /* namespace wrapper */\n";
+          }
+
+          {
+            std::stringstream ss;
+
+            appendStream(ss, structFile.headerCIncludeSS_);
+            appendStream(ss, structFile.headerCFunctionsSS_);
+            appendStream(ss, structFile.headerCppIncludeSS_);
+            appendStream(ss, structFile.headerCppFunctionsSS_);
+
+            writeBinary(structFile.headerFileName_, UseHelper::convertToBuffer(ss.str()));
+          }
+          {
+            std::stringstream ss;
+
+            appendStream(ss, structFile.cIncludeSS_);
+            appendStream(ss, structFile.cFunctionsSS_);
+            appendStream(ss, structFile.cppIncludeSS_);
+            appendStream(ss, structFile.cppFunctionsSS_);
+
+            writeBinary(structFile.cppFileName_, UseHelper::convertToBuffer(ss.str()));
+          }
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructC::processStruct(
+                                            HelperFile &helperFile,
+                                            StructFile &structFile,
+                                            StructPtr rootStructObj,
+                                            StructPtr structObj
+                                            )
+        {
+          if (!structObj) return;
+
+          if (rootStructObj == structObj) {
+            for (auto iter = structObj->mStructs.begin(); iter != structObj->mStructs.end(); ++iter) {
+              auto subStructObj = (*iter).second;
+              processStruct(helperFile, subStructObj);
+            }
+          }
+
+          for (auto iter = structObj->mIsARelationships.begin(); iter != structObj->mIsARelationships.end(); ++iter) {
+            auto relatedTypeObj = (*iter).second;
+            if (!relatedTypeObj) continue;
+            processStruct(helperFile, structFile, rootStructObj, relatedTypeObj->toStruct());
+          }
+
+          {
+            auto &ss = structFile.headerCFunctionsSS_;
+            ss << "\n";
+            ss << "/* " << fixType(structObj) << "*/\n";
+            ss << "\n";
+          }
+
+          processMethods(helperFile, structFile, rootStructObj, structObj);
+          processProperties(helperFile, structFile, rootStructObj, structObj);
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructC::processMethods(
+                                             HelperFile &helperFile,
+                                             StructFile &structFile,
+                                             StructPtr rootStructObj,
+                                             StructPtr structObj
+                                             )
+        {
+          auto dash = GenerateHelper::getDashedComment(String());
+          auto dash2 = GenerateHelper::getDashedComment(String("  "));
+
+          bool foundConstructor = false;
+
+          std::stringstream headerCSS;
+          std::stringstream headerCppSS;
+          std::stringstream cSS;
+          std::stringstream cppSS;
+
+          for (auto iter = structObj->mMethods.begin(); iter != structObj->mMethods.end(); ++iter) {
+            auto method = (*iter);
+            if (!method) continue;
+            if (method->hasModifier(Modifier_Method_EventHandler)) continue;
+
+            includeType(structFile, method->mResult);
+
+            bool isConstructor = method->hasModifier(Modifier_Method_Ctor);
+            bool isStatic = method->hasModifier(Modifier_Static);
+            bool hasResult = fixCType(method->mResult) != "void";
+            bool hasThis = ((!isStatic) && (!isConstructor));
+
+            if (rootStructObj != structObj) {
+              if ((isStatic) || (isConstructor)) continue;
+              foundConstructor = true;
+            }
+            if (method->hasModifier(Modifier_Method_Delete)) continue;
+
+            String name = method->mName;
+            if (method->hasModifier(Modifier_AltName)) {name = method->getModifierValue(Modifier_AltName);}
+
+            {
+              auto &ss = headerCSS;
+              ss << getApiExportDefine(structObj) << " " << fixCType(method->mResult) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_" << (isConstructor ? "wrapperCreate_" : "")  << name << "(";
+            }
+            {
+              auto &ss = cSS;
+              ss << dash;
+              ss << fixCType(method->mResult) << " " << fixType(structObj) << "_" << (isConstructor ? "wrapperCreate_" : "") << name << "(";
+            }
+
+            std::stringstream argSS;
+
+            size_t totalArgs = method->mArguments.size();
+            if (hasThis) ++totalArgs;
+            if (method->mThrows.size() > 0) ++totalArgs;
+
+            if (totalArgs > 1) argSS << "\n  ";
+
+            bool first = true;
+
+            if (method->mThrows.size() > 0) {
+              argSS << "exception_handle_t wrapperExceptionHandle";
+              first = false;
+            }
+
+            if (hasThis) {
+              if (!first) argSS << ",\n  ";
+              argSS << fixCType(structObj) << " " << "wrapperThisHandle";
+              first = false;
+            }
+
+            for (auto iterArg = method->mArguments.begin(); iterArg != method->mArguments.end(); ++iterArg) {
+              auto argPropertyObj = (*iterArg);
+              includeType(structFile, argPropertyObj->mType);
+              if (!first) argSS << ",\n  ";
+              first = false;
+              argSS << fixCType(argPropertyObj->mType) << " " << argPropertyObj->mName;
+            }
+            argSS << ")";
+
+            {
+              auto &ss = headerCSS;
+              ss << argSS.str() << ";\n";
+            }
+            {
+              auto &ss = cSS;
+              ss << argSS.str() << "\n";
+              ss << "{\n";
+              String indentStr = "  ";
+              if (method->mThrows.size() > 0) {
+                indentStr += "  ";
+                ss << "  try {\n";
+              }
+              ss << indentStr;
+              if (isConstructor) {
+                ss << "auto wrapperThis = wrapper::" << structObj->getPathName() << "::wrapper_create();\n";
+                ss << indentStr << "wrapperThis->wrapper_init_" << GenerateStructHeader::getStructInitName(structObj) << "(";
+              } else {
+                if (hasThis) {
+                  ss << "auto wrapperThis = " << getFromHandleMethod(false, structObj) << "(wrapperThisHandle);\n";
+                  ss << indentStr << "if (!wrapperThis) throw std::invalid_argument(\"null pointer exception\");\n";
+                  ss << indentStr;
+                }
+                if (hasResult) {
+                  ss << "return " << getToHandleMethod(method->hasModifier(Modifier_Optional), method->mResult) << "(";
+                }
+                if (hasThis) {
+                  ss << "wrapperThis->" << method->getMappingName() << "(";
+                } else {
+                  ss << "wrapper::" << structObj->getPathName() << "::" << method->getMappingName() << "(";
+                }
+              }
+
+              first = true;
+              for (auto iterNamedArgs = method->mArguments.begin(); iterNamedArgs != method->mArguments.end(); ++iterNamedArgs) {
+                auto propertyObj = (*iterNamedArgs);
+                if (!first) ss << ", ";
+                ss << getFromHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(" << propertyObj->getMappingName() << ")";
+              }
+
+              if (isConstructor) {
+                ss << ");\n";
+                ss << indentStr << "return " << getToHandleMethod(method->hasModifier(Modifier_Optional), structObj) << "(wrapperThis);\n";
+              } else {
+                if (hasResult) {
+                  ss << ")";
+                }
+                ss << ");\n";
+              }
+
+              if (method->mThrows.size() > 0) {
+                for (auto iterThrow = method->mThrows.begin(); iterThrow != method->mThrows.end(); ++iterThrow) {
+                  auto throwType = (*iterThrow);
+                  ss << "  } catch (const " << GenerateStructHeader::getWrapperTypeString(false, throwType) << " &e) {\n";
+                  ss << "    wrapper::exception_set_Exception(wrapperExceptionHandle, make_shared<::zsLib::" << ("Exception" == throwType->getMappingName() ? "" : "exceptions::") << throwType->getMappingName() << ">(e));\n";
+                }
+                ss << "  }\n";
+                if (hasResult) {
+                  ss << "  return 0;\n";
+                }
+              }
+              ss << "}\n";
+              ss << "\n";
+            }
+          }
+
+          bool onlyStatic = GenerateHelper::hasOnlyStaticMethods(structObj) || structObj->hasModifier(Modifier_Static);
+
+          if (rootStructObj == structObj) {
+            if (!onlyStatic) {
+              if (!foundConstructor) {
+                {
+                  auto &ss = structFile.headerCFunctionsSS_;
+                  ss << getApiExportDefine(structObj) << " " << fixCType(structObj) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperCreate_" << structObj->getMappingName() << "();\n";
+                }
+                {
+                  auto &ss = structFile.cFunctionsSS_;
+                  ss << dash;
+                  ss << fixCType(structObj) << " " << fixType(structObj) << "_wrapperCreate_" << structObj->getMappingName() << "()\n";
+                  ss << "{\n";
+                  ss << "  typedef " << fixCType(structObj) << " CType;\n";
+                  ss << "  typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
+                  ss << "  auto result = wrapper::" << structObj->getPathName() << "::wrapper_create();\n";
+                  ss << "  result->wrapper_init_" << GenerateStructHeader::getStructInitName(structObj) << "();\n";
+                  ss << "  return reinterpret_cast<CType>(new WrapperTypePtr(result));\n";
+                  ss << "}\n";
+                  ss << "\n";
+                }
+              }
+
+              {
+                auto &ss = structFile.headerCFunctionsSS_;
+                ss << getApiExportDefine(structObj) << " void " << getApiCallingDefine(structObj) << " " << fixType(structObj) << "_wrapperDestroy(" << fixCType(structObj) << " handle);\n";
+              }
+              {
+                auto &ss = structFile.cFunctionsSS_;
+                ss << dash;
+                ss << "void " << fixType(structObj) << "_wrapperDestroy(" << fixCType(structObj) << " handle)\n";
+                ss << "{\n";
+                ss << "  typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
+                ss << "  typedef WrapperTypePtr * WrapperTypePtrRawPtr;\n";
+                ss << "  if (0 == handle) return;\n";
+                ss << "  delete reinterpret_cast<WrapperTypePtrRawPtr>(handle);\n";
+                ss << "}\n";
+                ss << "\n";
+              }
+            }
+
+            {
+              auto &ss = structFile.headerCppFunctionsSS_;
+              ss << "  " << fixCType(structObj) << " " << fixType(structObj) << "_wrapperToHandle(" << GenerateStructHeader::getWrapperTypeString(false, structObj) << " value);\n";
+              ss << "  " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " " << fixType(structObj) << "_wrapperFromHandle(" << fixCType(structObj) << " handle);\n";
+            }
+            {
+              auto &ss = structFile.cppFunctionsSS_;
+              ss << dash2;
+              ss << "  " << fixCType(structObj) << " " << fixType(structObj) << "_wrapperToHandle(" << GenerateStructHeader::getWrapperTypeString(false, structObj) << " value)\n";
+              ss << "  {\n";
+              ss << "    typedef " << fixCType(structObj) << " CType;\n";
+              ss << "    typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
+              ss << "    typedef WrapperTypePtr * WrapperTypePtrRawPtr;\n";
+              ss << "    if (!value) return 0;\n";
+              ss << "    return reinterpret_cast<CType>(new WrapperTypePtr(value));\n";
+              ss << "  }\n";
+              ss << "\n";
+
+              ss << dash2;
+              ss << "  " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " " << fixType(structObj) << "_wrapperFromHandle(" << fixCType(structObj) << " handle);\n";
+              ss << "  {\n";
+              ss << "    typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
+              ss << "    typedef WrapperTypePtr * WrapperTypePtrRawPtr;\n";
+              ss << "    if (0 == handle) return WrapperTypePtr();\n";
+              ss << "    return (*reinterpret_cast<WrapperTypePtrRawPtr>(handle));\n";
+              ss << "  }\n";
+              ss << "\n";
+            }
+          }
+
+          structFile.headerCFunctionsSS_ << headerCSS.str();
+          structFile.headerCppFunctionsSS_ << headerCppSS.str();
+          structFile.cFunctionsSS_ << cSS.str();
+          structFile.cppFunctionsSS_ << cppSS.str();
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructC::processProperties(
+                                                HelperFile &helperFile,
+                                                StructFile &structFile,
+                                                StructPtr rootStructObj,
+                                                StructPtr structObj
+                                                )
+        {
+          bool onlyStatic = GenerateHelper::hasOnlyStaticMethods(structObj) || structObj->hasModifier(Modifier_Static);
+
+          if (onlyStatic) {
+            if (rootStructObj != structObj) return;
+          }
+
+          bool isDictionary = structObj->hasModifier(Modifier_Struct_Dictionary);
+
+          auto dash = GenerateHelper::getDashedComment(String());
+
+          for (auto iter = structObj->mProperties.begin(); iter != structObj->mProperties.end(); ++iter) {
+            auto propertyObj = (*iter);
+            if (!propertyObj) continue;
+
+            bool isStatic = propertyObj->hasModifier(Modifier_Static);
+            bool hasGetter = structObj->hasModifier(Modifier_Property_Getter);
+            bool hasSetter = structObj->hasModifier(Modifier_Property_Setter);
+
+            if (!isDictionary) {
+              if ((!hasGetter) && (!hasSetter)) {
+                hasGetter = hasSetter = true;
+              }
+            }
+
+            includeType(structFile, propertyObj->mType);
+
+            bool hasGet = true;
+            bool hasSet = true;
+
+            if ((hasGetter) && (!hasSetter)) hasSet = false;
+            if ((hasSetter) && (!hasGetter)) hasGet = false;
+
+            if (isStatic) {
+              if (hasGet) hasGetter = true;
+              if (hasSet) hasSetter = true;
+            }
+
+            {
+              auto &ss = structFile.headerCFunctionsSS_;
+              if (hasGet) {
+                ss << getApiExportDefine(structObj) << " " << fixCType(propertyObj->mType) << " " << getApiCallingDefine(structObj) << " " << fixType(structObj) << "_get_" << propertyObj->getMappingName() << "(" << (isStatic ? String("") : String(fixCType(propertyObj->mType) + " wrapperThisHandle")) << ");\n";
+              }
+              if (hasSet) {
+                ss << getApiExportDefine(structObj) << " void " << getApiCallingDefine(structObj) << " " << fixType(structObj) << "_set_" << propertyObj->getMappingName() << "(" << (isStatic ? String("") : String(fixCType(propertyObj->mType) + " wrapperThisHandle, ")) << fixCType(propertyObj->mType) << " value);\n";
+              }
+            }
+            {
+              auto &ss = structFile.cFunctionsSS_;
+              if (hasGet) {
+                ss << dash;
+                ss << fixCType(propertyObj->mType) << " " << fixType(structObj) << "_get_" << propertyObj->getMappingName() << "(" << (isStatic ? String("") : String(fixCType(propertyObj->mType) + " wrapperThisHandle")) << ")\n";
+                ss << "{\n";
+                if (!isStatic) {
+                  ss << "  auto wrapperThis = " << getFromHandleMethod(false, structObj) << "(wrapperThisHandle);\n";
+                  ss << "  return " << getToHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(wrapperThis->" << (hasGetter ? "get_" : "") << propertyObj->getMappingName() << (hasGetter ? "()" : "") << ");\n";
+                } else {
+                  ss << "  return " << getToHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(wrapper::" << structObj->getPathName() << "::get_" << propertyObj->getMappingName() << "());\n";
+                }
+                ss << "}\n";
+                ss << "\n";
+              }
+              if (hasSet) {
+                ss << dash;
+                ss << "void " << fixType(structObj) << "_set_" << propertyObj->getMappingName() << "(" << (isStatic ? String("") : String(fixCType(propertyObj->mType) + " wrapperThisHandle, ")) << fixCType(propertyObj->mType) << " value)\n";
+                ss << "{\n";
+                if (!isStatic) {
+                  ss << "  auto wrapperThis = " << getFromHandleMethod(false, structObj) << "(wrapperThisHandle);\n";
+                  ss << "  wrapperThis->" << (hasSetter ? "set_" : "") << propertyObj->getMappingName() << (hasSetter ? "(" : " = ") << getFromHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(value)" << (hasSetter ? ")" : "") << ";\n";
+                } else {
+                  ss << "  wrapper::" << structObj->getPathName() << "::set_" << propertyObj->getMappingName() << "(" << getFromHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "value));\n";
+                }
+                ss << "}\n";
+                ss << "\n";
+              }
+            }
+          }
+        }
+
+        //---------------------------------------------------------------------
         SecureByteBlockPtr GenerateStructC::generateTypesHeader(ProjectPtr project) throw (Failure)
         {
           if (!project) return SecureByteBlockPtr();
@@ -1501,6 +2550,38 @@ namespace zsLib
           ss << "typedef long double ldouble_t;\n";
           ss << "typedef uintptr_t binary_t;\n";
           ss << "typedef uintptr_t string_t;\n";
+          ss << "\n";
+          ss << "typedef uintptr_t box_bool_t;\n";
+          ss << "typedef uintptr_t box_schar_t;\n";
+          ss << "typedef uintptr_t box_uchar_t;\n";
+          ss << "typedef uintptr_t box_short_t;\n";
+          ss << "typedef uintptr_t box_ushort_t;\n";
+          ss << "typedef uintptr_t box_sint_t;\n";
+          ss << "typedef uintptr_t box_uint_t;\n";
+          ss << "typedef uintptr_t box_slong_t;\n";
+          ss << "typedef uintptr_t box_ulong_t;\n";
+          ss << "typedef uintptr_t box_sllong_t;\n";
+          ss << "typedef uintptr_t box_ullong_t;\n";
+          ss << "typedef uintptr_t box_float_t;\n";
+          ss << "typedef uintptr_t box_double_t;\n";
+          ss << "typedef uintptr_t box_float32_t;\n";
+          ss << "typedef uintptr_t box_float64_t;\n";
+          ss << "typedef uintptr_t box_ldouble_t;\n";
+          ss << "typedef uintptr_t box_int8_t;\n";
+          ss << "typedef uintptr_t box_uint8_t;\n";
+          ss << "typedef uintptr_t box_int16_t;\n";
+          ss << "typedef uintptr_t box_uint16_t;\n";
+          ss << "typedef uintptr_t box_int32_t;\n";
+          ss << "typedef uintptr_t box_uint32_t;\n";
+          ss << "typedef uintptr_t box_int64_t;\n";
+          ss << "typedef uintptr_t box_uint64_t;\n";
+          ss << "typedef uintptr_t box_uintptr_t;\n";
+          ss << "typedef uintptr_t box_binary_t;\n";
+          ss << "typedef uintptr_t box_string_t;\n";
+          ss << "\n";
+          ss << "typedef uintptr_t callback_event_t;\n";
+          ss << "typedef uintptr_t generic_handle_t;\n";
+          ss << "typedef uintptr_t exception_handle_t;\n";
           ss << "\n";
 
           processTypesNamespace(ss, project->mGlobal);
@@ -1726,6 +2807,7 @@ namespace zsLib
           prepareHelperFile(helperFile);
 
           finalizeHelperFile(helperFile);
+          processNamespace(helperFile, helperFile.global_);
         }
 
       } // namespace internal

@@ -94,6 +94,9 @@ namespace zsLib
           {
             StructPtr struct_;
 
+            String headerFileName_;
+            String cppFileName_;
+
             std::stringstream headerCIncludeSS_;
             std::stringstream headerCFunctionsSS_;
             std::stringstream headerCppIncludeSS_;
@@ -119,6 +122,7 @@ namespace zsLib
 
           static GenerateStructCPtr create();
 
+          static String fixBasicType(IEventingTypes::PredefinedTypedefs type);
           static String fixCType(IEventingTypes::PredefinedTypedefs type);
           static String fixCType(TypePtr type);
           static String fixType(TypePtr type);
@@ -129,8 +133,21 @@ namespace zsLib
                                           ContextPtr context,
                                           bool endGuard = false
                                           );
+          static String getToHandleMethod(
+                                          bool isOptional, 
+                                          TypePtr type
+                                          );
+          static String getFromHandleMethod(
+                                            bool isOptional,
+                                            TypePtr type
+                                            );
+
           static void includeType(
                                   HelperFile &helperFile,
+                                  TypePtr type
+                                  );
+          static void includeType(
+                                  StructFile &structFile,
                                   TypePtr type
                                   );
 
@@ -157,7 +174,18 @@ namespace zsLib
 
           static void prepareHelperFile(HelperFile &helperFile);
           static void prepareHelperCallback(HelperFile &helperFile);
+          static void prepareHelperExceptions(HelperFile &helperFile);
+          static void prepareHelperExceptions(
+                                              HelperFile &helperFile,
+                                              const String &exceptionName
+                                              );
+          static void prepareHelperBoxing(HelperFile &helperFile);
+          static void prepareHelperBoxing(
+                                          HelperFile &helperFile,
+                                          const IEventingTypes::PredefinedTypedefs basicType
+                                          );
           static void prepareHelperString(HelperFile &helperFile);
+          static void prepareHelperBinary(HelperFile &helperFile);
           static void prepareHelperDuration(
                                             HelperFile &helperFile,
                                             const String &durationType
@@ -174,6 +202,33 @@ namespace zsLib
           static void preparePromiseWithRejectionReason(HelperFile &helperFile);
 
           static void finalizeHelperFile(HelperFile &helperFile);
+
+          static void processNamespace(
+                                       HelperFile &helperFile,
+                                       NamespacePtr namespaceObj
+                                       );
+          static void processStruct(
+                                    HelperFile &helperFile,
+                                    StructPtr structObj
+                                    );
+          static void processStruct(
+                                    HelperFile &helperFile,
+                                    StructFile &structFile,
+                                    StructPtr rootStructObj,
+                                    StructPtr structObj
+                                    );
+          static void processMethods(
+                                     HelperFile &helperFile,
+                                     StructFile &structFile,
+                                     StructPtr rootStructObj,
+                                     StructPtr structObj
+                                     );
+          static void processProperties(
+                                        HelperFile &helperFile,
+                                        StructFile &structFile,
+                                        StructPtr rootStructObj,
+                                        StructPtr structObj
+                                        );
 
           static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure);
           

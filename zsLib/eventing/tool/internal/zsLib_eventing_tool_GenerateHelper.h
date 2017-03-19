@@ -77,6 +77,7 @@ namespace zsLib
           static bool needsDefaultConstructor(StructPtr structObj);
           static bool needsDefaultConstructor(TemplatedStructTypePtr templateObj);
 
+          static String getBasicTypeString(IEventingTypes::PredefinedTypedefs type);
           static String getBasicTypeString(BasicTypePtr type);
         };
 

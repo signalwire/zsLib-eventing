@@ -303,10 +303,10 @@ namespace zsLib
         }
 
         //-------------------------------------------------------------------
-        String GenerateHelper::getBasicTypeString(BasicTypePtr type)
+        String GenerateHelper::getBasicTypeString(IEventingTypes::PredefinedTypedefs type)
         {
           if (!type) return String();
-          switch (type->mBaseType)
+          switch (type)
           {
           case PredefinedTypedef_void:        return "void";
           case PredefinedTypedef_bool:        return "bool";
@@ -359,6 +359,13 @@ namespace zsLib
           case PredefinedTypedef_wstring:     return "::std::wstring";
           }
           return String();
+        }
+
+        //-------------------------------------------------------------------
+        String GenerateHelper::getBasicTypeString(BasicTypePtr type)
+        {
+          if (!type) return String();
+          return getBasicTypeString(type->mBaseType);
         }
 
       } // namespace internal
