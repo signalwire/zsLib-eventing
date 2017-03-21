@@ -229,6 +229,21 @@ namespace zsLib
                                         StructPtr rootStructObj,
                                         StructPtr structObj
                                         );
+          static void processEventHandlers(
+                                           HelperFile &helperFile,
+                                           StructFile &structFile,
+                                           StructPtr structObj
+                                           );
+          static void processEventHandlersStart(
+                                                HelperFile &helperFile,
+                                                StructFile &structFile,
+                                                StructPtr structObj
+                                                );
+          static void processEventHandlersEnd(
+                                              HelperFile &helperFile,
+                                              StructFile &structFile,
+                                              StructPtr structObj
+                                              );
 
           static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure);
           
