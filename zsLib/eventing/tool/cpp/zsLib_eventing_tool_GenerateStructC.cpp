@@ -179,7 +179,7 @@ namespace zsLib
 
             case PredefinedTypedef_uchar:     return "uchar_t";
             case PredefinedTypedef_char:
-            case PredefinedTypedef_schar:     return "char_t";
+            case PredefinedTypedef_schar:     return "schar_t";
             case PredefinedTypedef_ushort:    return "ushort_t";
             case PredefinedTypedef_short:
             case PredefinedTypedef_sshort:    return "sshort_t";
@@ -203,7 +203,7 @@ namespace zsLib
             case PredefinedTypedef_sint32:    return "int32_t";
             case PredefinedTypedef_uint64:    return "uint64_t";
             case PredefinedTypedef_int64:
-            case PredefinedTypedef_sint64:    return "uint64_t";
+            case PredefinedTypedef_sint64:    return "int64_t";
 
             case PredefinedTypedef_byte:      return "uint8_t";
             case PredefinedTypedef_word:      return "uint16_t";
@@ -339,9 +339,7 @@ namespace zsLib
         {
           String result = (!endGuard ? "WRAPPER_C_PLUS_PLUS_BEGIN_GUARD" : "WRAPPER_C_PLUS_PLUS_END_GUARD");
           if (!context) return result;
-          auto root = context->getRoot();
-          if (!root) return result;
-          auto project = context->toProject();
+          auto project = context->getProject();
           if (!project) return result;
 
           if (project->mName.isEmpty()) return result;
@@ -719,14 +717,14 @@ namespace zsLib
             ss << "\n";
 
             ss << dash;
-            ss << "void callback_wrapperInstall(wrapperCallbackFunction function)\n";
+            ss << "void " << getApiCallingDefine(helperFile.global_) << " callback_wrapperInstall(wrapperCallbackFunction function)\n";
             ss << "{\n";
             ss << "  callback_get_singleton() = function;\n";
             ss << "}\n";
             ss << "\n";
 
             ss << dash;
-            ss << "void callback_event_wrapperObserverDestroy(event_observer_t handle)\n";
+            ss << "void " << getApiCallingDefine(helperFile.global_) << " callback_event_wrapperObserverDestroy(event_observer_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperObserverPtr * IWrapperObserverPtrRawPtr;\n";
             ss << "  if (0 == handle) return;\n";
@@ -735,7 +733,7 @@ namespace zsLib
             ss << "\n";
 
             ss << dash;
-            ss << "void callback_event_wrapperDestroy(callback_event_t handle)\n";
+            ss << "void " << getApiCallingDefine(helperFile.global_) << " callback_event_wrapperDestroy(callback_event_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperCallbackEventPtr * IWrapperCallbackEventPtrRawPtr;\n";
             ss << "  if (0 == handle) return;\n";
@@ -743,7 +741,7 @@ namespace zsLib
             ss << "}\n";
             ss << "\n";
 
-            ss << "instance_id_t callback_event_wrapperInstanceId(callback_event_t handle)\n";
+            ss << "instance_id_t " << getApiCallingDefine(helperFile.global_) << " callback_event_wrapperInstanceId(callback_event_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperCallbackEventPtr * IWrapperCallbackEventPtrRawPtr;\n";
             ss << "  if (0 == handle) return 0;\n";
@@ -752,16 +750,16 @@ namespace zsLib
             ss << "\n";
 
             ss << dash;
-            ss << "event_observer_t callback_event_get_observer(callback_event_t handle)\n";
+            ss << "event_observer_t " << getApiCallingDefine(helperFile.global_) << " callback_event_get_observer(callback_event_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperCallbackEventPtr * IWrapperCallbackEventPtrRawPtr;\n";
-            ss << "  if (0 == handle) return reinterpret_cast<const char *>(NULL);\n";
+            ss << "  if (0 == handle) return static_cast<event_observer_t>(NULL);\n";
             ss << "  return (*reinterpret_cast<IWrapperCallbackEventPtrRawPtr>(handle))->getObserver();\n";
             ss << "}\n";
             ss << "\n";
 
             ss << dash;
-            ss << "const char *callback_event_get_namespace(callback_event_t handle)\n";
+            ss << "const char * " << getApiCallingDefine(helperFile.global_) << " callback_event_get_namespace(callback_event_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperCallbackEventPtr * IWrapperCallbackEventPtrRawPtr;\n";
             ss << "  if (0 == handle) return reinterpret_cast<const char *>(NULL);\n";
@@ -770,7 +768,7 @@ namespace zsLib
             ss << "\n";
 
             ss << dash;
-            ss << "const char *callback_event_get_class(callback_event_t handle)\n";
+            ss << "const char * " << getApiCallingDefine(helperFile.global_) << " callback_event_get_class(callback_event_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperCallbackEventPtr * IWrapperCallbackEventPtrRawPtr;\n";
             ss << "  if (0 == handle) return reinterpret_cast<const char *>(NULL);\n";
@@ -779,7 +777,7 @@ namespace zsLib
             ss << "\n";
 
             ss << dash;
-            ss << "const char *callback_event_get_method(callback_event_t handle)\n";
+            ss << "const char * " << getApiCallingDefine(helperFile.global_) << " callback_event_get_method(callback_event_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperCallbackEventPtr * IWrapperCallbackEventPtrRawPtr;\n";
             ss << "  if (0 == handle) return reinterpret_cast<const char *>(NULL);\n";
@@ -788,7 +786,7 @@ namespace zsLib
             ss << "\n";
 
             ss << dash;
-            ss << "generic_handle_t callback_event_get_source(callback_event_t handle)\n";
+            ss << "generic_handle_t " << getApiCallingDefine(helperFile.global_) << " callback_event_get_source(callback_event_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperCallbackEventPtr * IWrapperCallbackEventPtrRawPtr;\n";
             ss << "  if (0 == handle) return 0;\n";
@@ -797,11 +795,11 @@ namespace zsLib
             ss << "\n";
 
             ss << dash;
-            ss << "generic_handle_t callback_event_get_data(callback_event_t handle)\n";
+            ss << "generic_handle_t " << getApiCallingDefine(helperFile.global_) << " callback_event_get_data(callback_event_t handle, int argumentIndex)\n";
             ss << "{\n";
             ss << "  typedef IWrapperCallbackEventPtr * IWrapperCallbackEventPtrRawPtr;\n";
             ss << "  if (0 == handle) return 0;\n";
-            ss << "  return (*reinterpret_cast<IWrapperCallbackEventPtrRawPtr>(handle))->getEventData();\n";
+            ss << "  return (*reinterpret_cast<IWrapperCallbackEventPtrRawPtr>(handle))->getEventData(argumentIndex);\n";
             ss << "}\n";
             ss << "\n";
           }
@@ -843,7 +841,7 @@ namespace zsLib
           {
             auto &ss = helperFile.cFunctionsSS_;
             ss << dash;
-            ss << "exception_handle_t exception_wrapperCreate_exception()\n";
+            ss << "exception_handle_t " << getApiCallingDefine(helperFile.global_) << " exception_wrapperCreate_exception()\n";
             ss << "{\n";
             ss << "  typedef ::zsLib::Exception ExceptionType;\n";
             ss << "  typedef shared_ptr<ExceptionType> ExceptionTypePtr;\n";
@@ -853,7 +851,7 @@ namespace zsLib
             ss << "\n";
 
             ss << dash;
-            ss << "void exception_wrapperDestroy(exception_handle_t handle)\n";
+            ss << "void " << getApiCallingDefine(helperFile.global_) << " exception_wrapperDestroy(exception_handle_t handle)\n";
             ss << "{\n";
             ss << "  typedef ::zsLib::Exception ExceptionType;\n";
             ss << "  typedef shared_ptr<ExceptionType> ExceptionTypePtr;\n";
@@ -864,7 +862,7 @@ namespace zsLib
             ss << "\n";
 
             ss << dash;
-            ss << "instance_id_t exception_wrapperInstanceId(exception_handle_t handle)\n";
+            ss << "instance_id_t " << getApiCallingDefine(helperFile.global_) << " exception_wrapperInstanceId(exception_handle_t handle)\n";
             ss << "{\n";
             ss << "  typedef ::zsLib::Exception ExceptionType;\n";
             ss << "  typedef shared_ptr<ExceptionType> ExceptionTypePtr;\n";
@@ -875,13 +873,13 @@ namespace zsLib
             ss << "\n";
 
             ss << dash;
-            ss << "bool exception_hasException(exception_handle_t handle);\n";
+            ss << "bool " << getApiCallingDefine(helperFile.global_) << " exception_hasException(exception_handle_t handle)\n";
             ss << "{\n";
             ss << "  typedef ::zsLib::Exception ExceptionType;\n";
             ss << "  typedef shared_ptr<ExceptionType> ExceptionTypePtr;\n";
             ss << "  typedef ExceptionTypePtr * ExceptionTypePtrRawPtr;\n";
-            ss << "  if (0 == handle) return;\n";
-            ss << "  return (*reinterpret_cast<ExceptionTypePtrRawPtr>(handle));\n";
+            ss << "  if (0 == handle) return false;\n";
+            ss << "  return ((bool)(*reinterpret_cast<ExceptionTypePtrRawPtr>(handle)));\n";
             ss << "}\n";
             ss << "\n";
           }
@@ -941,29 +939,29 @@ namespace zsLib
             auto &ss = helperFile.cFunctionsSS_;
 
             ss << dash;
-            ss << "bool exception_is_" << exceptionName << "(exception_handle_t handle)n";
+            ss << "bool " << getApiCallingDefine(helperFile.global_) << " exception_is_" << exceptionName << "(exception_handle_t handle)\n";
             ss << "{\n";
             ss << "  typedef ::zsLib::Exception ExceptionType;\n";
             ss << "  typedef shared_ptr<ExceptionType> ExceptionTypePtr;\n";
             ss << "  typedef ExceptionTypePtr * ExceptionTypePtrRawPtr;\n";
-            ss << "  if (0 == handle) return;\n";
-            ss << "  return std::dynamic_pointer_cast<::zsLib::" << ("Exception" == exceptionName ? "" : "exceptions::" ) << exceptionName << "(*reinterpret_cast<ExceptionTypePtrRawPtr>(handle));\n";
+            ss << "  if (0 == handle) return false;\n";
+            ss << "  return ((bool)std::dynamic_pointer_cast<::zsLib::" << ("Exception" == exceptionName ? "" : "Exceptions::" ) << exceptionName << ">(*reinterpret_cast<ExceptionTypePtrRawPtr>(handle)));\n";
             ss << "}\n";
             ss << "\n";
           }
           {
             auto &ss = helperFile.headerCppFunctionsSS_;
-            ss << "  exception_handle_t exception_" << exceptionName << "_wrapperToHandle(const ::zsLib::" << (exceptionName == "Exception" ? "" : "exceptions::") << exceptionName << " &value);\n";
+            ss << "  exception_handle_t exception_" << exceptionName << "_wrapperToHandle(const ::zsLib::" << (exceptionName == "Exception" ? "" : "Exceptions::") << exceptionName << " &value);\n";
           }
           {
             auto &ss = helperFile.cppFunctionsSS_;
 
             ss << dash2;
-            ss << "  exception_handle_t exception_" << exceptionName << "_wrapperToHandle(const ::zsLib::" << (exceptionName == "Exception" ? "" : "exceptions::") << exceptionName << " &value)\n";
+            ss << "  exception_handle_t exception_" << exceptionName << "_wrapperToHandle(const ::zsLib::" << (exceptionName == "Exception" ? "" : "Exceptions::") << exceptionName << " &value)\n";
             ss << "  {\n";
-            ss << "    typedef ::zsLib::" << (exceptionName == "Exception" ? "" : "exceptions::") << exceptionName << " ExceptionType;\n";
+            ss << "    typedef ::zsLib::" << (exceptionName == "Exception" ? "" : "Exceptions::") << exceptionName << " ExceptionType;\n";
             ss << "    auto handle = exception_wrapperCreate_exception();\n";
-            ss << "    exception_set_Exception(handle, make_shared<ExceptionType>(e));\n";
+            ss << "    exception_set_Exception(handle, make_shared<ExceptionType>(value));\n";
             ss << "    return handle;\n";
             ss << "  }\n";
             ss << "\n";
@@ -977,48 +975,39 @@ namespace zsLib
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_bool);
 
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_uchar);
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_char);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_schar);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_ushort);
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_short);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_sshort);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_uint);
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_int);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_sint);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_ulong);
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_long);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_slong);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_ulonglong);
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_longlong);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_slonglong);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_uint8);
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_int8);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_sint8);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_uint16);
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_int16);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_sint16);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_uint32);
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_int32);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_sint32);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_uint64);
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_int64);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_sint64);
 
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_byte);
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_word);
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_dword);
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_qword);
+          //prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_byte);
+          //prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_word);
+          //prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_dword);
+          //prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_qword);
 
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_float);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_double);
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_ldouble);
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_float32);
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_float64);
+          //prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_float32);
+          //prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_float64);
 
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_pointer);
+          //prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_pointer);
 
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_binary);
-          prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_size);
+          //prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_size);
 
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_string);
         }
@@ -1066,27 +1055,38 @@ namespace zsLib
             {
               auto &ss = helperFile.cFunctionsSS_;
               ss << dash;
-              ss << boxedTypeStr << " box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "()\n";
+              ss << boxedTypeStr << " " << getApiCallingDefine(helperFile.global_) << " box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "()\n";
               ss << "{\n";
               ss << "  typedef " << boxedTypeStr << " CBoxType;\n";
               ss << "  typedef " << GenerateHelper::getBasicTypeString(basicType) << " BasicType;\n";
               ss << "  " << sharedPtrStr << "\n";
-              ss << "  return reinterpret_cast<CType>(new BasicTypePtr());\n";
+              ss << "  return reinterpret_cast<CBoxType>(new BasicTypePtr());\n";
               ss << "}\n";
               ss << "\n";
 
               ss << dash;
-              ss << boxedTypeStr << " box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "WithValue(" << cTypeStr << " value)\n";
+              ss << boxedTypeStr << " " << getApiCallingDefine(helperFile.global_) << " box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "WithValue(" << cTypeStr << " value)\n";
               ss << "{\n";
               ss << "  typedef " << boxedTypeStr << " CBoxType;\n";
               ss << "  typedef " << GenerateHelper::getBasicTypeString(basicType) << " BasicType;\n";
               ss << "  " << sharedPtrStr << "\n";
-              ss << "  return reinterpret_cast<CType>(new BasicTypePtr(value))";
+              ss << "  auto ptr = new BasicTypePtr();\n";
+              if (isBinary) {
+                ss << "  (*ptr) = wrapper::binary_t_wrapperFromHandle(value);\n";
+              } else if (isString) {
+                ss << "  (*ptr) = make_shared<BasicType>();\n";
+                ss << "  (*(*ptr)) = wrapper::string_t_wrapperFromHandle(value);\n";
+              } else {
+                ss << "  (*ptr) = make_shared<BasicType>();\n";
+                ss << "  (*((*ptr).get())) = value;\n";
+              }
+
+              ss << "  return reinterpret_cast<CBoxType>(ptr);\n";
               ss << "}\n";
               ss << "\n";
 
               ss << dash;
-              ss << "void box_" << cTypeStr << "_wrapperDestroy(" << boxedTypeStr << " handle)\n";
+              ss << "void " << getApiCallingDefine(helperFile.global_) << " box_" << cTypeStr << "_wrapperDestroy(" << boxedTypeStr << " handle)\n";
               ss << "{\n";
               ss << "  typedef " << boxedTypeStr << " CBoxType;\n";
               ss << "  typedef " << GenerateHelper::getBasicTypeString(basicType) << " BasicType;\n";
@@ -1097,19 +1097,19 @@ namespace zsLib
               ss << "}\n";
               ss << "\n";
 
-              ss << "instance_id_t box_" << cTypeStr << "_wrapperInstanceId(" << boxedTypeStr << " handle)\n";
+              ss << "instance_id_t " << getApiCallingDefine(helperFile.global_) << " box_" << cTypeStr << "_wrapperInstanceId(" << boxedTypeStr << " handle)\n";
               ss << "{\n";
               ss << "  typedef " << boxedTypeStr << " CBoxType;\n";
               ss << "  typedef " << GenerateHelper::getBasicTypeString(basicType) << " BasicType;\n";
               ss << "  " << sharedPtrStr << "\n";
               ss << "  typedef BasicTypePtr * BasicTypePtrRawPtr;\n";
               ss << "  if (0 == handle) return 0;\n";
-              ss << "  reinterpret_cast<instance_id_t>((*reinterpret_cast<BasicTypePtrRawPtr>(handle)).get());\n";
+              ss << "  return reinterpret_cast<instance_id_t>((*reinterpret_cast<BasicTypePtrRawPtr>(handle)).get());\n";
               ss << "}\n";
               ss << "\n";
 
               ss << dash;
-              ss << "bool box_" << cTypeStr << "_has_value(" << boxedTypeStr << " handle)\n";
+              ss << "bool " << getApiCallingDefine(helperFile.global_) << " box_" << cTypeStr << "_has_value(" << boxedTypeStr << " handle)\n";
               ss << "{\n";
               ss << "  typedef " << boxedTypeStr << " CBoxType;\n";
               ss << "  typedef " << GenerateHelper::getBasicTypeString(basicType) << " BasicType;\n";
@@ -1122,13 +1122,13 @@ namespace zsLib
               ss << "\n";
 
               ss << dash;
-              ss << cTypeStr << " box_" << cTypeStr << "_get_value(" << boxedTypeStr << " handle)\n";
+              ss << cTypeStr << " " << getApiCallingDefine(helperFile.global_) << " box_" << cTypeStr << "_get_value(" << boxedTypeStr << " handle)\n";
               ss << "{\n";
               ss << "  typedef " << boxedTypeStr << " CBoxType;\n";
               ss << "  typedef " << GenerateHelper::getBasicTypeString(basicType) << " BasicType;\n";
               ss << "  " << sharedPtrStr << "\n";
               ss << "  typedef BasicTypePtr * BasicTypePtrRawPtr;\n";
-              ss << "  if (0 == handle) throw std::invalid_argument(\"null pointer exception\");\n";
+              ss << "  if (0 == handle) return " << cTypeStr <<"();\n";
               ss << "  BasicTypePtr ptr = (*reinterpret_cast<BasicTypePtrRawPtr>(handle));\n";
               if (isBinary) {
                 ss << "  return wrapper::binary_t_wrapperToHandle(ptr);\n";
@@ -1141,20 +1141,20 @@ namespace zsLib
               ss << "\n";
 
               ss << dash;
-              ss << "void box_" << cTypeStr << "_set_value(" << boxedTypeStr << " handle, " << cTypeStr << " value)\n";
+              ss << "void " << getApiCallingDefine(helperFile.global_) << " box_" << cTypeStr << "_set_value(" << boxedTypeStr << " handle, " << cTypeStr << " value)\n";
               ss << "{\n";
               ss << "  typedef " << boxedTypeStr << " CBoxType;\n";
               ss << "  typedef " << GenerateHelper::getBasicTypeString(basicType) << " BasicType;\n";
               ss << "  " << sharedPtrStr << "\n";
               ss << "  typedef BasicTypePtr * BasicTypePtrRawPtr;\n";
-              ss << "  if (0 == handle) throw std::invalid_argument(\"null pointer exception\");\n";
+              ss << "  if (0 == handle) return;\n";
               ss << "  BasicTypePtr &ptr = (*reinterpret_cast<BasicTypePtrRawPtr>(handle));\n";
               if (isBinary) {
                 ss << "  ptr = wrapper::binary_t_wrapperFromHandle(value);\n";
               } else if (isString) {
-                ss << "  ptr = wrapper::string_t_wrapperFromHandle(value);\n";
+                ss << "  ptr = make_shared<String>(wrapper::string_t_wrapperFromHandle(value));\n";
               } else {
-                ss << "  *ptr = value;\n";
+                ss << "  (*(ptr.get())) = value;\n";
               }
               ss << "}\n";
               ss << "\n";
@@ -1185,9 +1185,9 @@ namespace zsLib
               ss << "    if (0 == handle) return Optional< " << GenerateHelper::getBasicTypeString(basicType) << " >();\n";
               ss << "    if (!box_" << cTypeStr << "_has_value(handle)) return Optional< " << GenerateHelper::getBasicTypeString(basicType) << " >();\n";
               if (isBinary) {
-                ss << "    return Optional< " << GenerateHelper::getBasicTypeString(basicType) << " >(binary_t_wrapperFromHandle(box_binary_t_get_value(handle));\n";
+                ss << "    return Optional< " << GenerateHelper::getBasicTypeString(basicType) << " >(binary_t_wrapperFromHandle(box_binary_t_get_value(handle)));\n";
               } else if (isString) {
-                ss << "    return Optional< " << GenerateHelper::getBasicTypeString(basicType) << " >(string_t_wrapperFromHandle(box_string_t_get_value(handle));\n";
+                ss << "    return Optional< " << GenerateHelper::getBasicTypeString(basicType) << " >(string_t_wrapperFromHandle(box_string_t_get_value(handle)));\n";
               } else {
                 ss << "    return Optional< " << GenerateHelper::getBasicTypeString(basicType) << " >(box_" << cTypeStr <<"_get_value(handle));\n";
               }
@@ -1210,8 +1210,8 @@ namespace zsLib
               ss << getApiExportDefine(helperFile.global_) << " string_t " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperCreate_string_tWithValue(const char *value);\n";
               ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperDestroy(string_t handle);\n";
               ss << getApiExportDefine(helperFile.global_) << " instance_id_t " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperInstanceId(string_t handle);\n";
-              ss << getApiExportDefine(helperFile.global_) << " const char * " << getApiCallingDefine(helperFile.global_) << " string_t_get_value(string_t_ handle);\n";
-              ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " string_t_set_value(string_t_ handle, const char *value);\n";
+              ss << getApiExportDefine(helperFile.global_) << " const char * " << getApiCallingDefine(helperFile.global_) << " string_t_get_value(string_t handle);\n";
+              ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " string_t_set_value(string_t handle, const char *value);\n";
               ss << "\n";
             }
             {
@@ -1232,14 +1232,14 @@ namespace zsLib
               ss << "\n";
 
               ss << dash;
-              ss << "string_t string_t_wrapperCreate_string_tWithValue(const char *value)\n";
+              ss << "string_t " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperCreate_string_tWithValue(const char *value)\n";
               ss << "{\n";
               ss << "  return reinterpret_cast<string_t>(new ::zsLib::String(value));\n";
               ss << "}\n";
               ss << "\n";
 
               ss << dash;
-              ss << "void string_t_wrapperDestroy(string_t handle)\n";
+              ss << "void " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperDestroy(string_t handle)\n";
               ss << "{\n";
               ss << "  if (0 == handle) return;\n";
               ss << "  delete reinterpret_cast<::zsLib::String *>(handle);\n";
@@ -1247,15 +1247,15 @@ namespace zsLib
               ss << "\n";
 
               ss << dash;
-              ss << "instance_id_t string_t_wrapperInstanceId(string_t handle)\n";
+              ss << "instance_id_t " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperInstanceId(string_t handle)\n";
               ss << "{\n";
               ss << "  if (0 == handle) return 0;\n";
-              ss << "  return reinterpret_cast<instance_id_t>((*reinterpret_cast<::zsLib::String *>(handle)).get());\n";
+              ss << "  return reinterpret_cast<instance_id_t>(reinterpret_cast<::zsLib::String *>(handle));\n";
               ss << "}\n";
               ss << "\n";
 
               ss << dash;
-              ss << "const char *string_t_get_value(string_t_ handle)\n";
+              ss << "const char * " << getApiCallingDefine(helperFile.global_) << " string_t_get_value(string_t handle)\n";
               ss << "{\n";
               ss << "  if (0 == handle) return reinterpret_cast<const char *>(NULL);\n";
               ss << "  return (*reinterpret_cast<::zsLib::String *>(handle));\n";
@@ -1263,9 +1263,9 @@ namespace zsLib
               ss << "\n";
 
               ss << dash;
-              ss << "void string_t_set_value(string_t_ handle, const char *value)\n";
+              ss << "void " << getApiCallingDefine(helperFile.global_) << " string_t_set_value(string_t handle, const char *value)\n";
               ss << "{\n";
-              ss << "  if (0 == handle) throw std::invalid_argument(\"null pointer exception\");\n";
+              ss << "  if (0 == handle) return;\n";
               ss << "  (*reinterpret_cast<::zsLib::String *>(handle)) = ::zsLib::String(value);\n";
               ss << "}\n";
               ss << "\n";
@@ -1303,15 +1303,15 @@ namespace zsLib
               ss << getApiExportDefine(helperFile.global_) << " binary_t " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperCreate_binary_tWithValue(const uint8_t *value, size_t size);\n";
               ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperDestroy(string_t handle);\n";
               ss << getApiExportDefine(helperFile.global_) << " instance_id_t " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperInstanceId(string_t handle);\n";
-              ss << getApiExportDefine(helperFile.global_) << " const uint8_t * " << getApiCallingDefine(helperFile.global_) << " binary_t_get_value(string_t_ handle);\n";
-              ss << getApiExportDefine(helperFile.global_) << " size_t * " << getApiCallingDefine(helperFile.global_) << " binary_t_get_size(string_t_ handle);\n";
-              ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " binary_t_set_value(string_t_ handle, const uint8_t *value, size_t size);\n";
+              ss << getApiExportDefine(helperFile.global_) << " const uint8_t * " << getApiCallingDefine(helperFile.global_) << " binary_t_get_value(binary_t handle);\n";
+              ss << getApiExportDefine(helperFile.global_) << " size_t " << getApiCallingDefine(helperFile.global_) << " binary_t_get_size(binary_t handle);\n";
+              ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " binary_t_set_value(binary_t handle, const uint8_t *value, size_t size);\n";
               ss << "\n";
             }
             {
               auto &ss = helperFile.headerCppFunctionsSS_;
-              ss << "  binary_t string_t_wrapperToHandle(SecureBytePtr value);\n";
-              ss << "  SecureBytePtr string_t_wrapperFromHandle(binary_t handle);\n";
+              ss << "  binary_t binary_t_wrapperToHandle(SecureByteBlockPtr value);\n";
+              ss << "  SecureByteBlockPtr binary_t_wrapperFromHandle(binary_t handle);\n";
               ss << "\n";
             }
           }
@@ -1319,14 +1319,14 @@ namespace zsLib
             {
               auto &ss = helperFile.cFunctionsSS_;
               ss << dash;
-              ss << getApiExportDefine(helperFile.global_) << " binary_t " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperCreate_binary_t()\n";
+              ss << "binary_t " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperCreate_binary_t()\n";
               ss << "{\n";
               ss << "  return reinterpret_cast<binary_t>(new SecureByteBlockPtr());\n";
               ss << "}\n";
               ss << "\n";
 
               ss << dash;
-              ss << "binary_t binary_t_wrapperCreate_binary_tWithValue(const uint8_t *value, size_t size)\n";
+              ss << "binary_t " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperCreate_binary_tWithValue(const uint8_t *value, size_t size)\n";
               ss << "{\n";
               ss << "  if ((NULL == value) || (0 == size)) return reinterpret_cast<binary_t>(new SecureByteBlockPtr());\n";
               ss << "  return reinterpret_cast<binary_t>(new SecureByteBlockPtr(make_shared<SecureByteBlock>(value, size)));\n";
@@ -1334,7 +1334,7 @@ namespace zsLib
               ss << "\n";
 
               ss << dash;
-              ss << "void binary_t_wrapperDestroy(binary_t_ handle)\n";
+              ss << "void " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperDestroy(binary_t handle)\n";
               ss << "{\n";
               ss << "  if (0 == handle) return;\n";
               ss << "  delete reinterpret_cast<SecureByteBlockPtr *>(handle);\n";
@@ -1342,7 +1342,7 @@ namespace zsLib
               ss << "\n";
 
               ss << dash;
-              ss << "instance_id_t binary_t_wrapperInstanceId(string_t handle)\n";
+              ss << "instance_id_t " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperInstanceId(string_t handle)\n";
               ss << "{\n";
               ss << "  if (0 == handle) return 0;\n";
               ss << "  return reinterpret_cast<instance_id_t>((*reinterpret_cast<SecureByteBlockPtr *>(handle)).get());\n";
@@ -1350,29 +1350,29 @@ namespace zsLib
               ss << "\n";
 
               ss << dash;
-              ss << "const uint8_t *binary_t_get_value(binary_t handle)\n";
+              ss << "const uint8_t * " << getApiCallingDefine(helperFile.global_) << " binary_t_get_value(binary_t handle)\n";
               ss << "{\n";
-              ss << "  if (0 == handle) return reinterpret_cast<const char *>(NULL);\n";
+              ss << "  if (0 == handle) return static_cast<const uint8_t *>(NULL);\n";
               ss << "  SecureByteBlockPtr ptr = (*reinterpret_cast<SecureByteBlockPtr *>(handle));\n";
-              ss << "  if (!ptr) return reinterpret_cast<const char *>(NULL);\n";
+              ss << "  if (!ptr) return static_cast<const uint8_t *>(NULL);\n";
               ss << "  return ptr->BytePtr();\n";
               ss << "}\n";
               ss << "\n";
 
               ss << dash;
-              ss << "size_t binary_t_get_size(binary_t handle)\n";
+              ss << "size_t " << getApiCallingDefine(helperFile.global_) << " binary_t_get_size(binary_t handle)\n";
               ss << "{\n";
-              ss << "  if (0 == handle) return reinterpret_cast<const char *>(NULL);\n";
+              ss << "  if (0 == handle) return 0;\n";
               ss << "  SecureByteBlockPtr ptr = (*reinterpret_cast<SecureByteBlockPtr *>(handle));\n";
-              ss << "  if (!ptr) return reinterpret_cast<const char *>(NULL);\n";
-              ss << "  return ptr->BytePtr();\n";
+              ss << "  if (!ptr) return 0;\n";
+              ss << "  return SafeInt<size_t>(ptr->SizeInBytes());\n";
               ss << "}\n";
               ss << "\n";
 
               ss << dash;
-              ss << "void binary_t_set_value(binary_t_ handle, const uint8_t *value, size_t size)\n";
+              ss << "void " << getApiCallingDefine(helperFile.global_) << " binary_t_set_value(binary_t handle, const uint8_t *value, size_t size)\n";
               ss << "{\n";
-              ss << "  if (0 == handle) throw std::invalid_argument(\"null pointer exception\");\n";
+              ss << "  if (0 == handle) return;\n";
               ss << "  if ((NULL == value) || (0 == size)) { (*reinterpret_cast<SecureByteBlockPtr *>(handle)) = SecureByteBlockPtr(); return; }\n";
               ss << "  (*reinterpret_cast<SecureByteBlockPtr *>(handle)) = make_shared<SecureByteBlock>(value, size);\n";
               ss << "}\n";
@@ -1429,7 +1429,7 @@ namespace zsLib
             }
             {
               auto &ss = helperFile.headerCppFunctionsSS_;
-              ss << "  " << fixCType(durationStruct) << " zs_" << durationType << "_wrapperToHandle(" << durationType << " value);\n";
+              ss << "  " << fixCType(durationStruct) << " zs_" << durationType << "_wrapperToHandle(" << zsDurationType << " value);\n";
               ss << "  " << zsDurationType << " zs_" << durationType << "_wrapperFromHandle(" << fixCType(durationStruct) << " handle);\n";
               ss << "\n";
             }
@@ -1438,7 +1438,7 @@ namespace zsLib
             {
               auto &ss = helperFile.cFunctionsSS_;
               ss << dash;
-              ss << fixCType(durationStruct) << " zs_" << durationType << "_wrapperCreate_" << durationType << "()\n";
+              ss << fixCType(durationStruct) << " " << getApiCallingDefine(durationStruct) << " zs_" << durationType << "_wrapperCreate_" << durationType << "()\n";
               ss << "{\n";
               ss << "  typedef " << fixCType(durationStruct) << " CType;\n";
               ss << "  typedef " << zsDurationType << " DurationType;\n";
@@ -1447,7 +1447,7 @@ namespace zsLib
               ss << "\n";
 
               ss << dash;
-              ss << fixCType(durationStruct) << " zs_" << durationType << "_wrapperCreate_" << durationType << "WithValue(int64_t value)\n";
+              ss << fixCType(durationStruct) << " " << getApiCallingDefine(durationStruct) << " zs_" << durationType << "_wrapperCreate_" << durationType << "WithValue(int64_t value)\n";
               ss << "{\n";
               ss << "  typedef " << fixCType(durationStruct) << " CType;\n";
               ss << "  typedef " << zsDurationType << " DurationType;\n";
@@ -1462,7 +1462,7 @@ namespace zsLib
               ss << "\n";
 
               ss << dash;
-              ss << "void zs_" << durationType << "_wrapperDestroy(" << fixCType(durationStruct) << " handle)\n";
+              ss << "void " << getApiCallingDefine(durationStruct) << " zs_" << durationType << "_wrapperDestroy(" << fixCType(durationStruct) << " handle)\n";
               ss << "{\n";
               ss << "  typedef " << zsDurationType << " DurationType;\n";
               ss << "  typedef DurationType * DurationTypeRawPtr;\n";
@@ -1472,18 +1472,18 @@ namespace zsLib
               ss << "\n";
 
               ss << dash;
-              ss << "instance_id_t zs_" << durationType << "_wrapperInstanceId(" << fixCType(durationStruct) << " handle)\n";
+              ss << "instance_id_t " << getApiCallingDefine(durationStruct) << " zs_" << durationType << "_wrapperInstanceId(" << fixCType(durationStruct) << " handle)\n";
               ss << "{\n";
               ss << "  typedef " << zsDurationType << " DurationType;\n";
               ss << "  typedef DurationType * DurationTypeRawPtr;\n";
-              ss << "  if (0 == handle) return;\n";
-              ss << "  return reinterpret_cast<instance_id_t>((*reinterpret_cast<DurationTypeRawPtr>(handle)).get());\n";
+              ss << "  if (0 == handle) return 0;\n";
+              ss << "  return reinterpret_cast<instance_id_t>(reinterpret_cast<DurationTypeRawPtr>(handle));\n";
               ss << "}\n";
               ss << "\n";
 
 
               ss << dash;
-              ss << "int64_t zs_" << durationType << "_get_value(" << fixCType(durationStruct) << " handle)\n";
+              ss << "int64_t " << getApiCallingDefine(durationStruct) << " zs_" << durationType << "_get_value(" << fixCType(durationStruct) << " handle)\n";
               ss << "{\n";
               ss << "  typedef " << zsDurationType << " DurationType;\n";
               ss << "  typedef DurationType * DurationTypeRawPtr;\n";
@@ -1497,12 +1497,12 @@ namespace zsLib
               ss << "\n";
 
               ss << dash;
-              ss << "void zs_" << durationType << "_set_value(" << fixCType(durationStruct) << " handle, int64_t value)\n";
+              ss << "void " << getApiCallingDefine(durationStruct) << " zs_" << durationType << "_set_value(" << fixCType(durationStruct) << " handle, int64_t value)\n";
               ss << "{\n";
               ss << "  typedef " << zsDurationType << " DurationType;\n";
               ss << "  typedef DurationType * DurationTypeRawPtr;\n";
               ss << "  typedef DurationType::rep DurationTypeRep;\n";
-              ss << "  if (0 == handle) throw std::invalid_argument(\"null pointer exception\");\n";
+              ss << "  if (0 == handle) return;\n";
               if (isTime) {
                 ss << "  typedef DurationType::duration TimeDurationType;\n";
                 ss << "  (*reinterpret_cast<DurationTypeRawPtr>(handle)) = DurationType(TimeDurationType(SafeInt<DurationTypeRep>(value)));\n";
@@ -1515,7 +1515,7 @@ namespace zsLib
             {
               auto &ss = helperFile.cppFunctionsSS_;
               ss << dash2;
-              ss << "  " << fixCType(durationStruct) << " zs_" << durationType << "_wrapperToHandle(" << durationType << " value)\n";
+              ss << "  " << fixCType(durationStruct) << " zs_" << durationType << "_wrapperToHandle(" << zsDurationType << " value)\n";
               ss << "  {\n";
               ss << "    typedef " << fixCType(durationStruct) << " CType;\n";
               ss << "    typedef " << zsDurationType << " DurationType;\n";
@@ -1545,6 +1545,7 @@ namespace zsLib
                                                 )
         {
           bool isMap = ("map" == listOrSetStr);
+          bool isList = ("list" == listOrSetStr);
           auto context = helperFile.global_->toContext()->findType("::std::" + listOrSetStr);
           if (!context) return;
 
@@ -1633,7 +1634,7 @@ namespace zsLib
               {
                 auto &ss = helperFile.cFunctionsSS_;
                 ss << dash;
-                ss << fixCType(templatedStructType) << " " << fixType(templatedStructType) << "_wrapperCreate_" << structType->getMappingName() << "()\n";
+                ss << fixCType(templatedStructType) << " " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_wrapperCreate_" << structType->getMappingName() << "()\n";
                 ss << "{\n";
                 ss << typedefsSS.str();
                 ss << "  return reinterpret_cast<CType>(new WrapperTypeListPtr(make_shared<WrapperTypeList>()));\n";
@@ -1641,7 +1642,7 @@ namespace zsLib
                 ss << "\n";
 
                 ss << dash;
-                ss << "void " << fixType(templatedStructType) << "_wrapperDestroy(" << fixCType(templatedStructType) << " handle)\n";
+                ss << "void " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_wrapperDestroy(" << fixCType(templatedStructType) << " handle)\n";
                 ss << "{\n";
                 ss << typedefsSS.str();
                 ss << "  if (0 == handle) return;\n";
@@ -1650,7 +1651,7 @@ namespace zsLib
                 ss << "\n";
 
                 ss << dash;
-                ss << "instance_id_t " << fixType(templatedStructType) << "_wrapperInstanceId(" << fixCType(templatedStructType) << " handle)\n";
+                ss << "instance_id_t " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_wrapperInstanceId(" << fixCType(templatedStructType) << " handle)\n";
                 ss << "{\n";
                 ss << typedefsSS.str();
                 ss << "  if (0 == handle) return 0;\n";
@@ -1659,26 +1660,28 @@ namespace zsLib
                 ss << "\n";
 
                 ss << dash;
-                ss << "void " << fixType(templatedStructType) << "_insert(" << fixCType(templatedStructType) << " handle, " << fixCType(listType) << " value)\n";
+                ss << "void " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_insert(" << fixCType(templatedStructType) << " handle, " << fixCType(listType) << " value)\n";
                 ss << "{\n";
                 ss << typedefsSS.str();
-                ss << "  if (0 == handle) throw std::invalid_argument(\"null pointer exception\");\n";
+                ss << "  if (0 == handle) return;\n";
 
                 String keyTypeStr;
                 String listTypeStr;
 
                 if (isMap) {
-                  if (((keyType->toBasicType()) ||
-                      (keyType->toEnumType())) &&
-                     ("string_t" != fixCType(keyType))) {
+                  if (keyType->toEnumType()) {
+                    keyTypeStr = "static_cast<" + GenerateStructHeader::getWrapperTypeString(false, listType) + ">(key)";
+                  } else if ((keyType->toBasicType()) &&
+                             ("string_t" != fixCType(keyType))) {
                     keyTypeStr = "key";
                   } else {
                     keyTypeStr = fixType(keyType) + "_wrapperFromHandle(key)";
                   }
                 }
-                if (((listType->toBasicType()) ||
-                    (listType->toEnumType())) &&
-                    ("string_t" != fixCType(listType))) {
+                if (listType->toEnumType()) {
+                  listTypeStr = "static_cast<" + GenerateStructHeader::getWrapperTypeString(false, listType) + ">(value)";
+                } else if ((listType->toBasicType()) &&
+                           ("string_t" != fixCType(listType))) {
                   listTypeStr = "value";
                 } else {
                   listTypeStr = fixType(listType) + "_wrapperFromHandle(value)";
@@ -1686,6 +1689,8 @@ namespace zsLib
 
                 if (isMap) {
                   ss << "  (*(*reinterpret_cast<WrapperTypeListPtrRawPtr>(handle)))[" << keyTypeStr << "] = " << listTypeStr << ";\n";
+                } else if (isList) {
+                  ss << "  (*reinterpret_cast<WrapperTypeListPtrRawPtr>(handle))->push_back(" << listTypeStr << ");\n";
                 } else {
                   ss << "  (*reinterpret_cast<WrapperTypeListPtrRawPtr>(handle))->insert(" << listTypeStr << ");\n";
                 }
@@ -1693,29 +1698,29 @@ namespace zsLib
                 ss << "\n";
 
                 ss << dash;
-                ss << "uintptr_t " << fixType(templatedStructType) << "_wrapperIterBegin(" << fixCType(templatedStructType) << " handle)\n";
+                ss << "uintptr_t " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_wrapperIterBegin(" << fixCType(templatedStructType) << " handle)\n";
                 ss << "{\n";
                 ss << typedefsWithIterSS.str();
-                ss << "  if (0 == handle) throw std::invalid_argument(\"null pointer exception\");\n";
+                ss << "  if (0 == handle) return 0;\n";
                 ss << "  return reinterpret_cast<uintptr_t>(new WrapperTypeListIterator((*reinterpret_cast<WrapperTypeListPtrRawPtr>(handle))->begin()));\n";
                 ss << "}\n";
                 ss << "\n";
 
                 ss << dash;
-                ss << "void " << fixType(templatedStructType) << "_wrapperIterNext(uintptr_t iterHandle)\n";
+                ss << "void " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_wrapperIterNext(uintptr_t iterHandle)\n";
                 ss << "{\n";
                 ss << typedefsWithIterSS.str();
-                ss << "  if (0 == iterHandle) throw std::invalid_argument(\"null pointer exception\");\n";
-                ss << "  ++(*reinterpret_cast<WrapperTypeListPtrRawPtr>(iterHandle));\n";
+                ss << "  if (0 == iterHandle) return;\n";
+                ss << "  ++(*reinterpret_cast<WrapperTypeListIteratorRawPtr>(iterHandle));\n";
                 ss << "}\n";
                 ss << "\n";
 
                 ss << dash;
-                ss << "bool " << fixType(templatedStructType) << "_wrapperIterIsEnd(" << fixCType(templatedStructType) << " handle, uintptr_t iterHandle)\n";
+                ss << "bool " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_wrapperIterIsEnd(" << fixCType(templatedStructType) << " handle, uintptr_t iterHandle)\n";
                 ss << "{\n";
                 ss << typedefsWithIterSS.str();
                 ss << "  if (0 == handle) throw std::invalid_argument(\"null pointer exception\");\n";
-                ss << "  if (0 == iterHandle) throw std::invalid_argument(\"null pointer exception\");\n";
+                ss << "  if (0 == iterHandle) return true;\n";
                 ss << "  auto iterRawPtr = reinterpret_cast<WrapperTypeListIteratorRawPtr>(iterHandle);\n";
                 ss << "  bool isEnd = (*iterRawPtr) == (*reinterpret_cast<WrapperTypeListPtrRawPtr>(handle))->end();\n";
                 ss << "  if (isEnd) delete iterRawPtr;\n";
@@ -1728,30 +1733,30 @@ namespace zsLib
                   ss << fixCType(keyType) << " " << fixType(templatedStructType) << "_wrapperIterKey(uintptr_t iterHandle)\n";
                   ss << "{\n";
                   ss << typedefsWithIterSS.str();
-                  ss << "  if (0 == iterHandle) throw std::invalid_argument(\"null pointer exception\");\n";
+                  ss << "  if (0 == iterHandle) return " << fixCType(keyType) << "();\n";
                   if (((keyType->toBasicType()) ||
                     (keyType->toEnumType())) &&
                     ("string_t" != fixCType(keyType))) {
-                    ss << "  return (*(*reinterpret_cast<WrapperTypeListPtrRawPtr>(iterHandle))).first;\n";
+                    ss << "  return (*(*reinterpret_cast<WrapperTypeListIteratorRawPtr>(iterHandle))).first;\n";
                   }
                   else {
-                    ss << "  return " << fixType(keyType) << "_wrapperToHandle(*(*reinterpret_cast<WrapperTypeListPtrRawPtr>(iterHandle)).first);\n";
+                    ss << "  return " << fixType(keyType) << "_wrapperToHandle(*(*reinterpret_cast<WrapperTypeListIteratorRawPtr>(iterHandle)).first);\n";
                   }
                   ss << "}\n";
                   ss << "\n";
                 }
 
                 ss << dash;
-                ss << fixCType(listType) << " " << fixType(templatedStructType) << "_wrapperIterValue(uintptr_t iterHandle)\n";
+                ss << fixCType(listType) << " " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_wrapperIterValue(uintptr_t iterHandle)\n";
                 ss << "{\n";
                 ss << typedefsWithIterSS.str();
-                ss << "  if (0 == iterHandle) throw std::invalid_argument(\"null pointer exception\");\n";
+                ss << "  if (0 == iterHandle) return " << fixCType(listType) << "();\n";
                 if (((listType->toBasicType()) ||
                      (listType->toEnumType())) &&
                    ("string_t" != fixCType(listType))) {
-                  ss << "  return (*(*reinterpret_cast<WrapperTypeListPtrRawPtr>(iterHandle)))" << (isMap ? ".second" : "") << ";\n";
+                  ss << "  return (*(*reinterpret_cast<WrapperTypeListIteratorRawPtr>(iterHandle)))" << (isMap ? ".second" : "") << ";\n";
                 } else {
-                  ss << "  return " << fixType(listType) << "_wrapperToHandle(*(*reinterpret_cast<WrapperTypeListPtrRawPtr>(iterHandle))" << (isMap ? ".second" : "") << ");\n";
+                  ss << "  return " << fixType(listType) << "_wrapperToHandle(*(*reinterpret_cast<WrapperTypeListIteratorRawPtr>(iterHandle))" << (isMap ? ".second" : "") << ");\n";
                 }
                 ss << "}\n";
                 ss << "\n";
@@ -1816,7 +1821,7 @@ namespace zsLib
             {
               auto &ss = helperFile.headerCppFunctionsSS_;
               if (isPromise) {
-                ss << "  event_observer_t " << specialName << "_wrapperObserveEvents(" << specialName << "Ptr value);\n";
+                ss << "  event_observer_t zs_" << specialName << "_wrapperObserveEvents(" << specialName << "Ptr value);\n";
               }
               ss << "  " << fixCType(contextStruct) << " zs_" << specialName << "_wrapperToHandle(" << specialName << "Ptr value);\n";
               ss << "  " << specialName << "Ptr zs_" << specialName << "_wrapperFromHandle(" << fixCType(contextStruct) << " handle);\n";
@@ -1828,7 +1833,7 @@ namespace zsLib
               auto &ss = helperFile.cFunctionsSS_;
 
               ss << dash;
-              ss << "void zs_" << specialName << "_wrapperDestroy(" << fixCType(contextStruct) << " handle)\n";
+              ss << "void " << getApiCallingDefine(contextStruct) << " zs_" << specialName << "_wrapperDestroy(" << fixCType(contextStruct) << " handle)\n";
               ss << "{\n";
               ss << "  typedef " << specialName << "Ptr WrapperType;\n";
               ss << "  typedef WrapperType * WrapperTypeRawPtr;\n";
@@ -1838,7 +1843,7 @@ namespace zsLib
               ss << "\n";
 
               ss << dash;
-              ss << "instance_id_t zs_" << specialName << "_wrapperInstanceId(" << fixCType(contextStruct) << " handle)\n";
+              ss << "instance_id_t " << getApiCallingDefine(contextStruct) << " zs_" << specialName << "_wrapperInstanceId(" << fixCType(contextStruct) << " handle)\n";
               ss << "{\n";
               ss << "  typedef " << specialName << "Ptr WrapperType;\n";
               ss << "  typedef WrapperType * WrapperTypeRawPtr;\n";
@@ -1849,17 +1854,17 @@ namespace zsLib
 
               if (isPromise) {
                 ss << dash;
-                ss << "event_observer_t zs_" << specialName << "_wrapperObserveEvents(" << fixCType(contextStruct) << " handle)\n";
+                ss << "event_observer_t " << getApiCallingDefine(contextStruct) << " zs_" << specialName << "_wrapperObserveEvents(" << fixCType(contextStruct) << " handle)\n";
                 ss << "{\n";
                 ss << "  typedef " << specialName << "Ptr WrapperType;\n";
                 ss << "  typedef WrapperType * WrapperTypeRawPtr;\n";
-                ss << "  if (0 == handle) return;\n";
+                ss << "  if (0 == handle) return 0;\n";
                 ss << "  return wrapper::zs_" << specialName << "_wrapperObserveEvents((*reinterpret_cast<WrapperTypeRawPtr>(handle)));\n";
                 ss << "}\n";
                 ss << "\n";
 
                 ss << dash;
-                ss << "uint64_t zs_" << specialName << "_get_id(" << fixCType(contextStruct) << " handle)\n";
+                ss << "uint64_t " << getApiCallingDefine(contextStruct) << " zs_" << specialName << "_get_id(" << fixCType(contextStruct) << " handle)\n";
                 ss << "{\n";
                 ss << "  typedef " << specialName << "Ptr WrapperType;\n";
                 ss << "  typedef WrapperType * WrapperTypeRawPtr;\n";
@@ -1869,7 +1874,7 @@ namespace zsLib
                 ss << "\n";
 
                 ss << dash;
-                ss << "bool zs_" << specialName << "_isSettled(" << fixCType(contextStruct) << " handle)\n";
+                ss << "bool " << getApiCallingDefine(contextStruct) << " zs_" << specialName << "_isSettled(" << fixCType(contextStruct) << " handle)\n";
                 ss << "{\n";
                 ss << "  typedef " << specialName << "Ptr WrapperType;\n";
                 ss << "  typedef WrapperType * WrapperTypeRawPtr;\n";
@@ -1879,7 +1884,7 @@ namespace zsLib
                 ss << "\n";
 
                 ss << dash;
-                ss << "bool zs_" << specialName << "_isResolved(" << fixCType(contextStruct) << " handle)\n";
+                ss << "bool " << getApiCallingDefine(contextStruct) << " zs_" << specialName << "_isResolved(" << fixCType(contextStruct) << " handle)\n";
                 ss << "{\n";
                 ss << "  typedef " << specialName << "Ptr WrapperType;\n";
                 ss << "  typedef WrapperType * WrapperTypeRawPtr;\n";
@@ -1889,7 +1894,7 @@ namespace zsLib
                 ss << "\n";
 
                 ss << dash;
-                ss << "bool zs_" << specialName << "_isRejected(" << fixCType(contextStruct) << " handle)\n";
+                ss << "bool " << getApiCallingDefine(contextStruct) << " zs_" << specialName << "_isRejected(" << fixCType(contextStruct) << " handle)\n";
                 ss << "{\n";
                 ss << "  typedef " << specialName << "Ptr WrapperType;\n";
                 ss << "  typedef WrapperType * WrapperTypeRawPtr;\n";
@@ -1919,16 +1924,16 @@ namespace zsLib
                 ss << "  public:\n";
                 ss << "    PromiseCallback(PromisePtr promise) : promise_(promise) {}\n";
                 ss << "\n";
-                ss << "    IWrapperObserverPtr *create(PromisePtr promise)\n";
+                ss << "    static IWrapperObserverPtr *create(PromisePtr promise)\n";
                 ss << "    {\n";
-                ss << "      if (!promise) return PromiseCallbackPtr();\n";
+                ss << "      if (!promise) return static_cast<IWrapperObserverPtr *>(NULL);\n";
                 ss << "\n";
                 ss << "      auto pThis = make_shared<PromiseCallback>(promise);\n";
-                ss << "      thisObserverRaw_ = new IWrapperObserverPtr(pThis);\n";
-                ss << "      thisWeak_ = pThis;\n";
+                ss << "      pThis->thisObserverRaw_ = new IWrapperObserverPtr(pThis);\n";
+                ss << "      pThis->thisWeak_ = pThis;\n";
                 ss << "      promise->then(pThis);\n";
                 ss << "      promise->background();\n";
-                ss << "      return thisObserverRaw_;\n";
+                ss << "      return pThis->thisObserverRaw_;\n";
                 ss << "    }\n";
                 ss << "\n";
                 ss << "    /* IWrapperObserver */\n";
@@ -1990,10 +1995,10 @@ namespace zsLib
               ss << dash2;
               ss << "  " << fixCType(contextStruct) << " zs_" << specialName << "_wrapperToHandle(" << specialName << "Ptr value)\n";
               ss << "  {\n";
+              ss << "    typedef " << fixCType(contextStruct) << " CType;\n";
               ss << "    typedef " << specialName << "Ptr WrapperType;\n";
-              ss << "    typedef WrapperType * WrapperTypeRawPtr;\n";
               ss << "    if (!value) return 0;\n";
-              ss << "    return reinterpret_cast<CType>(new DurationType(value));\n";
+              ss << "    return reinterpret_cast<CType>(new WrapperType(value));\n";
               ss << "  }\n";
               ss << "\n";
 
@@ -2042,15 +2047,16 @@ namespace zsLib
 
             {
               auto &ss = helperFile.headerCFunctionsSS_;
-              ss << getApiExportDefine(contextStruct) << " " << fixCType(promiseType) << " " << getApiCallingDefine(contextStruct) << " zs_PromiseWith_resolveValue_" << fixType(promiseType) << "(zs_Promise handle);\n";
+              ss << getApiExportDefine(contextStruct) << " " << fixCType(promiseType) << " " << getApiCallingDefine(contextStruct) << " zs_PromiseWith_resolveValue_" << fixType(promiseType) << "(zs_Promise_t handle);\n";
             }
             {
               auto &ss = helperFile.cFunctionsSS_;
 
               ss << dash;
-              ss << fixCType(promiseType) << " zs_PromiseWith_resolveValue_" << fixType(promiseType) << "(zs_Promise handle)\n";
+              ss << fixCType(promiseType) << " " << getApiCallingDefine(contextStruct) << " zs_PromiseWith_resolveValue_" << fixType(promiseType) << "(zs_Promise_t handle)\n";
               ss << "{\n";
               ss << "  typedef ::zsLib::AnyHolder< " << GenerateStructHeader::getWrapperTypeString(false, promiseType) << " > AnyHolderWrapper;\n";
+              ss << "  typedef PromisePtr * PromisePtrRawPtr;\n";
               ss << "  if (0 == handle) return 0;\n";
               ss << "  PromisePtr promise = (*reinterpret_cast<PromisePtrRawPtr>(handle));\n";
               ss << "  if (!promise) return 0;\n";
@@ -2095,15 +2101,16 @@ namespace zsLib
 
             {
               auto &ss = helperFile.headerCFunctionsSS_;
-              ss << getApiExportDefine(contextStruct) << " " << fixCType(promiseType) << " " << getApiCallingDefine(contextStruct) << " zs_PromiseWith_rejectReason_" << fixType(promiseType) << "(zs_Promise handle);\n";
+              ss << getApiExportDefine(contextStruct) << " " << fixCType(promiseType) << " " << getApiCallingDefine(contextStruct) << " zs_PromiseWith_rejectReason_" << fixType(promiseType) << "(zs_Promise_t handle);\n";
             }
             {
               auto &ss = helperFile.cFunctionsSS_;
 
               ss << dash;
-              ss << fixCType(promiseType) << " zs_PromiseWith_rejectReason_" << fixType(promiseType) << "(zs_Promise handle)\n";
+              ss << fixCType(promiseType) << " " << getApiCallingDefine(contextStruct) << " zs_PromiseWith_rejectReason_" << fixType(promiseType) << "(zs_Promise_t handle)\n";
               ss << "{\n";
               ss << "  typedef ::zsLib::AnyHolder< " << GenerateStructHeader::getWrapperTypeString(false, promiseType) << " > AnyHolderWrapper;\n";
+              ss << "  typedef PromisePtr * PromisePtrRawPtr;\n";
               ss << "  if (0 == handle) return 0;\n";
               ss << "  PromisePtr promise = (*reinterpret_cast<PromisePtrRawPtr>(handle));\n";
               ss << "  if (!promise) return 0;\n";
@@ -2331,9 +2338,10 @@ namespace zsLib
             bool hasResult = fixCType(method->mResult) != "void";
             bool hasThis = ((!isStatic) && (!isConstructor));
 
+            if (isConstructor) foundConstructor = true;
+
             if (rootStructObj != structObj) {
               if ((isStatic) || (isConstructor)) continue;
-              foundConstructor = true;
             }
             if (method->hasModifier(Modifier_Method_Delete)) continue;
 
@@ -2342,7 +2350,7 @@ namespace zsLib
 
             {
               auto &ss = headerCSS;
-              ss << getApiExportDefine(structObj) << " " << fixCType(method->mResult) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_" << (isConstructor ? "wrapperCreate_" : "")  << name << "(";
+              ss << getApiExportDefine(structObj) << " " << (isConstructor ? fixCType(structObj) : fixCType(method->mResult)) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_" << (isConstructor ? "wrapperCreate_" : "")  << name << "(";
             }
             {
               auto &ss = cSS;
@@ -2435,7 +2443,7 @@ namespace zsLib
                   auto throwType = (*iterThrow);
                   includeType(structFile, throwType);
                   ss << "  } catch (const " << GenerateStructHeader::getWrapperTypeString(false, throwType) << " &e) {\n";
-                  ss << "    wrapper::exception_set_Exception(wrapperExceptionHandle, make_shared<::zsLib::" << ("Exception" == throwType->getMappingName() ? "" : "exceptions::") << throwType->getMappingName() << ">(e));\n";
+                  ss << "    wrapper::exception_set_Exception(wrapperExceptionHandle, make_shared<::zsLib::" << ("Exception" == throwType->getMappingName() ? "" : "Exceptions::") << throwType->getMappingName() << ">(e));\n";
                 }
                 ss << "  }\n";
                 if (hasResult) {
@@ -2818,7 +2826,7 @@ namespace zsLib
             ss << "  ZS_DECLARE_STRUCT_PTR(" << fixType(structObj) << "_WrapperObserver);\n";
             ss << "\n";
             ss << "  struct " << fixType(structObj) << "_WrapperObserver :\n";
-            ss << "    public wrapper::" << structObj->getPathName() << "::WrapperObserver, \n";
+            ss << "    public wrapper" << structObj->getPathName() << "::WrapperObserver, \n";
             ss << "    public IWrapperObserver\n";
             ss << "  {\n";
             ss << "    static IWrapperObserver *wrapperObserverCreate(" << GenerateStructHeader::getWrapperTypeString(false, structObj) << " value);\n";
@@ -2843,7 +2851,7 @@ namespace zsLib
             ss << "      ::zsLib::String method_;\n";
             ss << "    };\n";
             ss << "\n";
-            ss << "    /* wrapper::" << structObj->getPathName() << "::WrapperObserver */\n";
+            ss << "    /* wrapper" << structObj->getPathName() << "::WrapperObserver */\n";
             ss << "\n";
           }
           {
@@ -2907,7 +2915,7 @@ namespace zsLib
             ss << "    ::zsLib::Lock lock_;\n";
             ss << "    " << fixType(structObj) << "_WrapperObserverWeakPtr thisWeak_;\n";
             ss << "    IWrapperObserverPtr *thisObserverRaw_;\n";
-            ss << "    wrapper::" << structObj->getPathName() << "WeakPtr source_;\n";
+            ss << "    wrapper" << structObj->getPathName() << "WeakPtr source_;\n";
             ss << "  };\n";
             ss << " \n";
           }
@@ -2968,7 +2976,7 @@ namespace zsLib
           ss << "typedef bool bool_t;\n";
           ss << "typedef signed char schar_t;\n";
           ss << "typedef unsigned char uchar_t;\n";
-          ss << "typedef signed short short_t;\n";
+          ss << "typedef signed short sshort_t;\n";
           ss << "typedef unsigned short ushort_t;\n";
           ss << "typedef signed int sint_t;\n";
           ss << "typedef unsigned int uint_t;\n";
@@ -2987,7 +2995,7 @@ namespace zsLib
           ss << "typedef uintptr_t box_bool_t;\n";
           ss << "typedef uintptr_t box_schar_t;\n";
           ss << "typedef uintptr_t box_uchar_t;\n";
-          ss << "typedef uintptr_t box_short_t;\n";
+          ss << "typedef uintptr_t box_sshort_t;\n";
           ss << "typedef uintptr_t box_ushort_t;\n";
           ss << "typedef uintptr_t box_sint_t;\n";
           ss << "typedef uintptr_t box_uint_t;\n";
@@ -3044,11 +3052,11 @@ namespace zsLib
           ss << "\n";
 
           ss << "  struct IWrapperCallbackEvent;\n";
-          ss << "  typedef shared_ptr<IWrapperCallbackEvent> IWrapperCallbackEventEventPtr;\n";
+          ss << "  typedef shared_ptr<IWrapperCallbackEvent> IWrapperCallbackEventPtr;\n";
           ss << "\n";
           ss << "  struct IWrapperCallbackEvent\n";
           ss << "  {\n";
-          ss << "    static void fireEvent(IWrapperCallbackEventEventPtr event);\n";
+          ss << "    static void fireEvent(IWrapperCallbackEventPtr event);\n";
           ss << "\n";
           ss << "    virtual event_observer_t getObserver() = 0;\n";
           ss << "    virtual const char *getNamespace() = 0;\n";
