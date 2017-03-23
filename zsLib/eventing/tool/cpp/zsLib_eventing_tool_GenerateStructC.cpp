@@ -842,7 +842,7 @@ namespace zsLib
             ss << "\n";
 
             ss << dash;
-            ss << "void " << getApiCallingDefine(helperFile.global_) << " callback_event_wrapperObserverDestroy(event_observer_t handle)\n";
+            ss << "void " << getApiCallingDefine(helperFile.global_) << " callback_wrapperObserverDestroy(event_observer_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperObserverPtr * IWrapperObserverPtrRawPtr;\n";
             ss << "  if (0 == handle) return;\n";
@@ -1608,8 +1608,8 @@ namespace zsLib
               auto &ss = helperFile.headerCFunctionsSS_;
               ss << getApiExportDefine(helperFile.global_) << " binary_t " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperCreate_binary_t();\n";
               ss << getApiExportDefine(helperFile.global_) << " binary_t " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperCreate_binary_tWithValue(const uint8_t *value, size_t size);\n";
-              ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperDestroy(string_t handle);\n";
-              ss << getApiExportDefine(helperFile.global_) << " instance_id_t " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperInstanceId(string_t handle);\n";
+              ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperDestroy(binary_t handle);\n";
+              ss << getApiExportDefine(helperFile.global_) << " instance_id_t " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperInstanceId(binary_t handle);\n";
               ss << getApiExportDefine(helperFile.global_) << " const uint8_t * " << getApiCallingDefine(helperFile.global_) << " binary_t_get_value(binary_t handle);\n";
               ss << getApiExportDefine(helperFile.global_) << " size_t " << getApiCallingDefine(helperFile.global_) << " binary_t_get_size(binary_t handle);\n";
               ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " binary_t_set_value(binary_t handle, const uint8_t *value, size_t size);\n";
@@ -1649,7 +1649,7 @@ namespace zsLib
               ss << "\n";
 
               ss << dash;
-              ss << "instance_id_t " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperInstanceId(string_t handle)\n";
+              ss << "instance_id_t " << getApiCallingDefine(helperFile.global_) << " binary_t_wrapperInstanceId(binary_t handle)\n";
               ss << "{\n";
               ss << "  if (0 == handle) return 0;\n";
               ss << "  return reinterpret_cast<instance_id_t>((*reinterpret_cast<SecureByteBlockPtr *>(handle)).get());\n";
@@ -1896,7 +1896,7 @@ namespace zsLib
 
                 ss << getApiExportDefine(structType) << " uintptr_t " << getApiCallingDefine(templatedStructType) << " " << fixType(templatedStructType) << "_wrapperIterBegin(" << fixCType(templatedStructType) << " handle);\n";
                 ss << getApiExportDefine(structType) << " void " << getApiCallingDefine(templatedStructType) << " " << fixType(templatedStructType) << "_wrapperIterNext(uintptr_t iterHandle);\n";
-                ss << getApiExportDefine(structType) << " bool " << getApiCallingDefine(templatedStructType) << " " << fixType(templatedStructType) << "_wrapperIterIsEnd(uintptr_t iterHandle);\n";
+                ss << getApiExportDefine(structType) << " bool " << getApiCallingDefine(templatedStructType) << " " << fixType(templatedStructType) << "_wrapperIterIsEnd(" << fixCType(templatedStructType) << " handle, uintptr_t iterHandle);\n";
                 if (isMap) {
                   ss << getApiExportDefine(structType) << " " << fixCType(keyType) << " " << getApiCallingDefine(templatedStructType) << " " << fixType(templatedStructType) << "_wrapperIterKey(uintptr_t iterHandle);\n";
                 }
