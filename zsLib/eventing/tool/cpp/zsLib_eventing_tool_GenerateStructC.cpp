@@ -163,6 +163,57 @@ namespace zsLib
         //---------------------------------------------------------------------
         String GenerateStructC::fixBasicType(IEventingTypes::PredefinedTypedefs type)
         {
+          switch (type) {
+            case PredefinedTypedef_void:        
+            case PredefinedTypedef_bool:        
+            case PredefinedTypedef_uchar:       break;
+            case PredefinedTypedef_char:        type = PredefinedTypedef_schar; break;
+            case PredefinedTypedef_schar:       
+            case PredefinedTypedef_ushort:      break;
+            case PredefinedTypedef_short:       type = PredefinedTypedef_sshort; break;
+            case PredefinedTypedef_sshort:      
+            case PredefinedTypedef_uint:        break;
+            case PredefinedTypedef_int:         type = PredefinedTypedef_sint; break;
+            case PredefinedTypedef_sint:        
+            case PredefinedTypedef_ulong:       break;
+            case PredefinedTypedef_long:        type = PredefinedTypedef_slong; break;
+            case PredefinedTypedef_slong:       
+            case PredefinedTypedef_ulonglong:   break;
+            case PredefinedTypedef_longlong:    type = PredefinedTypedef_slonglong; break;
+            case PredefinedTypedef_slonglong:   
+            case PredefinedTypedef_uint8:       
+            case PredefinedTypedef_int8:        
+            case PredefinedTypedef_sint8:       
+            case PredefinedTypedef_uint16:      
+            case PredefinedTypedef_int16:       
+            case PredefinedTypedef_sint16:      
+            case PredefinedTypedef_uint32:      
+            case PredefinedTypedef_int32:       
+            case PredefinedTypedef_sint32:      
+            case PredefinedTypedef_uint64:      
+            case PredefinedTypedef_int64:       
+            case PredefinedTypedef_sint64:      
+
+            case PredefinedTypedef_byte:        
+            case PredefinedTypedef_word:        
+            case PredefinedTypedef_dword:       
+            case PredefinedTypedef_qword:       
+
+            case PredefinedTypedef_float:       
+            case PredefinedTypedef_double:      
+            case PredefinedTypedef_ldouble:     
+            case PredefinedTypedef_float32:     
+            case PredefinedTypedef_float64:     
+
+            case PredefinedTypedef_pointer:     
+
+            case PredefinedTypedef_binary:      
+            case PredefinedTypedef_size:        
+
+            case PredefinedTypedef_string:      
+            case PredefinedTypedef_astring:     
+            case PredefinedTypedef_wstring:     break;
+          }
           String result = GenerateHelper::getBasicTypeString(type);
           result.replaceAll(" ", "_");
           return result;
@@ -244,6 +295,29 @@ namespace zsLib
           return result + "_t";
         }
 
+        //---------------------------------------------------------------------
+        String GenerateStructC::fixCType(
+                                         bool isOptional,
+                                         TypePtr type
+                                         )
+        {
+          if (!isOptional) return fixCType(type);
+          if (!type) return String();
+
+          {
+            auto basicType = type->toBasicType();
+            if (basicType) {
+              return String("box_") + fixCType(basicType->mBaseType);
+            }
+          }
+          {
+            auto enumObj = type->toEnumType();
+            if (enumObj) {
+              return String("box_") + fixCType(enumObj);
+            }
+          }
+          return fixCType(type);
+        }
 
         //---------------------------------------------------------------------
         String GenerateStructC::fixType(TypePtr type)
@@ -302,6 +376,21 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
+        String GenerateStructC::getApiCastRequiredDefine(ContextPtr context)
+        {
+          String result = "WRAPPER_C_GENERATED_REQUIRES_CAST";
+          if (!context) return result;
+          auto project = context->getProject();
+          if (!project) return result;
+
+          if (project->mName.isEmpty()) return result;
+
+          auto name = project->mName;
+          name.toUpper();
+          return name + "_WRAPPER_C_GENERATED_REQUIRES_CAST";
+        }
+
+        //---------------------------------------------------------------------
         String GenerateStructC::getApiExportDefine(ContextPtr context)
         {
           String result = "WRAPPER_C_EXPORT_API";
@@ -314,6 +403,22 @@ namespace zsLib
           auto name = project->mName;
           name.toUpper();
           return name + "_WRAPPER_C_EXPORT_API";
+        }
+
+
+        //---------------------------------------------------------------------
+        String GenerateStructC::getApiExportCastedDefine(ContextPtr context)
+        {
+          String result = "WRAPPER_C_CASTED_EXPORT_API";
+          if (!context) return result;
+          auto project = context->getProject();
+          if (!project) return result;
+
+          if (project->mName.isEmpty()) return result;
+
+          auto name = project->mName;
+          name.toUpper();
+          return name + "_WRAPPER_C_CASTED_EXPORT_API";
         }
 
         //---------------------------------------------------------------------
@@ -365,7 +470,7 @@ namespace zsLib
               }
               String cTypeStr = fixCType(basicType);
               if ("string_t" == cTypeStr) return "wrapper::string_t_wrapperToHandle";
-              if ("binary_t" == cTypeStr) return "wrapper::wrapper_t_wrapperToHandle";
+              if ("binary_t" == cTypeStr) return "wrapper::binary_t_wrapperToHandle";
               return String();
             }
           }
@@ -373,9 +478,9 @@ namespace zsLib
             auto enumType = type->toEnumType();
             if (enumType) {
               if (isOptional) {
-                return "box_" + fixBasicType(enumType->mBaseType) + "_wrapperToHandle";
+                return "box_" + fixCType(enumType) + "_wrapperToHandle";
               }
-              return String("SafeInt<") + fixCType(enumType->mBaseType) + ">";
+              return String("static_cast<") + fixCType(enumType->mBaseType) + ">";
             }
           }
           {
@@ -430,6 +535,14 @@ namespace zsLib
                                                     TypePtr type
                                                     )
         {
+          {
+            auto enumType = type->toEnumType();
+            if (enumType) {
+              if (!isOptional) {
+                return String("static_cast<wrapper") + enumType->getPathName() + ">";
+              }
+            }
+          }
           auto result = getToHandleMethod(isOptional, type);
           result.replaceAll("_wrapperToHandle", "_wrapperFromHandle");
           return result;
@@ -444,6 +557,7 @@ namespace zsLib
           if (!type) return;
           if (type->toBasicType()) return;
           if (type->toEnumType()) return;
+          if (GenerateHelper::isBuiltInType(type)) return;
           
           {
             auto templatedType = type->toTemplatedStructType();
@@ -474,7 +588,8 @@ namespace zsLib
           if (!type) return;
           if (type->toBasicType()) return;
           if (type->toEnumType()) return;
-          
+          if (GenerateHelper::isBuiltInType(type)) return;
+
           {
             auto templatedType = type->toTemplatedStructType();
             if (templatedType) {
@@ -494,6 +609,7 @@ namespace zsLib
             }
           }
         }
+
         //---------------------------------------------------------------------
         void GenerateStructC::calculateRelations(
                                                   NamespacePtr namespaceObj,
@@ -662,6 +778,8 @@ namespace zsLib
           prepareHelperSpecial(helperFile, "Promise");
           preparePromiseWithValue(helperFile);
           preparePromiseWithRejectionReason(helperFile);
+
+          prepareHelperNamespace(helperFile, helperFile.global_);
 
           {
             auto &ss = helperFile.headerCppFunctionsSS_;
@@ -1124,17 +1242,19 @@ namespace zsLib
               ss << dash;
               ss << cTypeStr << " " << getApiCallingDefine(helperFile.global_) << " box_" << cTypeStr << "_get_value(" << boxedTypeStr << " handle)\n";
               ss << "{\n";
+              ss << "  typedef " << cTypeStr << " CType;\n";
               ss << "  typedef " << boxedTypeStr << " CBoxType;\n";
               ss << "  typedef " << GenerateHelper::getBasicTypeString(basicType) << " BasicType;\n";
               ss << "  " << sharedPtrStr << "\n";
               ss << "  typedef BasicTypePtr * BasicTypePtrRawPtr;\n";
-              ss << "  if (0 == handle) return " << cTypeStr <<"();\n";
+              ss << "  if (0 == handle) return CType();\n";
               ss << "  BasicTypePtr ptr = (*reinterpret_cast<BasicTypePtrRawPtr>(handle));\n";
               if (isBinary) {
                 ss << "  return wrapper::binary_t_wrapperToHandle(ptr);\n";
               } else if (isString) {
                 ss << "  return wrapper::string_t_wrapperToHandle(*ptr);\n";
               } else {
+                ss << "  if (!ptr) return CType();\n";
                 ss << "  return *ptr;\n";
               }
               ss << "}\n";
@@ -1154,6 +1274,7 @@ namespace zsLib
               } else if (isString) {
                 ss << "  ptr = make_shared<String>(wrapper::string_t_wrapperFromHandle(value));\n";
               } else {
+                ss << "  if (!ptr) ptr = make_shared<BasicType>();\n";
                 ss << "  (*(ptr.get())) = value;\n";
               }
               ss << "}\n";
@@ -1191,6 +1312,192 @@ namespace zsLib
               } else {
                 ss << "    return Optional< " << GenerateHelper::getBasicTypeString(basicType) << " >(box_" << cTypeStr <<"_get_value(handle));\n";
               }
+              ss << "  }\n";
+              ss << "\n";
+            }
+          }
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructC::prepareHelperNamespace(
+                                                     HelperFile &helperFile,
+                                                     NamespacePtr namespaceObj
+                                                     )
+        {
+          if (!namespaceObj) return;
+
+          for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter) {
+            auto subNamespaceObj = (*iter).second;
+            prepareHelperNamespace(helperFile, subNamespaceObj);
+          }
+          for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter) {
+            auto subStructObj = (*iter).second;
+            prepareHelperStruct(helperFile, subStructObj);
+          }
+          for (auto iter = namespaceObj->mEnums.begin(); iter != namespaceObj->mEnums.end(); ++iter) {
+            auto subEnumObj = (*iter).second;
+            prepareHelperEnum(helperFile, subEnumObj);
+          }
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructC::prepareHelperStruct(
+                                                  HelperFile &helperFile,
+                                                  StructPtr structObj
+                                                  )
+        {
+          if (!structObj) return;
+
+          for (auto iter = structObj->mStructs.begin(); iter != structObj->mStructs.end(); ++iter) {
+            auto subStructObj = (*iter).second;
+            prepareHelperStruct(helperFile, subStructObj);
+          }
+          for (auto iter = structObj->mEnums.begin(); iter != structObj->mEnums.end(); ++iter) {
+            auto subEnumObj = (*iter).second;
+            prepareHelperEnum(helperFile, subEnumObj);
+          }
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructC::prepareHelperEnum(
+                                                HelperFile &helperFile,
+                                                EnumTypePtr enumObj
+                                                )
+        {
+          if (!enumObj) return;
+
+          String cTypeStr = fixCType(enumObj);
+          String boxedTypeStr = "box_" + cTypeStr;
+          String wrapperTypeStr = "wrapper" + enumObj->getPathName();
+
+          auto dash = GenerateHelper::getDashedComment(String());
+          auto dash2 = GenerateHelper::getDashedComment(String("  "));
+
+          {
+            {
+              auto &ss = helperFile.headerCFunctionsSS_;
+              ss << getApiExportDefine(helperFile.global_) << " " << boxedTypeStr << " " << getApiCallingDefine(helperFile.global_) << " " << boxedTypeStr << "_wrapperCreate_" << boxedTypeStr << "();\n";
+              ss << getApiExportDefine(helperFile.global_) << " " << boxedTypeStr << " " << getApiCallingDefine(helperFile.global_) << " " << boxedTypeStr << "_wrapperCreate_" << boxedTypeStr << "WithValue(" << cTypeStr << " value);\n";
+              ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " " << boxedTypeStr << "_wrapperDestroy(" << boxedTypeStr << " handle);\n";
+              ss << getApiExportDefine(helperFile.global_) << " instance_id_t " << getApiCallingDefine(helperFile.global_) << " " << boxedTypeStr << "_wrapperInstanceId(" << boxedTypeStr << " handle);\n";
+              ss << getApiExportDefine(helperFile.global_) << " " << "bool " << getApiCallingDefine(helperFile.global_) << " " << boxedTypeStr << "_has_value(" << boxedTypeStr << " handle);\n";
+              ss << getApiExportDefine(helperFile.global_) << " " << cTypeStr << " " << getApiCallingDefine(helperFile.global_) << " " << boxedTypeStr << "_get_value(" << boxedTypeStr << " handle);\n";
+              ss << getApiExportDefine(helperFile.global_) << " " << "void " << getApiCallingDefine(helperFile.global_) << " " << boxedTypeStr << "_set_value(" << boxedTypeStr << " handle, " << cTypeStr << " value);\n";
+              ss << "\n";
+            }
+            {
+              auto &ss = helperFile.headerCppFunctionsSS_;
+              ss << "  " << boxedTypeStr << " " << boxedTypeStr << "_wrapperToHandle(Optional< " << wrapperTypeStr << " > value);\n";
+              ss << "  Optional< " << wrapperTypeStr << " > " << boxedTypeStr << "_wrapperFromHandle(" << boxedTypeStr << " handle);\n";
+              ss << "\n";
+            }
+          }
+          {
+            {
+              auto &ss = helperFile.cFunctionsSS_;
+              ss << dash;
+              ss << boxedTypeStr << " " << getApiCallingDefine(helperFile.global_) << " " << boxedTypeStr << "_wrapperCreate_" << boxedTypeStr << "()\n";
+              ss << "{\n";
+              ss << "  typedef " << boxedTypeStr << " CBoxType;\n";
+              ss << "  typedef " << wrapperTypeStr << " BasicType;\n";
+              ss << "  typedef shared_ptr< BasicType > BasicTypePtr;\n";
+              ss << "  return reinterpret_cast<CBoxType>(new BasicTypePtr());\n";
+              ss << "}\n";
+              ss << "\n";
+
+              ss << dash;
+              ss << boxedTypeStr << " " << getApiCallingDefine(helperFile.global_) << " " << boxedTypeStr << "_wrapperCreate_" << boxedTypeStr << "WithValue(" << cTypeStr << " value)\n";
+              ss << "{\n";
+              ss << "  typedef " << boxedTypeStr << " CBoxType;\n";
+              ss << "  typedef " << wrapperTypeStr << " BasicType;\n";
+              ss << "  typedef shared_ptr< BasicType > BasicTypePtr;\n";
+              ss << "  auto ptr = new BasicTypePtr();\n";
+              ss << "  (*ptr) = make_shared<BasicType>();\n";
+              ss << "  (*((*ptr).get())) = static_cast<BasicType>(value);\n";
+              ss << "  return reinterpret_cast<CBoxType>(ptr);\n";
+              ss << "}\n";
+              ss << "\n";
+
+              ss << dash;
+              ss << "void " << getApiCallingDefine(helperFile.global_) << " " << boxedTypeStr << "_wrapperDestroy(" << boxedTypeStr << " handle)\n";
+              ss << "{\n";
+              ss << "  typedef " << wrapperTypeStr << " BasicType;\n";
+              ss << "  typedef shared_ptr< BasicType > BasicTypePtr;\n";
+              ss << "  typedef BasicTypePtr * BasicTypePtrRawPtr;\n";
+              ss << "  if (0 == handle) return;\n";
+              ss << "  delete reinterpret_cast<BasicTypePtrRawPtr>(handle);\n";
+              ss << "}\n";
+              ss << "\n";
+
+              ss << "instance_id_t " << getApiCallingDefine(helperFile.global_) << " " << boxedTypeStr << "_wrapperInstanceId(" << boxedTypeStr << " handle)\n";
+              ss << "{\n";
+              ss << "  typedef " << wrapperTypeStr << " BasicType;\n";
+              ss << "  typedef shared_ptr< BasicType > BasicTypePtr;\n";
+              ss << "  typedef BasicTypePtr * BasicTypePtrRawPtr;\n";
+              ss << "  if (0 == handle) return 0;\n";
+              ss << "  return reinterpret_cast<instance_id_t>((*reinterpret_cast<BasicTypePtrRawPtr>(handle)).get());\n";
+              ss << "}\n";
+              ss << "\n";
+
+              ss << dash;
+              ss << "bool " << getApiCallingDefine(helperFile.global_) << " " << boxedTypeStr << "_has_value(" << boxedTypeStr << " handle)\n";
+              ss << "{\n";
+              ss << "  typedef " << wrapperTypeStr << " BasicType;\n";
+              ss << "  typedef shared_ptr< BasicType > BasicTypePtr;\n";
+              ss << "  typedef BasicTypePtr * BasicTypePtrRawPtr;\n";
+              ss << "  if (0 == handle) return false;\n";
+              ss << "  BasicTypePtr ptr = (*reinterpret_cast<BasicTypePtrRawPtr>(handle));\n";
+              ss << "  return ((bool)ptr);\n";
+              ss << "}\n";
+              ss << "\n";
+
+              ss << dash;
+              ss << cTypeStr << " " << getApiCallingDefine(helperFile.global_) << " box_" << cTypeStr << "_get_value(" << boxedTypeStr << " handle)\n";
+              ss << "{\n";
+              ss << "  typedef " << cTypeStr << " CType;\n";
+              ss << "  typedef " << wrapperTypeStr << " BasicType;\n";
+              ss << "  typedef shared_ptr< BasicType > BasicTypePtr;\n";
+              ss << "  typedef BasicTypePtr * BasicTypePtrRawPtr;\n";
+              ss << "  if (0 == handle) return " << cTypeStr << "();\n";
+              ss << "  BasicTypePtr ptr = (*reinterpret_cast<BasicTypePtrRawPtr>(handle));\n";
+              ss << "  if (!ptr) return CType();\n";
+              ss << "  return static_cast<CType>(*ptr);\n";
+              ss << "}\n";
+              ss << "\n";
+
+              ss << dash;
+              ss << "void " << getApiCallingDefine(helperFile.global_) << " box_" << cTypeStr << "_set_value(" << boxedTypeStr << " handle, " << cTypeStr << " value)\n";
+              ss << "{\n";
+              ss << "  typedef " << wrapperTypeStr << " BasicType;\n";
+              ss << "  typedef shared_ptr< BasicType > BasicTypePtr;\n";
+              ss << "  typedef BasicTypePtr * BasicTypePtrRawPtr;\n";
+              ss << "  if (0 == handle) return;\n";
+              ss << "  BasicTypePtr &ptr = (*reinterpret_cast<BasicTypePtrRawPtr>(handle));\n";
+              ss << "  if (!ptr) ptr = make_shared<BasicType>();\n";
+              ss << "  (*(ptr.get())) = static_cast<BasicType>(value);\n";
+              ss << "}\n";
+              ss << "\n";
+            }
+            {
+              auto &ss = helperFile.cppFunctionsSS_;
+              ss << dash2;
+              ss << "  " << boxedTypeStr << " " << boxedTypeStr << "_wrapperToHandle(Optional< " << wrapperTypeStr << " > value)\n";
+              ss << "  {\n";
+              ss << "    typedef " << cTypeStr << " CType;\n";
+              ss << "    if (!value.hasValue()) return " << boxedTypeStr << "_wrapperCreate_" << boxedTypeStr << "();\n";
+              ss << "    return " << boxedTypeStr << "_wrapperCreate_" << boxedTypeStr << "WithValue(static_cast<CType>(value.value()));\n";
+              ss << "  }\n";
+              ss << "\n";
+
+              ss << dash2;
+              ss << "  Optional< " << wrapperTypeStr << " > " << boxedTypeStr << "_wrapperFromHandle(" << boxedTypeStr << " handle)\n";
+              ss << "  {\n";
+              ss << "    typedef " << wrapperTypeStr << " BasicType;\n";
+              ss << "    typedef shared_ptr< BasicType > BasicTypePtr;\n";
+              ss << "    typedef BasicTypePtr * BasicTypePtrRawPtr;\n";
+              ss << "    if (0 == handle) return Optional< BasicType >();\n";
+              ss << "    if (!" << boxedTypeStr << "_has_value(handle)) return Optional< BasicType >();\n";
+              ss << "    return Optional< BasicType >(static_cast<BasicType>(" << boxedTypeStr << "_get_value(handle)));\n";
               ss << "  }\n";
               ss << "\n";
             }
@@ -2232,6 +2539,8 @@ namespace zsLib
             ss << "{\n";
           }
 
+          structFile.includeC("\"c_" + fixType(structObj) + ".h\"");
+          structFile.includeC("\"../" + fixType(structObj) + ".h\"");
           processStruct(helperFile, structFile, structObj, structObj);
 
           {
@@ -2319,6 +2628,8 @@ namespace zsLib
           auto dash = GenerateHelper::getDashedComment(String());
           auto dash2 = GenerateHelper::getDashedComment(String("  "));
 
+          auto exportStr = (rootStructObj == structObj ? getApiExportDefine(helperFile.global_) : getApiExportCastedDefine(helperFile.global_));
+
           bool foundConstructor = false;
 
           std::stringstream headerCSS;
@@ -2335,7 +2646,6 @@ namespace zsLib
 
             bool isConstructor = method->hasModifier(Modifier_Method_Ctor);
             bool isStatic = method->hasModifier(Modifier_Static);
-            bool hasResult = fixCType(method->mResult) != "void";
             bool hasThis = ((!isStatic) && (!isConstructor));
 
             if (isConstructor) foundConstructor = true;
@@ -2348,14 +2658,17 @@ namespace zsLib
             String name = method->mName;
             if (method->hasModifier(Modifier_AltName)) {name = method->getModifierValue(Modifier_AltName);}
 
+            String resultCTypeStr = (isConstructor ? fixCType(structObj) : fixCType(method->hasModifier(Modifier_Optional), method->mResult));
+            bool hasResult = resultCTypeStr != "void";
+
             {
               auto &ss = headerCSS;
-              ss << getApiExportDefine(structObj) << " " << (isConstructor ? fixCType(structObj) : fixCType(method->mResult)) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_" << (isConstructor ? "wrapperCreate_" : "")  << name << "(";
+              ss << exportStr << " " << resultCTypeStr << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_" << (isConstructor ? "wrapperCreate_" : "")  << name << "(";
             }
             {
               auto &ss = cSS;
               ss << dash;
-              ss << fixCType(method->mResult) << " " << fixType(structObj) << "_" << (isConstructor ? "wrapperCreate_" : "") << name << "(";
+              ss << resultCTypeStr << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_" << (isConstructor ? "wrapperCreate_" : "") << name << "(";
             }
 
             std::stringstream argSS;
@@ -2399,25 +2712,32 @@ namespace zsLib
               String indentStr = "  ";
               if (method->mThrows.size() > 0) {
                 indentStr += "  ";
+                if (hasResult) {
+                  ss << "  " << resultCTypeStr << " wrapperResult {};\n";
+                }
                 ss << "  try {\n";
               }
               ss << indentStr;
               if (isConstructor) {
-                ss << "auto wrapperThis = wrapper::" << structObj->getPathName() << "::wrapper_create();\n";
+                ss << "auto wrapperThis = wrapper" << structObj->getPathName() << "::wrapper_create();\n";
                 ss << indentStr << "wrapperThis->wrapper_init_" << GenerateStructHeader::getStructInitName(structObj) << "(";
               } else {
                 if (hasThis) {
                   ss << "auto wrapperThis = " << getFromHandleMethod(false, structObj) << "(wrapperThisHandle);\n";
-                  ss << indentStr << "if (!wrapperThis) throw std::invalid_argument(\"null pointer exception\");\n";
+                  ss << indentStr << "if (!wrapperThis) return";
+                  if ("void" != resultCTypeStr) {
+                    ss << " " << resultCTypeStr << "()";
+                  }
+                  ss << ";\n";
                   ss << indentStr;
                 }
                 if (hasResult) {
-                  ss << "return " << getToHandleMethod(method->hasModifier(Modifier_Optional), method->mResult) << "(";
+                  ss << (method->mThrows.size() > 0 ? "wrapperResult = " : "return ") << getToHandleMethod(method->hasModifier(Modifier_Optional), method->mResult) << "(";
                 }
                 if (hasThis) {
                   ss << "wrapperThis->" << method->getMappingName() << "(";
                 } else {
-                  ss << "wrapper::" << structObj->getPathName() << "::" << method->getMappingName() << "(";
+                  ss << "wrapper" << structObj->getPathName() << "::" << method->getMappingName() << "(";
                 }
               }
 
@@ -2425,6 +2745,7 @@ namespace zsLib
               for (auto iterNamedArgs = method->mArguments.begin(); iterNamedArgs != method->mArguments.end(); ++iterNamedArgs) {
                 auto propertyObj = (*iterNamedArgs);
                 if (!first) ss << ", ";
+                first = false;
                 ss << getFromHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(" << propertyObj->getMappingName() << ")";
               }
 
@@ -2447,7 +2768,7 @@ namespace zsLib
                 }
                 ss << "  }\n";
                 if (hasResult) {
-                  ss << "  return 0;\n";
+                  ss << "  return wrapperResult;\n";
                 }
               }
               ss << "}\n";
@@ -2473,16 +2794,18 @@ namespace zsLib
                     foundRelated = true;
                     includeType(structFile, relatedStruct);
 
+                    structFile.includeC("\"../" + fixType(relatedStruct) + ".h\"");
+
                     {
                       auto &ss = structFile.headerCFunctionsSS_;
-                      ss << getApiExportDefine(structObj) << " " << fixCType(relatedStruct) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperCastAs_" << fixType(relatedStruct) << "(" << fixCType(structObj) << " handle);\n";
+                      ss << exportStr << " " << fixCType(relatedStruct) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperCastAs_" << fixType(relatedStruct) << "(" << fixCType(structObj) << " handle);\n";
                     }
                     {
                       auto &ss = structFile.cFunctionsSS_;
                       ss << dash;
-                      ss << fixCType(relatedStruct) << " " << fixType(rootStructObj) << "_wrapperCastAs_" << fixType(relatedStruct) << "(" << fixCType(structObj) << " handle)\n";
+                      ss << fixCType(relatedStruct) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperCastAs_" << fixType(relatedStruct) << "(" << fixCType(structObj) << " handle)\n";
                       ss << "{\n";
-                      ss << "  typedef wrapper::" << relatedStruct->getPathName() << " RelatedWrapperType;\n";
+                      ss << "  typedef wrapper" << relatedStruct->getPathName() << " RelatedWrapperType;\n";
                       ss << "  typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
                       ss << "  typedef WrapperTypePtr * WrapperTypePtrRawPtr;\n";
                       ss << "  if (0 == handle) return 0;\n";
@@ -2505,16 +2828,16 @@ namespace zsLib
               if (!foundConstructor) {
                 {
                   auto &ss = structFile.headerCFunctionsSS_;
-                  ss << getApiExportDefine(structObj) << " " << fixCType(structObj) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperCreate_" << structObj->getMappingName() << "();\n";
+                  ss << exportStr << " " << fixCType(structObj) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperCreate_" << structObj->getMappingName() << "();\n";
                 }
                 {
                   auto &ss = structFile.cFunctionsSS_;
                   ss << dash;
-                  ss << fixCType(structObj) << " " << fixType(structObj) << "_wrapperCreate_" << structObj->getMappingName() << "()\n";
+                  ss << fixCType(structObj) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperCreate_" << structObj->getMappingName() << "()\n";
                   ss << "{\n";
                   ss << "  typedef " << fixCType(structObj) << " CType;\n";
                   ss << "  typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
-                  ss << "  auto result = wrapper::" << structObj->getPathName() << "::wrapper_create();\n";
+                  ss << "  auto result = wrapper" << structObj->getPathName() << "::wrapper_create();\n";
                   ss << "  result->wrapper_init_" << GenerateStructHeader::getStructInitName(structObj) << "();\n";
                   ss << "  return reinterpret_cast<CType>(new WrapperTypePtr(result));\n";
                   ss << "}\n";
@@ -2524,13 +2847,13 @@ namespace zsLib
 
               {
                 auto &ss = structFile.headerCFunctionsSS_;
-                ss << getApiExportDefine(structObj) << " void " << getApiCallingDefine(structObj) << " " << fixType(structObj) << "_wrapperDestroy(" << fixCType(structObj) << " handle);\n";
-                ss << getApiExportDefine(structObj) << " instance_id_t " << getApiCallingDefine(structObj) << " " << fixType(structObj) << "_wrapperInstanceId(" << fixCType(structObj) << " handle);\n";
+                ss << exportStr << " void " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperDestroy(" << fixCType(structObj) << " handle);\n";
+                ss << exportStr << " instance_id_t " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperInstanceId(" << fixCType(structObj) << " handle);\n";
               }
               {
                 auto &ss = structFile.cFunctionsSS_;
                 ss << dash;
-                ss << "void " << fixType(structObj) << "_wrapperDestroy(" << fixCType(structObj) << " handle)\n";
+                ss << "void " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperDestroy(" << fixCType(structObj) << " handle)\n";
                 ss << "{\n";
                 ss << "  typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
                 ss << "  typedef WrapperTypePtr * WrapperTypePtrRawPtr;\n";
@@ -2540,11 +2863,11 @@ namespace zsLib
                 ss << "\n";
 
                 ss << dash;
-                ss << "instance_id_t " << fixType(structObj) << "_wrapperInstanceId(" << fixCType(structObj) << " handle)\n";
+                ss << "instance_id_t " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperInstanceId(" << fixCType(structObj) << " handle)\n";
                 ss << "{\n";
                 ss << "  typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
                 ss << "  typedef WrapperTypePtr * WrapperTypePtrRawPtr;\n";
-                ss << "  if (0 == handle) return;\n";
+                ss << "  if (0 == handle) return 0;\n";
                 ss << "  return reinterpret_cast<instance_id_t>((*reinterpret_cast<WrapperTypePtrRawPtr>(handle)).get());\n";
                 ss << "}\n";
                 ss << "\n";
@@ -2553,13 +2876,13 @@ namespace zsLib
 
             {
               auto &ss = structFile.headerCppFunctionsSS_;
-              ss << "  " << fixCType(structObj) << " " << fixType(structObj) << "_wrapperToHandle(" << GenerateStructHeader::getWrapperTypeString(false, structObj) << " value);\n";
-              ss << "  " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " " << fixType(structObj) << "_wrapperFromHandle(" << fixCType(structObj) << " handle);\n";
+              ss << "  " << fixCType(structObj) << " " << fixType(rootStructObj) << "_wrapperToHandle(" << GenerateStructHeader::getWrapperTypeString(false, structObj) << " value);\n";
+              ss << "  " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " " << fixType(rootStructObj) << "_wrapperFromHandle(" << fixCType(structObj) << " handle);\n";
             }
             {
               auto &ss = structFile.cppFunctionsSS_;
               ss << dash2;
-              ss << "  " << fixCType(structObj) << " " << fixType(structObj) << "_wrapperToHandle(" << GenerateStructHeader::getWrapperTypeString(false, structObj) << " value)\n";
+              ss << "  " << fixCType(structObj) << " " << fixType(rootStructObj) << "_wrapperToHandle(" << GenerateStructHeader::getWrapperTypeString(false, structObj) << " value)\n";
               ss << "  {\n";
               ss << "    typedef " << fixCType(structObj) << " CType;\n";
               ss << "    typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
@@ -2570,7 +2893,7 @@ namespace zsLib
               ss << "\n";
 
               ss << dash2;
-              ss << "  " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " " << fixType(structObj) << "_wrapperFromHandle(" << fixCType(structObj) << " handle);\n";
+              ss << "  " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " " << fixType(rootStructObj) << "_wrapperFromHandle(" << fixCType(structObj) << " handle)\n";
               ss << "  {\n";
               ss << "    typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
               ss << "    typedef WrapperTypePtr * WrapperTypePtrRawPtr;\n";
@@ -2601,6 +2924,8 @@ namespace zsLib
             if (rootStructObj != structObj) return;
           }
 
+          auto exportStr = (rootStructObj == structObj ? getApiExportDefine(helperFile.global_) : getApiExportCastedDefine(helperFile.global_));
+
           bool isDictionary = structObj->hasModifier(Modifier_Struct_Dictionary);
 
           auto dash = GenerateHelper::getDashedComment(String());
@@ -2610,8 +2935,8 @@ namespace zsLib
             if (!propertyObj) continue;
 
             bool isStatic = propertyObj->hasModifier(Modifier_Static);
-            bool hasGetter = structObj->hasModifier(Modifier_Property_Getter);
-            bool hasSetter = structObj->hasModifier(Modifier_Property_Setter);
+            bool hasGetter = propertyObj->hasModifier(Modifier_Property_Getter);
+            bool hasSetter = propertyObj->hasModifier(Modifier_Property_Setter);
 
             if (!isDictionary) {
               if ((!hasGetter) && (!hasSetter)) {
@@ -2635,36 +2960,36 @@ namespace zsLib
             {
               auto &ss = structFile.headerCFunctionsSS_;
               if (hasGet) {
-                ss << getApiExportDefine(structObj) << " " << fixCType(propertyObj->mType) << " " << getApiCallingDefine(structObj) << " " << fixType(structObj) << "_get_" << propertyObj->getMappingName() << "(" << (isStatic ? String("") : String(fixCType(propertyObj->mType) + " wrapperThisHandle")) << ");\n";
+                ss << exportStr << " " << fixCType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_get_" << propertyObj->getMappingName() << "(" << (isStatic ? String("") : String(fixCType(structObj) + " wrapperThisHandle")) << ");\n";
               }
               if (hasSet) {
-                ss << getApiExportDefine(structObj) << " void " << getApiCallingDefine(structObj) << " " << fixType(structObj) << "_set_" << propertyObj->getMappingName() << "(" << (isStatic ? String("") : String(fixCType(propertyObj->mType) + " wrapperThisHandle, ")) << fixCType(propertyObj->mType) << " value);\n";
+                ss << exportStr << " void " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_set_" << propertyObj->getMappingName() << "(" << (isStatic ? String("") : String(fixCType(structObj) + " wrapperThisHandle, ")) << fixCType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " value);\n";
               }
             }
             {
               auto &ss = structFile.cFunctionsSS_;
               if (hasGet) {
                 ss << dash;
-                ss << fixCType(propertyObj->mType) << " " << fixType(structObj) << "_get_" << propertyObj->getMappingName() << "(" << (isStatic ? String("") : String(fixCType(propertyObj->mType) + " wrapperThisHandle")) << ")\n";
+                ss << fixCType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_get_" << propertyObj->getMappingName() << "(" << (isStatic ? String("") : String(fixCType(structObj) + " wrapperThisHandle")) << ")\n";
                 ss << "{\n";
                 if (!isStatic) {
                   ss << "  auto wrapperThis = " << getFromHandleMethod(false, structObj) << "(wrapperThisHandle);\n";
                   ss << "  return " << getToHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(wrapperThis->" << (hasGetter ? "get_" : "") << propertyObj->getMappingName() << (hasGetter ? "()" : "") << ");\n";
                 } else {
-                  ss << "  return " << getToHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(wrapper::" << structObj->getPathName() << "::get_" << propertyObj->getMappingName() << "());\n";
+                  ss << "  return " << getToHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(wrapper" << structObj->getPathName() << "::get_" << propertyObj->getMappingName() << "());\n";
                 }
                 ss << "}\n";
                 ss << "\n";
               }
               if (hasSet) {
                 ss << dash;
-                ss << "void " << fixType(structObj) << "_set_" << propertyObj->getMappingName() << "(" << (isStatic ? String("") : String(fixCType(propertyObj->mType) + " wrapperThisHandle, ")) << fixCType(propertyObj->mType) << " value)\n";
+                ss << "void " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_set_" << propertyObj->getMappingName() << "(" << (isStatic ? String("") : String(fixCType(structObj) + " wrapperThisHandle, ")) << fixCType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " value)\n";
                 ss << "{\n";
                 if (!isStatic) {
                   ss << "  auto wrapperThis = " << getFromHandleMethod(false, structObj) << "(wrapperThisHandle);\n";
                   ss << "  wrapperThis->" << (hasSetter ? "set_" : "") << propertyObj->getMappingName() << (hasSetter ? "(" : " = ") << getFromHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(value)" << (hasSetter ? ")" : "") << ";\n";
                 } else {
-                  ss << "  wrapper::" << structObj->getPathName() << "::set_" << propertyObj->getMappingName() << "(" << getFromHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "value));\n";
+                  ss << "  wrapper" << structObj->getPathName() << "::set_" << propertyObj->getMappingName() << "(" << getFromHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(value));\n";
                 }
                 ss << "}\n";
                 ss << "\n";
@@ -2735,6 +3060,9 @@ namespace zsLib
                 size_t index = 1;
                 for (auto iterArgs = method->mArguments.begin(); iterArgs != method->mArguments.end(); ++iterArgs, ++index) {
                   auto propertyObj = (*iterArgs);
+
+                  includeType(structFile, propertyObj->mType);
+
                   ss << "    if (" << (index-1) << " == argumentIndex) ";
                   bool isSimple = false;
                   {
@@ -2752,7 +3080,7 @@ namespace zsLib
               }
 
               ss << dash2;
-              ss << "  void " << fixType(structObj) << "WrapperObserver::" << method->getMappingName() << "(";
+              ss << "  void " << fixType(structObj) << "_WrapperObserver::" << method->getMappingName() << "(";
               bool first = true;
               for (auto iterArgs = method->mArguments.begin(); iterArgs != method->mArguments.end(); ++iterArgs) {
                 auto propertyObj = (*iterArgs);
@@ -2808,9 +3136,9 @@ namespace zsLib
           {
             auto &ss = structFile.cFunctionsSS_;
             ss << dash;
-            ss << "event_observer_t " << fixType(structObj) << "_wrapperObserveEvents(" << fixCType(structObj) << " handle)\n";
+            ss << "event_observer_t " << getApiCallingDefine(structObj) << " " << fixType(structObj) << "_wrapperObserveEvents(" << fixCType(structObj) << " handle)\n";
             ss << "{\n";
-            ss << "  typedef wrapper::" << structObj->getPathName() << "WrapperType;\n";
+            ss << "  typedef wrapper" << structObj->getPathName() << " WrapperType;\n";
             ss << "  typedef shared_ptr<WrapperType> WrapperTypePtr;\n";
             ss << "  typedef WrapperTypePtr * WrapperTypePtrRawPtr;\n";
             ss << "  if (0 == handle) return 0;\n";
@@ -2829,7 +3157,7 @@ namespace zsLib
             ss << "    public wrapper" << structObj->getPathName() << "::WrapperObserver, \n";
             ss << "    public IWrapperObserver\n";
             ss << "  {\n";
-            ss << "    static IWrapperObserver *wrapperObserverCreate(" << GenerateStructHeader::getWrapperTypeString(false, structObj) << " value);\n";
+            ss << "    static IWrapperObserverPtr *wrapperObserverCreate(" << GenerateStructHeader::getWrapperTypeString(false, structObj) << " value);\n";
             ss << "\n";
             ss << "    /* IWrapperObserver */\n";
             ss << "\n";
@@ -2857,15 +3185,13 @@ namespace zsLib
           {
             auto &ss = structFile.cppFunctionsSS_;
             ss << dash2;
-            ss << "  IWrapperObserver * " << fixType(structObj) << "_WrapperObserver::wrapperObserverCreate(" << GenerateStructHeader::getWrapperTypeString(false, structObj) << " value)\n";
+            ss << "  IWrapperObserverPtr * " << fixType(structObj) << "_WrapperObserver::wrapperObserverCreate(" << GenerateStructHeader::getWrapperTypeString(false, structObj) << " value)\n";
             ss << "  {\n";
-            ss << "    auto pThis = make_shared<>(wrapper::" << structObj->getPathName() << ");\n";
+            ss << "    auto pThis = make_shared<" << fixType(structObj) << "_WrapperObserver>();\n";
             ss << "    pThis->thisObserverRaw_ = new IWrapperObserverPtr(pThis);\n";
             ss << "    pThis->thisWeak_ = pThis;\n";
             ss << "    pThis->source_ = value;\n";
-            ss << "    if (value) {\n";
-            ss << "      value->wrapper_installObserver(pThis);\n";
-            ss << "    }\n";
+            ss << "    if (value) value->wrapper_installObserver(pThis);\n";
             ss << "    return pThis->thisObserverRaw_;\n";
             ss << "  }\n";
             ss << "\n";
@@ -2882,18 +3208,17 @@ namespace zsLib
             ss << dash2;
             ss << "  void " << fixType(structObj) << "_WrapperObserver::observerCancel()\n";
             ss << "  {\n";
-            ss << "    IWrapperObserverPtr pThis;\n";
-            ss << "    auto pThisWrapperObserver;";
+            ss << "    IWrapperObserverPtr pObserverThis;\n";
             ss << "    {\n";
             ss << "      ::zsLib::AutoLock lock(lock_);\n";
             ss << "      if (NULL == thisObserverRaw_) return;\n";
-            ss << "      pThisWrapperObserver = thisWeak_.lock();\n";
-            ss << "      pThis = *thisObserverRaw_;\n";
-            ss << "      delete thisObserverRaw_;\n";
+            ss << "      auto pThis = thisWeak_.lock();\n";
+            ss << "      pObserverThis = *thisObserverRaw_;\n";
+            ss << "      auto value = source_.lock();\n";
+            ss << "      if (value) value->wrapper_uninstallObserver(pThis);\n";
+            ss << "      auto temp = thisObserverRaw_;\n";
             ss << "      thisObserverRaw_ = NULL;\n";
-            ss << "      if (source_) {\n";
-            ss << "        value->wrapper_installObserver(pThis);\n";
-            ss << "      }\n";
+            ss << "      delete temp;\n";
             ss << "    }\n";
             ss << "  }\n";
             ss << "\n";
@@ -2960,6 +3285,18 @@ namespace zsLib
           ss << "#endif /* _WIN32 */\n";
           ss << "#endif /* " << getApiImplementationDefine(project) << " */\n";
           ss << "#endif /* ndef " << getApiExportDefine(project) << " */\n";
+          ss << "\n";
+
+          ss << "#ifndef " << getApiExportCastedDefine(project) << "\n";
+          ss << "/* By defining " << getApiCastRequiredDefine(project) << " the wrapper will not export\n";
+          ss << "   any base class methods and instead will expect the caller to cast the C object handle\n";
+          ss << "   type to the base C object type to access base object methods and properties. */\n";
+          ss << "#ifdef " << getApiCastRequiredDefine(project) << "\n";
+          ss << "#define " << getApiExportCastedDefine(project) << "\n";
+          ss << "#else /* " << getApiCastRequiredDefine(project) << " */\n";
+          ss << "#define " << getApiExportCastedDefine(project) << " " << getApiExportDefine(project) << "\n";
+          ss << "#endif /* " << getApiCastRequiredDefine(project) << " */\n";
+          ss << "#endif /* ndef " << getApiExportCastedDefine(project) << " */\n";
           ss << "\n";
 
           ss << "#ifndef " << getApiCallingDefine(project) << "\n";
@@ -3135,6 +3472,7 @@ namespace zsLib
           {
             auto enumObj = (*iter).second;
             ss << "typedef " << fixCType(enumObj->mBaseType) << " " << fixCType(enumObj) << ";\n";
+            ss << "typedef uintptr_t box_" << fixCType(enumObj) << ";\n";
           }
         }
 

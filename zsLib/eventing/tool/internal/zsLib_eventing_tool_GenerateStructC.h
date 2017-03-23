@@ -125,9 +125,15 @@ namespace zsLib
           static String fixBasicType(IEventingTypes::PredefinedTypedefs type);
           static String fixCType(IEventingTypes::PredefinedTypedefs type);
           static String fixCType(TypePtr type);
+          static String fixCType(
+                                 bool isOptional,
+                                 TypePtr type
+                                 );
           static String fixType(TypePtr type);
           static String getApiImplementationDefine(ContextPtr context);
+          static String getApiCastRequiredDefine(ContextPtr context);
           static String getApiExportDefine(ContextPtr context);
+          static String getApiExportCastedDefine(ContextPtr context);
           static String getApiCallingDefine(ContextPtr context);
           static String getApiGuardDefine(
                                           ContextPtr context,
@@ -184,6 +190,18 @@ namespace zsLib
                                           HelperFile &helperFile,
                                           const IEventingTypes::PredefinedTypedefs basicType
                                           );
+          static void prepareHelperNamespace(
+                                             HelperFile &helperFile,
+                                             NamespacePtr namespaceObj
+                                             );
+          static void prepareHelperStruct(
+                                          HelperFile &helperFile,
+                                          StructPtr structObj
+                                          );
+          static void prepareHelperEnum(
+                                        HelperFile &helperFile,
+                                        EnumTypePtr enumObj
+                                        );
           static void prepareHelperString(HelperFile &helperFile);
           static void prepareHelperBinary(HelperFile &helperFile);
           static void prepareHelperDuration(
