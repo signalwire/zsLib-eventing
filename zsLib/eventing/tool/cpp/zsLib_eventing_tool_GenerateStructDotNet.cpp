@@ -2916,7 +2916,7 @@ namespace zsLib
             {
               auto &ss = structFile.delegateSS_;
               structFile.indentLess();
-              ss << indentStr << "public delegate void " << fixCCsType(structObj) << "_" << GenerateStructCx::fixName(method->getMappingName()) << "(";
+              ss << indentStr << "public delegate void " << fixCsType(structObj) << "_" << GenerateStructCx::fixName(method->getMappingName()) << "(";
               bool first {true};
               for (auto iterArgs = method->mArguments.begin(); iterArgs != method->mArguments.end(); ++iterArgs) {
                 auto arg = (*iterArgs);
@@ -2932,96 +2932,8 @@ namespace zsLib
             {
               auto &ss = structFile.structSS_;
 
-              ss << indentStr << "public event " << fixCCsType(structObj) << "_" << GenerateStructCx::fixName(method->getMappingName()) << " " << GenerateStructCx::fixName(method->getMappingName()) << ";\n";
-#if 0
-              if (method->mArguments.size() > 0) {
-                ss << "\n";
-                ss << "    struct WrapperEvent_" << method->getMappingName() << " : public WrapperEvent\n";
-                ss << "    {\n";
-                ss << "      virtual const char *getMethod() {return \"" << method->getMappingName() << "\";}\n";
-                ss << "      virtual generic_handle_t getEventData(int argumentIndex);\n";
-                ss << "\n";
-                size_t index = 1;
-                for (auto iterArgs = method->mArguments.begin(); iterArgs != method->mArguments.end(); ++iterArgs, ++index) {
-                  auto propertyObj = (*iterArgs);
-                  ss << "      " << GenerateStructHeader::getWrapperTypeString(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " param" << index << "_;\n";
-                }
-                ss << "    };\n";
-                ss << "\n";
-              }
-
-              ss << "    virtual void " << method->getMappingName() << "(";
-              bool first = true;
-              for (auto iterArgs = method->mArguments.begin(); iterArgs != method->mArguments.end(); ++iterArgs) {
-                auto propertyObj = (*iterArgs);
-                if (!first) {ss << ", ";}
-                first = false;
-                ss << GenerateStructHeader::getWrapperTypeString(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " " << propertyObj->getMappingName();
-              }
-              ss << ");\n";
-#endif //0
+              ss << indentStr << "public event " << fixCsType(structObj) << "_" << GenerateStructCx::fixName(method->getMappingName()) << " " << GenerateStructCx::fixName(method->getMappingName()) << ";\n";
             }
-#if 0
-            {
-              auto &ss = structFile.cppFunctionsSS_;
-
-              if (method->mArguments.size() > 0) {
-                ss << dash2;
-                ss << "  generic_handle_t " << fixType(structObj) << "_WrapperObserver::WrapperEvent_" << method->getMappingName() << "::getEventData(int argumentIndex)\n";
-                ss << "  {\n";
-                size_t index = 1;
-                for (auto iterArgs = method->mArguments.begin(); iterArgs != method->mArguments.end(); ++iterArgs, ++index) {
-                  auto propertyObj = (*iterArgs);
-
-                  includeType(structFile, propertyObj->mType);
-
-                  ss << "    if (" << (index-1) << " == argumentIndex) ";
-                  bool isSimple = false;
-                  {
-                    auto basicType = propertyObj->toBasicType();
-                    if (basicType) {
-                      String basicTypeStr = fixCType(basicType->mBaseType);
-                      if (("binary_t" != basicTypeStr) && ("string_t" != basicTypeStr)) isSimple = true;
-                    }
-                  }
-                  ss << "return " << getToHandleMethod(propertyObj->hasModifier(Modifier_Optional) || isSimple, propertyObj->mType) << "(param" << index << "_);\n";
-                }
-                ss << "    return 0;\n";
-                ss << "  }\n";
-                ss << "\n";
-              }
-
-              ss << dash2;
-              ss << "  void " << fixType(structObj) << "_WrapperObserver::" << method->getMappingName() << "(";
-              bool first = true;
-              for (auto iterArgs = method->mArguments.begin(); iterArgs != method->mArguments.end(); ++iterArgs) {
-                auto propertyObj = (*iterArgs);
-                if (!first) { ss << ", "; }
-                first = false;
-                ss << GenerateStructHeader::getWrapperTypeString(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " " << propertyObj->getMappingName();
-              }
-              ss << ")\n";
-              ss << "  {\n";
-              if (method->mArguments.size() > 0) {
-                ss << "    auto wrapperEvent = make_shared<" << fixType(structObj) << "_WrapperObserver::WrapperEvent_" << method->getMappingName() << ">();\n";
-                ss << "    wrapperEvent->observer_ = thisWeak_.lock();\n";
-                size_t index = 1;
-                for (auto iterArgs = method->mArguments.begin(); iterArgs != method->mArguments.end(); ++iterArgs, ++index) {
-                  auto propertyObj = (*iterArgs);
-                  first = false;
-                  ss << "    wrapperEvent->param" << index << "_ = " << propertyObj->mName << ";\n";
-                }
-                ss << "    wrapper::IWrapperCallbackEvent::fireEvent(wrapperEvent);\n";
-              } else {
-                ss << "    auto wrapperEvent = make_shared<" << fixType(structObj) << "_WrapperObserver::WrapperEvent>();\n";
-                ss << "    wrapperEvent->observer_ = thisWeak_.lock();\n";
-                ss << "    wrapperEvent->method_ = \"" << method->getMappingName() << "\";\n";
-                ss << "    wrapper::IWrapperCallbackEvent::fireEvent(wrapperEvent);\n";
-              }
-              ss << "  }\n";
-              ss << "\n";
-            }
-#endif //0
           }
 
           processEventHandlersEnd(apiFile, structFile, structObj);
@@ -3081,110 +2993,9 @@ namespace zsLib
             ss << indentStr << "{\n";
             ss << indentStr << "    " << getHelperPath(apiFile) << ".ObserveEventsCancel(\"" << structObj->getPath() << "\", \"" << structObj->getMappingName() << "\", " << getApiPath(apiFile) << "." << GenerateStructC::fixCType(structObj) << "_wrapperInstanceId(this.native_), (object)this);\n";
             ss << indentStr << "}\n";
-
-          }
-#if 0
-          structFile.headerIncludeCpp("\"../" + fixType(structObj) + ".h\"");
-
-          auto dash = GenerateHelper::getDashedComment(String());
-          auto dash2 = GenerateHelper::getDashedComment(String("  "));
-
-          {
-            auto &ss = structFile.headerCFunctionsSS_;
-            ss << "\n";
-            ss << getApiExportDefine(structObj) << " event_observer_t " << getApiCallingDefine(structObj) << " " << fixType(structObj) << "_wrapperObserveEvents(" << fixCType(structObj) << " handle);\n";
-          }
-          {
-            auto &ss = structFile.cFunctionsSS_;
-            ss << dash;
-            ss << "event_observer_t " << getApiCallingDefine(structObj) << " " << fixType(structObj) << "_wrapperObserveEvents(" << fixCType(structObj) << " handle)\n";
-            ss << "{\n";
-            ss << "  typedef wrapper" << structObj->getPathName() << " WrapperType;\n";
-            ss << "  typedef shared_ptr<WrapperType> WrapperTypePtr;\n";
-            ss << "  typedef WrapperTypePtr * WrapperTypePtrRawPtr;\n";
-            ss << "  if (0 == handle) return 0;\n";
-            ss << "  auto pWrapper = (*reinterpret_cast<WrapperTypePtrRawPtr>(handle));";
-            ss << "  if (!pWrapper) return 0;\n";
-            ss << "  return reinterpret_cast<event_observer_t>(" << fixType(structObj) << "_WrapperObserver::wrapperObserverCreate(pWrapper)" << ");\n";
-            ss << "}\n";
-            ss << "\n";
-          }
-          {
-            auto &ss = structFile.headerCppFunctionsSS_;
-            ss << "\n";
-            ss << "  ZS_DECLARE_STRUCT_PTR(" << fixType(structObj) << "_WrapperObserver);\n";
-            ss << "\n";
-            ss << "  struct " << fixType(structObj) << "_WrapperObserver :\n";
-            ss << "    public wrapper" << structObj->getPathName() << "::WrapperObserver, \n";
-            ss << "    public IWrapperObserver\n";
-            ss << "  {\n";
-            ss << "    static IWrapperObserverPtr *wrapperObserverCreate(" << GenerateStructHeader::getWrapperTypeString(false, structObj) << " value);\n";
-            ss << "\n";
-            ss << "    /* IWrapperObserver */\n";
-            ss << "\n";
-            ss << "    virtual event_observer_t getObserver();\n";
-            ss << "    virtual void observerCancel();\n";
-            ss << "\n";
-            ss << "    /* WrapperEvent */\n";
-            ss << "\n";
-            ss << "    struct WrapperEvent : public IWrapperCallbackEvent\n";
-            ss << "    {\n";
-            ss << "      virtual event_observer_t getObserver() {return observer_->getObserver();}\n";
-            ss << "      virtual const char *getNamespace()     {return \"" << structObj->getPath() << "\";}\n";
-            ss << "      virtual const char *getClass()         {return \"" << structObj->getMappingName() << "\";}\n";
-            ss << "      virtual const char *getMethod()        {return method_.c_str();}\n";
-            ss << "      virtual generic_handle_t getSource()   {return reinterpret_cast<generic_handle_t>(new " << GenerateStructHeader::getWrapperTypeString(false, structObj) << "(observer_->source_.lock()));}\n";
-            ss << "      virtual generic_handle_t getEventData(int argumentIndex) {return 0;}\n";
-            ss << "\n";
-            ss << "      " << fixType(structObj) << "_WrapperObserverPtr observer_;\n";
-            ss << "      ::zsLib::String method_;\n";
-            ss << "    };\n";
-            ss << "\n";
-            ss << "    /* wrapper" << structObj->getPathName() << "::WrapperObserver */\n";
-            ss << "\n";
-          }
-          {
-            auto &ss = structFile.cppFunctionsSS_;
-            ss << dash2;
-            ss << "  IWrapperObserverPtr * " << fixType(structObj) << "_WrapperObserver::wrapperObserverCreate(" << GenerateStructHeader::getWrapperTypeString(false, structObj) << " value)\n";
-            ss << "  {\n";
-            ss << "    auto pThis = make_shared<" << fixType(structObj) << "_WrapperObserver>();\n";
-            ss << "    pThis->thisObserverRaw_ = new IWrapperObserverPtr(pThis);\n";
-            ss << "    pThis->thisWeak_ = pThis;\n";
-            ss << "    pThis->source_ = value;\n";
-            ss << "    if (value) value->wrapper_installObserver(pThis);\n";
-            ss << "    return pThis->thisObserverRaw_;\n";
-            ss << "  }\n";
             ss << "\n";
 
-            ss << dash2;
-            ss << "  event_observer_t " << fixType(structObj) << "_WrapperObserver::getObserver()\n";
-            ss << "  {\n";
-            ss << "    ::zsLib::AutoLock lock(lock_);\n";
-            ss << "    if (NULL == thisObserverRaw_) return 0;\n";
-            ss << "    return reinterpret_cast<event_observer_t>(thisObserverRaw_);\n";
-            ss << "  }\n";
-            ss << "\n";
-
-            ss << dash2;
-            ss << "  void " << fixType(structObj) << "_WrapperObserver::observerCancel()\n";
-            ss << "  {\n";
-            ss << "    IWrapperObserverPtr pObserverThis;\n";
-            ss << "    {\n";
-            ss << "      ::zsLib::AutoLock lock(lock_);\n";
-            ss << "      if (NULL == thisObserverRaw_) return;\n";
-            ss << "      auto pThis = thisWeak_.lock();\n";
-            ss << "      pObserverThis = *thisObserverRaw_;\n";
-            ss << "      auto value = source_.lock();\n";
-            ss << "      if (value) value->wrapper_uninstallObserver(pThis);\n";
-            ss << "      auto temp = thisObserverRaw_;\n";
-            ss << "      thisObserverRaw_ = NULL;\n";
-            ss << "      delete temp;\n";
-            ss << "    }\n";
-            ss << "  }\n";
-            ss << "\n";
           }
-#endif //0
         }
 
         //---------------------------------------------------------------------
@@ -3195,20 +3006,6 @@ namespace zsLib
                                                            )
         {
           structFile.endRegion("Events");
-#if 0
-          {
-            auto &ss = structFile.headerCppFunctionsSS_;
-            ss << "\n";
-            ss << "    /* data */\n";
-            ss << "\n";
-            ss << "    ::zsLib::Lock lock_;\n";
-            ss << "    " << fixType(structObj) << "_WrapperObserverWeakPtr thisWeak_;\n";
-            ss << "    IWrapperObserverPtr *thisObserverRaw_;\n";
-            ss << "    wrapper" << structObj->getPathName() << "WeakPtr source_;\n";
-            ss << "  };\n";
-            ss << " \n";
-          }
-#endif //0
         }
 
 #if 0
