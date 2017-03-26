@@ -69,10 +69,16 @@ namespace zsLib
                                  std::stringstream &ss,
                                  bool &first
                                  );
+          static void insertBlob(
+                                 std::stringstream &ss,
+                                 const String &indentStr,
+                                 const char *blob
+                                 );
 
           static bool isBuiltInType(TypePtr type);
 
           static bool hasOnlyStaticMethods(StructPtr structObj);
+          static bool hasEventHandlers(StructPtr structObj);
 
           static bool needsDefaultConstructor(StructPtr structObj);
           static bool needsDefaultConstructor(TemplatedStructTypePtr templateObj);

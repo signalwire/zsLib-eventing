@@ -196,6 +196,33 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
+        void GenerateHelper::insertBlob(
+                                        std::stringstream &ss,
+                                        const String &indentStr,
+                                        const char *blob
+                                        )
+        {
+          if (NULL == blob) return;
+
+          bool lastWasEol {true};
+
+          const char *p = blob;
+          while ('\0' != *p)
+          {
+            if ('\n' == *p) {
+              ss << *p;
+              lastWasEol = true;
+              ++p;
+              continue;
+            }
+            if (lastWasEol) ss << indentStr;
+            lastWasEol = false;
+            ss << *p;
+            ++p;
+          }
+        }
+
+        //---------------------------------------------------------------------
         bool GenerateHelper::isBuiltInType(TypePtr type)
         {
           if (!type) return false;
@@ -274,6 +301,19 @@ namespace zsLib
             return false;
           }
           return true;
+        }
+
+
+        //-------------------------------------------------------------------
+        bool GenerateHelper::hasEventHandlers(StructPtr structObj)
+        {
+          if (!structObj) return false;
+
+          for (auto iter = structObj->mMethods.begin(); iter != structObj->mMethods.end(); ++iter) {
+            auto method = (*iter);
+            if (method->hasModifier(Modifier_Method_EventHandler)) return true;
+          }
+          return false;
         }
 
         //-------------------------------------------------------------------

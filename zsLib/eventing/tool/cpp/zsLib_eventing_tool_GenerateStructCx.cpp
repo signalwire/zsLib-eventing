@@ -967,10 +967,9 @@ namespace zsLib
           cppSS << "{\n";
           cppSS << "  ::zsLib::Time t = day_point(jan / 1 / 1601);\n";
           cppSS << "\n";
-          cppSS << "  auto nano = ::zsLib::toMilliseconds(zsLib::Nanoseconds(static_cast<::zsLib::Nanoseconds::rep>(value.UniversalTime) * static_cast<::zsLib::Nanoseconds::rep>(100)));\n";
+          cppSS << "  auto nano = std::chrono::duration_cast<::zsLib::Time::duration>(zsLib::Nanoseconds(static_cast<::zsLib::Nanoseconds::rep>(value.UniversalTime) * static_cast<::zsLib::Nanoseconds::rep>(100)));\n";
           cppSS << "\n";
-          cppSS << "  auto result = t + nano;\n";
-          cppSS << "  return zsLib::timeSinceEpoch(result);\n";
+          cppSS << "  return t + nano;\n";
           cppSS << "}\n";
           cppSS << "\n";
         }

@@ -64,6 +64,7 @@ namespace zsLib
           {
             NamespacePtr global_;
             NamePathStructSetMap derives_;
+            StringSet boxings_;
 
             String headerFileName_;
             String cppFileName_;
@@ -88,6 +89,7 @@ namespace zsLib
             void headerIncludeCpp(const String &headerFile);
             void includeC(const String &headerFile);
             void includeCpp(const String &headerFile);
+            bool hasBoxing(const String &namePathStr);
           };
 
           struct StructFile
@@ -166,6 +168,35 @@ namespace zsLib
                                          NamePathStructSetMap &ioDerivesInfo
                                          );
 
+          static void calculateBoxings(
+                                       NamespacePtr namespaceObj,
+                                       StringSet &ioBoxings
+                                       );
+          static void calculateBoxings(
+                                       StructPtr structObj,
+                                       StringSet &ioBoxings
+                                       );
+          static void calculateBoxings(
+                                       TemplatedStructTypePtr templatedStructObj,
+                                       StringSet &ioBoxings
+                                       );
+          static void calculateBoxings(
+                                       MethodPtr method,
+                                       StringSet &ioBoxings,
+                                       TemplatedStructTypePtr templatedStruct = TemplatedStructTypePtr()
+                                       );
+          static void calculateBoxings(
+                                       PropertyPtr property,
+                                       StringSet &ioBoxings,
+                                       TemplatedStructTypePtr templatedStruct = TemplatedStructTypePtr()
+                                       );
+          static void calculateBoxingType(
+                                          bool isOptional,
+                                          TypePtr type,
+                                          StringSet &ioBoxings,
+                                          TemplatedStructTypePtr templatedStruct = TemplatedStructTypePtr()
+                                          );
+
           static void insertInto(
                                  StructPtr structObj,
                                  const NamePath &namePath,
@@ -202,6 +233,10 @@ namespace zsLib
                                         HelperFile &helperFile,
                                         EnumTypePtr enumObj
                                         );
+          static void prepareHelperEnumBoxing(
+                                              HelperFile &helperFile,
+                                              EnumTypePtr enumObj
+                                              );
           static void prepareHelperString(HelperFile &helperFile);
           static void prepareHelperBinary(HelperFile &helperFile);
           static void prepareHelperDuration(
@@ -214,7 +249,7 @@ namespace zsLib
                                         );
           static void prepareHelperSpecial(
                                            HelperFile &helperFile,
-                                           const String specialName
+                                           const String &specialName
                                            );
           static void preparePromiseWithValue(HelperFile &helperFile);
           static void preparePromiseWithRejectionReason(HelperFile &helperFile);
