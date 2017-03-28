@@ -322,6 +322,7 @@ namespace zsLib
           if (!structObj) return false;
 
           if (structObj->hasModifier(Modifier_Static)) return false;
+          if (hasOnlyStaticMethods(structObj)) return false;
 
           for (auto iter = structObj->mMethods.begin(); iter != structObj->mMethods.end(); ++iter)
           {

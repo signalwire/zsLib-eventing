@@ -2890,6 +2890,14 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
+    IIDLTypes::StructPtr IIDLTypes::TemplatedStructType::getParentStruct() const
+    {
+      auto parent = getParent();
+      if (!parent) return StructPtr();
+      return parent->toStruct();
+    }
+
+    //-------------------------------------------------------------------------
     void IIDLTypes::createTemplatedStructTypeForwards(
                                                       ContextPtr context,
                                                       ElementPtr templatedStructsEl,

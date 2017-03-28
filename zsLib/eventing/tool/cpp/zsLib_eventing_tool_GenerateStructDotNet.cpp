@@ -93,19 +93,61 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
+        void GenerateStructDotNet::BaseFile::usingTypedef(IEventingTypes::PredefinedTypedefs type)
+        {
+          switch (type) {
+            case PredefinedTypedef_void: return;
+
+            case PredefinedTypedef_binary: {
+              usingTypedef("binary_t", "System.IntPtr");
+              usingTypedef("box_binary_t", "System.IntPtr");
+              return;
+            }
+            case PredefinedTypedef_string:
+            case PredefinedTypedef_astring:
+            case PredefinedTypedef_wstring: {
+              usingTypedef("string_t", "System.IntPtr");
+              usingTypedef("box_string_t", "System.IntPtr");
+              return;
+            }
+          }
+          usingTypedef(GenerateStructC::fixCType(type), fixCsSystemType(type));
+          usingTypedef("box_" + GenerateStructC::fixCType(type), "System.IntPtr");
+        }
+
+        //---------------------------------------------------------------------
         void GenerateStructDotNet::BaseFile::usingTypedef(TypePtr type)
         {
           if (!type) return;
 
           {
             auto basicType = type->toBasicType();
-            if (basicType) return;
+            if (basicType) {
+              usingTypedef(basicType->mBaseType);
+              return;
+            }
           }
 
           {
             auto structType = type->toStruct();
             if (structType) {
-              if (GenerateHelper::isBuiltInType(structType)) return;
+              if (GenerateHelper::isBuiltInType(structType)) {
+                auto specialName = structType->getPathName();
+
+                {
+                  if ("::zs::Any" == specialName) goto define_using_default;
+                  if ("::zs::Promise" == specialName) goto define_using_default;
+                  if ("::zs::Time" == specialName) goto define_using_default;
+                  if ("::zs::Nanoseconds" == specialName) goto define_using_default;
+                  if ("::zs::Microseconds" == specialName) goto define_using_default;
+                  if ("::zs::Milliseconds" == specialName) goto define_using_default;
+                  if ("::zs::Seconds" == specialName) goto define_using_default;
+                  if ("::zs::Minutes" == specialName) goto define_using_default;
+                  if ("::zs::Hours" == specialName) goto define_using_default;
+                  return;
+                }
+              define_using_default: {}
+              }
               usingTypedef(GenerateStructC::fixCType(type), "System.IntPtr");
               return;
             }
@@ -125,6 +167,7 @@ namespace zsLib
               auto systemType = fixCsSystemType(enumType->mBaseType);
               if (systemType.hasData()) {
                 usingTypedef(GenerateStructC::fixCType(type), systemType);
+                usingTypedef(GenerateStructC::fixCType(true, type), "System.IntPtr");
               }
             }
           }
@@ -205,14 +248,18 @@ namespace zsLib
         #pragma mark
 
         //---------------------------------------------------------------------
-        GenerateStructDotNet::StructFile::StructFile(StructPtr structObj) :
+        GenerateStructDotNet::StructFile::StructFile(
+                                                     BaseFile &baseFile,
+                                                     StructPtr structObj
+                                                     ) :
           interfaceSS_(preStructSS_),
           interfaceEndSS_(preStructEndSS_),
           delegateSS_(structDeclationsSS_),
           struct_(structObj),
           isStaticOnly_(GenerateHelper::hasOnlyStaticMethods(structObj)),
           hasEvents_(GenerateHelper::hasEventHandlers(structObj)),
-          isDictionary(structObj->hasModifier(Modifier_Struct_Dictionary))
+          isDictionary(structObj->hasModifier(Modifier_Struct_Dictionary)),
+          shouldInheritException_((!isStaticOnly_) && shouldDeriveFromException(baseFile, structObj))
         {
           if ((!isStaticOnly_) &&
               (!isDictionary)) {
@@ -301,6 +348,14 @@ namespace zsLib
             case PredefinedTypedef_wstring:     break;
           }
           return String();
+        }
+
+        //---------------------------------------------------------------------
+        String GenerateStructDotNet::fixArgumentName(const String &value)
+        {
+          if ("params" == value) return "@params";
+          if ("event" == value) return "@event";
+          return value;
         }
 
         //---------------------------------------------------------------------
@@ -434,38 +489,42 @@ namespace zsLib
           {
             auto templatedType = type->toTemplatedStructType();
             if (templatedType) {
-              auto parent = templatedType->getParent();
-              if (parent) {
-                auto parentStruct = parent->toStruct();
-                if (parentStruct) {
-                  String prefixStr;
-                  String postFixStr = ">";
-                  String specialName = parentStruct->getPathName();
-                  if ("::zs::PromiseWith" == specialName) prefixStr = "System.Threading.Tasks.Task<";
-                  if ("::std::list" == specialName) prefixStr = "System.Collections.Generic.IReadOnlyList<";
-                  if ("::std::set" == specialName) {
-                    prefixStr = "System.Collections.Generic.IReadOnlyDictionary<";
-                    postFixStr = ", object>";
-                  }
-                  if ("::std::map" == specialName) prefixStr = "System.Collections.Generic.IReadOnlyDictionary<";
+              auto parentStruct = templatedType->getParentStruct();
+              if (parentStruct) {
+                String prefixStr;
+                String postFixStr = ">";
+                String specialName = parentStruct->getPathName();
 
-                  String argsStr;
-                  for (auto iter = templatedType->mTemplateArguments.begin(); iter != templatedType->mTemplateArguments.end(); ++iter) {
-                    auto subType = (*iter);
-                    if (argsStr.hasData()) {
-                      argsStr += ", ";
-                    }
-                    argsStr += fixCsPathType(subType, isInterface);
-                  }
+                size_t maxArgs = templatedType->mTemplateArguments.size();
 
-                  if ((">" == postFixStr.substr(0, 1)) &&
-                      (argsStr.length() > 0) &&
-                      (">" == argsStr.substr(argsStr.length() - 1, 1))) {
-                    argsStr += " ";
-                  }
-
-                  return prefixStr + argsStr + postFixStr;
+                if ("::zs::PromiseWith" == specialName) {
+                  prefixStr = "System.Threading.Tasks.Task<";
+                  maxArgs = 1;
                 }
+                if ("::std::list" == specialName) prefixStr = "System.Collections.Generic.IReadOnlyList<";
+                if ("::std::set" == specialName) {
+                  prefixStr = "System.Collections.Generic.IReadOnlyDictionary<";
+                  postFixStr = ", object>";
+                }
+                if ("::std::map" == specialName) prefixStr = "System.Collections.Generic.IReadOnlyDictionary<";
+
+                size_t index = 0;
+                String argsStr;
+                for (auto iter = templatedType->mTemplateArguments.begin(); (index < maxArgs) && (iter != templatedType->mTemplateArguments.end()); ++iter, ++index) {
+                  auto subType = (*iter);
+                  if (argsStr.hasData()) {
+                    argsStr += ", ";
+                  }
+                  argsStr += fixCsPathType(subType, isInterface);
+                }
+
+                if ((">" == postFixStr.substr(0, 1)) &&
+                    (argsStr.length() > 0) &&
+                    (">" == argsStr.substr(argsStr.length() - 1, 1))) {
+                  argsStr += " ";
+                }
+
+                return prefixStr + argsStr + postFixStr;
               }
             }
           }
@@ -679,6 +738,7 @@ namespace zsLib
         //---------------------------------------------------------------------
         String GenerateStructDotNet::getHelpersMethod(
                                                       BaseFile &baseFile,
+                                                      bool useApiHelper,
                                                       const String &methodName,
                                                       bool isOptional,
                                                       TypePtr type
@@ -689,12 +749,16 @@ namespace zsLib
           {
             auto basicType = type->toBasicType();
             if (basicType) {
-              String cTypeStr = GenerateStructC::fixBasicType(basicType->mBaseType);
+              String cTypeStr = GenerateStructC::fixCType(basicType->mBaseType);
               if (isOptional) {
-                return getApiPath(baseFile) + ".box_" + cTypeStr + methodName;
+                return (useApiHelper ? getApiPath(baseFile) : getHelperPath(baseFile)) + ".box_" + cTypeStr + methodName;
               }
-              if ("string_t" == cTypeStr) return getApiPath(baseFile) + "." + cTypeStr + methodName;
-              if ("binary_t" == cTypeStr) return getApiPath(baseFile) + "." + cTypeStr + methodName;
+              if ("string_t" == cTypeStr) {
+                return (useApiHelper ? getApiPath(baseFile) : getHelperPath(baseFile)) + "." + GenerateStructC::fixType(type) + methodName;
+              }
+              if ("binary_t" == cTypeStr) {
+                return (useApiHelper ? getApiPath(baseFile) : getHelperPath(baseFile)) + "." + GenerateStructC::fixType(type) + methodName;
+              }
               return String();
             }
           }
@@ -703,13 +767,30 @@ namespace zsLib
             if (enumType) {
               String cTypeStr = GenerateStructC::fixCType(enumType);
               if (isOptional) {
-                return getApiPath(baseFile) + ".box_" + cTypeStr + methodName;
+                return (useApiHelper ? getApiPath(baseFile) : getHelperPath(baseFile)) + ".box_" + GenerateStructC::fixCType(type) + methodName;
               }
-              return getApiPath(baseFile) + "." + cTypeStr + methodName;
+              return (useApiHelper ? getApiPath(baseFile) : getHelperPath(baseFile)) + "." + GenerateStructC::fixCType(type) + methodName;
             }
           }
 
-          return getHelperPath(baseFile) + "." + GenerateStructC::fixCType(type) + methodName;
+          {
+            if (useApiHelper) {
+              {
+                auto templatedStruct = type->toTemplatedStructType();
+                if (templatedStruct) {
+                  auto parentStruct = templatedStruct->getParentStruct();
+                  if (parentStruct) {
+                    String specialName = parentStruct->getPathName();
+                    if ("::zs::PromiseWith" == specialName) {
+                      return getApiPath(baseFile) + ".zs_Promise" + methodName;
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          return (useApiHelper ? getApiPath(baseFile) : getHelperPath(baseFile)) + "." + GenerateStructC::fixType(type) + methodName;
         }
 
         //---------------------------------------------------------------------
@@ -719,7 +800,7 @@ namespace zsLib
                                                   TypePtr type
                                                   )
         {
-          return getHelpersMethod(baseFile, "_ToC", isOptional, type);
+          return getHelpersMethod(baseFile, false, "_ToC", isOptional, type);
         }
 
         //---------------------------------------------------------------------
@@ -729,7 +810,7 @@ namespace zsLib
                                                     TypePtr type
                                                     )
         {
-          return getHelpersMethod(baseFile, "_FromC", isOptional, type);
+          return getHelpersMethod(baseFile, false, "_FromC", isOptional, type);
         }
 
         //---------------------------------------------------------------------
@@ -739,7 +820,7 @@ namespace zsLib
                                                          TypePtr type
                                                          )
         {
-          return getHelpersMethod(baseFile, "_AdoptFromC", isOptional, type);
+          return getHelpersMethod(baseFile, false, "_AdoptFromC", isOptional, type);
         }
 
         //---------------------------------------------------------------------
@@ -749,7 +830,11 @@ namespace zsLib
                                                        TypePtr type
                                                        )
         {
-          return getHelpersMethod(baseFile, "_wrapperDestroy", isOptional, type);
+          if (!type) return String();
+          if (!isOptional) {
+            if (type->toEnumType()) return String();
+          }
+          return getHelpersMethod(baseFile, true, "_wrapperDestroy", isOptional, type);
         }
 
         //---------------------------------------------------------------------
@@ -767,35 +852,81 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructDotNet::getApiPath(BaseFile &apiFile)
+        String GenerateStructDotNet::getApiCastRequiredDefine(BaseFile &baseFile)
         {
-          return "Wrapper." + GenerateStructCx::fixName(apiFile.project_->getMappingName()) + ".Api";
+          String result = "WRAPPER_C_GENERATED_REQUIRES_CAST";
+          if (!baseFile.project_) return result;
+          if (baseFile.project_->mName.isEmpty()) return result;
+
+          auto name = baseFile.project_->mName;
+          name.toUpper();
+          return name + "_WRAPPER_C_GENERATED_REQUIRES_CAST";
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructDotNet::getHelperPath(BaseFile &apiFile)
+        String GenerateStructDotNet::getApiPath(BaseFile &baseFile)
         {
-          return "Wrapper." + GenerateStructCx::fixName(apiFile.project_->getMappingName()) + ".Helpers";
+          return "Wrapper." + GenerateStructCx::fixName(baseFile.project_->getMappingName()) + ".Api";
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::finalizeBaseFile(BaseFile &apiFile)
+        String GenerateStructDotNet::getHelperPath(BaseFile &baseFile)
+        {
+          return "Wrapper." + GenerateStructCx::fixName(baseFile.project_->getMappingName()) + ".Helpers";
+        }
+
+        //---------------------------------------------------------------------
+        bool GenerateStructDotNet::shouldDeriveFromException(
+                                                             BaseFile &baseFile,
+                                                             StructPtr structObj
+                                                             )
+        {
+          if (!structObj) return false;
+          if (structObj->mIsARelationships.size() > 0) return false;
+          if (structObj->hasModifier(Modifier_Static)) return false;
+
+          auto context = baseFile.global_->toContext()->findType("::zs::PromiseRejectionReason");
+          if (!context) return false;
+
+          auto rejectionStruct = context->toStruct();
+          if (!rejectionStruct) return false;
+
+          auto checkName = structObj->getPathName();
+
+          for (auto iterTemplate = rejectionStruct->mTemplatedStructs.begin(); iterTemplate != rejectionStruct->mTemplatedStructs.end(); ++iterTemplate) {
+            auto templatedStruct = (*iterTemplate).second;
+            if (!templatedStruct) continue;
+
+            auto iterFoundType = templatedStruct->mTemplateArguments.begin();
+            if (iterFoundType == templatedStruct->mTemplateArguments.end()) continue;
+
+            auto foundType = (*iterFoundType);
+            if (!foundType) continue;
+
+            if (foundType->getPathName() == checkName) return true;
+          }
+
+          return false;
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructDotNet::finalizeBaseFile(BaseFile &baseFile)
         {
           std::stringstream ss;
 
-          GenerateStructC::appendStream(ss, apiFile.usingNamespaceSS_);
-          GenerateStructC::appendStream(ss, apiFile.usingAliasSS_);
-          GenerateStructC::appendStream(ss, apiFile.namespaceSS_);
-          GenerateStructC::appendStream(ss, apiFile.preStructSS_);
-          GenerateStructC::appendStream(ss, apiFile.preStructEndSS_);
-          GenerateStructC::appendStream(ss, apiFile.structDeclationsSS_);
-          GenerateStructC::appendStream(ss, apiFile.structSS_);
-          GenerateStructC::appendStream(ss, apiFile.structEndSS_);
-          GenerateStructC::appendStream(ss, apiFile.postStructSS_);
-          GenerateStructC::appendStream(ss, apiFile.postStructEndSS_);
-          GenerateStructC::appendStream(ss, apiFile.namespaceEndSS_);
+          GenerateStructC::appendStream(ss, baseFile.usingNamespaceSS_);
+          GenerateStructC::appendStream(ss, baseFile.usingAliasSS_);
+          GenerateStructC::appendStream(ss, baseFile.namespaceSS_);
+          GenerateStructC::appendStream(ss, baseFile.preStructSS_);
+          GenerateStructC::appendStream(ss, baseFile.preStructEndSS_);
+          GenerateStructC::appendStream(ss, baseFile.structDeclationsSS_);
+          GenerateStructC::appendStream(ss, baseFile.structSS_);
+          GenerateStructC::appendStream(ss, baseFile.structEndSS_);
+          GenerateStructC::appendStream(ss, baseFile.postStructSS_);
+          GenerateStructC::appendStream(ss, baseFile.postStructEndSS_);
+          GenerateStructC::appendStream(ss, baseFile.namespaceEndSS_);
 
-          writeBinary(apiFile.fileName_, UseHelper::convertToBuffer(ss.str()));
+          writeBinary(baseFile.fileName_, UseHelper::convertToBuffer(ss.str()));
         }
 
         //---------------------------------------------------------------------
@@ -1141,7 +1272,7 @@ namespace zsLib
               "        }\n"
               "    }\n"
               "\n"
-              "    private System.Collections.Generic.Dictionary<string, Structs> observers_;\n"
+              "    private System.Collections.Generic.Dictionary<string, Structs> observers_ = new System.Collections.Generic.Dictionary<string, Structs>();\n"
               "\n"
               "    public static EventManager Singleton { get { return singleton_; } }\n"
               "\n"
@@ -1504,7 +1635,7 @@ namespace zsLib
               ss << indentStr << "    return " << getApiPath(apiFile) << ".box_" << cTypeStr << "_get_value(handle);\n";
               ss << indentStr << "}\n";
               ss << "\n";
-              ss << indentStr << "public static " << fixCCsType(basicType) << " box_" << cTypeStr << "_AdoptFromC(" << boxedTypeStr << " handle)\n";
+              ss << indentStr << "public static " << fixCCsType(basicType) << "? box_" << cTypeStr << "_AdoptFromC(" << boxedTypeStr << " handle)\n";
               ss << indentStr << "{\n";
               ss << indentStr << "    var result = box_" << cTypeStr << "_FromC(handle);\n";
               ss << indentStr << "    " << getApiPath(apiFile) << ".box_" << cTypeStr << "_wrapperDestroy(handle);\n";
@@ -1533,10 +1664,10 @@ namespace zsLib
             auto &ss = apiFile.structSS_;
             ss << "\n";
             ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
-            ss << indentStr << "public extern static string_t string_t_wrapperCreate_string_t();\n";
+            ss << indentStr << "public extern static string_t string_t_wrapperCreate_string();\n";
             ss << "\n";
             ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
-            ss << indentStr << "public extern static string_t string_t_wrapperCreate_string_tWithValue([MarshalAs(UseStringMarshal)] string value);\n";
+            ss << indentStr << "public extern static string_t string_t_wrapperCreate_stringWithValue([MarshalAs(UseStringMarshal)] string value);\n";
             ss << "\n";
             ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
             ss << indentStr << "public extern static void string_t_wrapperDestroy(string_t handle);\n";
@@ -1575,7 +1706,7 @@ namespace zsLib
             ss << indentStr << "public static string_t string_t_ToC(string value)\n";
             ss << indentStr << "{\n";
             ss << indentStr << "    if (null == value) return System.IntPtr.Zero;\n";
-            ss << indentStr << "    return " << getApiPath(apiFile) << ".string_t_wrapperCreate_string_tWithValue(value);\n";
+            ss << indentStr << "    return " << getApiPath(apiFile) << ".string_t_wrapperCreate_stringWithValue(value);\n";
             ss << indentStr << "}\n";
           }
 
@@ -1665,7 +1796,7 @@ namespace zsLib
           prepareApiDuration(apiFile, "Microseconds");
           prepareApiDuration(apiFile, "Nanoseconds");
 
-          apiFile.endRegion("Time helpers");
+          apiFile.endRegion("Time API helpers");
           apiFile.endHelpersRegion("Time helpers");
         }
 
@@ -1733,7 +1864,7 @@ namespace zsLib
             ss << indentStr << "public static " << fixCsPathType(durationContext) << " zs_" << durationType << "_AdoptFromC(" << cTypeStr << " handle)\n";
             ss << indentStr << "{\n";
             ss << indentStr << "  var result = zs_" << durationType << "_FromC(handle);\n";
-            ss << indentStr << "  " << getApiPath(apiFile) << "zs_" << durationType << "_wrapperDestroy(handle);\n";
+            ss << indentStr << "  " << getApiPath(apiFile) << ".zs_" << durationType << "_wrapperDestroy(handle);\n";
             ss << indentStr << "  return result;\n";
             ss << indentStr << "}\n";
 
@@ -1762,10 +1893,12 @@ namespace zsLib
         {
           auto &indentStr = apiFile.indent_;
 
-          apiFile.startRegion(listOrSetStr + " helpers");
+          apiFile.startRegion(listOrSetStr + " API helpers");
+          apiFile.startHelpersRegion(listOrSetStr + " helpers");
 
           bool isMap = ("map" == listOrSetStr);
           bool isList = ("list" == listOrSetStr);
+          bool isSet = ("set" == listOrSetStr);
           auto context = apiFile.global_->toContext()->findType("::std::" + listOrSetStr);
           if (!context) return;
 
@@ -1788,7 +1921,6 @@ namespace zsLib
                 }
               }
             }
-
             
             apiFile.usingTypedef("iterator_handle_t", "System.IntPtr");
             apiFile.usingTypedef(GenerateStructC::fixCType(templatedStructType), "System.IntPtr");
@@ -1838,8 +1970,98 @@ namespace zsLib
               ss << indentStr << "public extern static " << fixCCsType(listType) << " " << GenerateStructC::fixType(templatedStructType) << "_wrapperIterValue(iterator_handle_t iterHandle);\n";
               ss << "\n";
             }
+
+            {
+              auto &ss = apiFile.helpersSS_;
+
+              ss << "\n";
+              ss << indentStr << "public static " <<  fixCsPathType(templatedStructType) << " " << GenerateStructC::fixType(templatedStructType) << "_FromC(" << GenerateStructC::fixCType(templatedStructType) << " handle)\n";
+              ss << indentStr << "{\n";
+              ss << indentStr << "    if (System.IntPtr.Zero == handle) return null;\n";
+              ss << indentStr << "    var result = new ";
+              if (isList) {
+                ss << "System.Collections.Generic.List< " << fixCsPathType(listType) << " >";
+              } else if (isMap) {
+                ss << "System.Collections.Generic.Dictionary< " << fixCsPathType(keyType) << ", " << fixCsPathType(listType) << " >";
+              } else {
+                ss << "System.Collections.Generic.Dictionary< " << fixCsPathType(listType) << ", object >";
+              }
+              ss << "();\n";
+              ss << indentStr << "    var iterHandle = " << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterBegin(handle);\n";
+              ss << indentStr << "    while (!" << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterIsEnd(handle))\n";
+              ss << indentStr << "    {\n";
+              if (isMap) {
+                ss << indentStr << "        var cKey = " << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterKey(iterHandle);\n";
+              }
+              ss << indentStr << "        var cValue = " << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterValue(iterHandle);\n";
+
+              if (isMap) {
+                ss << indentStr << "        var csKey = " << getAdoptFromCMethod(apiFile, false, listType) << "(cKey);\n";
+              }
+              ss << indentStr << "        var csValue = " << getAdoptFromCMethod(apiFile, false, listType) << "(cValue);\n";
+              if (isList) {
+                ss << indentStr << "        result.Add(csValue);\n";
+              } else if (isMap) {
+                ss << indentStr << "        result.Add(csKey, csValue);\n";
+              } else {
+                ss << indentStr << "        result.Add(csValue, null);\n";
+              }
+
+              ss << indentStr << "    }\n";
+              ss << indentStr << "    return result;\n";
+              ss << indentStr << "}\n";
+
+              ss << "\n";
+              ss << indentStr << "public static " << fixCsPathType(templatedStructType) << " " << GenerateStructC::fixType(templatedStructType) << "_AdoptFromC(" << GenerateStructC::fixCType(templatedStructType) << " handle)\n";
+              ss << indentStr << "{\n";
+              ss << indentStr << "    if (System.IntPtr.Zero == handle) return null;\n";
+              ss << indentStr << "    var result = " << GenerateStructC::fixType(templatedStructType) << "_FromC(handle);\n";
+              ss << indentStr << "    " << getDestroyCMethod(apiFile, false, templatedStructType) << "(handle);\n";
+              ss << indentStr << "    return result;\n";
+              ss << indentStr << "}\n";
+
+              ss << "\n";
+              ss << indentStr << "public static " << GenerateStructC::fixCType(templatedStructType) << " " << GenerateStructC::fixType(templatedStructType) << "_ToC(" << fixCsPathType(templatedStructType) << " values)\n";
+              ss << indentStr << "{\n";
+              ss << indentStr << "    if (null == values) return System.IntPtr.Zero;\n";
+              ss << indentStr << "    var handle = " << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) << "_wrapperCreate_" << listOrSetStr << "();\n";
+              if (isList) {
+                ss << indentStr << "    foreach (var value in values)\n";
+              } else if (isMap) {
+                ss << indentStr << "    foreach (System.Collections.Generic.KeyValuePair< " << fixCsPathType(keyType) << ", " <<  fixCsPathType(listType) << " > value in values)\n";
+              } else {
+                ss << indentStr << "    foreach (System.Collections.Generic.KeyValuePair< " << fixCsPathType(listType) << ", object > value in values)\n";
+              }
+              ss << indentStr << "    {\n";
+              if (isList) {
+                ss << indentStr << "        var cValue = " << getToCMethod(apiFile, false, listType) << "(value);\n";
+                ss << indentStr << "        " << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) << "_insert(handle, cValue);\n";
+              } else if (isMap) {
+                ss << indentStr << "        var cKey = " << getToCMethod(apiFile, false, keyType) << "(value.Key);\n";
+                ss << indentStr << "        var cValue = " << getToCMethod(apiFile, false, listType) << "(value.Value);\n";
+                ss << indentStr << "        " << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) <<  "_insert(handle, cKey, cValue);\n";
+                auto destroyStr = getDestroyCMethod(apiFile, false, keyType);
+                if (destroyStr.hasData()) {
+                  ss << indentStr << "        " << destroyStr << "(cKey);\n";
+                }
+              } else {
+                ss << indentStr << "        var cValue = " << getToCMethod(apiFile, false, listType) << "(value.Key);\n";
+                ss << indentStr << "        " << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) << "_insert(handle, cValue);\n";
+              }
+              {
+                auto destroyStr = getDestroyCMethod(apiFile, false, listType);
+                if (destroyStr.hasData()) {
+                  ss << indentStr << "        " << destroyStr << "(cValue);\n";
+                }
+              }
+              ss << indentStr << "    }\n";
+              ss << indentStr << "    return handle;\n";
+              ss << indentStr << "}\n";
+
+            }
           }
-          apiFile.endRegion(listOrSetStr + " helpers");
+          apiFile.endRegion(listOrSetStr + " API helpers");
+          apiFile.endHelpersRegion(listOrSetStr + " helpers");
         }
 
         //---------------------------------------------------------------------
@@ -1851,6 +2073,7 @@ namespace zsLib
           auto &indentStr = apiFile.indent_;
 
           bool isPromise = "Promise" == specialName;
+          bool isAny = "Any" == specialName;
 
           auto context = apiFile.global_->toContext()->findType("::zs::" + specialName);
           if (!context) return;
@@ -1860,7 +2083,8 @@ namespace zsLib
 
           apiFile.usingTypedef(GenerateStructC::fixCType(contextStruct), "System.IntPtr");
 
-          apiFile.startRegion(specialName + " helpers");
+          apiFile.startRegion(specialName + " API helpers");
+          apiFile.startHelpersRegion(specialName + " helpers");
 
           {
             auto &ss = apiFile.structSS_;
@@ -1892,7 +2116,82 @@ namespace zsLib
             }
             ss << "\n";
           }
-          apiFile.endRegion(specialName + " helpers");
+
+          if (isPromise) {
+            auto &ss = apiFile.helpersSS_;
+            ss << "\n";
+
+            static const char *promiseAdopt =
+              "public static System.Threading.Tasks.Task zs_Promise_AdoptFromC(zs_Promise_t handle)\n"
+              "{\n"
+              "    return System.Threading.Tasks.Task.Run(() => {\n"
+              "        if (System.IntPtr.Zero == handle) return null;\n"
+              "\n"
+              "        var target = new object();\n"
+              "        var tcs = new System.Threading.Tasks.TaskCompletionSource<object>();\n"
+              "        var instanceId = $API$.zs_Promise_wrapperInstanceId(handle);\n"
+              "\n"
+              "        ObserveEvents(\"::zs\", \"Promise\", instanceId, target, (object callbackTarget, string methodName, callback_event_t callbackHandle) =>\n"
+              "        {\n"
+              "            bool resolved = $API$.zs_Promise_isResolved(handle);\n"
+              "            if (resolved) {\n"
+              "                tcs.SetResult(null);\n"
+              "                return;\n"
+              "            }\n"
+              "            var exception = zs_PromiseRejectionReason_FromC(handle);\n"
+              "            if (null != exception) {\n"
+              "                tcs.SetException(exception);\n"
+              "            } else {\n"
+              "                tcs.SetCanceled();\n"
+              "            }\n"
+              "        });\n"
+              "\n"
+              "        var eventObserverHandle = $API$.zs_Promise_wrapperObserveEvents(handle);\n"
+              "\n"
+              "        tcs.Task.Wait();\n"
+              "\n"
+              "        $API$.callback_wrapperObserverDestroy(eventObserverHandle);\n"
+              "        $API$.zs_Promise_wrapperDestroy(handle);\n"
+              "\n"
+              "        return tcs.Task.Result;\n"
+              "    });\n"
+              "}\n"
+              ;
+            String promiseAdoptStr(promiseAdopt);
+            promiseAdoptStr.replaceAll("$API$", getApiPath(apiFile));
+            GenerateHelper::insertBlob(ss, indentStr, promiseAdoptStr);
+            ss << indentStr << "\n";
+          } else if (isAny) {
+            {
+              auto &ss = apiFile.helpersSS_;
+
+              String cTypeStr = GenerateStructC::fixCType(contextStruct);
+
+              ss << "\n";
+              ss << indentStr << "public static " << fixCsPathType(contextStruct) << " " << GenerateStructC::fixType(contextStruct) << "_FromC(" << cTypeStr << " handle)\n";
+              ss << indentStr << "{\n";
+              ss << indentStr << "    return (object)handle;\n";
+              ss << indentStr << "}\n";
+
+              ss << "\n";
+              ss << indentStr << "public static " << fixCsPathType(contextStruct) << " " << GenerateStructC::fixType(contextStruct) << "_AdoptFromC(" << cTypeStr << " handle)\n";
+              ss << indentStr << "{\n";
+              ss << indentStr << "  var result = " << GenerateStructC::fixType(contextStruct) << "_FromC(handle);\n";
+              ss << indentStr << "  " << getDestroyCMethod(apiFile, false, contextStruct) << "(handle);\n";
+              ss << indentStr << "  return result;\n";
+              ss << indentStr << "}\n";
+
+              ss << "\n";
+              ss << indentStr << "public static " << cTypeStr << " " << GenerateStructC::fixType(contextStruct) << "_ToC(" << fixCsPathType(contextStruct) << " value)\n";
+              ss << indentStr << "{\n";
+              ss << indentStr << "    return (" << cTypeStr << ")value;\n";
+              ss << indentStr << "}\n";
+            }
+          }
+
+
+          apiFile.endRegion(specialName + " API helpers");
+          apiFile.endHelpersRegion(specialName + " helpers");
         }
 
         //---------------------------------------------------------------------
@@ -1906,7 +2205,8 @@ namespace zsLib
           auto contextStruct = context->toStruct();
           if (!contextStruct) return;
 
-          apiFile.startRegion("PromiseWith helpers");
+          apiFile.startRegion("PromiseWith API helpers");
+          apiFile.startHelpersRegion("PromiseWith helpers");
 
           for (auto iter = contextStruct->mTemplatedStructs.begin(); iter != contextStruct->mTemplatedStructs.end(); ++iter)
           {
@@ -1928,11 +2228,62 @@ namespace zsLib
               ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
               ss << indentStr << "public extern static " << GenerateStructC::fixCType(promiseType) << " zs_PromiseWith_resolveValue_" << GenerateStructC::fixType(promiseType) << "(zs_Promise_t handle);\n";
             }
+            {
+              auto &ss = apiFile.helpersSS_;
+              ss << "\n";
+
+              static const char *promiseAdopt =
+                "public static System.Threading.Tasks.Task< $RESOLVECSTYPE$ > $ZSPROMISEWITHTYPE$_AdoptFromC($ZSPROMISEWITHCTYPE$ handle)\n"
+                "{\n"
+                "    return System.Threading.Tasks.Task.Run< $RESOLVECSTYPE$ >(() => {\n"
+                "        if (System.IntPtr.Zero == handle) return null;\n"
+                "\n"
+                "        var target = new object();\n"
+                "        var tcs = new System.Threading.Tasks.TaskCompletionSource< $RESOLVECSTYPE$ >();\n"
+                "        var instanceId = $API$.zs_Promise_wrapperInstanceId(handle);\n"
+                "\n"
+                "        ObserveEvents(\"::zs\", \"Promise\", instanceId, target, (object callbackTarget, string methodName, callback_event_t callbackHandle) =>\n"
+                "        {\n"
+                "            bool resolved = $API$.zs_Promise_isResolved(handle);\n"
+                "            if (resolved) {\n"
+                "                tcs.SetResult($ADOPTMETHOD$($RESOLVEMETHOD$(handle)));\n"
+                "                return;\n"
+                "            }\n"
+                "            var exception = zs_PromiseRejectionReason_FromC(handle);\n"
+                "            if (null != exception) {\n"
+                "                tcs.SetException(exception);\n"
+                "            } else {\n"
+                "                tcs.SetCanceled();\n"
+                "            }\n"
+                "        });\n"
+                "\n"
+                "        var eventObserverHandle = $API$.zs_Promise_wrapperObserveEvents(handle);\n"
+                "\n"
+                "        tcs.Task.Wait();\n"
+                "\n"
+                "        $API$.callback_wrapperObserverDestroy(eventObserverHandle);\n"
+                "        $API$.zs_Promise_wrapperDestroy(handle);\n"
+                "\n"
+                "        return tcs.Task.Result;\n"
+                "    });\n"
+                "}\n"
+                ;
+              String promiseAdoptStr(promiseAdopt);
+              promiseAdoptStr.replaceAll("$API$", getApiPath(apiFile));
+              promiseAdoptStr.replaceAll("$ZSPROMISEWITHTYPE$", GenerateStructC::fixType(templatedStructType));
+              promiseAdoptStr.replaceAll("$ZSPROMISEWITHCTYPE$", GenerateStructC::fixCType(templatedStructType));
+              promiseAdoptStr.replaceAll("$RESOLVECSTYPE$", fixCsPathType(promiseType));
+              promiseAdoptStr.replaceAll("$ADOPTMETHOD$", getAdoptFromCMethod(apiFile, false, promiseType));
+              promiseAdoptStr.replaceAll("$RESOLVEMETHOD$", String(getApiPath(apiFile) + ".zs_PromiseWith_resolveValue_" + GenerateStructC::fixType(promiseType)));
+
+              GenerateHelper::insertBlob(ss, indentStr, promiseAdoptStr);
+              ss << indentStr << "\n";
+            }
           }
 
-          apiFile.endRegion("PromiseWith helpers");
+          apiFile.endRegion("PromiseWith API helpers");
+          apiFile.endHelpersRegion("PromiseWith helpers");
         }
-
 
         //---------------------------------------------------------------------
         void GenerateStructDotNet::preparePromiseWithRejectionReason(ApiFile &apiFile)
@@ -1945,7 +2296,16 @@ namespace zsLib
           auto contextStruct = context->toStruct();
           if (!contextStruct) return;
 
-          apiFile.startRegion("PromiseWithRejectionReason helpers");
+          apiFile.startRegion("PromiseWithRejectionReason API helpers");
+          apiFile.startHelpersRegion("PromiseWithRejectionReason helpers");
+
+          {
+            auto &ss = apiFile.helpersSS_;
+            ss << "\n";
+            ss << indentStr << "public static System.Exception zs_PromiseRejectionReason_FromC(zs_Promise_t handle)\n";
+            ss << indentStr << "{\n";
+            ss << indentStr << "    if (System.IntPtr.Zero == handle) return null;\n";
+          }
 
           for (auto iter = contextStruct->mTemplatedStructs.begin(); iter != contextStruct->mTemplatedStructs.end(); ++iter)
           {
@@ -1967,8 +2327,20 @@ namespace zsLib
               ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
               ss << indentStr << "public extern static " << GenerateStructC::fixCType(promiseType) << " zs_PromiseWith_rejectReason_" << GenerateStructC::fixType(promiseType) << "(zs_Promise_t handle);\n";
             }
+            {
+              auto &ss = apiFile.helpersSS_;
+              ss << indentStr << "    { var result = " << getAdoptFromCMethod(apiFile, false, promiseType) << "(" << getApiPath(apiFile) <<  ".zs_PromiseWith_rejectReason_" << GenerateStructC::fixType(promiseType) << "(handle)); if (null != result) return result; }\n";
+            }
           }
-          apiFile.endRegion("PromiseWithRejectionReason helpers");
+
+          {
+            auto &ss = apiFile.helpersSS_;
+            ss << indentStr << "    return null;\n";
+            ss << indentStr << "}\n";
+          }
+
+          apiFile.endRegion("PromiseWithRejectionReason API helpers");
+          apiFile.endHelpersRegion("PromiseWithRejectionReason helpers");
         }
 
         //---------------------------------------------------------------------
@@ -2227,10 +2599,15 @@ namespace zsLib
           if (GenerateHelper::isBuiltInType(structObj)) return;
           if (structObj->mGenerics.size() > 0) return;
 
-          StructFile structFile(structObj);
+          StructFile structFile(apiFile, structObj);
           structFile.project_ = apiFile.project_;
           structFile.global_ = apiFile.global_;
           structFile.fileName_ = UseHelper::fixRelativeFilePath(apiFile.fileName_, "net_" + GenerateStructC::fixType(structObj) + ".cs");
+
+          {
+            auto &ss = structFile.usingNamespaceSS_;
+            ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
+          }
 
           auto &indentStr = structFile.indent_;
 
@@ -2266,23 +2643,35 @@ namespace zsLib
             ss << indentStr << "{\n";
           }
 
+          String fixedTypeStr = GenerateStructC::fixType(structObj);
           String cTypeStr = GenerateStructC::fixCType(structObj);
           String csTypeStr = GenerateStructCx::fixStructName(structObj);
 
           {
             auto &ss = structFile.structSS_;
-            ss << indentStr << "public " << (structFile.isStaticOnly_ ? "static " : "sealed ") << "class " << csTypeStr << (structFile.isStaticOnly_ ? "" : " : System.IDisposable");
+            ss << indentStr << "public " << (structFile.isStaticOnly_ ? "static " : "sealed ") << "class " << csTypeStr;
+
+            String indentPlusStr;
+            size_t spaceLength = indentStr.length() + strlen("public sealed class  : ") + csTypeStr.length();
+            indentPlusStr.reserve(spaceLength);
+            for (size_t index = 0; index < spaceLength; ++index) { indentPlusStr += " "; }
+
+            if (structFile.shouldInheritException_) {
+              ss << " : System.Exception,\n";
+              ss << indentPlusStr;
+            } else if (!structFile.isStaticOnly_) {
+              ss << " : ";
+            }
+            ss << (structFile.isStaticOnly_ ? "" : "System.IDisposable");
 
             if (!structFile.isStaticOnly_) {
-              String indentPlusStr;
-              size_t spaceLength = indentStr.length() + strlen("public sealed class  : ") + csTypeStr.length();
-              indentPlusStr.reserve(spaceLength);
-              for (size_t index = 0; index < spaceLength; ++index) { indentPlusStr += " "; }
               processInheritance(apiFile, structFile, structObj, indentPlusStr);
             }
             ss << "\n";
             ss << indentStr << "{\n";
           }
+
+          apiFile.startRegion(fixCsPathType(structObj));
 
           structFile.indentMore();
 
@@ -2317,7 +2706,7 @@ namespace zsLib
               if (structFile.hasEvents_) {
                 ss << indentStr << "    WrapperObserveEventsCancel();\n";
               }
-              ss << indentStr << "    " << getApiPath(apiFile) << "." << cTypeStr << "_wrapperDestroy(this.native_);\n";
+              ss << indentStr << "    " << getApiPath(apiFile) << "." << fixedTypeStr << "_wrapperDestroy(this.native_);\n";
               ss << indentStr << "    this.native_ = System.IntPtr.Zero;\n";
               ss << indentStr << "    if (disposing) System.GC.SuppressFinalize(this);\n";
               ss << indentStr << "}\n";
@@ -2327,22 +2716,22 @@ namespace zsLib
               ss << indentStr << "    Dispose(false);\n";
               ss << indentStr << "}\n";
               ss << "\n";
-              ss << indentStr << "internal static " << csTypeStr << " " << cTypeStr << "_FromC(" << cTypeStr << " handle)\n";
+              ss << indentStr << "internal static " << csTypeStr << " " << fixedTypeStr << "_FromC(" << cTypeStr << " handle)\n";
               ss << indentStr << "{\n";
               ss << indentStr << "    if (System.IntPtr.Zero == handle) return null;\n";
-              ss << indentStr << "    return new " << csTypeStr << "((WrapperMakePrivate)null, " << getApiPath(apiFile) << "." << cTypeStr << "_wrapperClone(handle));\n";
+              ss << indentStr << "    return new " << csTypeStr << "((WrapperMakePrivate)null, " << getApiPath(apiFile) << "." << fixedTypeStr << "_wrapperClone(handle));\n";
               ss << indentStr << "}\n";
               ss << "\n";
-              ss << indentStr << "internal static " << csTypeStr << " " << cTypeStr << "_AdoptFromC(" << cTypeStr << " handle)\n";
+              ss << indentStr << "internal static " << csTypeStr << " " << fixedTypeStr << "_AdoptFromC(" << cTypeStr << " handle)\n";
               ss << indentStr << "{\n";
               ss << indentStr << "    if (System.IntPtr.Zero == handle) return null;\n";
               ss << indentStr << "    return new " << csTypeStr << "((WrapperMakePrivate)null, handle);\n";
               ss << indentStr << "}\n";
               ss << "\n";
-              ss << indentStr << "internal static " << cTypeStr << " " << cTypeStr << "_ToC(" << csTypeStr << " value)\n";
+              ss << indentStr << "internal static " << cTypeStr << " " << fixedTypeStr << "_ToC(" << csTypeStr << " value)\n";
               ss << indentStr << "{\n";
               ss << indentStr << "    if (null == value) return System.IntPtr.Zero;\n";
-              ss << indentStr << "    return value.native_;\n";
+              ss << indentStr << "    return " << getApiPath(apiFile) << "." << fixedTypeStr << "_wrapperClone(value.native_);\n";
               ss << indentStr << "}\n";
               structFile.endRegion("To / From C routines");
             }
@@ -2354,36 +2743,92 @@ namespace zsLib
               auto &ss = apiFile.structSS_;
               ss << "\n";
               ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
-              ss << indentStr << "public extern static " << cTypeStr << " " << cTypeStr << "_wrapperClone(" << cTypeStr << " handle);\n";
+              ss << indentStr << "public extern static " << cTypeStr << " " << fixedTypeStr << "_wrapperClone(" << cTypeStr << " handle);\n";
               ss << "\n";
               ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
-              ss << indentStr << "public extern static void " << cTypeStr << "_wrapperDestroy(" << cTypeStr << " handle);\n";
+              ss << indentStr << "public extern static void " << fixedTypeStr << "_wrapperDestroy(" << cTypeStr << " handle);\n";
               ss << "\n";
               ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
-              ss << indentStr << "public extern static instance_id_t " << cTypeStr << "_wrapperInstanceId(" << cTypeStr << " handle);\n";
+              ss << indentStr << "public extern static instance_id_t " << fixedTypeStr << "_wrapperInstanceId(" << cTypeStr << " handle);\n";
+              if (structFile.hasEvents_) {
+                apiFile.usingTypedef("event_observer_t", "System.IntPtr");
+                ss << "\n";
+                ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
+                ss << indentStr << "public extern static event_observer_t " << fixedTypeStr << "_wrapperObserveEvents(" << cTypeStr << " handle);\n";
+              }
             }
             {
               auto &indentStr = apiFile.indent_;
               auto &ss = apiFile.helpersSS_;
               ss << "\n";
-              ss << indentStr << "public static " << fixCsPathType(structObj) << " " << cTypeStr << "_FromC(" << cTypeStr << " handle)\n";
+              ss << indentStr << "public static " << fixCsPathType(structObj) << " " << fixedTypeStr << "_FromC(" << cTypeStr << " handle)\n";
               ss << indentStr << "{\n";
-              ss << indentStr << "    return " << fixCsPathType(structObj) << "." << cTypeStr << "_FromC(handle);\n";
+              ss << indentStr << "    return " << fixCsPathType(structObj) << "." << fixedTypeStr << "_FromC(handle);\n";
               ss << indentStr << "}\n";
               ss << "\n";
-              ss << indentStr << "public static " << fixCsPathType(structObj) << " " << cTypeStr << "_AdoptFromC(" << cTypeStr << " handle)\n";
+              ss << indentStr << "public static " << fixCsPathType(structObj) << " " << fixedTypeStr << "_AdoptFromC(" << cTypeStr << " handle)\n";
               ss << indentStr << "{\n";
-              ss << indentStr << "    return " << fixCsPathType(structObj) << "." << cTypeStr << "_AdoptFromC(handle);\n";
+              ss << indentStr << "    return " << fixCsPathType(structObj) << "." << fixedTypeStr << "_AdoptFromC(handle);\n";
               ss << indentStr << "}\n";
               ss << "\n";
-              ss << indentStr << "public static " << cTypeStr << " " << cTypeStr << "_ToC(" << fixCsPathType(structObj) << " value)\n";
+              ss << indentStr << "public static " << cTypeStr << " " << fixedTypeStr << "_ToC(" << fixCsPathType(structObj) << " value)\n";
               ss << indentStr << "{\n";
-              ss << indentStr << "    return " << fixCsPathType(structObj) << "." << cTypeStr << "_ToC(value);\n";
+              ss << indentStr << "    return " << fixCsPathType(structObj) << "." << fixedTypeStr << "_ToC(value);\n";
               ss << indentStr << "}\n";
             }
           }
 
+          if (!structFile.isStaticOnly_) {
+            auto found = apiFile.derives_.find(structObj->getPathName());
+            if (found != apiFile.derives_.end()) {
+              auto &structSet = (*found).second;
+
+              std::stringstream relStructSS;
+
+              bool foundRelated = false;
+              for (auto iterSet = structSet.begin(); iterSet != structSet.end(); ++iterSet) {
+                auto relatedStruct = (*iterSet);
+                if (!relatedStruct) continue;
+                if (relatedStruct == structObj) continue;
+
+                foundRelated = true;
+
+                apiFile.usingTypedef(relatedStruct);
+
+                {
+                  auto &indentStr = apiFile.indent_;
+                  auto &ss = apiFile.structSS_;
+                  ss << "\n";
+                  ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
+                  ss << indentStr << "public extern static " << GenerateStructC::fixCType(relatedStruct) << " " << GenerateStructC::fixType(structObj) << "_wrapperCastAs_" << GenerateStructC::fixType(relatedStruct) << "(" << GenerateStructC::fixCType(structObj) << " handle);\n";
+                }
+                {
+                  auto &indentStr = structFile.indent_;
+                  auto &ss = relStructSS;
+                  ss << "\n";
+                  ss << indentStr << "public static " << fixCsType(structObj) << " Cast(" << fixCsPathType(relatedStruct) << " value)\n";
+                  ss << indentStr << "{\n";
+                  ss << indentStr << "    if (null == value) return null;\n";
+                  ss << indentStr << "    var castHandle = " << getToCMethod(apiFile, false, relatedStruct) << "(value);\n";
+                  ss << indentStr << "    if (System.IntPtr.Zero == castHandle) return null;\n";
+                  ss << indentStr << "    var originalHandle = " << getApiPath(apiFile) << "." << GenerateStructC::fixType(structObj) << "_wrapperCastAs_" << GenerateStructC::fixType(relatedStruct) << "(castHandle);\n";
+                  ss << indentStr << "    if (System.IntPtr.Zero == originalHandle) return null;\n";
+                  ss << indentStr << "    return " << getAdoptFromCMethod(apiFile, false, structObj) << "(originalHandle);\n";
+                  ss << indentStr << "}\n";
+                }
+              }
+
+              if (foundRelated) {
+                structFile.startRegion("Casting methods");
+                structFile.structSS_ << relStructSS.str();
+                structFile.endRegion("Casting methods");
+              }
+            }
+          }
+
           processStruct(apiFile, structFile, structObj, structObj);
+
+          apiFile.endRegion(fixCsPathType(structObj));
 
           structFile.indentLess();
 
@@ -2511,6 +2956,24 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
+        String GenerateStructDotNet::getSpecialMethodPrefix(
+                                                            ApiFile &apiFile,
+                                                            StructFile &structFile,
+                                                            StructPtr rootStructObj,
+                                                            StructPtr structObj,
+                                                            MethodPtr method
+                                                            )
+        {
+          if (!method) return String();
+          if (!structObj) return String();
+
+          String specialName = (GenerateStructCx::fixName(method->getMappingName()));
+
+          if ("ToString" == specialName) return String("override");
+          return String();
+        }
+
+        //---------------------------------------------------------------------
         void GenerateStructDotNet::processMethods(
                                                   ApiFile &apiFile,
                                                   StructFile &structFile,
@@ -2519,17 +2982,42 @@ namespace zsLib
                                                   )
         {
           auto &indentStr = structFile.indent_;
-          bool foundConstructor = false;
 
-          std::stringstream headerCSS;
-          std::stringstream headerCppSS;
-          std::stringstream cSS;
-          std::stringstream cppSS;
+          bool foundDllMethod {};
 
-          auto cTypeStr = GenerateStructC::fixCType(structObj);
-          auto csTypeStr = fixCsType(structObj);
+          if (rootStructObj == structObj) {
+            if (GenerateHelper::needsDefaultConstructor(rootStructObj)) {
+              {
+                auto &indentStr = apiFile.indent_;
+                auto &&ss = apiFile.structSS_;
+                ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
+                apiFile.usingTypedef(rootStructObj);
+                ss << indentStr << "public extern static " << GenerateStructC::fixCType(structObj) << " " << GenerateStructC::fixType(rootStructObj) << "_wrapperCreate_" << rootStructObj->getMappingName() << "();\n";
+              }
+              {
+                auto &ss = structFile.structSS_;
+                ss << "\n";
 
-#if 0
+                String altNameStr = GenerateStructCx::fixName(rootStructObj->getMappingName());
+
+                ss << indentStr << "public " << altNameStr << "()\n";
+
+                ss << indentStr << "{\n";
+                structFile.indentMore();
+
+                structFile.usingTypedef(structObj);
+                ss << indentStr << "this.native_ = " << getApiPath(apiFile) << "." << GenerateStructC::fixType(rootStructObj) << "_wrapperCreate_" << altNameStr << "();\n";
+
+                if (structFile.hasEvents_) {
+                  ss << indentStr << "WrapperObserveEvents();\n";
+                }
+
+                structFile.indentLess();
+                ss << indentStr << "}\n";
+              }
+            }
+          }
+
           for (auto iter = structObj->mMethods.begin(); iter != structObj->mMethods.end(); ++iter) {
             auto method = (*iter);
             if (!method) continue;
@@ -2539,267 +3027,255 @@ namespace zsLib
             bool isStatic = method->hasModifier(Modifier_Static);
             bool hasThis = ((!isStatic) && (!isConstructor));
 
-            if (isConstructor) foundConstructor = true;
+            bool generateInterface = (!isStatic) && (!isConstructor) && (rootStructObj == structObj) && (structFile.shouldDefineInterface_);
 
             if (rootStructObj != structObj) {
               if ((isStatic) || (isConstructor)) continue;
             }
             if (method->hasModifier(Modifier_Method_Delete)) continue;
 
-            String name = method->mName;
-            if (method->hasModifier(Modifier_AltName)) {name = method->getModifierValue(Modifier_AltName);}
+            auto resultCsStr = fixCsPathType(method->hasModifier(Modifier_Optional), method->mResult);
+            bool hasResult = "void" != resultCsStr && (!isConstructor);
 
-            String resultCTypeStr = (isConstructor ? fixCType(structObj) : fixCType(method->hasModifier(Modifier_Optional), method->mResult));
-            bool hasResult = resultCTypeStr != "void";
+            String altNameStr = method->getModifierValue(Modifier_AltName);
+            if (altNameStr.isEmpty()) {
+              altNameStr = method->getMappingName();
+            }
 
             {
-              auto &ss = headerCSS;
-              ss << exportStr << " " << resultCTypeStr << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_" << (isConstructor ? "wrapperCreate_" : "")  << name << "(";
-            }
-            {
-              auto &ss = cSS;
-              ss << dash;
-              ss << resultCTypeStr << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_" << (isConstructor ? "wrapperCreate_" : "") << name << "(";
-            }
+              auto &indentStr = apiFile.indent_;
+              auto &&ss = apiFile.structSS_;
 
-            std::stringstream argSS;
-
-            size_t totalArgs = method->mArguments.size();
-            if (hasThis) ++totalArgs;
-            if (method->mThrows.size() > 0) ++totalArgs;
-
-            if (totalArgs > 1) argSS << "\n  ";
-
-            bool first = true;
-
-            if (method->mThrows.size() > 0) {
-              argSS << "exception_handle_t wrapperExceptionHandle";
-              first = false;
-            }
-
-            if (hasThis) {
-              if (!first) argSS << ",\n  ";
-              argSS << fixCType(structObj) << " " << "wrapperThisHandle";
-              first = false;
-            }
-
-            for (auto iterArg = method->mArguments.begin(); iterArg != method->mArguments.end(); ++iterArg) {
-              auto argPropertyObj = (*iterArg);
-              includeType(structFile, argPropertyObj->mType);
-              if (!first) argSS << ",\n  ";
-              first = false;
-              argSS << fixCType(argPropertyObj->mType) << " " << argPropertyObj->mName;
-            }
-            argSS << ")";
-
-            {
-              auto &ss = headerCSS;
-              ss << argSS.str() << ";\n";
-            }
-            {
-              auto &ss = cSS;
-              ss << argSS.str() << "\n";
-              ss << "{\n";
-              String indentStr = "  ";
-              if (method->mThrows.size() > 0) {
-                indentStr += "  ";
-                if (hasResult) {
-                  ss << "  " << resultCTypeStr << " wrapperResult {};\n";
+              if (!foundDllMethod) {
+                if (rootStructObj != structObj) {
+                  ss << "\n";
+                  ss << "#if !" << getApiCastRequiredDefine(apiFile) << "\n";
                 }
-                ss << "  try {\n";
+                foundDllMethod = true;
               }
-              ss << indentStr;
+              ss << "\n";
+              ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
               if (isConstructor) {
-                ss << "auto wrapperThis = wrapper" << structObj->getPathName() << "::wrapper_create();\n";
-                ss << indentStr << "wrapperThis->wrapper_init_" << GenerateStructHeader::getStructInitName(structObj) << "(";
+                apiFile.usingTypedef(structObj);
+                ss << indentStr << "public extern static " << GenerateStructC::fixCType(structObj) << " " << GenerateStructC::fixType(rootStructObj) << "_wrapperCreate_" << altNameStr << "(";
               } else {
-                if (hasThis) {
-                  ss << "auto wrapperThis = " << getFromHandleMethod(false, structObj) << "(wrapperThisHandle);\n";
-                  ss << indentStr << "if (!wrapperThis) return";
-                  if ("void" != resultCTypeStr) {
-                    ss << " " << resultCTypeStr << "()";
-                  }
-                  ss << ";\n";
-                  ss << indentStr;
+                if (!method->hasModifier(Modifier_Optional)) {
+                  ss << getReturnMarshal(method->mResult, indentStr);
                 }
-                if (hasResult) {
-                  ss << (method->mThrows.size() > 0 ? "wrapperResult = " : "return ") << getToHandleMethod(method->hasModifier(Modifier_Optional), method->mResult) << "(";
-                }
-                if (hasThis) {
-                  ss << "wrapperThis->" << method->getMappingName() << "(";
-                } else {
-                  ss << "wrapper" << structObj->getPathName() << "::" << method->getMappingName() << "(";
-                }
+                apiFile.usingTypedef(method->mResult);
+                ss << indentStr << "public extern static " << GenerateStructC::fixCType(method->hasModifier(Modifier_Optional), method->mResult) << " " << GenerateStructC::fixType(rootStructObj) << "_" << altNameStr << "(";
               }
-
-              first = true;
-              for (auto iterNamedArgs = method->mArguments.begin(); iterNamedArgs != method->mArguments.end(); ++iterNamedArgs) {
-                auto propertyObj = (*iterNamedArgs);
+              bool first {true};
+              if (method->mThrows.size() > 0) {
+                apiFile.usingTypedef("exception_handle_t", "System.IntPtr");
+                ss << "exception_handle_t wrapperExceptionHandle";
+                first = false;
+              }
+              if ((!isConstructor) &&
+                  (!isStatic)) {
                 if (!first) ss << ", ";
                 first = false;
-                ss << getFromHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(" << propertyObj->getMappingName() << ")";
+                ss << GenerateStructC::fixCType(rootStructObj) << " thisHandle";
+              }
+              for (auto iterArgs = method->mArguments.begin(); iterArgs != method->mArguments.end(); ++iterArgs) {
+                auto arg = (*iterArgs);
+                if (!arg) continue;
+                if (!first) ss << ", ";
+                first = false;
+                apiFile.usingTypedef(arg->mType);
+                if (!arg->hasModifier(Modifier_Optional)) {
+                  ss << getParamMarshal(arg->mType);
+                }
+                ss << GenerateStructC::fixCType(arg->hasModifier(Modifier_Optional), arg->mType) << " " << fixArgumentName(arg->getMappingName());
+              }
+              ss << ");\n";
+            }
+
+            {
+              auto &iSS = structFile.interfaceSS_;
+              auto &sSS = structFile.structSS_;
+
+              if (generateInterface) {
+                iSS << "\n";
+                iSS << indentStr << resultCsStr << " " << GenerateStructCx::fixName(method->getMappingName()) << "(" << (method->mArguments.size() > 1 ? String("\n" + indentStr + "    ") : String());
+              }
+
+              String specialPrefix = getSpecialMethodPrefix(apiFile, structFile, rootStructObj, structObj, method);
+
+              sSS << "\n";
+              sSS << indentStr << specialPrefix << (specialPrefix.hasData() ? " " : "") << (isStatic ? "static " : "") << "public " << (isConstructor ? String() : String(resultCsStr + " ")) << GenerateStructCx::fixName(method->getMappingName()) << "(" << (method->mArguments.size() > 1 ? String("\n" + indentStr + "    ") : String());
+
+              bool first {true};
+              for (auto iterArgs = method->mArguments.begin(); iterArgs != method->mArguments.end(); ++iterArgs)
+              {
+                auto arg = (*iterArgs);
+                if (!arg) continue;
+                if (!first) {
+                  if (generateInterface) {
+                    iSS << ",\n" << indentStr << "    ";
+                  }
+                  sSS << ",\n" << indentStr << "    ";
+                }
+                first = false;
+                if (generateInterface) {
+                  iSS << fixCsPathType(arg->hasModifier(Modifier_Optional), arg->mType) << " " << fixArgumentName(arg->getMappingName());
+                }
+                sSS << fixCsPathType(arg->hasModifier(Modifier_Optional), arg->mType) << " " << fixArgumentName(arg->getMappingName());
+              }
+
+              if (generateInterface) {
+                iSS << ");\n";
+              }
+              sSS << ")\n";
+            }
+            {
+              auto &ss = structFile.structSS_;
+              ss << indentStr << "{\n";
+              structFile.indentMore();
+
+              if (rootStructObj != structObj) {
+                ss << "#if " << getApiCastRequiredDefine(apiFile) << "\n";
+
+                ss << indentStr << "var cast = " << fixCsPathType(structObj) << ".Cast(this);\n";
+                ss << indentStr << "if (null == cast) throw new System.NullReferenceException(\"this \\\"" << fixCsPathType(structObj) << "\\\" casted from \\\"" << fixCsPathType(rootStructObj) << "\\\" becomes null.\");\n";
+                ss << indentStr << (hasResult ? "return " : "" ) << "cast." << GenerateStructCx::fixName(method->getMappingName()) << "(";
+                bool first {true};
+                for (auto iterArgs = method->mArguments.begin(); iterArgs != method->mArguments.end(); ++iterArgs) {
+                  auto arg = (*iterArgs);
+                  if (!arg) continue;
+                  if (!first) ss << ", ";
+                  first = false;
+                  ss << fixArgumentName(arg->getMappingName());
+                }
+                ss << ");\n";
+                ss << "#else // " << getApiCastRequiredDefine(apiFile) << "\n";
+              }
+
+              for (auto iterArgs = method->mArguments.begin(); iterArgs != method->mArguments.end(); ++iterArgs) {
+                auto arg = (*iterArgs);
+                if (!arg) continue;
+                structFile.usingTypedef(arg->mType);
+                ss << indentStr << GenerateStructC::fixCType(arg->hasModifier(Modifier_Optional), arg->mType) << " wrapper_c_" << arg->getMappingName() << " = " << getToCMethod(apiFile, arg->hasModifier(Modifier_Optional), arg->mType) << "(" << fixArgumentName(arg->getMappingName()) << ");\n";
+              }
+              if (method->mThrows.size() > 0) {
+                structFile.usingTypedef("exception_handle_t", "System.IntPtr");
+                ss << indentStr << "exception_handle_t wrapperException = " << getApiPath(apiFile) << ".exception_wrapperCreate_exception();\n";
+              }
+              if (hasResult) {
+                structFile.usingTypedef(method->mResult);
+                ss << indentStr << GenerateStructC::fixCType(method->hasModifier(Modifier_Optional), method->mResult) << " wrapper_c_wrapper_result = ";
+              }
+              if (isConstructor) {
+                structFile.usingTypedef(structObj);
+                ss << indentStr << "this.native_ = ";
+              }
+
+              if ((!hasResult) &&
+                  (!isConstructor)) {
+                ss << indentStr;
               }
 
               if (isConstructor) {
-                ss << ");\n";
-                ss << indentStr << "return " << getToHandleMethod(method->hasModifier(Modifier_Optional), structObj) << "(wrapperThis);\n";
+                ss << getApiPath(apiFile) << "." << GenerateStructC::fixType(rootStructObj) << "_wrapperCreate_" << altNameStr << "(";
               } else {
-                if (hasResult) {
-                  ss << ")";
+                ss << getApiPath(apiFile) << "." << GenerateStructC::fixType(rootStructObj) << "_" << altNameStr << "(";
+              }
+
+              bool first {true};
+              if (method->mThrows.size() > 0) {
+                ss << "wrapperException";
+                first = false;
+              }
+              if ((!isConstructor) &&
+                  (!isStatic)) {
+                if (!first) ss << ", ";
+                first = false;
+                ss << "this.native_";
+              }
+              for (auto iterArgs = method->mArguments.begin(); iterArgs != method->mArguments.end(); ++iterArgs)
+              {
+                auto arg = (*iterArgs);
+                if (!arg) continue;
+                if (!first) ss << ", ";
+                first = false;
+                ss << "wrapper_c_" << arg->getMappingName();
+              }
+              ss << ");\n";
+
+              for (auto iterArgs = method->mArguments.begin(); iterArgs != method->mArguments.end(); ++iterArgs)
+              {
+                auto arg = (*iterArgs);
+                if (!arg) continue;
+                auto wrapperDestroyStr = getDestroyCMethod(apiFile, arg->hasModifier(Modifier_Optional), arg->mType);
+                if (wrapperDestroyStr.hasData()) {
+                  ss << indentStr << wrapperDestroyStr << "(wrapper_c_" << arg->getMappingName() << ");\n";
                 }
-                ss << ");\n";
               }
 
               if (method->mThrows.size() > 0) {
-                for (auto iterThrow = method->mThrows.begin(); iterThrow != method->mThrows.end(); ++iterThrow) {
-                  auto throwType = (*iterThrow);
-                  includeType(structFile, throwType);
-                  ss << "  } catch (const " << GenerateStructHeader::getWrapperTypeString(false, throwType) << " &e) {\n";
-                  ss << "    wrapper::exception_set_Exception(wrapperExceptionHandle, make_shared<::zsLib::" << ("Exception" == throwType->getMappingName() ? "" : "Exceptions::") << throwType->getMappingName() << ">(e));\n";
-                }
-                ss << "  }\n";
+                ss << indentStr << "var wrapperCsException = " << getHelperPath(apiFile) << ".exception_AdoptFromC(wrapperException);\n";
+                ss << indentStr << "if (null != wrapperCsException) {\n";
                 if (hasResult) {
-                  ss << "  return wrapperResult;\n";
+                  auto destroyStr = getDestroyCMethod(apiFile, method->hasModifier(Modifier_Optional), method->mResult);
+                  if (destroyStr.hasData()) {
+                    ss << indentStr << "    " << destroyStr << "(wrapper_c_wrapper_result);\n";
+                  }
+                }
+                ss << indentStr << "    throw wrapperCsException;\n";
+                ss << indentStr << "}\n";
+              }
+
+              if (hasResult) {
+                ss << indentStr << "return " << getAdoptFromCMethod(apiFile, method->hasModifier(Modifier_Optional), method->mResult) << "(wrapper_c_wrapper_result);\n";
+              }
+              if (isConstructor) {
+                if (structFile.hasEvents_) {
+                  ss << indentStr << "WrapperObserveEvents();\n";
                 }
               }
-              ss << "}\n";
-              ss << "\n";
+
+              if (rootStructObj != structObj) {
+                ss << "#endif // " << getApiCastRequiredDefine(apiFile) << "\n";
+              }
+
+              structFile.indentLess();
+              ss << indentStr << "}\n";
             }
           }
 
-          bool onlyStatic = GenerateHelper::hasOnlyStaticMethods(structObj) || structObj->hasModifier(Modifier_Static);
-
-          if (rootStructObj == structObj) {
-            if (!onlyStatic) {
-              {
-                auto found = apiFile.derives_.find(structObj->getPathName());
-                if (found != apiFile.derives_.end()) {
-                  auto &structSet = (*found).second;
-
-                  bool foundRelated = false;
-                  for (auto iterSet = structSet.begin(); iterSet != structSet.end(); ++iterSet) {
-                    auto relatedStruct = (*iterSet);
-                    if (!relatedStruct) continue;
-                    if (relatedStruct == structObj) continue;
-
-                    foundRelated = true;
-                    includeType(structFile, relatedStruct);
-
-                    structFile.includeC("\"../" + fixType(relatedStruct) + ".h\"");
-
-                    {
-                      auto &ss = structFile.headerCFunctionsSS_;
-                      ss << exportStr << " " << fixCType(relatedStruct) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperCastAs_" << fixType(relatedStruct) << "(" << fixCType(structObj) << " handle);\n";
-                    }
-                    {
-                      auto &ss = structFile.cFunctionsSS_;
-                      ss << dash;
-                      ss << fixCType(relatedStruct) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperCastAs_" << fixType(relatedStruct) << "(" << fixCType(structObj) << " handle)\n";
-                      ss << "{\n";
-                      ss << "  typedef wrapper" << relatedStruct->getPathName() << " RelatedWrapperType;\n";
-                      ss << "  typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
-                      ss << "  typedef WrapperTypePtr * WrapperTypePtrRawPtr;\n";
-                      ss << "  if (0 == handle) return 0;\n";
-                      ss << "  auto originalType = *reinterpret_cast<WrapperTypePtrRawPtr>(handle);\n";
-                      ss << "  auto castType = std::dynamic_pointer_cast<RelatedWrapperType>(originalType);\n";
-                      ss << "  if (!castType) return 0;\n";
-                      ss << "  return " << getToHandleMethod(false, relatedStruct) << "(castType);\n";
-                      ss << "}\n";
-                      ss << "\n";
-                    }
-                  }
-
-                  if (foundRelated) {
-                    auto &ss = structFile.headerCFunctionsSS_;
-                    ss << "\n";
-                  }
-                }
-              }
-
-              if (!foundConstructor) {
-                {
-                  auto &ss = structFile.headerCFunctionsSS_;
-                  ss << exportStr << " " << fixCType(structObj) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperCreate_" << structObj->getMappingName() << "();\n";
-                }
-                {
-                  auto &ss = structFile.cFunctionsSS_;
-                  ss << dash;
-                  ss << fixCType(structObj) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperCreate_" << structObj->getMappingName() << "()\n";
-                  ss << "{\n";
-                  ss << "  typedef " << fixCType(structObj) << " CType;\n";
-                  ss << "  typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
-                  ss << "  auto result = wrapper" << structObj->getPathName() << "::wrapper_create();\n";
-                  ss << "  result->wrapper_init_" << GenerateStructHeader::getStructInitName(structObj) << "();\n";
-                  ss << "  return reinterpret_cast<CType>(new WrapperTypePtr(result));\n";
-                  ss << "}\n";
-                  ss << "\n";
-                }
-              }
-
-              {
-                auto &ss = structFile.headerCFunctionsSS_;
-                ss << exportStr << " void " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperDestroy(" << fixCType(structObj) << " handle);\n";
-                ss << exportStr << " instance_id_t " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperInstanceId(" << fixCType(structObj) << " handle);\n";
-              }
-              {
-                auto &ss = structFile.cFunctionsSS_;
-                ss << dash;
-                ss << "void " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperDestroy(" << fixCType(structObj) << " handle)\n";
-                ss << "{\n";
-                ss << "  typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
-                ss << "  typedef WrapperTypePtr * WrapperTypePtrRawPtr;\n";
-                ss << "  if (0 == handle) return;\n";
-                ss << "  delete reinterpret_cast<WrapperTypePtrRawPtr>(handle);\n";
-                ss << "}\n";
-                ss << "\n";
-
-                ss << dash;
-                ss << "instance_id_t " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperInstanceId(" << fixCType(structObj) << " handle)\n";
-                ss << "{\n";
-                ss << "  typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
-                ss << "  typedef WrapperTypePtr * WrapperTypePtrRawPtr;\n";
-                ss << "  if (0 == handle) return 0;\n";
-                ss << "  return reinterpret_cast<instance_id_t>((*reinterpret_cast<WrapperTypePtrRawPtr>(handle)).get());\n";
-                ss << "}\n";
-                ss << "\n";
-              }
-            }
-
-            {
-              auto &ss = structFile.headerCppFunctionsSS_;
-              ss << "  " << fixCType(structObj) << " " << fixType(rootStructObj) << "_wrapperToHandle(" << GenerateStructHeader::getWrapperTypeString(false, structObj) << " value);\n";
-              ss << "  " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " " << fixType(rootStructObj) << "_wrapperFromHandle(" << fixCType(structObj) << " handle);\n";
-            }
-            {
-              auto &ss = structFile.cppFunctionsSS_;
-              ss << dash2;
-              ss << "  " << fixCType(structObj) << " " << fixType(rootStructObj) << "_wrapperToHandle(" << GenerateStructHeader::getWrapperTypeString(false, structObj) << " value)\n";
-              ss << "  {\n";
-              ss << "    typedef " << fixCType(structObj) << " CType;\n";
-              ss << "    typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
-              ss << "    typedef WrapperTypePtr * WrapperTypePtrRawPtr;\n";
-              ss << "    if (!value) return 0;\n";
-              ss << "    return reinterpret_cast<CType>(new WrapperTypePtr(value));\n";
-              ss << "  }\n";
+          if (foundDllMethod) {
+            if (rootStructObj != structObj) {
+              auto &indentStr = apiFile.indent_;
+              auto &&ss = apiFile.structSS_;
               ss << "\n";
-
-              ss << dash2;
-              ss << "  " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " " << fixType(rootStructObj) << "_wrapperFromHandle(" << fixCType(structObj) << " handle)\n";
-              ss << "  {\n";
-              ss << "    typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
-              ss << "    typedef WrapperTypePtr * WrapperTypePtrRawPtr;\n";
-              ss << "    if (0 == handle) return WrapperTypePtr();\n";
-              ss << "    return (*reinterpret_cast<WrapperTypePtrRawPtr>(handle));\n";
-              ss << "  }\n";
-              ss << "\n";
+              ss << "#endif // !" << getApiCastRequiredDefine(apiFile) << "\n";
             }
           }
+        }
 
-          structFile.headerCFunctionsSS_ << headerCSS.str();
-          structFile.headerCppFunctionsSS_ << headerCppSS.str();
-          structFile.cFunctionsSS_ << cSS.str();
-          structFile.cppFunctionsSS_ << cppSS.str();
-#endif //0
+        //---------------------------------------------------------------------
+        String GenerateStructDotNet::getSpecialPropertyPrefix(
+                                                              ApiFile &apiFile,
+                                                              StructFile &structFile,
+                                                              StructPtr rootStructObj,
+                                                              StructPtr structObj,
+                                                              PropertyPtr propertyObj
+                                                              )
+        {
+          if (!propertyObj) return String();
+          if (!structObj) return String();
+
+          String specialName = (GenerateStructCx::fixName(propertyObj->getMappingName()));
+
+          if ("Message" == specialName) {
+            bool isException = structFile.shouldInheritException_ || (shouldDeriveFromException(apiFile, structObj));
+            if (isException) {
+              if (propertyObj->hasModifier(Modifier_Property_Setter)) return String("new");
+              if (propertyObj->hasModifier(Modifier_Property_Getter)) return String("override");
+              return String("new");
+            }
+          }
+          return String();
         }
 
         //---------------------------------------------------------------------
@@ -2810,18 +3286,14 @@ namespace zsLib
                                                      StructPtr structObj
                                                      )
         {
-#if 0
-          bool onlyStatic = GenerateHelper::hasOnlyStaticMethods(structObj) || structObj->hasModifier(Modifier_Static);
-
-          if (onlyStatic) {
+          auto &indentStr = structFile.indent_;
+          if (structFile.isStaticOnly_) {
             if (rootStructObj != structObj) return;
           }
 
-          auto exportStr = (rootStructObj == structObj ? getApiExportDefine(apiFile.global_) : getApiExportCastedDefine(apiFile.global_));
-
           bool isDictionary = structObj->hasModifier(Modifier_Struct_Dictionary);
 
-          auto dash = GenerateHelper::getDashedComment(String());
+          bool foundCastRequiredDll {};
 
           for (auto iter = structObj->mProperties.begin(); iter != structObj->mProperties.end(); ++iter) {
             auto propertyObj = (*iter);
@@ -2831,13 +3303,13 @@ namespace zsLib
             bool hasGetter = propertyObj->hasModifier(Modifier_Property_Getter);
             bool hasSetter = propertyObj->hasModifier(Modifier_Property_Setter);
 
+            bool generateInterface = (!isStatic) && (rootStructObj == structObj) && (structFile.shouldDefineInterface_);
+
             if (!isDictionary) {
               if ((!hasGetter) && (!hasSetter)) {
                 hasGetter = hasSetter = true;
               }
             }
-
-            includeType(structFile, propertyObj->mType);
 
             bool hasGet = true;
             bool hasSet = true;
@@ -2846,50 +3318,104 @@ namespace zsLib
             if ((hasSetter) && (!hasGetter)) hasGet = false;
 
             if (isStatic) {
+              if (rootStructObj != structObj) continue;
               if (hasGet) hasGetter = true;
               if (hasSet) hasSetter = true;
+            } else {
+              apiFile.usingTypedef(rootStructObj);
+            }
+
+            apiFile.usingTypedef(propertyObj->mType);
+            structFile.usingTypedef(propertyObj->mType);
+
+            if (generateInterface) {
+              auto &ss = structFile.interfaceSS_;
+              ss << indentStr << fixCsPathType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " " << GenerateStructCx::fixName(propertyObj->getMappingName()) << " { " << (hasGet ? "get; " : "") << (hasSet ? "set; " : "") << "}\n";
             }
 
             {
-              auto &ss = structFile.headerCFunctionsSS_;
+              auto &ss = structFile.structSS_;
+              auto specialPrefix = getSpecialPropertyPrefix(apiFile, structFile, rootStructObj, structObj, propertyObj);
+              ss << indentStr << specialPrefix << (specialPrefix.hasData() ? " " : "") << (isStatic ? "static " : "") << "public " << fixCsPathType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " " << GenerateStructCx::fixName(propertyObj->getMappingName()) << "\n";
+              ss << indentStr << "{\n";
+
+              if (rootStructObj != structObj) {
+                ss << "#if " << getApiCastRequiredDefine(apiFile) << "\n";
+                if (hasGet) {
+                  ss << indentStr << "    get\n";
+                  ss << indentStr << "    {\n";
+                  ss << indentStr << "        var cast = " << fixCsPathType(structObj) << ".Cast(this);\n";
+                  ss << indentStr << "        if (null == cast) throw new System.NullReferenceException(\"this \\\"" << fixCsPathType(structObj) << "\\\" casted from \\\"" << fixCsPathType(rootStructObj) << "\\\" becomes null.\");\n";
+                  ss << indentStr << "        return cast." << GenerateStructCx::fixName(propertyObj->getMappingName()) << ";\n";
+                  ss << indentStr << "    }\n";
+                }
+                if (hasSet) {
+                  ss << indentStr << "    set\n";
+                  ss << indentStr << "    {\n";
+                  ss << indentStr << "        var cast = " << fixCsPathType(structObj) << ".Cast(this);\n";
+                  ss << indentStr << "        if (null == cast) throw new System.NullReferenceException(\"this \\\"" << fixCsPathType(structObj) << "\\\" casted from \\\"" << fixCsPathType(rootStructObj) << "\\\" becomes null.\");\n";
+                  ss << indentStr << "        cast." << GenerateStructCx::fixName(propertyObj->getMappingName()) << " = value;\n";
+                  ss << indentStr << "    }\n";
+                }
+                ss << "#else // " << getApiCastRequiredDefine(apiFile) << "\n";
+              }
+
               if (hasGet) {
-                ss << exportStr << " " << fixCType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_get_" << propertyObj->getMappingName() << "(" << (isStatic ? String("") : String(fixCType(structObj) + " wrapperThisHandle")) << ");\n";
+                ss << indentStr << "    get\n";
+                ss << indentStr << "    {\n";
+                ss << indentStr << "        var result = " << getApiPath(apiFile) << "." << GenerateStructC::fixType(structObj) << "_get_" << propertyObj->getMappingName() << "(" << (isStatic ? "" : "this.native_") << ");\n";
+                ss << indentStr << "        return " << getAdoptFromCMethod(apiFile, propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(result);\n";
+                ss << indentStr << "    }\n";
               }
               if (hasSet) {
-                ss << exportStr << " void " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_set_" << propertyObj->getMappingName() << "(" << (isStatic ? String("") : String(fixCType(structObj) + " wrapperThisHandle, ")) << fixCType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " value);\n";
+                ss << indentStr << "    set\n";
+                ss << indentStr << "    {\n";
+                ss << indentStr << "        var cValue = " << getToCMethod(apiFile, propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(value);\n";
+                ss << indentStr << "        " << getApiPath(apiFile) << "." << GenerateStructC::fixType(rootStructObj) << "_set_" << propertyObj->getMappingName() << "(" << (isStatic ? "" : "this.native_, ") << "cValue);\n";
+                auto destroyRoutine = getDestroyCMethod(apiFile, propertyObj->hasModifier(Modifier_Optional), propertyObj->mType);
+                if (destroyRoutine.hasData()) {
+                  ss << indentStr << "        " << getDestroyCMethod(apiFile, propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(cValue);\n";
+                }
+                ss << indentStr << "    }\n";
               }
+
+              if (rootStructObj != structObj) {
+                ss << "#endif // " << getApiCastRequiredDefine(apiFile) << "\n";
+              }
+
+              ss << indentStr << "}\n";
             }
+
             {
-              auto &ss = structFile.cFunctionsSS_;
-              if (hasGet) {
-                ss << dash;
-                ss << fixCType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_get_" << propertyObj->getMappingName() << "(" << (isStatic ? String("") : String(fixCType(structObj) + " wrapperThisHandle")) << ")\n";
-                ss << "{\n";
-                if (!isStatic) {
-                  ss << "  auto wrapperThis = " << getFromHandleMethod(false, structObj) << "(wrapperThisHandle);\n";
-                  ss << "  return " << getToHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(wrapperThis->" << (hasGetter ? "get_" : "") << propertyObj->getMappingName() << (hasGetter ? "()" : "") << ");\n";
-                } else {
-                  ss << "  return " << getToHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(wrapper" << structObj->getPathName() << "::get_" << propertyObj->getMappingName() << "());\n";
+              auto &indentStr = apiFile.indent_;
+              auto &ss = apiFile.structSS_;
+              if (rootStructObj != structObj) {
+                if (!foundCastRequiredDll) {
+                  ss << "#if !" << getApiCastRequiredDefine(apiFile) << "\n";
+                  foundCastRequiredDll = true;
                 }
-                ss << "}\n";
+              }
+              if (hasGet) {
                 ss << "\n";
+                ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
+                if (!propertyObj->hasModifier(Modifier_Optional)) {
+                  ss << getReturnMarshal(propertyObj->mType, indentStr);
+                }
+                ss << indentStr << "public extern static " << GenerateStructC::fixCType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " " << GenerateStructC::fixType(rootStructObj) << "_get_" << propertyObj->getMappingName() << "(" << (isStatic ? String() : String(GenerateStructC::fixCType(rootStructObj) + " thisHandle")) << ");\n";
               }
               if (hasSet) {
-                ss << dash;
-                ss << "void " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_set_" << propertyObj->getMappingName() << "(" << (isStatic ? String("") : String(fixCType(structObj) + " wrapperThisHandle, ")) << fixCType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " value)\n";
-                ss << "{\n";
-                if (!isStatic) {
-                  ss << "  auto wrapperThis = " << getFromHandleMethod(false, structObj) << "(wrapperThisHandle);\n";
-                  ss << "  wrapperThis->" << (hasSetter ? "set_" : "") << propertyObj->getMappingName() << (hasSetter ? "(" : " = ") << getFromHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(value)" << (hasSetter ? ")" : "") << ";\n";
-                } else {
-                  ss << "  wrapper" << structObj->getPathName() << "::set_" << propertyObj->getMappingName() << "(" << getFromHandleMethod(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "(value));\n";
-                }
-                ss << "}\n";
                 ss << "\n";
+                ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
+                ss << indentStr << "public extern static void " << GenerateStructC::fixType(rootStructObj) << "_set_" << propertyObj->getMappingName() << "(" << (isStatic ? String() : String(GenerateStructC::fixCType(rootStructObj) + " thisHandle, ")) << (propertyObj->hasModifier(Modifier_Optional) ? String() : getParamMarshal(propertyObj->mType)) << GenerateStructC::fixCType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " value);\n";
               }
             }
+
           }
-#endif // 0
+          if (foundCastRequiredDll) {
+            auto &indentStr = apiFile.indent_;
+            auto &ss = apiFile.structSS_;
+            ss << "#endif // !" << getApiCastRequiredDefine(apiFile) << "\n";
+          }
         }
 
         //---------------------------------------------------------------------
@@ -2923,7 +3449,7 @@ namespace zsLib
                 if (!arg) continue;
                 if (!first) ss << ", ";
                 first = false;
-                ss << fixCsPathType(arg->mType) << " " << arg->getMappingName();
+                ss << fixCsPathType(arg->mType) << " " << fixArgumentName(arg->getMappingName());
               }
               ss << ");\n";
               structFile.indentMore();
@@ -2950,13 +3476,17 @@ namespace zsLib
 
           structFile.startRegion("Events");
 
+          structFile.usingTypedef("event_observer_t", "System.IntPtr");
+
           {
             auto &ss = structFile.structSS_;
             ss << "\n";
+            ss << indentStr << "private event_observer_t wrapperEventObserver_ = System.IntPtr.Zero;\n";
+            ss << "\n";
             ss << indentStr << "private void WrapperObserveEvents()\n";
             ss << indentStr << "{\n";
-            ss << indentStr << "    if (System.IntPtr.Zero == native_) return;\n";
-            ss << indentStr << "    " << getHelperPath(apiFile) << ".ObserveEvents(\"" << structObj->getPath() << "\", \"" << structObj->getMappingName() << "\", " << getApiPath(apiFile) << "." << GenerateStructC::fixCType(structObj) << "_wrapperInstanceId(this.native_), (object)this, (object target, string method, callback_event_t handle) => {\n";
+            ss << indentStr << "    if (System.IntPtr.Zero == this.native_) return;\n";
+            ss << indentStr << "    " << getHelperPath(apiFile) << ".ObserveEvents(\"" << structObj->getPath() << "\", \"" << structObj->getMappingName() << "\", " << getApiPath(apiFile) << "." << GenerateStructC::fixType(structObj) << "_wrapperInstanceId(this.native_), (object)this, (object target, string method, callback_event_t handle) => {\n";
             structFile.indentMore();
             structFile.indentMore();
 
@@ -2986,12 +3516,18 @@ namespace zsLib
             structFile.indentLess();
 
             ss << indentStr << "    });\n";
+            ss << indentStr << "    if (System.IntPtr.Zero == this.wrapperEventObserver_) this.wrapperEventObserver_ = " << getApiPath(apiFile) << "." << GenerateStructC::fixType(structObj) << "_wrapperObserveEvents(this.native_);\n";
             ss << indentStr << "}\n";
 
             ss << "\n";
             ss << indentStr << "private void WrapperObserveEventsCancel()\n";
             ss << indentStr << "{\n";
-            ss << indentStr << "    " << getHelperPath(apiFile) << ".ObserveEventsCancel(\"" << structObj->getPath() << "\", \"" << structObj->getMappingName() << "\", " << getApiPath(apiFile) << "." << GenerateStructC::fixCType(structObj) << "_wrapperInstanceId(this.native_), (object)this);\n";
+            ss << indentStr << "    if (System.IntPtr.Zero != this.wrapperEventObserver_)\n";
+            ss << indentStr << "    {\n";
+            ss << indentStr << "        " << getApiPath(apiFile) << ".callback_wrapperObserverDestroy(this.wrapperEventObserver_);\n";
+            ss << indentStr << "        this.wrapperEventObserver_ = System.IntPtr.Zero;\n";
+            ss << indentStr << "    }\n";
+            ss << indentStr << "    " << getHelperPath(apiFile) << ".ObserveEventsCancel(\"" << structObj->getPath() << "\", \"" << structObj->getMappingName() << "\", " << getApiPath(apiFile) << "." << GenerateStructC::fixType(structObj) << "_wrapperInstanceId(this.native_), (object)this);\n";
             ss << indentStr << "}\n";
             ss << "\n";
 
@@ -3007,660 +3543,6 @@ namespace zsLib
         {
           structFile.endRegion("Events");
         }
-
-#if 0
-        
-        //---------------------------------------------------------------------
-        String GenerateStructDotNet::fixCType(TypePtr type)
-        {
-          if (!type) return String();
-
-          {
-            auto basicType = type->toBasicType();
-            if (basicType) {
-              return fixCType(basicType->mBaseType);
-            }
-          }
-
-          auto result = fixType(type);
-          return result + "_t";
-        }
-
-        //---------------------------------------------------------------------
-        String GenerateStructDotNet::fixCType(
-                                         bool isOptional,
-                                         TypePtr type
-                                         )
-        {
-          if (!isOptional) return fixCType(type);
-          if (!type) return String();
-
-          {
-            auto basicType = type->toBasicType();
-            if (basicType) {
-              return String("box_") + fixCType(basicType->mBaseType);
-            }
-          }
-          {
-            auto enumObj = type->toEnumType();
-            if (enumObj) {
-              return String("box_") + fixCType(enumObj);
-            }
-          }
-          return fixCType(type);
-        }
-
-        //---------------------------------------------------------------------
-        String GenerateStructDotNet::fixType(TypePtr type)
-        {
-          if (!type) return String();
-
-          {
-            auto basicType = type->toBasicType();
-            if (basicType) {
-              return fixCType(basicType->mBaseType);
-            }
-          }
-
-          {
-            auto templateType = type->toTemplatedStructType();
-            if (templateType) {
-              auto parent = type->getParent();
-              if (parent) {
-                auto result = fixType(parent->toStruct());
-                for (auto iter = templateType->mTemplateArguments.begin(); iter != templateType->mTemplateArguments.end(); ++iter) {
-                  auto typeArgument = (*iter);
-                  String temp = fixType(typeArgument);
-                  if (temp.hasData()) {
-                    if (result.hasData()) {
-                      result += "_";
-                    }
-                    result += temp;
-                  }
-                }
-                return result;
-              }
-            }
-          }
-
-          auto result = type->getPathName();
-          if ("::" == result.substr(0, 2)) {
-            result = result.substr(2);
-          }
-          result.replaceAll("::", "_");
-          return result;
-        }
-
-        //---------------------------------------------------------------------
-        String GenerateStructDotNet::getApiImplementationDefine(ContextPtr context)
-        {
-          String result = "WRAPPER_C_GENERATED_IMPLEMENTATION";
-          if (!context) return result;
-          auto project = context->getProject();
-          if (!project) return result;
-
-          if (project->mName.isEmpty()) return result;
-
-          auto name = project->mName;
-          name.toUpper();
-          return name + "_WRAPPER_C_GENERATED_IMPLEMENTATION";
-        }
-
-        //---------------------------------------------------------------------
-        String GenerateStructDotNet::getApiCastRequiredDefine(ContextPtr context)
-        {
-          String result = "WRAPPER_C_GENERATED_REQUIRES_CAST";
-          if (!context) return result;
-          auto project = context->getProject();
-          if (!project) return result;
-
-          if (project->mName.isEmpty()) return result;
-
-          auto name = project->mName;
-          name.toUpper();
-          return name + "_WRAPPER_C_GENERATED_REQUIRES_CAST";
-        }
-
-        //---------------------------------------------------------------------
-        String GenerateStructDotNet::getApiExportDefine(ContextPtr context)
-        {
-          String result = "WRAPPER_C_EXPORT_API";
-          if (!context) return result;
-          auto project = context->getProject();
-          if (!project) return result;
-
-          if (project->mName.isEmpty()) return result;
-
-          auto name = project->mName;
-          name.toUpper();
-          return name + "_WRAPPER_C_EXPORT_API";
-        }
-
-
-        //---------------------------------------------------------------------
-        String GenerateStructDotNet::getApiExportCastedDefine(ContextPtr context)
-        {
-          String result = "WRAPPER_C_CASTED_EXPORT_API";
-          if (!context) return result;
-          auto project = context->getProject();
-          if (!project) return result;
-
-          if (project->mName.isEmpty()) return result;
-
-          auto name = project->mName;
-          name.toUpper();
-          return name + "_WRAPPER_C_CASTED_EXPORT_API";
-        }
-
-        //---------------------------------------------------------------------
-        String GenerateStructDotNet::getApiCallingDefine(ContextPtr context)
-        {
-          String result = "WRAPPER_C_CALLING_CONVENTION";
-          if (!context) return result;
-          auto project = context->getProject();
-          if (!project) return result;
-
-          if (project->mName.isEmpty()) return result;
-
-          auto name = project->mName;
-          name.toUpper();
-          return name + "_WRAPPER_C_CALLING_CONVENTION";
-        }
-
-        //---------------------------------------------------------------------
-        String GenerateStructDotNet::getApiGuardDefine(
-                                                  ContextPtr context,
-                                                  bool endGuard
-                                                  )
-        {
-          String result = (!endGuard ? "WRAPPER_C_PLUS_PLUS_BEGIN_GUARD" : "WRAPPER_C_PLUS_PLUS_END_GUARD");
-          if (!context) return result;
-          auto project = context->getProject();
-          if (!project) return result;
-
-          if (project->mName.isEmpty()) return result;
-
-          auto name = project->mName;
-          name.toUpper();
-          return name + (!endGuard ? "_WRAPPER_C_PLUS_PLUS_BEGIN_GUARD" : "_WRAPPER_C_PLUS_PLUS_END_GUARD");
-        }
-        
-        //---------------------------------------------------------------------
-        String GenerateStructDotNet::getToHandleMethod(
-                                                  bool isOptional,
-                                                  TypePtr type
-                                                  )
-        {
-          if (!type) return String();
-
-          {
-            auto basicType = type->toBasicType();
-            if (basicType) {
-              if (isOptional) {
-                return "wrapper::box_" + fixBasicType(basicType->mBaseType) + "_wrapperToHandle";
-              }
-              String cTypeStr = fixCType(basicType);
-              if ("string_t" == cTypeStr) return "wrapper::string_t_wrapperToHandle";
-              if ("binary_t" == cTypeStr) return "wrapper::binary_t_wrapperToHandle";
-              return String();
-            }
-          }
-          {
-            auto enumType = type->toEnumType();
-            if (enumType) {
-              if (isOptional) {
-                return "box_" + fixCType(enumType) + "_wrapperToHandle";
-              }
-              return String("static_cast<") + fixCType(enumType->mBaseType) + ">";
-            }
-          }
-          {
-            if (GenerateHelper::isBuiltInType(type)) {
-              auto structObj = type->toStruct();
-              if (!structObj) {
-                auto templatedStructObj = type->toTemplatedStructType();
-                if (templatedStructObj) {
-                  auto parentObj = templatedStructObj->getParent();
-                  if (parentObj) structObj = parentObj->toStruct();
-                }
-              }
-
-              if (!structObj) return String();
-
-              String specialName = structObj->getPathName();
-
-              if ("::zs::Any" == specialName) return "wrapper::zs_Any_wrapperToHandle";
-              if ("::zs::Promise" == specialName) return "wrapper::zs_Promise_wrapperToHandle";
-              if ("::zs::PromiseWith" == specialName) return "wrapper::zs_Promise_wrapperToHandle";
-              if ("::zs::PromiseRejectionReason" == specialName) return String();
-              if ("::zs::exceptions::Exception" == specialName) return "wrapper::exception_Exception_wrapperToHandle";
-              if ("::zs::exceptions::InvalidArgument" == specialName) return "wrapper::exception_InvalidArgument_wrapperToHandle";
-              if ("::zs::exceptions::BadState" == specialName) return "wrapper::exception_BadState_wrapperToHandle";
-              if ("::zs::exceptions::NotImplemented" == specialName) return "wrapper::exception_NotImplemented_wrapperToHandle";
-              if ("::zs::exceptions::NotSupported" == specialName) return "wrapper::exception_NotSupported_wrapperToHandle";
-              if ("::zs::exceptions::UnexpectedError" == specialName) return "wrapper::exception_UnexpectedError_wrapperToHandle";
-              if ("::zs::Time" == specialName) return "wrapper::zs_Time_wrapperToHandle";
-              if ("::zs::Milliseconds" == specialName) return "wrapper::zs_Milliseconds_wrapperToHandle";
-              if ("::zs::Microseconds" == specialName) return "wrapper::zs_Microseconds_wrapperToHandle";
-              if ("::zs::Nanoseconds" == specialName) return "wrapper::zs_Nanoseconds_wrapperToHandle";
-              if ("::zs::Seconds" == specialName) return "wrapper::zs_Seconds_wrapperToHandle";
-              if ("::zs::Minutes" == specialName) return "wrapper::zs_Minutes_wrapperToHandle";
-              if ("::zs::Hours" == specialName) return "wrapper::zs_Hours_wrapperToHandle";
-              if ("::std::set" == specialName) return String("wrapper::") + fixType(type) + "_wrapperToHandle";
-              if ("::std::list" == specialName) return String("wrapper::") + fixType(type) + "_wrapperToHandle";
-              if ("::std::map" == specialName) return String("wrapper::") + fixType(type) + "_wrapperToHandle";
-            }
-          }
-          {
-            auto structObj = type->toStruct();
-            if (structObj) {
-              return String("wrapper::") + fixType(structObj) + "_wrapperToHandle";
-            }
-          }
-          return String();
-        }
-
-        //---------------------------------------------------------------------
-        String GenerateStructDotNet::getFromHandleMethod(
-                                                    bool isOptional,
-                                                    TypePtr type
-                                                    )
-        {
-          {
-            auto enumType = type->toEnumType();
-            if (enumType) {
-              if (!isOptional) {
-                return String("static_cast<wrapper") + enumType->getPathName() + ">";
-              }
-            }
-          }
-          auto result = getToHandleMethod(isOptional, type);
-          result.replaceAll("_wrapperToHandle", "_wrapperFromHandle");
-          return result;
-        }
-
-        //---------------------------------------------------------------------
-        void GenerateStructDotNet::calculateRelations(
-                                                  NamespacePtr namespaceObj,
-                                                  NamePathStructSetMap &ioDerivesInfo
-                                                  )
-        {
-          if (!namespaceObj) return;
-          for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter) {
-            auto subNamespaceObj = (*iter).second;
-            calculateRelations(subNamespaceObj, ioDerivesInfo);
-          }
-          for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter) {
-            auto structObj = (*iter).second;
-            calculateRelations(structObj, ioDerivesInfo);
-          }
-        }
-
-        //---------------------------------------------------------------------
-        void GenerateStructDotNet::calculateRelations(
-                                                 StructPtr structObj,
-                                                 NamePathStructSetMap &ioDerivesInfo
-                                                 )
-        {
-          if (!structObj) return;
-
-          String currentNamePath = structObj->getPathName();
-
-          StructSet allParents;
-          allParents.insert(structObj);
-
-          while (allParents.size() > 0)
-          {
-            auto top = allParents.begin();
-            StructPtr parentStructObj = (*top);
-            allParents.erase(top);
-            
-            if (structObj != parentStructObj) {
-              insertInto(parentStructObj, currentNamePath, ioDerivesInfo);
-            }
-            insertInto(structObj, parentStructObj->getPathName(), ioDerivesInfo);
-
-            for (auto iter = parentStructObj->mIsARelationships.begin(); iter != parentStructObj->mIsARelationships.end(); ++iter)
-            {
-              auto foundObj = (*iter).second;
-              if (!foundObj) continue;
-              auto foundStructObj = foundObj->toStruct();
-              if (!foundStructObj) continue;
-              allParents.insert(foundStructObj);
-            }
-          }
-
-          for (auto iter = structObj->mStructs.begin(); iter != structObj->mStructs.end(); ++iter)
-          {
-            auto foundStruct = (*iter).second;
-            calculateRelations(foundStruct, ioDerivesInfo);
-          }
-        }
-        
-        //---------------------------------------------------------------------
-        void GenerateStructDotNet::insertInto(
-                                          StructPtr structObj,
-                                          const NamePath &namePath,
-                                          NamePathStructSetMap &ioDerivesInfo
-                                          )
-        {
-          if (!structObj) return;
-
-          auto found = ioDerivesInfo.find(namePath);
-          if (found == ioDerivesInfo.end()) {
-            StructSet newSet;
-            newSet.insert(structObj);
-            ioDerivesInfo[namePath] = newSet;
-            return;
-          }
-
-          auto &existingSet = (*found).second;
-          existingSet.insert(structObj);
-        }
-
-        //---------------------------------------------------------------------
-        SecureByteBlockPtr GenerateStructDotNet::generateTypesHeader(ProjectPtr project) throw (Failure)
-        {
-          if (!project) return SecureByteBlockPtr();
-          if (!project->mGlobal) return SecureByteBlockPtr();
-
-          std::stringstream ss;
-
-          ss << "/* " ZS_EVENTING_GENERATED_BY " */\n\n";
-          ss << "#pragma once\n\n";
-          ss << "\n";
-          ss << "#include <stdint.h>\n\n";
-          ss << "\n";
-
-          ss << "#ifdef __cplusplus\n";
-          ss << "#define " << getApiGuardDefine(project) << "    extern \"C\" {\n";
-          ss << "#define " << getApiGuardDefine(project, true) << "      }\n";
-          ss << "#else /* __cplusplus */\n";
-          ss << "#include <stdbool.h>\n";
-          ss << "#define " << getApiGuardDefine(project) << "\n";
-          ss << "#define " << getApiGuardDefine(project, true) << "\n";
-          ss << "#endif /* __cplusplus */\n";
-          ss << "\n";
-
-          ss << "#ifndef " << getApiExportDefine(project) << "\n";
-          ss << "#ifdef " << getApiImplementationDefine(project) << "\n";
-          ss << "#ifdef _WIN32\n";
-          ss << "#define " << getApiExportDefine(project) << " __declspec(dllexport)\n";
-          ss << "#else /* _WIN32 */\n";
-          ss << "#define " << getApiExportDefine(project) << " __attribute__((visibility(\"default\")))\n";
-          ss << "#endif /* _WIN32 */\n";
-          ss << "#else /* "<< getApiImplementationDefine(project) << " */\n";
-          ss << "#ifdef _WIN32\n";
-          ss << "#define " << getApiExportDefine(project) << " __declspec(dllimport)\n";
-          ss << "#else /* _WIN32 */\n";
-          ss << "#define " << getApiExportDefine(project) << " __attribute__((visibility(\"default\")))\n";
-          ss << "#endif /* _WIN32 */\n";
-          ss << "#endif /* " << getApiImplementationDefine(project) << " */\n";
-          ss << "#endif /* ndef " << getApiExportDefine(project) << " */\n";
-          ss << "\n";
-
-          ss << "#ifndef " << getApiExportCastedDefine(project) << "\n";
-          ss << "/* By defining " << getApiCastRequiredDefine(project) << " the wrapper will not export\n";
-          ss << "   any base class methods and instead will expect the caller to cast the C object handle\n";
-          ss << "   type to the base C object type to access base object methods and properties. */\n";
-          ss << "#ifdef " << getApiCastRequiredDefine(project) << "\n";
-          ss << "#define " << getApiExportCastedDefine(project) << "\n";
-          ss << "#else /* " << getApiCastRequiredDefine(project) << " */\n";
-          ss << "#define " << getApiExportCastedDefine(project) << " " << getApiExportDefine(project) << "\n";
-          ss << "#endif /* " << getApiCastRequiredDefine(project) << " */\n";
-          ss << "#endif /* ndef " << getApiExportCastedDefine(project) << " */\n";
-          ss << "\n";
-
-          ss << "#ifndef " << getApiCallingDefine(project) << "\n";
-          ss << "#ifdef _WIN32\n";
-          ss << "#define " << getApiCallingDefine(project) << " __stdcall\n";
-          ss << "#else /* _WIN32 */\n";
-          ss << "#define " << getApiCallingDefine(project) << " __attribute__((cdecl))\n";
-          ss << "#endif /* _WIN32 */\n";
-          ss << "#endif /* ndef " << getApiCallingDefine(project) << " */\n";
-          ss << "\n";
-
-          ss << getApiGuardDefine(project) << "\n";
-          ss << "\n";
-          ss << "typedef bool bool_t;\n";
-          ss << "typedef signed char schar_t;\n";
-          ss << "typedef unsigned char uchar_t;\n";
-          ss << "typedef signed short sshort_t;\n";
-          ss << "typedef unsigned short ushort_t;\n";
-          ss << "typedef signed int sint_t;\n";
-          ss << "typedef unsigned int uint_t;\n";
-          ss << "typedef signed long slong_t;\n";
-          ss << "typedef unsigned long ulong_t;\n";
-          ss << "typedef signed long long sllong_t;\n";
-          ss << "typedef unsigned long long ullong_t;\n";
-          ss << "typedef float float_t;\n";
-          ss << "typedef double double_t;\n";
-          ss << "typedef float float32_t;\n";
-          ss << "typedef double float64_t;\n";
-          ss << "typedef long double ldouble_t;\n";
-          ss << "typedef uintptr_t binary_t;\n";
-          ss << "typedef uintptr_t string_t;\n";
-          ss << "\n";
-          ss << "typedef uintptr_t box_bool_t;\n";
-          ss << "typedef uintptr_t box_schar_t;\n";
-          ss << "typedef uintptr_t box_uchar_t;\n";
-          ss << "typedef uintptr_t box_sshort_t;\n";
-          ss << "typedef uintptr_t box_ushort_t;\n";
-          ss << "typedef uintptr_t box_sint_t;\n";
-          ss << "typedef uintptr_t box_uint_t;\n";
-          ss << "typedef uintptr_t box_slong_t;\n";
-          ss << "typedef uintptr_t box_ulong_t;\n";
-          ss << "typedef uintptr_t box_sllong_t;\n";
-          ss << "typedef uintptr_t box_ullong_t;\n";
-          ss << "typedef uintptr_t box_float_t;\n";
-          ss << "typedef uintptr_t box_double_t;\n";
-          ss << "typedef uintptr_t box_float32_t;\n";
-          ss << "typedef uintptr_t box_float64_t;\n";
-          ss << "typedef uintptr_t box_ldouble_t;\n";
-          ss << "typedef uintptr_t box_int8_t;\n";
-          ss << "typedef uintptr_t box_uint8_t;\n";
-          ss << "typedef uintptr_t box_int16_t;\n";
-          ss << "typedef uintptr_t box_uint16_t;\n";
-          ss << "typedef uintptr_t box_int32_t;\n";
-          ss << "typedef uintptr_t box_uint32_t;\n";
-          ss << "typedef uintptr_t box_int64_t;\n";
-          ss << "typedef uintptr_t box_uint64_t;\n";
-          ss << "typedef uintptr_t box_uintptr_t;\n";
-          ss << "typedef uintptr_t box_binary_t;\n";
-          ss << "typedef uintptr_t box_string_t;\n";
-          ss << "\n";
-          ss << "typedef uintptr_t instance_id_t;\n";
-          ss << "typedef uintptr_t event_observer_t;\n";
-          ss << "typedef uintptr_t callback_event_t;\n";
-          ss << "typedef uintptr_t generic_handle_t;\n";
-          ss << "typedef uintptr_t exception_handle_t;\n";
-          ss << "\n";
-
-          processTypesNamespace(ss, project->mGlobal);
-
-          ss << "\n";
-          processTypesTemplatesAndSpecials(ss, project);
-          ss << "\n";
-          ss << getApiGuardDefine(project, true) << "\n";
-
-          ss << "\n";
-          ss << "#ifdef __cplusplus\n";
-          ss << "#include \"../types.h\"\n";
-          ss << "\n";
-
-          ss << "namespace wrapper\n";
-          ss << "{\n";
-          ss << "  struct IWrapperObserver;\n";
-          ss << "  typedef shared_ptr<IWrapperObserver> IWrapperObserverPtr;\n";
-          ss << "\n";
-          ss << "  struct IWrapperObserver\n";
-          ss << "  {\n";
-          ss << "    virtual event_observer_t getObserver() = 0;\n";
-          ss << "    virtual void observerCancel() = 0;\n";
-          ss << "  };\n";
-          ss << "\n";
-
-          ss << "  struct IWrapperCallbackEvent;\n";
-          ss << "  typedef shared_ptr<IWrapperCallbackEvent> IWrapperCallbackEventPtr;\n";
-          ss << "\n";
-          ss << "  struct IWrapperCallbackEvent\n";
-          ss << "  {\n";
-          ss << "    static void fireEvent(IWrapperCallbackEventPtr event);\n";
-          ss << "\n";
-          ss << "    virtual event_observer_t getObserver() = 0;\n";
-          ss << "    virtual const char *getNamespace() = 0;\n";
-          ss << "    virtual const char *getClass() = 0;\n";
-          ss << "    virtual const char *getMethod() = 0;\n";
-          ss << "    virtual generic_handle_t getSource() = 0;\n";
-          ss << "    virtual generic_handle_t getEventData(int argumentIndex) = 0;\n";
-          ss << "  };\n";
-          ss << "\n";
-          ss << "} /* namespace wrapper */\n";
-          ss << "\n";
-          ss << "#endif /* __cplusplus */\n";
-
-          return UseHelper::convertToBuffer(ss.str());
-        }
-        
-        //---------------------------------------------------------------------
-        void GenerateStructDotNet::processTypesNamespace(
-                                                    std::stringstream &ss,
-                                                    NamespacePtr namespaceObj
-                                                    )
-        {
-          if (!namespaceObj) return;
-          if (namespaceObj->hasModifier(Modifier_Special)) return;
-
-          bool firstNamespace {true};
-          for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter)
-          {
-            auto subNamespaceObj = (*iter).second;
-            processTypesNamespace(ss, subNamespaceObj);
-          }
-
-          processTypesEnum(ss, namespaceObj);
-
-          for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter)
-          {
-            auto structObj = (*iter).second;
-            processTypesStruct(ss, structObj);
-          }
-        }
-
-        //---------------------------------------------------------------------
-        void GenerateStructDotNet::processTypesStruct(
-                                                  std::stringstream &ss,
-                                                  StructPtr structObj
-                                                  )
-        {
-          if (!structObj) return;
-          if (GenerateHelper::isBuiltInType(structObj)) return;
-          if (structObj->mGenerics.size() > 0) return;
-
-          ss << "typedef uintptr_t " << fixCType(structObj) << ";\n";
-
-          processTypesEnum(ss, structObj);
-
-          for (auto iter = structObj->mStructs.begin(); iter != structObj->mStructs.end(); ++iter) {
-            auto subStructObj = (*iter).second;
-            processTypesStruct(ss, subStructObj);
-          }
-        }
-
-        //---------------------------------------------------------------------
-        void GenerateStructDotNet::processTypesEnum(
-                                               std::stringstream &ss,
-                                               ContextPtr context
-                                               )
-        {
-          auto namespaceObj = context->toNamespace();
-          auto structObj = context->toStruct();
-          if ((!namespaceObj) && (!structObj)) return;
-
-          bool found = false;
-
-          auto &enums = namespaceObj ? (namespaceObj->mEnums) : (structObj->mEnums);
-          for (auto iter = enums.begin(); iter != enums.end(); ++iter)
-          {
-            auto enumObj = (*iter).second;
-            ss << "typedef " << fixCType(enumObj->mBaseType) << " " << fixCType(enumObj) << ";\n";
-            ss << "typedef uintptr_t box_" << fixCType(enumObj) << ";\n";
-          }
-        }
-
-        //---------------------------------------------------------------------
-        void GenerateStructDotNet::processTypesTemplatesAndSpecials(
-                                                               std::stringstream &ss,
-                                                               ProjectPtr project
-                                                               )
-        {
-          if (!project) return;
-
-          ContextPtr context = project;
-          processTypesTemplate(ss, context->findType("::std::list"));
-          ss << "\n";
-          processTypesTemplate(ss, context->findType("::std::map"));
-          ss << "\n";
-          processTypesTemplate(ss, context->findType("::std::set"));
-          ss << "\n";
-          processTypesTemplate(ss, context->findType("::zs::PromiseWith"));
-          ss << "\n";
-
-          processTypesSpecialStruct(ss, context->findType("::zs::Any"));
-          processTypesSpecialStruct(ss, context->findType("::zs::Promise"));
-          processTypesSpecialStruct(ss, context->findType("::zs::Exception"));
-          processTypesSpecialStruct(ss, context->findType("::zs::InvalidArgument"));
-          processTypesSpecialStruct(ss, context->findType("::zs::BadState"));
-          processTypesSpecialStruct(ss, context->findType("::zs::NotImplemented"));
-          processTypesSpecialStruct(ss, context->findType("::zs::NotSupported"));
-          processTypesSpecialStruct(ss, context->findType("::zs::UnexpectedError"));
-          ss << "\n";
-
-          processTypesSpecialStruct(ss, context->findType("::zs::Time"));
-          processTypesSpecialStruct(ss, context->findType("::zs::Milliseconds"));
-          processTypesSpecialStruct(ss, context->findType("::zs::Microseconds"));
-          processTypesSpecialStruct(ss, context->findType("::zs::Nanoseconds"));
-          processTypesSpecialStruct(ss, context->findType("::zs::Seconds"));
-          processTypesSpecialStruct(ss, context->findType("::zs::Minutes"));
-          processTypesSpecialStruct(ss, context->findType("::zs::Hours"));
-        }
-
-        //---------------------------------------------------------------------
-        void GenerateStructDotNet::processTypesTemplate(
-                                                   std::stringstream &ss,
-                                                   ContextPtr structContextObj
-                                                   )
-        {
-          if (!structContextObj) return;
-
-          auto structObj = structContextObj->toStruct();
-          if (!structObj) return;
-
-          if (structObj->mGenerics.size() < 1) return;
-
-          for (auto iter = structObj->mTemplatedStructs.begin(); iter != structObj->mTemplatedStructs.end(); ++iter) {
-            auto templatedStruct = (*iter).second;
-            ss << "typedef uintptr_t " << fixCType(templatedStruct) << ";\n";
-          }
-        }
-
-        //---------------------------------------------------------------------
-        void GenerateStructDotNet::processTypesSpecialStruct(
-                                                        std::stringstream &ss,
-                                                        ContextPtr structContextObj
-                                                        )
-        {
-          if (!structContextObj) return;
-
-          auto structObj = structContextObj->toStruct();
-          if (!structObj) return;
-
-          if (!structObj->hasModifier(Modifier_Special)) return;
-
-          ss << "typedef uintptr_t " << fixCType(structObj) << ";\n";
-        }
-
-#endif //0
 
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------

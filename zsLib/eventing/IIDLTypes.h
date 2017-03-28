@@ -685,6 +685,7 @@ namespace zsLib
         virtual void resolveTypedefs() throw (InvalidContent) override;
 
         String calculateTemplateID() const;
+        StructPtr getParentStruct() const;
       };
 
       static void createTemplatedStructTypeForwards(

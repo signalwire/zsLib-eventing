@@ -341,21 +341,18 @@ namespace zsLib
           {
             auto templateType = type->toTemplatedStructType();
             if (templateType) {
-              auto parent = type->getParent();
-              if (parent) {
-                auto result = fixType(parent->toStruct());
-                for (auto iter = templateType->mTemplateArguments.begin(); iter != templateType->mTemplateArguments.end(); ++iter) {
-                  auto typeArgument = (*iter);
-                  String temp = fixType(typeArgument);
-                  if (temp.hasData()) {
-                    if (result.hasData()) {
-                      result += "_";
-                    }
-                    result += temp;
+              auto result = fixType(templateType->getParentStruct());
+              for (auto iter = templateType->mTemplateArguments.begin(); iter != templateType->mTemplateArguments.end(); ++iter) {
+                auto typeArgument = (*iter);
+                String temp = fixType(typeArgument);
+                if (temp.hasData()) {
+                  if (result.hasData()) {
+                    result += "_";
                   }
+                  result += temp;
                 }
-                return result;
               }
+              return result;
             }
           }
 
@@ -784,10 +781,7 @@ namespace zsLib
             if (genericType) {
               if (!templatedStruct) return;
 
-              auto parent = templatedStruct->getParent();
-              if (!parent)  return;
-
-              auto parentStruct = parent->toStruct();
+              auto parentStruct = templatedStruct->getParentStruct();
               if (!parentStruct) return;
 
               String name = genericType->getMappingName();
@@ -940,6 +934,11 @@ namespace zsLib
           prepareHelperSpecial(helperFile, "Promise");
           preparePromiseWithValue(helperFile);
           preparePromiseWithRejectionReason(helperFile);
+
+          {
+            auto &ss = helperFile.headerCFunctionsSS_;
+            ss << "\n";
+          }
 
           prepareHelperNamespace(helperFile, helperFile.global_);
 
@@ -1711,8 +1710,8 @@ namespace zsLib
           {
             {
               auto &ss = helperFile.headerCFunctionsSS_;
-              ss << getApiExportDefine(helperFile.global_) << " string_t " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperCreate_string_t();\n";
-              ss << getApiExportDefine(helperFile.global_) << " string_t " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperCreate_string_tWithValue(const char *value);\n";
+              ss << getApiExportDefine(helperFile.global_) << " string_t " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperCreate_string();\n";
+              ss << getApiExportDefine(helperFile.global_) << " string_t " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperCreate_stringWithValue(const char *value);\n";
               ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperDestroy(string_t handle);\n";
               ss << getApiExportDefine(helperFile.global_) << " instance_id_t " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperInstanceId(string_t handle);\n";
               ss << getApiExportDefine(helperFile.global_) << " const char * " << getApiCallingDefine(helperFile.global_) << " string_t_get_value(string_t handle);\n";
@@ -1730,14 +1729,14 @@ namespace zsLib
             {
               auto &ss = helperFile.cFunctionsSS_;
               ss << dash;
-              ss << getApiExportDefine(helperFile.global_) << " string_t " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperCreate_string_t()\n";
+              ss << getApiExportDefine(helperFile.global_) << " string_t " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperCreate_string()\n";
               ss << "{\n";
               ss << "  return reinterpret_cast<string_t>(new ::zsLib::String());\n";
               ss << "}\n";
               ss << "\n";
 
               ss << dash;
-              ss << "string_t " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperCreate_string_tWithValue(const char *value)\n";
+              ss << "string_t " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperCreate_stringWithValue(const char *value)\n";
               ss << "{\n";
               ss << "  return reinterpret_cast<string_t>(new ::zsLib::String(value));\n";
               ss << "}\n";
@@ -2216,7 +2215,7 @@ namespace zsLib
                 ss << "\n";
 
                 ss << dash;
-                ss << "void " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_wrapperIterNext(uintptr_t iterHandle)\n";
+                ss << "void " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_wrapperIterNext(iterator_handle_t iterHandle)\n";
                 ss << "{\n";
                 ss << typedefsWithIterSS.str();
                 ss << "  if (0 == iterHandle) return;\n";
@@ -2225,7 +2224,7 @@ namespace zsLib
                 ss << "\n";
 
                 ss << dash;
-                ss << "bool " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_wrapperIterIsEnd(" << fixCType(templatedStructType) << " handle, uintptr_t iterHandle)\n";
+                ss << "bool " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_wrapperIterIsEnd(" << fixCType(templatedStructType) << " handle, iterator_handle_t iterHandle)\n";
                 ss << "{\n";
                 ss << typedefsWithIterSS.str();
                 ss << "  if (0 == handle) return true;\n";
@@ -2239,7 +2238,7 @@ namespace zsLib
 
                 if (isMap) {
                   ss << dash;
-                  ss << fixCType(keyType) << " " << fixType(templatedStructType) << "_wrapperIterKey(uintptr_t iterHandle)\n";
+                  ss << fixCType(keyType) << " " << fixType(templatedStructType) << "_wrapperIterKey(iterator_handle_t iterHandle)\n";
                   ss << "{\n";
                   ss << typedefsWithIterSS.str();
                   ss << "  if (0 == iterHandle) return " << fixCType(keyType) << "();\n";
@@ -2256,7 +2255,7 @@ namespace zsLib
                 }
 
                 ss << dash;
-                ss << fixCType(listType) << " " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_wrapperIterValue(uintptr_t iterHandle)\n";
+                ss << fixCType(listType) << " " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_wrapperIterValue(iterator_handle_t iterHandle)\n";
                 ss << "{\n";
                 ss << typedefsWithIterSS.str();
                 ss << "  if (0 == iterHandle) return " << fixCType(listType) << "();\n";

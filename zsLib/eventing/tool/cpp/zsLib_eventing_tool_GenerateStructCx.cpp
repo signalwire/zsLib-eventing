@@ -2246,20 +2246,17 @@ namespace zsLib
               String specialTemplatePost;
 
               {
-                auto parent = type->getParent();
-                if (parent) {
-                  auto parentStruct = parent->toStruct();
-                  if (parentStruct) {
-                    if (parentStruct->hasModifier(Modifier_Special)) {
-                      specialName = parentStruct->getPathName();
-                      if ("::std::set" == specialName) {
-                        templatedTypeStr = "Windows::Foundation::Collections::IMapView< ";
-                        specialTemplatePost = ", Platform::Object^";
-                      }
-                      if ("::std::list" == specialName) templatedTypeStr = "Windows::Foundation::Collections::IVectorView< ";
-                      if ("::std::map" == specialName) templatedTypeStr = "Windows::Foundation::Collections::IMapView< ";
-                      if ("::zs::PromiseWith" == specialName) templatedTypeStr = "Windows::Foundation::IAsyncOperation< ";
+                auto parentStruct = templatedType->getParentStruct();
+                if (parentStruct) {
+                  if (parentStruct->hasModifier(Modifier_Special)) {
+                    specialName = parentStruct->getPathName();
+                    if ("::std::set" == specialName) {
+                      templatedTypeStr = "Windows::Foundation::Collections::IMapView< ";
+                      specialTemplatePost = ", Platform::Object^";
                     }
+                    if ("::std::list" == specialName) templatedTypeStr = "Windows::Foundation::Collections::IVectorView< ";
+                    if ("::std::map" == specialName) templatedTypeStr = "Windows::Foundation::Collections::IMapView< ";
+                    if ("::zs::PromiseWith" == specialName) templatedTypeStr = "Windows::Foundation::IAsyncOperation< ";
                   }
                 }
               }

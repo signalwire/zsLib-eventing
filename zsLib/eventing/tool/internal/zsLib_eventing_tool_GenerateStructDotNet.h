@@ -93,6 +93,7 @@ namespace zsLib
                               const String &usingType,
                               const String &originalType = String()
                               );
+            void usingTypedef(IEventingTypes::PredefinedTypedefs type);
             void usingTypedef(TypePtr type);
 
             bool hasBoxing(const String &namePathStr);
@@ -133,13 +134,17 @@ namespace zsLib
             std::stringstream &interfaceEndSS_;
             std::stringstream &delegateSS_;
 
-            StructFile(StructPtr structObj);
+            StructFile(
+                       BaseFile &baseFile,
+                       StructPtr structObj
+                       );
 
             StructPtr struct_;
             bool isStaticOnly_ {};
             bool isDictionary {};
             bool hasEvents_ {};
             bool shouldDefineInterface_ {};
+            bool shouldInheritException_ {};
           };
 
           GenerateStructDotNet();
@@ -147,6 +152,7 @@ namespace zsLib
           static GenerateStructDotNetPtr create();
 
           static String getMarshalAsType(IEventingTypes::PredefinedTypedefs type);
+          static String fixArgumentName(const String &value);
           static String fixCCsType(IEventingTypes::PredefinedTypedefs type);
           static String fixCCsType(TypePtr type);
           static String fixCsType(
@@ -185,6 +191,7 @@ namespace zsLib
           static String getParamMarshal(TypePtr type);
           static String getHelpersMethod(
                                          BaseFile &baseFile,
+                                         bool useApiHelper,
                                          const String &methodName,
                                          bool isOptional,
                                          TypePtr type
@@ -212,8 +219,14 @@ namespace zsLib
 
           static bool hasInterface(StructPtr structObj);
 
+          static String getApiCastRequiredDefine(BaseFile &baseFile);
           static String getApiPath(BaseFile &baseFile);
           static String getHelperPath(BaseFile &enumFile);
+
+          static bool shouldDeriveFromException(
+                                                BaseFile &baseFile,
+                                                StructPtr structObj
+                                                );
 
           static void finalizeBaseFile(BaseFile &apiFile);
 
@@ -300,12 +313,26 @@ namespace zsLib
                                   StructPtr structObj,
                                   EnumTypePtr enumObj
                                   );
+          static String getSpecialMethodPrefix(
+                                               ApiFile &apiFile,
+                                               StructFile &structFile,
+                                               StructPtr rootStructObj,
+                                               StructPtr structObj,
+                                               MethodPtr method
+                                               );
           static void processMethods(
                                      ApiFile &apiFile,
                                      StructFile &structFile,
                                      StructPtr rootStructObj,
                                      StructPtr structObj
                                      );
+          static String getSpecialPropertyPrefix(
+                                                 ApiFile &apiFile,
+                                                 StructFile &structFile,
+                                                 StructPtr rootStructObj,
+                                                 StructPtr structObj,
+                                                 PropertyPtr propertyObj
+                                                 );
           static void processProperties(
                                         ApiFile &apiFile,
                                         StructFile &structFile,
@@ -327,82 +354,6 @@ namespace zsLib
                                               StructFile &structFile,
                                               StructPtr structObj
                                               );
-#if 0
-          static String fixBasicType(IEventingTypes::PredefinedTypedefs type);
-          static String fixCType(IEventingTypes::PredefinedTypedefs type);
-          static String fixCType(TypePtr type);
-          static String fixCType(
-                                 bool isOptional,
-                                 TypePtr type
-                                 );
-          static String fixType(TypePtr type);
-          static String getApiImplementationDefine(ContextPtr context);
-          static String getApiCastRequiredDefine(ContextPtr context);
-          static String getApiExportDefine(ContextPtr context);
-          static String getApiExportCastedDefine(ContextPtr context);
-          static String getApiCallingDefine(ContextPtr context);
-          static String getApiGuardDefine(
-                                          ContextPtr context,
-                                          bool endGuard = false
-                                          );
-          static String getToHandleMethod(
-                                          bool isOptional, 
-                                          TypePtr type
-                                          );
-          static String getFromHandleMethod(
-                                            bool isOptional,
-                                            TypePtr type
-                                            );
-
-          static void calculateRelations(
-                                         NamespacePtr namespaceObj,
-                                         NamePathStructSetMap &ioDerivesInfo
-                                         );
-          static void calculateRelations(
-                                         StructPtr structObj,
-                                         NamePathStructSetMap &ioDerivesInfo
-                                         );
-
-          static void insertInto(
-                                 StructPtr structObj,
-                                 const NamePath &namePath,
-                                 NamePathStructSetMap &ioDerivesInfo
-                                 );
-
-          static void appendStream(
-                                   std::stringstream &output,
-                                   std::stringstream &source,
-                                   bool appendEol = true
-                                   );
-
-
-          static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure);
-          
-          static void processTypesNamespace(
-                                            std::stringstream &ss,
-                                            NamespacePtr namespaceObj
-                                            );
-          static void processTypesStruct(
-                                         std::stringstream &ss,
-                                         StructPtr structObj
-                                         );
-          static void processTypesEnum(
-                                       std::stringstream &ss,
-                                       ContextPtr context
-                                       );
-          static void processTypesTemplatesAndSpecials(
-                                                       std::stringstream &ss,
-                                                       ProjectPtr project
-                                                       );
-          static void processTypesTemplate(
-                                           std::stringstream &ss,
-                                           ContextPtr structContextObj
-                                           );
-          static void processTypesSpecialStruct(
-                                                std::stringstream &ss,
-                                                ContextPtr structContextObj
-                                                );
-#endif //0
 
           //-------------------------------------------------------------------
           #pragma mark
