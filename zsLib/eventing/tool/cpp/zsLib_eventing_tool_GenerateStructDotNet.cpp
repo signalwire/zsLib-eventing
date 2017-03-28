@@ -2535,6 +2535,7 @@ namespace zsLib
             if (!enumObj) continue;
 
             ss << "\n";
+            ss << GenerateHelper::getDocumentation(indentStr + "/// ", enumObj, 80);
             ss << indentStr << "public enum " << GenerateStructCx::fixName(enumObj->getMappingName());
             if (enumObj->mBaseType != PredefinedTypedef_int) {
               ss << " : " << fixCCsType(enumObj->mBaseType);
@@ -2549,6 +2550,7 @@ namespace zsLib
 
               if (!first) ss << ",\n";
               first = false;
+              ss << GenerateHelper::getDocumentation(indentStr + "/// ", valueObj, 80);
               ss << indentStr << GenerateStructCx::fixName(valueObj->getMappingName());
               if (valueObj->mValue.hasData()) {
                 ss << " = " << valueObj->mValue;
@@ -2639,6 +2641,7 @@ namespace zsLib
 
           if (structFile.shouldDefineInterface_) {
             auto &ss = structFile.interfaceSS_;
+            ss << GenerateHelper::getDocumentation(indentStr + "/// ", structObj, 80);
             ss << indentStr << "public interface I" << GenerateStructCx::fixStructName(structObj) << "\n";
             ss << indentStr << "{\n";
           }
@@ -2649,6 +2652,7 @@ namespace zsLib
 
           {
             auto &ss = structFile.structSS_;
+            ss << GenerateHelper::getDocumentation(indentStr + "/// ", structObj, 80);
             ss << indentStr << "public " << (structFile.isStaticOnly_ ? "static " : "sealed ") << "class " << csTypeStr;
 
             String indentPlusStr;
@@ -3097,12 +3101,14 @@ namespace zsLib
 
               if (generateInterface) {
                 iSS << "\n";
+                iSS << GenerateHelper::getDocumentation(indentStr + "/// ", method, 80);
                 iSS << indentStr << resultCsStr << " " << GenerateStructCx::fixName(method->getMappingName()) << "(" << (method->mArguments.size() > 1 ? String("\n" + indentStr + "    ") : String());
               }
 
               String specialPrefix = getSpecialMethodPrefix(apiFile, structFile, rootStructObj, structObj, method);
 
               sSS << "\n";
+              sSS << GenerateHelper::getDocumentation(indentStr + "/// ", method, 80);
               sSS << indentStr << specialPrefix << (specialPrefix.hasData() ? " " : "") << (isStatic ? "static " : "") << "public " << (isConstructor ? String() : String(resultCsStr + " ")) << GenerateStructCx::fixName(method->getMappingName()) << "(" << (method->mArguments.size() > 1 ? String("\n" + indentStr + "    ") : String());
 
               bool first {true};
@@ -3330,12 +3336,14 @@ namespace zsLib
 
             if (generateInterface) {
               auto &ss = structFile.interfaceSS_;
+              ss << GenerateHelper::getDocumentation(indentStr + "/// ", propertyObj, 80);
               ss << indentStr << fixCsPathType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " " << GenerateStructCx::fixName(propertyObj->getMappingName()) << " { " << (hasGet ? "get; " : "") << (hasSet ? "set; " : "") << "}\n";
             }
 
             {
               auto &ss = structFile.structSS_;
               auto specialPrefix = getSpecialPropertyPrefix(apiFile, structFile, rootStructObj, structObj, propertyObj);
+              ss << GenerateHelper::getDocumentation(indentStr + "/// ", propertyObj, 80);
               ss << indentStr << specialPrefix << (specialPrefix.hasData() ? " " : "") << (isStatic ? "static " : "") << "public " << fixCsPathType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " " << GenerateStructCx::fixName(propertyObj->getMappingName()) << "\n";
               ss << indentStr << "{\n";
 
@@ -3458,6 +3466,7 @@ namespace zsLib
             {
               auto &ss = structFile.structSS_;
 
+              ss << GenerateHelper::getDocumentation(indentStr + "/// ", method, 80);
               ss << indentStr << "public event " << fixCsType(structObj) << "_" << GenerateStructCx::fixName(method->getMappingName()) << " " << GenerateStructCx::fixName(method->getMappingName()) << ";\n";
             }
           }
