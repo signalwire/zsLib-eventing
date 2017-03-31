@@ -170,8 +170,6 @@ namespace zsLib
           }
 
           output() <<
-          "                                           objc - Generate Objective-C wrapper\n"
-          "                                           android - Java on Android\n"
           " -author       \"John Q Public\"           - manifest author.\n"
           " -monitor                                - monitor for remote events\n"
           " -connect      ip                        - create an outgoing connection to eventing server IP\n"
