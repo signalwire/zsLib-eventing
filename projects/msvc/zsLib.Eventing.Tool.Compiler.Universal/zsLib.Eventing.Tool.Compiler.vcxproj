@@ -261,7 +261,10 @@
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_CommandLine.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_EventingCompiler.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateHelper.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateJson.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructC.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructCx.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructDotNet.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructHeader.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructImplCpp.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructImplHeader.h" />
@@ -472,7 +475,10 @@
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_CommandLine.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_EventingCompiler.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateHelper.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateJson.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructC.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructCx.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructDotNet.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructHeader.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructImpHeader.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructImplCpp.cpp" />

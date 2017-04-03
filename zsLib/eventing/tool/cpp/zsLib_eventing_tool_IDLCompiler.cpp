@@ -33,6 +33,9 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplCpp.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructCx.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructC.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructDotNet.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateJson.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h>
 
 #include <zsLib/eventing/tool/OutputStream.h>
@@ -43,6 +46,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <zsLib/Exception.h>
 #include <zsLib/Numeric.h>
+#include <zsLib/SafeInt.h>
 
 #include <sstream>
 #include <list>
@@ -249,8 +253,6 @@ namespace zsLib
           const char *start = p;
           
           bool foundNegative = false;
-          bool foundDot = false;
-          bool foundExponent = false;
 
           if ('-' == *start) {
             foundNegative = true;
@@ -303,7 +305,6 @@ namespace zsLib
               case '.': {
                 if (10 != base) goto check_exponent;
                 ++p;
-                foundDot = true;
                 continue;
               }
               case '0':
@@ -363,7 +364,6 @@ namespace zsLib
             }
             if (10 != base) goto check_postfix;
 
-            foundExponent = true;
             ++p;
             
             bool foundExponentNumber = false;
@@ -1249,7 +1249,12 @@ namespace zsLib
           bool created {};
           auto newStruct = processStructForward(context, structName, &created);
           if (!created) {
-            ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " struct/interface was not created: " + structName);
+            if (!newStruct) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " struct/interface was not created: " + structName);
+            }
+            if (newStruct->hasExistingNonForwardedData()) {
+              ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " struct/interface already has a definition: " + structName);
+            }
           }
 
           tool::output() << "[Info] Found struct: " << getPathName(newStruct) << (foundTemplate ? " (template)" : "") << "\n";
@@ -1798,7 +1803,7 @@ namespace zsLib
               }
               
               if (-1 != totalParams) {
-                if (totalParams != values.size()) {
+                if (totalParams != SafeInt<decltype(totalParams)>(values.size())) {
                   ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting total parameter mismatch: " + string(totalParams) + ", found=" + string(values.size()));
                 }
               }
@@ -3200,6 +3205,9 @@ namespace zsLib
           ICompiler::installTarget(internal::GenerateStructHeader::create());
           ICompiler::installTarget(internal::GenerateStructImplCpp::create());
           ICompiler::installTarget(internal::GenerateStructCx::create());
+          ICompiler::installTarget(internal::GenerateStructC::create());
+          ICompiler::installTarget(internal::GenerateStructDotNet::create());
+          ICompiler::installTarget(internal::GenerateJson::create());
         }
 
       } // namespace internal

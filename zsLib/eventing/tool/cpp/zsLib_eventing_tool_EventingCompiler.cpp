@@ -2005,7 +2005,7 @@ namespace zsLib
           {
             addEOL(profilesEl);
             //<EventCollector Id="EventCollector_zsLib_Verbose" Name="zsLib Event Collector" Private="false" ProcessPrivate="false" Secure="false" Realtime="false">
-            //  <BufferSize Value="1024"/>
+            //  <BufferSize Value="2048"/>
             //  <Buffers Value="40"/>
             //</EventCollector>
             {
@@ -2019,13 +2019,13 @@ namespace zsLib
               addEOL(eventCollectorEl);
               {
                 ElementPtr bufferSizeEl = Element::create("BufferSize");
-                bufferSizeEl->setAttribute("Value", "1024");
+                bufferSizeEl->setAttribute("Value", "2048");
                 eventCollectorEl->adoptAsLastChild(bufferSizeEl);
                 addEOL(eventCollectorEl);
               }
               {
                 ElementPtr bufferEl = Element::create("Buffers");
-                bufferEl->setAttribute("Value", "1024");
+                bufferEl->setAttribute("Value", "2048");
                 eventCollectorEl->adoptAsLastChild(bufferEl);
                 addEOL(eventCollectorEl);
               }
@@ -2481,7 +2481,7 @@ namespace zsLib
 #define ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES (3)
               
               ss << "    ::zsLib::eventing::USE_EVENT_DATA_DESCRIPTOR xxDescriptors[" << string(ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES+totalTypes) << "]; \\\n";
-              ss << "    size_t xxLineNumber = __LINE__; \\\n";
+              ss << "    uint32_t xxLineNumber = __LINE__; \\\n";
               ss << "    \\\n";
               ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_ASTR(&(xxDescriptors[0]), " << getCurrentSubsystemStr << ".getName()); \\\n";
               ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_ASTR(&(xxDescriptors[1]), __func__); \\\n";
@@ -2576,7 +2576,7 @@ namespace zsLib
                       String oldValueStrPlus1 = "(xValue" + string(loop+1) + ")";
                       
                       ss << "    auto " << newValueStr << " = " << originalValueStr << "; \\\n";
-                      ss << "    size_t " << newValueStrPlus1 << " {static_cast<size_t>" << oldValueStrPlus1 << "}; \\\n";
+                      ss << "    uint32_t " << newValueStrPlus1 << " {static_cast<uint32_t>" << oldValueStrPlus1 << "}; \\\n";
                       ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_VALUE(&(xxDescriptors[" << current << "]), &(" << newValueStrPlus1 << "), sizeof(" << newValueStrPlus1 << ")); \\\n";
                       ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_BUFFER(&(xxDescriptors[" << string(current+1) << "]), " << newValueStr << ", " << newValueStrPlus1 << "); \\\n";
 

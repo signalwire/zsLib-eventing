@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<CodeLite_Project Name="zsLib-eventing-tool" InternalType="Library">
+<CodeLite_Project Name="zsLib-eventing-tool" InternalType="Library" Version="10.0.0">
   <Plugins>
     <Plugin Name="qmake">
       <![CDATA[00010001N0007Release000000000000]]>
@@ -13,15 +13,33 @@
         <VirtualDirectory Name="cpp">
           <File Name="../../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool.cpp"/>
           <File Name="../../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_CommandLine.cpp"/>
-          <File Name="../../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_Compiler.cpp"/>
           <File Name="../../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_Monitor.cpp"/>
+          <File Name="../../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_EventingCompiler.cpp"/>
+          <File Name="../../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateHelper.cpp"/>
+          <File Name="../../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateJson.cpp"/>
+          <File Name="../../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructCx.cpp"/>
+          <File Name="../../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructHeader.cpp"/>
+          <File Name="../../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructImpHeader.cpp"/>
+          <File Name="../../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructImplCpp.cpp"/>
+          <File Name="../../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateTypesHeader.cpp"/>
+          <File Name="../../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_Helper.cpp"/>
+          <File Name="../../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_IDLCompiler.cpp"/>
         </VirtualDirectory>
         <VirtualDirectory Name="internal">
           <File Name="../../../../zsLib/eventing/tool/internal/types.h"/>
           <File Name="../../../../zsLib/eventing/tool/internal/zsLib_eventing_tool.h"/>
           <File Name="../../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_CommandLine.h"/>
-          <File Name="../../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_Compiler.h"/>
           <File Name="../../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_Monitor.h"/>
+          <File Name="../../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_EventingCompiler.h"/>
+          <File Name="../../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateHelper.h"/>
+          <File Name="../../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateJson.h"/>
+          <File Name="../../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructCx.h"/>
+          <File Name="../../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h"/>
+          <File Name="../../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplCpp.h"/>
+          <File Name="../../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplHeader.h"/>
+          <File Name="../../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateTypesHeader.h"/>
+          <File Name="../../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h"/>
+          <File Name="../../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h"/>
         </VirtualDirectory>
         <File Name="../../../../zsLib/eventing/tool/ICommandLine.h"/>
         <File Name="../../../../zsLib/eventing/tool/ICompiler.h"/>
@@ -44,7 +62,7 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Debug" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Static Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;-std=c++11;-Wall;-Wno-unknown-pragmas;-Wno-unused-local-typedefs;-Wno-pragmas" C_Options="-g" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+      <Compiler Options="-g;-std=c++11;-Wall;-Wno-unknown-pragmas;-Wno-unused-local-typedefs;-Wno-pragmas;-Wno-switch" C_Options="-g" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <IncludePath Value="../../../.."/>
         <IncludePath Value="../../../../../zsLib"/>
@@ -86,7 +104,7 @@
       </Completion>
     </Configuration>
     <Configuration Name="Release" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Static Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-std=c++11;-Wall;-Wno-unknown-pragmas;-Wno-unused-local-typedefs;-Wno-pragmas" C_Options="" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+      <Compiler Options="-std=c++11;-Wall;-Wno-unknown-pragmas;-Wno-unused-local-typedefs;-Wno-pragmas;-Wno-switch" C_Options="" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <IncludePath Value="../../../.."/>
         <IncludePath Value="../../../../../zsLib"/>

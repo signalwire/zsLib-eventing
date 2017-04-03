@@ -42,51 +42,39 @@ namespace zsLib
       namespace internal
       {
         
-
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         #pragma mark
-        #pragma mark GenerateHelper
+        #pragma mark GenerateJson
         #pragma mark
 
-        struct GenerateHelper : public IDLCompiler
+        struct GenerateJson : public IIDLCompilerTarget,
+                              public IDLCompiler
         {
-          static String getDashedComment(const String &indent);
+          typedef std::set<String> StringSet;
 
-          static String getDocumentation(
-                                         const String &linePrefix,
-                                         ContextPtr context,
-                                         size_t maxLineLength
-                                         );
+          GenerateJson();
 
-          static void insertFirst(
-                                  std::stringstream &ss,
-                                  bool &first
-                                 );
-          static void insertLast(
-                                 std::stringstream &ss,
-                                 bool &first
-                                 );
-          static void insertBlob(
-                                 std::stringstream &ss,
-                                 const String &indentStr,
-                                 const char *blob
-                                 );
+          static GenerateJsonPtr create();
+          static SecureByteBlockPtr generateJson(ProjectPtr project) throw (Failure);
 
-          static bool isBuiltInType(TypePtr type);
+          //-------------------------------------------------------------------
+          #pragma mark
+          #pragma mark GenerateJson::IIDLCompilerTarget
+          #pragma mark
 
-          static bool hasOnlyStaticMethods(StructPtr structObj);
-          static bool hasEventHandlers(StructPtr structObj);
+          //-------------------------------------------------------------------
+          virtual String targetKeyword() override;
+          virtual String targetKeywordHelp() override;
+          virtual void targetOutput(
+                                    const String &inPathStr,
+                                    const ICompilerTypes::Config &config
+                                    ) throw (Failure) override;
 
-          static bool needsDefaultConstructor(StructPtr structObj);
-          static bool needsDefaultConstructor(TemplatedStructTypePtr templateObj);
-
-          static String getBasicTypeString(IEventingTypes::PredefinedTypedefs type);
-          static String getBasicTypeString(BasicTypePtr type);
         };
-
+         
       } // namespace internal
     } // namespace tool
   } // namespace eventing
