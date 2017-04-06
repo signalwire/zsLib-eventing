@@ -19,6 +19,9 @@
 		001E92111E5EB3D400980069 /* zsLib_eventing_tool_IDLCompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E92051E5EB3D400980069 /* zsLib_eventing_tool_IDLCompiler.cpp */; };
 		001E92121E5EB3D400980069 /* zsLib_eventing_tool_Monitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E92061E5EB3D400980069 /* zsLib_eventing_tool_Monitor.cpp */; };
 		001E92131E5EB3D400980069 /* zsLib_eventing_tool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E92071E5EB3D400980069 /* zsLib_eventing_tool.cpp */; };
+		005779AE1E9682CF004B0E53 /* zsLib_eventing_tool_GenerateJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005779AB1E9682CF004B0E53 /* zsLib_eventing_tool_GenerateJson.cpp */; };
+		005779AF1E9682CF004B0E53 /* zsLib_eventing_tool_GenerateStructC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005779AC1E9682CF004B0E53 /* zsLib_eventing_tool_GenerateStructC.cpp */; };
+		005779B01E9682CF004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005779AD1E9682CF004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -59,6 +62,12 @@
 		001E921E1E5EB3E400980069 /* zsLib_eventing_tool_IDLCompiler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_tool_IDLCompiler.h; sourceTree = "<group>"; };
 		001E921F1E5EB3E400980069 /* zsLib_eventing_tool_Monitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_tool_Monitor.h; sourceTree = "<group>"; };
 		001E92201E5EB3E400980069 /* zsLib_eventing_tool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_tool.h; sourceTree = "<group>"; };
+		005779A81E96828F004B0E53 /* zsLib_eventing_tool_GenerateJson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_tool_GenerateJson.h; sourceTree = "<group>"; };
+		005779A91E96828F004B0E53 /* zsLib_eventing_tool_GenerateStructC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_tool_GenerateStructC.h; sourceTree = "<group>"; };
+		005779AA1E96828F004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_tool_GenerateStructDotNet.h; sourceTree = "<group>"; };
+		005779AB1E9682CF004B0E53 /* zsLib_eventing_tool_GenerateJson.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zsLib_eventing_tool_GenerateJson.cpp; sourceTree = "<group>"; };
+		005779AC1E9682CF004B0E53 /* zsLib_eventing_tool_GenerateStructC.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zsLib_eventing_tool_GenerateStructC.cpp; sourceTree = "<group>"; };
+		005779AD1E9682CF004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zsLib_eventing_tool_GenerateStructDotNet.cpp; sourceTree = "<group>"; };
 		008698731DE3F51F009D669C /* libzsLib-eventing-tool-ios.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libzsLib-eventing-tool-ios.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		008698941DE3F543009D669C /* ICommandLine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ICommandLine.h; sourceTree = "<group>"; };
 		008698951DE3F543009D669C /* ICompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ICompiler.h; sourceTree = "<group>"; };
@@ -131,7 +140,10 @@
 				001E91FC1E5EB3D400980069 /* zsLib_eventing_tool_CommandLine.cpp */,
 				001E91FD1E5EB3D400980069 /* zsLib_eventing_tool_EventingCompiler.cpp */,
 				001E91FE1E5EB3D400980069 /* zsLib_eventing_tool_GenerateHelper.cpp */,
+				005779AB1E9682CF004B0E53 /* zsLib_eventing_tool_GenerateJson.cpp */,
+				005779AC1E9682CF004B0E53 /* zsLib_eventing_tool_GenerateStructC.cpp */,
 				001E91FF1E5EB3D400980069 /* zsLib_eventing_tool_GenerateStructCx.cpp */,
+				005779AD1E9682CF004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.cpp */,
 				001E92001E5EB3D400980069 /* zsLib_eventing_tool_GenerateStructHeader.cpp */,
 				001E92011E5EB3D400980069 /* zsLib_eventing_tool_GenerateStructImpHeader.cpp */,
 				001E92021E5EB3D400980069 /* zsLib_eventing_tool_GenerateStructImplCpp.cpp */,
@@ -151,7 +163,10 @@
 				001E92151E5EB3E400980069 /* zsLib_eventing_tool_CommandLine.h */,
 				001E92161E5EB3E400980069 /* zsLib_eventing_tool_EventingCompiler.h */,
 				001E92171E5EB3E400980069 /* zsLib_eventing_tool_GenerateHelper.h */,
+				005779A81E96828F004B0E53 /* zsLib_eventing_tool_GenerateJson.h */,
+				005779A91E96828F004B0E53 /* zsLib_eventing_tool_GenerateStructC.h */,
 				001E92181E5EB3E400980069 /* zsLib_eventing_tool_GenerateStructCx.h */,
+				005779AA1E96828F004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.h */,
 				001E92191E5EB3E400980069 /* zsLib_eventing_tool_GenerateStructHeader.h */,
 				001E921A1E5EB3E400980069 /* zsLib_eventing_tool_GenerateStructImplCpp.h */,
 				001E921B1E5EB3E400980069 /* zsLib_eventing_tool_GenerateStructImplHeader.h */,
@@ -225,11 +240,14 @@
 				001E920E1E5EB3D400980069 /* zsLib_eventing_tool_GenerateStructImplCpp.cpp in Sources */,
 				001E920A1E5EB3D400980069 /* zsLib_eventing_tool_GenerateHelper.cpp in Sources */,
 				001E92081E5EB3D400980069 /* zsLib_eventing_tool_CommandLine.cpp in Sources */,
+				005779B01E9682CF004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.cpp in Sources */,
 				001E92131E5EB3D400980069 /* zsLib_eventing_tool.cpp in Sources */,
 				001E920F1E5EB3D400980069 /* zsLib_eventing_tool_GenerateTypesHeader.cpp in Sources */,
 				001E92121E5EB3D400980069 /* zsLib_eventing_tool_Monitor.cpp in Sources */,
 				001E92091E5EB3D400980069 /* zsLib_eventing_tool_EventingCompiler.cpp in Sources */,
+				005779AE1E9682CF004B0E53 /* zsLib_eventing_tool_GenerateJson.cpp in Sources */,
 				001E920B1E5EB3D400980069 /* zsLib_eventing_tool_GenerateStructCx.cpp in Sources */,
+				005779AF1E9682CF004B0E53 /* zsLib_eventing_tool_GenerateStructC.cpp in Sources */,
 				001E920C1E5EB3D400980069 /* zsLib_eventing_tool_GenerateStructHeader.cpp in Sources */,
 				001E92101E5EB3D400980069 /* zsLib_eventing_tool_Helper.cpp in Sources */,
 				001E92111E5EB3D400980069 /* zsLib_eventing_tool_IDLCompiler.cpp in Sources */,

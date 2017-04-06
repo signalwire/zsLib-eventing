@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		005779B71E96834A004B0E53 /* zsLib_eventing_IDLTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005779B61E96834A004B0E53 /* zsLib_eventing_IDLTypes.cpp */; };
 		008698631DE3F476009D669C /* zsLib_eventing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008698461DE3F476009D669C /* zsLib_eventing.cpp */; };
 		008698641DE3F476009D669C /* zsLib_eventing_EventingTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008698471DE3F476009D669C /* zsLib_eventing_EventingTypes.cpp */; };
 		008698651DE3F476009D669C /* zsLib_eventing_Hasher.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008698481DE3F476009D669C /* zsLib_eventing_Hasher.cpp */; };
@@ -27,6 +28,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		005779B51E968340004B0E53 /* zsLib_eventing_IDLTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_IDLTypes.h; sourceTree = "<group>"; };
+		005779B61E96834A004B0E53 /* zsLib_eventing_IDLTypes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zsLib_eventing_IDLTypes.cpp; sourceTree = "<group>"; };
+		005779BD1E9683D3004B0E53 /* IIDLTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IIDLTypes.h; sourceTree = "<group>"; };
 		008698371DE3F458009D669C /* libzsLib-eventing-ios.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libzsLib-eventing-ios.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		008698461DE3F476009D669C /* zsLib_eventing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zsLib_eventing.cpp; sourceTree = "<group>"; };
 		008698471DE3F476009D669C /* zsLib_eventing_EventingTypes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zsLib_eventing_EventingTypes.cpp; sourceTree = "<group>"; };
@@ -91,6 +95,7 @@
 				0086984B1DE3F476009D669C /* IEventingTypes.h */,
 				0086984C1DE3F476009D669C /* IHasher.h */,
 				0086984D1DE3F476009D669C /* IHelper.h */,
+				005779BD1E9683D3004B0E53 /* IIDLTypes.h */,
 				009CEED11DF0AFC0000FF4D2 /* IRemoteEventing.h */,
 				008698621DE3F476009D669C /* types.h */,
 			);
@@ -104,6 +109,7 @@
 				008698471DE3F476009D669C /* zsLib_eventing_EventingTypes.cpp */,
 				008698481DE3F476009D669C /* zsLib_eventing_Hasher.cpp */,
 				008698491DE3F476009D669C /* zsLib_eventing_Helper.cpp */,
+				005779B61E96834A004B0E53 /* zsLib_eventing_IDLTypes.cpp */,
 				009CEECE1DF0AFA9000FF4D2 /* zsLib_eventing_RemoteEventing.cpp */,
 			);
 			path = cpp;
@@ -116,6 +122,7 @@
 				008698501DE3F476009D669C /* zsLib_eventing_EventingTypes.h */,
 				008698511DE3F476009D669C /* zsLib_eventing_Hasher.h */,
 				008698521DE3F476009D669C /* zsLib_eventing_Helper.h */,
+				005779B51E968340004B0E53 /* zsLib_eventing_IDLTypes.h */,
 				009CEED01DF0AFB8000FF4D2 /* zsLib_eventing_RemoteEventing.h */,
 			);
 			path = internal;
@@ -182,6 +189,7 @@
 				008698651DE3F476009D669C /* zsLib_eventing_Hasher.cpp in Sources */,
 				009CEECF1DF0AFA9000FF4D2 /* zsLib_eventing_RemoteEventing.cpp in Sources */,
 				008698641DE3F476009D669C /* zsLib_eventing_EventingTypes.cpp in Sources */,
+				005779B71E96834A004B0E53 /* zsLib_eventing_IDLTypes.cpp in Sources */,
 				008698631DE3F476009D669C /* zsLib_eventing.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
