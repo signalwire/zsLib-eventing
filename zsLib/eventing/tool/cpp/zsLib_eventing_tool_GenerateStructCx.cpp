@@ -1046,16 +1046,16 @@ namespace zsLib
                 auto templatedStruct = (*iterPromise).second;
                 if (!templatedStruct) continue;
 
-                auto foundType = templatedStruct->mTemplateArguments.begin();
-                if (foundType == templatedStruct->mTemplateArguments.end()) continue;
+                auto foundArgType = templatedStruct->mTemplateArguments.begin();
+                if (foundArgType == templatedStruct->mTemplateArguments.end()) continue;
 
-                auto resolveType = (*foundType);
+                auto resolveType = (*foundArgType);
                 if (!resolveType) continue;
 
                 TypePtr rejectType;
                 {
-                  (++foundType);
-                  if (foundType != templatedStruct->mTemplateArguments.end()) rejectType = *foundType;
+                  (++foundArgType);
+                  if (foundArgType != templatedStruct->mTemplateArguments.end()) rejectType = *foundArgType;
                 }
 
                 String promiseWithStr = "PromiseWithHolderPtr";
@@ -1143,10 +1143,10 @@ namespace zsLib
                 auto templatedStruct = (*iterRej).second;
                 if (!templatedStruct) continue;
 
-                auto foundType = templatedStruct->mTemplateArguments.begin();
-                if (foundType == templatedStruct->mTemplateArguments.end()) continue;
+                auto foundArgType = templatedStruct->mTemplateArguments.begin();
+                if (foundArgType == templatedStruct->mTemplateArguments.end()) continue;
 
-                auto rejectionType = (*foundType);
+                auto rejectionType = (*foundArgType);
                 if (!rejectionType) continue;
                 generatePromiseRejection(helperFile, indentStr, rejectionType);
               }
@@ -1592,8 +1592,6 @@ namespace zsLib
             bool isToString = ("ToString" == fixName(method->mName)) && ("::string" == method->mResult->getPathName()) && (0 == method->mArguments.size());
             bool isStatic = method->hasModifier(Modifier_Static);
 
-            String delegateName;
-
             std::stringstream implSS;
 
             if (!createConstructors) {
@@ -1667,17 +1665,17 @@ namespace zsLib
               cppSS << dashedStr;
               cppSS << "void " << fixNamePath(structObj) << "::WrapperObserverImpl::" << method->mName << "(";
 
-              String delegateName = fixName(method->getModifierValue(Modifier_Method_EventHandler, 0));
-              if (!delegateName.hasData()) {
-                delegateName = fixStructName(structObj) + "_";
+              String delegateNameStr = fixName(method->getModifierValue(Modifier_Method_EventHandler, 0));
+              if (!delegateNameStr.hasData()) {
+                delegateNameStr = fixStructName(structObj) + "_";
                 if (method->hasModifier(Modifier_AltName)) {
-                  delegateName += fixName(method->getModifierValue(Modifier_AltName, 0));
+                  delegateNameStr += fixName(method->getModifierValue(Modifier_AltName, 0));
                 } else {
-                  delegateName += fixName(method->mName);
+                  delegateNameStr += fixName(method->mName);
                 }
-                delegateName += "Delegate";
+                delegateNameStr += "Delegate";
               }
-              prestructDelegateSS << structFile.mHeaderIndentStr << "public delegate void " << delegateName << "(";
+              prestructDelegateSS << structFile.mHeaderIndentStr << "public delegate void " << delegateNameStr << "(";
               if (method->mArguments.size() > 1) {
                 observerSS << "\n";
                 observerSS << indentStr << "  ";
@@ -1687,7 +1685,7 @@ namespace zsLib
                 prestructDelegateSS << structFile.mHeaderIndentStr << "  ";
               }
 
-              headerMethodsSS << indentStr << "event " << delegateName << "^ " << fixName(method->mName) << ";\n";
+              headerMethodsSS << indentStr << "event " << delegateNameStr << "^ " << fixName(method->mName) << ";\n";
             } else {
               cppSS << dashedStr;
 
@@ -2324,19 +2322,20 @@ namespace zsLib
             auto basicType = type->toBasicType();
             if (basicType) {
               switch (basicType->mBaseType) {
-              case IEventingTypes::PredefinedTypedef_bool:      return "Boolean";
+                case IEventingTypes::PredefinedTypedef_bool:      return "Boolean";
 
-              case IEventingTypes::PredefinedTypedef_binary:    return "Binary";
+                case IEventingTypes::PredefinedTypedef_binary:    return "Binary";
 
-              case IEventingTypes::PredefinedTypedef_ulong:     return "HelperULong";
-              case IEventingTypes::PredefinedTypedef_long:
-              case IEventingTypes::PredefinedTypedef_slong:     return "HelperLong";
+                case IEventingTypes::PredefinedTypedef_ulong:     return "HelperULong";
+                case IEventingTypes::PredefinedTypedef_long:
+                case IEventingTypes::PredefinedTypedef_slong:     return "HelperLong";
 
-              case IEventingTypes::PredefinedTypedef_float:     return "HelperFloat";
+                case IEventingTypes::PredefinedTypedef_float:     return "HelperFloat";
 
-              case IEventingTypes::PredefinedTypedef_string:
-              case IEventingTypes::PredefinedTypedef_astring:
-              case IEventingTypes::PredefinedTypedef_wstring:   return "String";
+                case IEventingTypes::PredefinedTypedef_string:
+                case IEventingTypes::PredefinedTypedef_astring:
+                case IEventingTypes::PredefinedTypedef_wstring:   return "String";
+                default:                                          break;
               }
               auto result = getBasicCxTypeString(false, basicType);
               return fixName(result);

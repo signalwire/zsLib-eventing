@@ -1931,10 +1931,10 @@ namespace zsLib
       for (auto iter = linkedTypedefs.begin(); iter != linkedTypedefs.end(); ++iter) {
         auto typedefObj = (*iter);
         
-        for (auto iter = typedefObj->mModifiers.begin(); iter != typedefObj->mModifiers.end(); ++iter)
+        for (auto iterInner = typedefObj->mModifiers.begin(); iterInner != typedefObj->mModifiers.end(); ++iterInner)
         {
-          auto name = (*iter).first;
-          auto values = (*iter).second;
+          auto name = (*iterInner).first;
+          auto values = (*iterInner).second;
           
           if (mModifiers.end() != mModifiers.find(name)) {
             ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, modifier=") + name);

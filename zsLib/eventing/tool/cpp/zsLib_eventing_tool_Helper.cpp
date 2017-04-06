@@ -416,8 +416,8 @@ namespace zsLib
 
             if ('\\' == value) {
               ++pos;
-              auto value = Helper::decodeCEscape(pos, lineCount);
-              ss << value;
+              auto valueEsc = Helper::decodeCEscape(pos, lineCount);
+              ss << valueEsc;
               continue;
             }
 

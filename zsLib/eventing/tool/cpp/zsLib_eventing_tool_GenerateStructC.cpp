@@ -1321,7 +1321,6 @@ namespace zsLib
         {
           bool isBinary = IEventingTypes::PredefinedTypedef_binary == basicType;
           bool isString = IEventingTypes::PredefinedTypedef_string == basicType;
-          bool isSpecial = isBinary || isString;
 
           String cTypeStr = fixCType(basicType);
           String boxedTypeStr = "box_" + cTypeStr;
@@ -3639,7 +3638,6 @@ namespace zsLib
           if (!namespaceObj) return;
           if (namespaceObj->hasModifier(Modifier_Special)) return;
 
-          bool firstNamespace {true};
           for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter)
           {
             auto subNamespaceObj = (*iter).second;
@@ -3684,8 +3682,6 @@ namespace zsLib
           auto namespaceObj = context->toNamespace();
           auto structObj = context->toStruct();
           if ((!namespaceObj) && (!structObj)) return;
-
-          bool found = false;
 
           auto &enums = namespaceObj ? (namespaceObj->mEnums) : (structObj->mEnums);
           for (auto iter = enums.begin(); iter != enums.end(); ++iter)

@@ -110,6 +110,7 @@ namespace zsLib
               usingTypedef("box_string_t", "System.IntPtr");
               return;
             }
+            default: break;
           }
           usingTypedef(GenerateStructC::fixCType(type), fixCsSystemType(type));
           usingTypedef("box_" + GenerateStructC::fixCType(type), "System.IntPtr");
@@ -1440,8 +1441,6 @@ namespace zsLib
           }
 
           {
-            auto &ss = apiFile.structSS_;
-
             apiFile.endRegion("Exception API helpers");
           }
         }
@@ -1481,8 +1480,6 @@ namespace zsLib
         //---------------------------------------------------------------------
         void GenerateStructDotNet::prepareApiBoxing(ApiFile &apiFile)
         {
-          auto &indentStr = apiFile.indent_;
-
           apiFile.startRegion("Boxing API helpers");
           apiFile.startHelpersRegion("Boxing helpers");
 
@@ -1809,8 +1806,6 @@ namespace zsLib
         {
           auto &indentStr = apiFile.indent_;
 
-          bool isTime = "Time" == durationType;
-
           auto durationContext = apiFile.global_->toContext()->findType("::zs::" + durationType);
           if (!durationContext) return;
 
@@ -1898,7 +1893,6 @@ namespace zsLib
 
           bool isMap = ("map" == listOrSetStr);
           bool isList = ("list" == listOrSetStr);
-          bool isSet = ("set" == listOrSetStr);
           auto context = apiFile.global_->toContext()->findType("::std::" + listOrSetStr);
           if (!context) return;
 
@@ -2489,8 +2483,6 @@ namespace zsLib
         //---------------------------------------------------------------------
         void GenerateStructDotNet::prepareEnumFile(EnumFile &enumFile)
         {
-          auto &indentStr = enumFile.indent_;
-
           {
             auto &ss = enumFile.usingNamespaceSS_;
             ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
@@ -2545,8 +2537,8 @@ namespace zsLib
             enumFile.indentMore();
 
             bool first = true;
-            for (auto iter = enumObj->mValues.begin(); iter != enumObj->mValues.end(); ++iter) {
-              auto valueObj = (*iter);
+            for (auto iterVal = enumObj->mValues.begin(); iterVal != enumObj->mValues.end(); ++iterVal) {
+              auto valueObj = (*iterVal);
 
               if (!first) ss << ",\n";
               first = false;
@@ -2564,7 +2556,6 @@ namespace zsLib
 
           if (!namespaceObj->isGlobal()) {
             enumFile.indentLess();
-            auto &ss = enumFile.namespaceSS_;
             ss << indentStr << "} // namespace " << GenerateStructCx::fixName(namespaceObj->getMappingName()) << "\n";
             ss << "\n";
           }
@@ -2743,42 +2734,42 @@ namespace zsLib
               apiFile.usingTypedef(structObj);
               apiFile.usingTypedef("instance_id_t", "System.IntPtr");
 
-              auto &indentStr = apiFile.indent_;
+              auto &indentApiStr = apiFile.indent_;
               auto &ss = apiFile.structSS_;
               ss << "\n";
-              ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
-              ss << indentStr << "public extern static " << cTypeStr << " " << fixedTypeStr << "_wrapperClone(" << cTypeStr << " handle);\n";
+              ss << indentApiStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
+              ss << indentApiStr << "public extern static " << cTypeStr << " " << fixedTypeStr << "_wrapperClone(" << cTypeStr << " handle);\n";
               ss << "\n";
-              ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
-              ss << indentStr << "public extern static void " << fixedTypeStr << "_wrapperDestroy(" << cTypeStr << " handle);\n";
+              ss << indentApiStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
+              ss << indentApiStr << "public extern static void " << fixedTypeStr << "_wrapperDestroy(" << cTypeStr << " handle);\n";
               ss << "\n";
-              ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
-              ss << indentStr << "public extern static instance_id_t " << fixedTypeStr << "_wrapperInstanceId(" << cTypeStr << " handle);\n";
+              ss << indentApiStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
+              ss << indentApiStr << "public extern static instance_id_t " << fixedTypeStr << "_wrapperInstanceId(" << cTypeStr << " handle);\n";
               if (structFile.hasEvents_) {
                 apiFile.usingTypedef("event_observer_t", "System.IntPtr");
                 ss << "\n";
-                ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
-                ss << indentStr << "public extern static event_observer_t " << fixedTypeStr << "_wrapperObserveEvents(" << cTypeStr << " handle);\n";
+                ss << indentApiStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
+                ss << indentApiStr << "public extern static event_observer_t " << fixedTypeStr << "_wrapperObserveEvents(" << cTypeStr << " handle);\n";
               }
             }
             {
-              auto &indentStr = apiFile.indent_;
+              auto &indentApiStr = apiFile.indent_;
               auto &ss = apiFile.helpersSS_;
               ss << "\n";
-              ss << indentStr << "public static " << fixCsPathType(structObj) << " " << fixedTypeStr << "_FromC(" << cTypeStr << " handle)\n";
-              ss << indentStr << "{\n";
-              ss << indentStr << "    return " << fixCsPathType(structObj) << "." << fixedTypeStr << "_FromC(handle);\n";
-              ss << indentStr << "}\n";
+              ss << indentApiStr << "public static " << fixCsPathType(structObj) << " " << fixedTypeStr << "_FromC(" << cTypeStr << " handle)\n";
+              ss << indentApiStr << "{\n";
+              ss << indentApiStr << "    return " << fixCsPathType(structObj) << "." << fixedTypeStr << "_FromC(handle);\n";
+              ss << indentApiStr << "}\n";
               ss << "\n";
-              ss << indentStr << "public static " << fixCsPathType(structObj) << " " << fixedTypeStr << "_AdoptFromC(" << cTypeStr << " handle)\n";
-              ss << indentStr << "{\n";
-              ss << indentStr << "    return " << fixCsPathType(structObj) << "." << fixedTypeStr << "_AdoptFromC(handle);\n";
-              ss << indentStr << "}\n";
+              ss << indentApiStr << "public static " << fixCsPathType(structObj) << " " << fixedTypeStr << "_AdoptFromC(" << cTypeStr << " handle)\n";
+              ss << indentApiStr << "{\n";
+              ss << indentApiStr << "    return " << fixCsPathType(structObj) << "." << fixedTypeStr << "_AdoptFromC(handle);\n";
+              ss << indentApiStr << "}\n";
               ss << "\n";
-              ss << indentStr << "public static " << cTypeStr << " " << fixedTypeStr << "_ToC(" << fixCsPathType(structObj) << " value)\n";
-              ss << indentStr << "{\n";
-              ss << indentStr << "    return " << fixCsPathType(structObj) << "." << fixedTypeStr << "_ToC(value);\n";
-              ss << indentStr << "}\n";
+              ss << indentApiStr << "public static " << cTypeStr << " " << fixedTypeStr << "_ToC(" << fixCsPathType(structObj) << " value)\n";
+              ss << indentApiStr << "{\n";
+              ss << indentApiStr << "    return " << fixCsPathType(structObj) << "." << fixedTypeStr << "_ToC(value);\n";
+              ss << indentApiStr << "}\n";
             }
           }
 
@@ -2800,25 +2791,25 @@ namespace zsLib
                 apiFile.usingTypedef(relatedStruct);
 
                 {
-                  auto &indentStr = apiFile.indent_;
+                  auto &indentApiStr = apiFile.indent_;
                   auto &ss = apiFile.structSS_;
                   ss << "\n";
-                  ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
-                  ss << indentStr << "public extern static " << GenerateStructC::fixCType(relatedStruct) << " " << GenerateStructC::fixType(structObj) << "_wrapperCastAs_" << GenerateStructC::fixType(relatedStruct) << "(" << GenerateStructC::fixCType(structObj) << " handle);\n";
+                  ss << indentApiStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
+                  ss << indentApiStr << "public extern static " << GenerateStructC::fixCType(relatedStruct) << " " << GenerateStructC::fixType(structObj) << "_wrapperCastAs_" << GenerateStructC::fixType(relatedStruct) << "(" << GenerateStructC::fixCType(structObj) << " handle);\n";
                 }
                 {
-                  auto &indentStr = structFile.indent_;
+                  auto &indentStructStr = structFile.indent_;
                   auto &ss = relStructSS;
                   ss << "\n";
-                  ss << indentStr << "public static " << fixCsType(structObj) << " Cast(" << fixCsPathType(relatedStruct) << " value)\n";
-                  ss << indentStr << "{\n";
-                  ss << indentStr << "    if (null == value) return null;\n";
-                  ss << indentStr << "    var castHandle = " << getToCMethod(apiFile, false, relatedStruct) << "(value);\n";
-                  ss << indentStr << "    if (System.IntPtr.Zero == castHandle) return null;\n";
-                  ss << indentStr << "    var originalHandle = " << getApiPath(apiFile) << "." << GenerateStructC::fixType(structObj) << "_wrapperCastAs_" << GenerateStructC::fixType(relatedStruct) << "(castHandle);\n";
-                  ss << indentStr << "    if (System.IntPtr.Zero == originalHandle) return null;\n";
-                  ss << indentStr << "    return " << getAdoptFromCMethod(apiFile, false, structObj) << "(originalHandle);\n";
-                  ss << indentStr << "}\n";
+                  ss << indentStructStr << "public static " << fixCsType(structObj) << " Cast(" << fixCsPathType(relatedStruct) << " value)\n";
+                  ss << indentStructStr << "{\n";
+                  ss << indentStructStr << "    if (null == value) return null;\n";
+                  ss << indentStructStr << "    var castHandle = " << getToCMethod(apiFile, false, relatedStruct) << "(value);\n";
+                  ss << indentStructStr << "    if (System.IntPtr.Zero == castHandle) return null;\n";
+                  ss << indentStructStr << "    var originalHandle = " << getApiPath(apiFile) << "." << GenerateStructC::fixType(structObj) << "_wrapperCastAs_" << GenerateStructC::fixType(relatedStruct) << "(castHandle);\n";
+                  ss << indentStructStr << "    if (System.IntPtr.Zero == originalHandle) return null;\n";
+                  ss << indentStructStr << "    return " << getAdoptFromCMethod(apiFile, false, structObj) << "(originalHandle);\n";
+                  ss << indentStructStr << "}\n";
                 }
               }
 
@@ -2889,8 +2880,6 @@ namespace zsLib
                                                  )
         {
           if (!structObj) return;
-
-          auto &indentStr = structFile.indent_;
 
           if (rootStructObj == structObj) {
             for (auto iter = structObj->mStructs.begin(); iter != structObj->mStructs.end(); ++iter) {
@@ -2992,11 +2981,11 @@ namespace zsLib
           if (rootStructObj == structObj) {
             if (GenerateHelper::needsDefaultConstructor(rootStructObj)) {
               {
-                auto &indentStr = apiFile.indent_;
+                auto &indentApiStr = apiFile.indent_;
                 auto &&ss = apiFile.structSS_;
-                ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
+                ss << indentApiStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
                 apiFile.usingTypedef(rootStructObj);
-                ss << indentStr << "public extern static " << GenerateStructC::fixCType(structObj) << " " << GenerateStructC::fixType(rootStructObj) << "_wrapperCreate_" << rootStructObj->getMappingName() << "();\n";
+                ss << indentApiStr << "public extern static " << GenerateStructC::fixCType(structObj) << " " << GenerateStructC::fixType(rootStructObj) << "_wrapperCreate_" << rootStructObj->getMappingName() << "();\n";
               }
               {
                 auto &ss = structFile.structSS_;
@@ -3029,7 +3018,6 @@ namespace zsLib
 
             bool isConstructor = method->hasModifier(Modifier_Method_Ctor);
             bool isStatic = method->hasModifier(Modifier_Static);
-            bool hasThis = ((!isStatic) && (!isConstructor));
 
             bool generateInterface = (!isStatic) && (!isConstructor) && (rootStructObj == structObj) && (structFile.shouldDefineInterface_);
 
@@ -3047,7 +3035,7 @@ namespace zsLib
             }
 
             {
-              auto &indentStr = apiFile.indent_;
+              auto &indentApiStr = apiFile.indent_;
               auto &&ss = apiFile.structSS_;
 
               if (!foundDllMethod) {
@@ -3058,16 +3046,16 @@ namespace zsLib
                 foundDllMethod = true;
               }
               ss << "\n";
-              ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
+              ss << indentApiStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
               if (isConstructor) {
                 apiFile.usingTypedef(structObj);
-                ss << indentStr << "public extern static " << GenerateStructC::fixCType(structObj) << " " << GenerateStructC::fixType(rootStructObj) << "_wrapperCreate_" << altNameStr << "(";
+                ss << indentApiStr << "public extern static " << GenerateStructC::fixCType(structObj) << " " << GenerateStructC::fixType(rootStructObj) << "_wrapperCreate_" << altNameStr << "(";
               } else {
                 if (!method->hasModifier(Modifier_Optional)) {
-                  ss << getReturnMarshal(method->mResult, indentStr);
+                  ss << getReturnMarshal(method->mResult, indentApiStr);
                 }
                 apiFile.usingTypedef(method->mResult);
-                ss << indentStr << "public extern static " << GenerateStructC::fixCType(method->hasModifier(Modifier_Optional), method->mResult) << " " << GenerateStructC::fixType(rootStructObj) << "_" << altNameStr << "(";
+                ss << indentApiStr << "public extern static " << GenerateStructC::fixCType(method->hasModifier(Modifier_Optional), method->mResult) << " " << GenerateStructC::fixType(rootStructObj) << "_" << altNameStr << "(";
               }
               bool first {true};
               if (method->mThrows.size() > 0) {
@@ -3251,7 +3239,6 @@ namespace zsLib
 
           if (foundDllMethod) {
             if (rootStructObj != structObj) {
-              auto &indentStr = apiFile.indent_;
               auto &&ss = apiFile.structSS_;
               ss << "\n";
               ss << "#endif // !" << getApiCastRequiredDefine(apiFile) << "\n";
@@ -3395,7 +3382,7 @@ namespace zsLib
             }
 
             {
-              auto &indentStr = apiFile.indent_;
+              auto &indentApiStr = apiFile.indent_;
               auto &ss = apiFile.structSS_;
               if (rootStructObj != structObj) {
                 if (!foundCastRequiredDll) {
@@ -3405,22 +3392,21 @@ namespace zsLib
               }
               if (hasGet) {
                 ss << "\n";
-                ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
+                ss << indentApiStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
                 if (!propertyObj->hasModifier(Modifier_Optional)) {
-                  ss << getReturnMarshal(propertyObj->mType, indentStr);
+                  ss << getReturnMarshal(propertyObj->mType, indentApiStr);
                 }
-                ss << indentStr << "public extern static " << GenerateStructC::fixCType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " " << GenerateStructC::fixType(rootStructObj) << "_get_" << propertyObj->getMappingName() << "(" << (isStatic ? String() : String(GenerateStructC::fixCType(rootStructObj) + " thisHandle")) << ");\n";
+                ss << indentApiStr << "public extern static " << GenerateStructC::fixCType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " " << GenerateStructC::fixType(rootStructObj) << "_get_" << propertyObj->getMappingName() << "(" << (isStatic ? String() : String(GenerateStructC::fixCType(rootStructObj) + " thisHandle")) << ");\n";
               }
               if (hasSet) {
                 ss << "\n";
-                ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
-                ss << indentStr << "public extern static void " << GenerateStructC::fixType(rootStructObj) << "_set_" << propertyObj->getMappingName() << "(" << (isStatic ? String() : String(GenerateStructC::fixCType(rootStructObj) + " thisHandle, ")) << (propertyObj->hasModifier(Modifier_Optional) ? String() : getParamMarshal(propertyObj->mType)) << GenerateStructC::fixCType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " value);\n";
+                ss << indentApiStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
+                ss << indentApiStr << "public extern static void " << GenerateStructC::fixType(rootStructObj) << "_set_" << propertyObj->getMappingName() << "(" << (isStatic ? String() : String(GenerateStructC::fixCType(rootStructObj) + " thisHandle, ")) << (propertyObj->hasModifier(Modifier_Optional) ? String() : getParamMarshal(propertyObj->mType)) << GenerateStructC::fixCType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << " value);\n";
               }
             }
 
           }
           if (foundCastRequiredDll) {
-            auto &indentStr = apiFile.indent_;
             auto &ss = apiFile.structSS_;
             ss << "#endif // !" << getApiCastRequiredDefine(apiFile) << "\n";
           }

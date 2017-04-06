@@ -1652,8 +1652,8 @@ namespace zsLib
             auto property = Property::create(context);
             fillContext(property);
             property->mName = argumentNameToken->mToken;
-            TypedefTypePtr createdTypedef;
-            property->mType = findTypeOrCreateTypedef(method, argumentTypeTokens, createdTypedef);
+            TypedefTypePtr createdTypedefIgnored;
+            property->mType = findTypeOrCreateTypedef(method, argumentTypeTokens, createdTypedefIgnored);
             if (!property->mType) {
               ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " did not find valid method argument type");
             }
@@ -1681,11 +1681,11 @@ namespace zsLib
             {
               if (parseComma()) continue;
 
-              TokenList typeTokens;
-              extractToComma(what, typeTokens);
+              TokenList throwsTypeTokens;
+              extractToComma(what, throwsTypeTokens);
 
-              TypedefTypePtr createdTypedef;
-              auto type = findTypeOrCreateTypedef(context, typeTokens, createdTypedef);
+              TypedefTypePtr createdTypedefIgnored;
+              auto type = findTypeOrCreateTypedef(context, throwsTypeTokens, createdTypedefIgnored);
               method->mThrows.push_back(type);
             }
 
@@ -1784,11 +1784,11 @@ namespace zsLib
 
                   pushTokens(paramTokens);
                   while (hasMoreTokens()) {
-                    auto token = extractNextToken(what);
+                    auto nextToken = extractNextToken(what);
                     if (added) {
                       value << " ";
                     }
-                    value << token->mToken;
+                    value << nextToken->mToken;
                     added = true;
                   }
                   popTokens();  // paramTokens

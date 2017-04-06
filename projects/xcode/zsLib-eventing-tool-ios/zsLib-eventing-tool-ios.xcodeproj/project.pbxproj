@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		001E92081E5EB3D400980069 /* zsLib_eventing_tool_CommandLine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91FC1E5EB3D400980069 /* zsLib_eventing_tool_CommandLine.cpp */; };
-		001E92091E5EB3D400980069 /* zsLib_eventing_tool_EventingCompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91FD1E5EB3D400980069 /* zsLib_eventing_tool_EventingCompiler.cpp */; };
+		001E92091E5EB3D400980069 /* zsLib_eventing_tool_EventingCompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91FD1E5EB3D400980069 /* zsLib_eventing_tool_EventingCompiler.cpp */; settings = {COMPILER_FLAGS = "-Wno-documentation"; }; };
 		001E920A1E5EB3D400980069 /* zsLib_eventing_tool_GenerateHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91FE1E5EB3D400980069 /* zsLib_eventing_tool_GenerateHelper.cpp */; };
 		001E920B1E5EB3D400980069 /* zsLib_eventing_tool_GenerateStructCx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91FF1E5EB3D400980069 /* zsLib_eventing_tool_GenerateStructCx.cpp */; };
 		001E920C1E5EB3D400980069 /* zsLib_eventing_tool_GenerateStructHeader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E92001E5EB3D400980069 /* zsLib_eventing_tool_GenerateStructHeader.cpp */; };
@@ -285,14 +285,17 @@
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_SHADOW = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
@@ -336,13 +339,16 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"NDEBUG=1",
 					"$(inherited)",
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_SHADOW = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
