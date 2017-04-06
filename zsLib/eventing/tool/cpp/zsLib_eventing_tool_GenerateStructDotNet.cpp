@@ -970,10 +970,10 @@ namespace zsLib
             ss << indentStr << "{\n";
             apiFile.indentMore();
             ss << "#if __TVOS__ && __UNIFIED__\n";
-            ss << indentStr << "private const string UseDynamicLib = \"@rpath/" << libNameStr << ".framework/libSkiaSharp\";\n";
+            ss << indentStr << "private const string UseDynamicLib = \"@rpath/" << libNameStr << ".framework/" << libNameStr << "\";\n";
             ss << indentStr << "private const CallingConvention UseCallingConvention = CallingConvention.Cdecl;\n";
             ss << "#elif __IOS__ && __UNIFIED__\n";
-            ss << indentStr << "private const string UseDynamicLib = \"@rpath/" << libNameStr << ".framework/libSkiaSharp\";\n";
+            ss << indentStr << "private const string UseDynamicLib = \"@rpath/" << libNameStr << ".framework/" << libNameStr << "\";\n";
             ss << indentStr << "private const CallingConvention UseCallingConvention = CallingConvention.Cdecl;\n";
             ss << "#elif __ANDROID__\n";
             ss << indentStr << "private const string UseDynamicLib = \"" << libNameStr << ".so\";\n";
