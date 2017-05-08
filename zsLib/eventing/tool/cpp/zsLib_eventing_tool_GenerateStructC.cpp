@@ -977,9 +977,9 @@ namespace zsLib
             ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " callback_event_wrapperDestroy(callback_event_t handle);\n";
             ss << getApiExportDefine(helperFile.global_) << " instance_id_t " << getApiCallingDefine(helperFile.global_) << " callback_event_wrapperInstanceId(callback_event_t handle);\n";
             ss << getApiExportDefine(helperFile.global_) << " event_observer_t " << getApiCallingDefine(helperFile.global_) << " callback_event_get_observer(callback_event_t handle);\n";
-            ss << getApiExportDefine(helperFile.global_) << " const char * " << getApiCallingDefine(helperFile.global_) << " callback_event_get_namespace(callback_event_t handle);\n";
-            ss << getApiExportDefine(helperFile.global_) << " const char * " << getApiCallingDefine(helperFile.global_) << " callback_event_get_class(callback_event_t handle);\n";
-            ss << getApiExportDefine(helperFile.global_) << " const char * " << getApiCallingDefine(helperFile.global_) << " callback_event_get_method(callback_event_t handle);\n";
+            ss << getApiExportDefine(helperFile.global_) << " const_char_star_t " << getApiCallingDefine(helperFile.global_) << " callback_event_get_namespace_actual(callback_event_t handle);\n";
+            ss << getApiExportDefine(helperFile.global_) << " const_char_star_t " << getApiCallingDefine(helperFile.global_) << " callback_event_get_class_actual(callback_event_t handle);\n";
+            ss << getApiExportDefine(helperFile.global_) << " const_char_star_t " << getApiCallingDefine(helperFile.global_) << " callback_event_get_method_actual(callback_event_t handle);\n";
             ss << getApiExportDefine(helperFile.global_) << " generic_handle_t " << getApiCallingDefine(helperFile.global_) << " callback_event_get_source(callback_event_t handle);\n";
             ss << getApiExportDefine(helperFile.global_) << " instance_id_t " << getApiCallingDefine(helperFile.global_) << " callback_event_get_source_instance_id(callback_event_t handle);\n";
             ss << getApiExportDefine(helperFile.global_) << " generic_handle_t " << getApiCallingDefine(helperFile.global_) << " callback_event_get_data(callback_event_t handle, int argumentIndex);\n";
@@ -1039,29 +1039,29 @@ namespace zsLib
             ss << "\n";
 
             ss << dash;
-            ss << "const char * " << getApiCallingDefine(helperFile.global_) << " callback_event_get_namespace(callback_event_t handle)\n";
+            ss << "const_char_star_t " << getApiCallingDefine(helperFile.global_) << " callback_event_get_namespace_actual(callback_event_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperCallbackEventPtr * IWrapperCallbackEventPtrRawPtr;\n";
-            ss << "  if (0 == handle) return reinterpret_cast<const char *>(NULL);\n";
-            ss << "  return (*reinterpret_cast<IWrapperCallbackEventPtrRawPtr>(handle))->getNamespace();\n";
+            ss << "  if (0 == handle) return 0;\n";
+            ss << "  return reinterpret_cast<const_char_star_t>((*reinterpret_cast<IWrapperCallbackEventPtrRawPtr>(handle))->getNamespace());\n";
             ss << "}\n";
             ss << "\n";
 
             ss << dash;
-            ss << "const char * " << getApiCallingDefine(helperFile.global_) << " callback_event_get_class(callback_event_t handle)\n";
+            ss << "const_char_star_t " << getApiCallingDefine(helperFile.global_) << " callback_event_get_class_actual(callback_event_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperCallbackEventPtr * IWrapperCallbackEventPtrRawPtr;\n";
-            ss << "  if (0 == handle) return reinterpret_cast<const char *>(NULL);\n";
-            ss << "  return (*reinterpret_cast<IWrapperCallbackEventPtrRawPtr>(handle))->getClass();\n";
+            ss << "  if (0 == handle) return 0;\n";
+            ss << "  return reinterpret_cast<const_char_star_t>((*reinterpret_cast<IWrapperCallbackEventPtrRawPtr>(handle))->getClass());\n";
             ss << "}\n";
             ss << "\n";
 
             ss << dash;
-            ss << "const char * " << getApiCallingDefine(helperFile.global_) << " callback_event_get_method(callback_event_t handle)\n";
+            ss << "const_char_star_t " << getApiCallingDefine(helperFile.global_) << " callback_event_get_method_actual(callback_event_t handle)\n";
             ss << "{\n";
             ss << "  typedef IWrapperCallbackEventPtr * IWrapperCallbackEventPtrRawPtr;\n";
-            ss << "  if (0 == handle) return reinterpret_cast<const char *>(NULL);\n";
-            ss << "  return (*reinterpret_cast<IWrapperCallbackEventPtrRawPtr>(handle))->getMethod();\n";
+            ss << "  if (0 == handle) return 0;\n";
+            ss << "  return reinterpret_cast<const_char_star_t>((*reinterpret_cast<IWrapperCallbackEventPtrRawPtr>(handle))->getMethod());\n";
             ss << "}\n";
             ss << "\n";
 
@@ -1120,7 +1120,7 @@ namespace zsLib
             ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " exception_wrapperDestroy(exception_handle_t handle);\n";
             ss << getApiExportDefine(helperFile.global_) << " instance_id_t " << getApiCallingDefine(helperFile.global_) << " exception_wrapperInstanceId(exception_handle_t handle);\n";
             ss << getApiExportDefine(helperFile.global_) << " bool " << getApiCallingDefine(helperFile.global_) << " exception_hasException(exception_handle_t handle);\n";
-            ss << getApiExportDefine(helperFile.global_) << " const char * " << getApiCallingDefine(helperFile.global_) << " exception_what(exception_handle_t handle);\n";
+            ss << getApiExportDefine(helperFile.global_) << " const_char_star_t " << getApiCallingDefine(helperFile.global_) << " exception_what_actual(exception_handle_t handle);\n";
             ss << "\n";
           }
           {
@@ -1174,13 +1174,13 @@ namespace zsLib
             ss << "\n";
 
             ss << dash;
-            ss << "const char * " << getApiCallingDefine(helperFile.global_) << " exception_what(exception_handle_t handle)\n";
+            ss << "const_char_star_t " << getApiCallingDefine(helperFile.global_) << " exception_what_actual(exception_handle_t handle)\n";
             ss << "{\n";
             ss << "  typedef ::zsLib::Exception ExceptionType;\n";
             ss << "  typedef shared_ptr<ExceptionType> ExceptionTypePtr;\n";
             ss << "  typedef ExceptionTypePtr * ExceptionTypePtrRawPtr;\n";
-            ss << "  if (0 == handle) return static_cast<const char *>(NULL);\n";
-            ss << "  return (*reinterpret_cast<ExceptionTypePtrRawPtr>(handle))->what();\n";
+            ss << "  if (0 == handle) return 0;\n";
+            ss << "  return reinterpret_cast<const_char_star_t>((*reinterpret_cast<ExceptionTypePtrRawPtr>(handle))->what());\n";
             ss << "}\n";
             ss << "\n";
           }
@@ -1713,7 +1713,7 @@ namespace zsLib
               ss << getApiExportDefine(helperFile.global_) << " string_t " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperCreate_stringWithValue(const char *value);\n";
               ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperDestroy(string_t handle);\n";
               ss << getApiExportDefine(helperFile.global_) << " instance_id_t " << getApiCallingDefine(helperFile.global_) << " string_t_wrapperInstanceId(string_t handle);\n";
-              ss << getApiExportDefine(helperFile.global_) << " const char * " << getApiCallingDefine(helperFile.global_) << " string_t_get_value(string_t handle);\n";
+              ss << getApiExportDefine(helperFile.global_) << " const_char_star_t " << getApiCallingDefine(helperFile.global_) << " string_t_get_value_actual(string_t handle);\n";
               ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " string_t_set_value(string_t handle, const char *value);\n";
               ss << "\n";
             }
@@ -1758,10 +1758,10 @@ namespace zsLib
               ss << "\n";
 
               ss << dash;
-              ss << "const char * " << getApiCallingDefine(helperFile.global_) << " string_t_get_value(string_t handle)\n";
+              ss << "const_char_star_t " << getApiCallingDefine(helperFile.global_) << " string_t_get_value_actual(string_t handle)\n";
               ss << "{\n";
-              ss << "  if (0 == handle) return reinterpret_cast<const char *>(NULL);\n";
-              ss << "  return (*reinterpret_cast<::zsLib::String *>(handle));\n";
+              ss << "  if (0 == handle) return 0;\n";
+              ss << "  return reinterpret_cast<const_char_star_t>((*reinterpret_cast<::zsLib::String *>(handle)).c_str());\n";
               ss << "}\n";
               ss << "\n";
 
@@ -3544,6 +3544,7 @@ namespace zsLib
           ss << "typedef uintptr_t binary_t;\n";
           ss << "typedef uint64_t binary_size_t;\n";
           ss << "typedef uintptr_t string_t;\n";
+          ss << "typedef uintptr_t const_char_star_t;\n";
           ss << "\n";
           ss << "typedef uintptr_t box_bool_t;\n";
           ss << "typedef uintptr_t box_schar_t;\n";

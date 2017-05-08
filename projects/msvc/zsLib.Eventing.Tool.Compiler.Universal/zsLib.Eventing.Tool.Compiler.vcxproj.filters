@@ -628,11 +628,6 @@
     <Page Include="MainPage.xaml" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\..\..\..\zsLib\zsLib\license.txt">
-      <Filter>zsLib</Filter>
-    </Text>
-  </ItemGroup>
-  <ItemGroup>
     <Midl Include="..\..\..\..\zsLib\zsLib\idl\std.idl">
       <Filter>zsLib\idl</Filter>
     </Midl>

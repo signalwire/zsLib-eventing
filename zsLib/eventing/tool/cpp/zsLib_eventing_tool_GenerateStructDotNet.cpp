@@ -1072,13 +1072,14 @@ namespace zsLib
           apiFile.usingTypedef("instance_id_t", "System.IntPtr");
           apiFile.usingTypedef("callback_event_t", "System.IntPtr");
           apiFile.usingTypedef("event_observer_t", "System.IntPtr");
+          apiFile.usingTypedef("const_char_star_t", "System.IntPtr");
 
           {
             auto &ss = apiFile.structSS_;
 
             apiFile.startRegion("Callback and Event API helpers");
 
-            static const char *callbackHelpers = 
+            static const char *callbackHelpers =
               "// void wrapperCallbackFunction(callback_event_t handle);\n"
               "[UnmanagedFunctionPointer(UseCallingConvention)]\n"
               "public delegate void WrapperCallbackFunction(callback_event_t handle);\n"
@@ -1099,16 +1100,28 @@ namespace zsLib
               "public extern static event_observer_t callback_event_get_observer(callback_event_t handle);\n"
               "\n"
               "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n"
-              "[return: MarshalAs(UseStringMarshal)]\n"
-              "public extern static string callback_event_get_namespace(callback_event_t handle);\n"
+              "public extern static const_char_star_t callback_event_get_namespace_actual(callback_event_t handle);\n"
+              "\n"
+              "public static string callback_event_get_namespace(callback_event_t handle)\n"
+              "{\n"
+              "    return System.Runtime.InteropServices.Marshal.PtrToStringAnsi(callback_event_get_namespace_actual(handle));\n"
+              "}\n"
               "\n"
               "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n"
-              "[return: MarshalAs(UseStringMarshal)]\n"
-              "public extern static string callback_event_get_class(callback_event_t handle);\n"
+              "public extern static const_char_star_t callback_event_get_class_actual(callback_event_t handle);\n"
+              "\n"
+              "public static string callback_event_get_class(callback_event_t handle)\n"
+              "{\n"
+              "    return System.Runtime.InteropServices.Marshal.PtrToStringAnsi(callback_event_get_class_actual(handle));\n"
+              "}\n"
               "\n"
               "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n"
-              "[return: MarshalAs(UseStringMarshal)]\n"
-              "public extern static string callback_event_get_method(callback_event_t handle);\n"
+              "public extern static const_char_star_t callback_event_get_method_actual(callback_event_t handle);\n"
+              "\n"
+              "public static string callback_event_get_method(callback_event_t handle)\n"
+              "{\n"
+              "    return System.Runtime.InteropServices.Marshal.PtrToStringAnsi(callback_event_get_method_actual(handle));\n"
+              "}\n"
               "\n"
               "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n"
               "public extern static generic_handle_t callback_event_get_source(callback_event_t handle);\n"
@@ -1380,13 +1393,14 @@ namespace zsLib
 
           apiFile.usingTypedef("exception_handle_t", "System.IntPtr");
           apiFile.usingTypedef("instance_id_t", "System.IntPtr");
+          apiFile.usingTypedef("const_char_star_t", "System.IntPtr");
 
           {
             apiFile.startRegion("Exception API helpers");
 
             auto &ss = apiFile.structSS_;
 
-            static const char *exceptionHelpers = 
+            static const char *exceptionHelpers =
               "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n"
               "public extern static exception_handle_t exception_wrapperCreate_exception();\n"
               "\n"
@@ -1401,8 +1415,12 @@ namespace zsLib
               "public extern static bool exception_hasException(exception_handle_t handle);\n"
               "\n"
               "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n"
-              "[return: MarshalAs(UseStringMarshal)]\n"
-              "public extern static string exception_what(exception_handle_t handle);\n"
+              "public extern static const_char_star_t exception_what_actual(exception_handle_t handle);\n"
+              "\n"
+              "public static string exception_what(exception_handle_t handle)\n"
+              "{\n"
+              "    return System.Runtime.InteropServices.Marshal.PtrToStringAnsi(exception_what_actual(handle));\n"
+              "}\n"
               "\n"
               ;
             GenerateHelper::insertBlob(ss, indentStr, exceptionHelpers);
@@ -1654,6 +1672,7 @@ namespace zsLib
           auto &indentStr = apiFile.indent_;
 
           apiFile.usingTypedef("string_t", "System.IntPtr");
+          apiFile.usingTypedef("const_char_star_t", "System.IntPtr");
 
           apiFile.startRegion("String API helpers");
 
@@ -1673,8 +1692,12 @@ namespace zsLib
             ss << indentStr << "public extern static instance_id_t string_t_wrapperInstanceId(string_t handle);\n";
             ss << "\n";
             ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
-            ss << indentStr << "[return: MarshalAs(UseStringMarshal)]\n";
-            ss << indentStr << "public extern static string string_t_get_value(string_t handle);\n";
+            ss << indentStr << "public extern static const_char_star_t string_t_get_value_actual(string_t handle);\n";
+            ss << "\n";
+            ss << indentStr << "public static string string_t_get_value(string_t handle)\n";
+            ss << indentStr << "{\n";
+            ss << indentStr << "    return System.Runtime.InteropServices.Marshal.PtrToStringAnsi(string_t_get_value_actual(handle));\n";
+            ss << indentStr << "}\n";
             ss << "\n";
             ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
             ss << indentStr << "public extern static void string_t_set_value(string_t handle, [MarshalAs(UseStringMarshal)] string value);\n";
