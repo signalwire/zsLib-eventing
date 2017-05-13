@@ -2005,7 +2005,7 @@ namespace zsLib
               }
               ss << "();\n";
               ss << indentStr << "    var iterHandle = " << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterBegin(handle);\n";
-              ss << indentStr << "    while (!" << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterIsEnd(handle))\n";
+              ss << indentStr << "    while (!" << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterIsEnd(iterHandle))\n";
               ss << indentStr << "    {\n";
               if (isMap) {
                 ss << indentStr << "        var cKey = " << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterKey(iterHandle);\n";
