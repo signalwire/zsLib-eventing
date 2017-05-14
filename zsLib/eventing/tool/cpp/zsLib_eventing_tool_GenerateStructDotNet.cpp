@@ -1974,7 +1974,7 @@ namespace zsLib
               ss << "\n";
               ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
               ss << indentStr << "[return: MarshalAs(UseBoolMashal)]\n";
-              ss << indentStr << "public extern static bool " << GenerateStructC::fixType(templatedStructType) << "_wrapperIterIsEnd(iterator_handle_t iterHandle);\n";
+              ss << indentStr << "public extern static bool " << GenerateStructC::fixType(templatedStructType) << "_wrapperIterIsEnd(" << GenerateStructC::fixCType(templatedStructType) << " handle, iterator_handle_t iterHandle);\n";
               if (isMap) {
                 ss << "\n";
                 ss << indentStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
@@ -2005,7 +2005,7 @@ namespace zsLib
               }
               ss << "();\n";
               ss << indentStr << "    var iterHandle = " << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterBegin(handle);\n";
-              ss << indentStr << "    while (!" << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterIsEnd(iterHandle))\n";
+              ss << indentStr << "    while (!" << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterIsEnd(handle, iterHandle))\n";
               ss << indentStr << "    {\n";
               if (isMap) {
                 ss << indentStr << "        var cKey = " << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterKey(iterHandle);\n";
@@ -2023,6 +2023,7 @@ namespace zsLib
               } else {
                 ss << indentStr << "        result.Add(csValue, null);\n";
               }
+              ss << indentStr << "        " << getApiPath(apiFile) << "." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterNext(iterHandle);\n";
 
               ss << indentStr << "    }\n";
               ss << indentStr << "    return result;\n";
