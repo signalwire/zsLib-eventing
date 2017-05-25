@@ -973,7 +973,7 @@ namespace zsLib
             ss << indentStr << "private const string UseDynamicLib = \"@rpath/" << libNameStr << ".framework/" << libNameStr << "\";\n";
             ss << indentStr << "private const CallingConvention UseCallingConvention = CallingConvention.Cdecl;\n";
             ss << "#elif __IOS__ && __UNIFIED__\n";
-            ss << indentStr << "private const string UseDynamicLib = \"@rpath/" << libNameStr << ".framework/" << libNameStr << "\";\n";
+            ss << indentStr << "private const string UseDynamicLib = \"" << libNameStr << ".dylib\";\n";
             ss << indentStr << "private const CallingConvention UseCallingConvention = CallingConvention.Cdecl;\n";
             ss << "#elif __ANDROID__\n";
             ss << indentStr << "private const string UseDynamicLib = \"" << libNameStr << ".so\";\n";
