@@ -1292,7 +1292,7 @@ namespace zsLib
               "\n"
               "    private EventManager()\n"
               "    {\n"
-              "        Wrapper.Ortc.Api.callback_wrapperInstall(HandleEvent);\n"
+              "        $APINAMESPACE$.callback_wrapperInstall(HandleEvent);\n"
               "    }\n"
               "\n"
               "    public void ObserveEvents(\n"
@@ -1347,15 +1347,16 @@ namespace zsLib
               "        foreach (Target target in targets) { target.FireEvent(methodName, handle); }\n"
               "    }\n"
               "\n"
+              "    [ObjCRuntime.MonoPInvokeCallback(typeof($APINAMESPACE$.WrapperCallbackFunction))]\n"
               "    private static void HandleEvent(callback_event_t handle)\n"
               "    {\n"
               "        if (System.IntPtr.Zero == handle) return;\n"
-              "        string namespaceName = Wrapper.Ortc.Api.callback_event_get_namespace(handle);\n"
-              "        string className = Wrapper.Ortc.Api.callback_event_get_class(handle);\n"
-              "        string methodName = Wrapper.Ortc.Api.callback_event_get_method(handle);\n"
-              "        var instanceId = Wrapper.Ortc.Api.callback_event_get_source_instance_id(handle);\n"
+              "        string namespaceName = $APINAMESPACE$.callback_event_get_namespace(handle);\n"
+              "        string className = $APINAMESPACE$.callback_event_get_class(handle);\n"
+              "        string methodName = $APINAMESPACE$.callback_event_get_method(handle);\n"
+              "        var instanceId = $APINAMESPACE$.callback_event_get_source_instance_id(handle);\n"
               "        Singleton.HandleEvent(handle, namespaceName, className, methodName, instanceId);\n"
-              "        Wrapper.Ortc.Api.callback_event_wrapperDestroy(handle);\n"
+              "        $APINAMESPACE$.callback_event_wrapperDestroy(handle);\n"
               "    }\n"
               "}\n"
               "\n"
@@ -1380,7 +1381,12 @@ namespace zsLib
               "}\n"
               ;
 
-              GenerateHelper::insertBlob(ss, indentStr, callbackHelpers);
+              String apiNamespaceStr = "Wrapper." + GenerateStructCx::fixName(apiFile.project_->getMappingName()) + ".Api";
+
+              String callbackHelpersStr(callbackHelpers);
+              callbackHelpersStr.replaceAll("$APINAMESPACE$", apiNamespaceStr);
+
+              GenerateHelper::insertBlob(ss, indentStr, callbackHelpersStr);
 
               apiFile.endHelpersRegion("Callback and Event helpers");
           }
