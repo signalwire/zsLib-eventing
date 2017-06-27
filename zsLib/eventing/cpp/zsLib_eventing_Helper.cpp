@@ -145,7 +145,7 @@ namespace zsLib
       internal::installRemoteEventingSettingsDefaults();
     }
 
-#ifdef WINRT
+#ifdef WINUWP
     //-------------------------------------------------------------------------
     void IHelper::setup(Windows::UI::Core::CoreDispatcher ^dispatcher)
     {
@@ -153,7 +153,7 @@ namespace zsLib
       internal::CryptoPPHelper::singleton();
       internal::installRemoteEventingSettingsDefaults();
     }
-#endif //WINRT
+#endif //WINUWP
 
     //-------------------------------------------------------------------------
     SecureByteBlockPtr IHelper::loadFile(const char *path) throw (StdError)

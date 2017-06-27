@@ -25,7 +25,7 @@
       <File Name="../../../../../zsLib/zsLib/cpp/zsLib_MessageQueueThreadBasic.cpp"/>
       <File Name="../../../../../zsLib/zsLib/cpp/zsLib_MessageQueueThreadPool.cpp"/>
       <File Name="../../../../../zsLib/zsLib/cpp/zsLib_MessageQueueThreadUsingBlackberryChannels.cpp"/>
-      <File Name="../../../../../zsLib/zsLib/cpp/zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWinRT.cpp"/>
+      <File Name="../../../../../zsLib/zsLib/cpp/zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWinUWP.cpp"/>
       <File Name="../../../../../zsLib/zsLib/cpp/zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWindows.cpp"/>
       <File Name="../../../../../zsLib/zsLib/cpp/zsLib_MessageQueueThreadUsingMainThreadMessageQueueForApple.cpp"/>
       <File Name="../../../../../zsLib/zsLib/cpp/zsLib_Numeric.cpp"/>
@@ -74,7 +74,7 @@
       <File Name="../../../../../zsLib/zsLib/internal/zsLib_MessageQueueThreadBasic.h"/>
       <File Name="../../../../../zsLib/zsLib/internal/zsLib_MessageQueueThreadPool.h"/>
       <File Name="../../../../../zsLib/zsLib/internal/zsLib_MessageQueueThreadUsingBlackberryChannels.h"/>
-      <File Name="../../../../../zsLib/zsLib/internal/zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWinRT.h"/>
+      <File Name="../../../../../zsLib/zsLib/internal/zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWinUWP.h"/>
       <File Name="../../../../../zsLib/zsLib/internal/zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWindows.h"/>
       <File Name="../../../../../zsLib/zsLib/internal/zsLib_MessageQueueThreadUsingMainThreadMessageQueueForApple.h"/>
       <File Name="../../../../../zsLib/zsLib/internal/zsLib_Numeric.h"/>

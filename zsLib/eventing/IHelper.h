@@ -45,9 +45,9 @@ namespace zsLib
     interaction IHelper : public zsLib::IHelper
     {
       static void setup();
-#ifdef WINRT
+#ifdef WINUWP
       static void setup(Windows::UI::Core::CoreDispatcher ^dispatcher);
-#endif //WINRT
+#endif //WINUWP
 
       static SecureByteBlockPtr loadFile(const char *path) throw (StdError);
       static void saveFile(const char *path, SecureByteBlock &buffer) throw (StdError);
