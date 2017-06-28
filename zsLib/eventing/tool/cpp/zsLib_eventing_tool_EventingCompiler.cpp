@@ -2449,13 +2449,12 @@ namespace zsLib
             {
               String getCurrentSubsystemStr;
               if ("x" == event->mSubsystem) {
-                ss << "  if (ZS_EVENTING_IS_LOGGING(" << getEventingHandleFunctionWithNamespace << ", " << keywordValue << ", " << Log::toString(event->mLevel) << ")) { \\\n";
+                ss << "  if (ZS_EVENTING_CHECK_IF_LOGGING(" << getEventingHandleFunctionWithNamespace << ", " << keywordValue << ", " << Log::toString(event->mLevel) << ")) { \\\n";
                 getCurrentSubsystemStr = "(ZS_GET_SUBSYSTEM())";
               } else {
-                ss << "  if (ZS_EVENTING_IS_SUBSYSTEM_LOGGING(" << getEventingHandleFunctionWithNamespace << ", " << keywordValue << ", xSubsystem, " << Log::toString(event->mLevel) << ")) { \\\n";
+                ss << "  if (ZS_EVENTING_CHECK_IF_SUBSYSTEM_LOGGING(" << getEventingHandleFunctionWithNamespace << ", " << keywordValue << ", xSubsystem, " << Log::toString(event->mLevel) << ")) { \\\n";
                 getCurrentSubsystemStr = "(xSubsystem)";
               }
-              
 
               size_t totalDataTypes = 0;
               size_t totalPointerTypes = 0;
@@ -2661,16 +2660,12 @@ namespace zsLib
             "\n"
             "#else /* ZS_EVENTING_NOOP */\n"
             "\n"
-            "#ifndef ZS_EVENTING_IS_SUBSYSTEM_LOGGING\n"
-            "#define ZS_EVENTING_IS_SUBSYSTEM_LOGGING(xSubsystem, xLevel)\n"
-            "#endif /* ZS_EVENTING_IS_SUBSYSTEM_LOGGING */\n"
-            "\n"
-            "#ifndef ZS_EVENTING_IS_LOGGING\n"
-            "#define ZS_EVENTING_IS_LOGGING(xLevel)\n"
-            "#endif /* ZS_EVENTING_IS_LOGGING */\n"
+            "#ifndef ZS_EVENTING_GET_CURRENT_SUBSYSTEM_NAME\n"
+            "#define ZS_EVENTING_GET_CURRENT_SUBSYSTEM_NAME()                                                            ((ZS_GET_SUBSYSTEM()).getName())\n"
+            "#endif /* ZS_EVENTING_GET_CURRENT_SUBSYSTEM_NAME */\n"
             "\n"
             "#ifndef ZS_EVENTING_GET_SUBSYSTEM_NAME\n"
-            "#define ZS_EVENTING_GET_SUBSYSTEM_NAME ((const char *)NULL)\n"
+            "#define ZS_EVENTING_GET_SUBSYSTEM_NAME(xSubsystem)                                                          ((xSubsystem).getName())\n"
             "#endif /* ZS_EVENTING_GET_SUBSYSTEM_NAME */\n"
             "\n"
             "#ifndef ZS_EVENTING_EXCLUSIVE\n"
@@ -2691,8 +2686,15 @@ namespace zsLib
             "#ifndef _WIN32\n"
             "\n"
             "#ifndef ZS_EVENTING_REGISTER\n"
-            "#define ZS_EVENTING_REGISTER(xProviderName)\n"
-            "#define ZS_EVENTING_UNREGISTER(xProviderName)\n"
+            "#define ZS_EVENTING_REGISTER(xProviderName)                               ;\n"
+            "#define ZS_EVENTING_UNREGISTER(xProviderName)                             ;\n"
+            "\n"
+            "#define ZS_EVENTING_IS_LOGGING(xLevel)                                    (::zsLib::internal::Log::returnFalse())\n"
+            "#define ZS_EVENTING_IS_LOGGING_VALUE(xLevelValue)                         (::zsLib::internal::Log::returnFalse())\n"
+            "#define ZS_EVENTING_IS_SUBSYSTEM_LOGGING(xSubsystem, xLevel)              (::zsLib::internal::Log::returnFalse())\n"
+            "\n"
+            "#define ZS_EVENTING_GET_CURRENT_SUBSYSTEM_NAME()                          ((ZS_GET_SUBSYSTEM()).getName())\n"
+            "#define ZS_EVENTING_GET_SUBSYSTEM_NAME(xSubsystem)                        ((xSubsystem).getName())\n"
             "\n";
 
           for (int index = 0; index <= 38; ++index)
@@ -2702,7 +2704,7 @@ namespace zsLib
             {
               ss << ", xType" << string(paramIndex) << ", xName" << string(paramIndex) << ", xValue" << string(paramIndex);
             }
-            ss << ")\n";
+            ss << ") ;\n";
           }
 
           ss << "\n";
@@ -2714,7 +2716,7 @@ namespace zsLib
             {
               ss << ", xType" << string(paramIndex) << "AndName" << string(paramIndex) << ", xValue" << string(paramIndex);
             }
-            ss << ")\n";
+            ss << ") ;\n";
           }
 
           ss <<
@@ -2731,6 +2733,18 @@ namespace zsLib
             "#ifndef ZS_EVENTING_REGISTER\n"
             "#define ZS_EVENTING_REGISTER(xProviderName)                                     ZS_INTERNAL_REGISTER_EVENTING_##xProviderName()\n"
             "#define ZS_EVENTING_UNREGISTER(xProviderName)                                   ZS_INTERNAL_UNREGISTER_EVENTING_##xProviderName()\n"
+            "\n"
+            "#ifndef ZS_EVENTING_IS_SUBSYSTEM_LOGGING\n"
+            "#define ZS_EVENTING_IS_SUBSYSTEM_LOGGING(xSubsystem, xLevel)                    (((xSubsystem).getEventingLevel()) >= ::zsLib::Log::xLevel)\n"
+            "#endif /* ZS_EVENTING_IS_SUBSYSTEM_LOGGING */\n"
+            "\n"
+            "#ifndef ZS_EVENTING_IS_LOGGING\n"
+            "#define ZS_EVENTING_IS_LOGGING(xLevel)                                          (((ZS_GET_SUBSYSTEM()).getEventingLevel()) >= ::zsLib::Log::xLevel)\n"
+            "#endif /* ZS_EVENTING_IS_LOGGING */\n"
+            "\n"
+            "#ifndef ZS_EVENTING_IS_LOGGING_VALUE\n"
+            "#define ZS_EVENTING_IS_LOGGING_VALUE(xLevelValue)                               (((ZS_GET_SUBSYSTEM()).getEventingLevel()) >= (xLevelValue))\n"
+            "#endif /* ZS_EVENTING_IS_LOGGING_VALUE */\n"
             "\n";
 
           for (int index = 0; index <= 38; ++index)
@@ -2768,14 +2782,6 @@ namespace zsLib
           }
 
           ss << "#endif /* ZS_EVENTING_REGISTER */\n\n";
-
-          ss <<
-            "#ifndef ZS_EVENTING_IS_LOGGING\n"
-            "#define ZS_EVENTING_IS_LOGGING(xLevel)\n"
-            "#define ZS_EVENTING_IS_SUBSYSTEM_LOGGING(xSubsystem, xLevel)\n"
-            "#define ZS_EVENTING_GET_CURRENT_SUBSYSTEM_NAME() ((const char *)NULL)\n"
-            "#define ZS_EVENTING_GET_SUBSYSTEM_NAME(xSubsystem) #xSubsystem\n"
-            "#endif /*ZS_EVENTING_IS_LOGGING */\n\n";
 
           ss << "#define ZS_INTERNAL_REGISTER_EVENTING_" << provider->mName << "() EventRegister" << provider->mName << "()\n";
           ss << "#define ZS_INTERNAL_UNREGISTER_EVENTING_" << provider->mName << "() EventUnregister" << provider->mName << "()\n\n";
