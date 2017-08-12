@@ -664,14 +664,14 @@ namespace zsLib
             if (isJSON) {
               try {
                 tool::output() << "\n[Info] Reading JSON configuration: " << fileName << "\n\n";
-                auto rootEl = UseEventingHelper::read(file);
-                if (!rootEl) {
+                auto fileRootEl = UseEventingHelper::read(file);
+                if (!fileRootEl) {
                   ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_FILE_FAILED_TO_LOAD, String("Failed to load file as JSON: ") + fileName);
                 }
                 if (!provider) {
-                  provider = Provider::create(rootEl);
+                  provider = Provider::create(fileRootEl);
                 } else {
-                  provider->parse(rootEl);
+                  provider->parse(fileRootEl);
                 }
               } catch (const InvalidContent &e) {
                 ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Failed to parse JSON configuration: " + e.message());
@@ -806,28 +806,28 @@ namespace zsLib
 
                   // map channel
                   {
-                    auto found = provider->mChannels.find(channelID);
-                    if (found == provider->mChannels.end()) {
+                    auto foundChannel = provider->mChannels.find(channelID);
+                    if (foundChannel == provider->mChannels.end()) {
                       ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Event has invalid channel: " + line);
                     }
-                    event->mChannel = (*found).second;
+                    event->mChannel = (*foundChannel).second;
                   }
 
                   // map task + task opcode
                   {
                     // map task
                     {
-                      auto found = provider->mTasks.find(taskID);
-                      if (found == provider->mTasks.end()) {
+                      auto foundTask = provider->mTasks.find(taskID);
+                      if (foundTask == provider->mTasks.end()) {
                         ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Event has invalid task: " + line);
                       }
-                      event->mTask = (*found).second;
+                      event->mTask = (*foundTask).second;
                     }
                     // map task opcode (if revelant)
                     {
-                      auto found = event->mTask->mOpCodes.find(opCode);
-                      if (found != event->mTask->mOpCodes.end()) {
-                        event->mOpCode = (*found).second;
+                      auto foundOpCode = event->mTask->mOpCodes.find(opCode);
+                      if (foundOpCode != event->mTask->mOpCodes.end()) {
+                        event->mOpCode = (*foundOpCode).second;
                       }
                     }
                   }
@@ -837,12 +837,12 @@ namespace zsLib
                     for (auto iterKeywords = keywordIDs.begin(); iterKeywords != keywordIDs.end(); ++iterKeywords)
                     {
                       auto &keywordID = (*iterKeywords);
-                      auto found = provider->mKeywords.find(keywordID);
-                      if (found == provider->mKeywords.end()) {
+                      auto foundKeyword = provider->mKeywords.find(keywordID);
+                      if (foundKeyword == provider->mKeywords.end()) {
                         ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Event has invalid keywords: " + line);
                       }
 
-                      auto keyword = (*found).second;
+                      auto keyword = (*foundKeyword).second;
                       event->mKeywords[keyword->mName] = keyword;
                     }
                   }
@@ -850,8 +850,8 @@ namespace zsLib
                   // map opcode
                   if (!event->mOpCode)
                   {
-                    auto found = provider->mOpCodes.find(opCode);
-                    if (found == provider->mOpCodes.end()) {
+                    auto foundOpCode = provider->mOpCodes.find(opCode);
+                    if (foundOpCode == provider->mOpCodes.end()) {
                       try {
                         auto predefinedOpCode = IEventingTypes::toPredefinedOpCode(opCode);
                         event->mOpCode = IEventingTypes::OpCode::create();
@@ -863,7 +863,7 @@ namespace zsLib
                         ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Event has invalid opCode: " + line);
                       }
                     }
-                    event->mOpCode = (*found).second;
+                    event->mOpCode = (*foundOpCode).second;
                   }
 
                 found_predefined_opcode: {}
@@ -892,9 +892,9 @@ namespace zsLib
 
                     // check if there's a typedef
                     {
-                      auto found = provider->mTypedefs.find(type);
-                      if (found != provider->mTypedefs.end()) {
-                        dataType->mType = (*found).second->mType;
+                      auto foundTypedef = provider->mTypedefs.find(type);
+                      if (foundTypedef != provider->mTypedefs.end()) {
+                        dataType->mType = (*foundTypedef).second->mType;
                       }
                       else {
                         try {
@@ -914,12 +914,12 @@ namespace zsLib
                     dataTemplateHash = dataTemplate->hash();
 
                     {
-                      auto found = provider->mDataTemplates.find(dataTemplateHash);
-                      if (found == provider->mDataTemplates.end()) {
+                      auto foundTemplate = provider->mDataTemplates.find(dataTemplateHash);
+                      if (foundTemplate == provider->mDataTemplates.end()) {
                         provider->mDataTemplates[dataTemplateHash] = dataTemplate; // remember new template
                       }
                       else {
-                        dataTemplate = (*found).second; // replace with existing template
+                        dataTemplate = (*foundTemplate).second; // replace with existing template
                       }
                     }
                   }
@@ -927,10 +927,10 @@ namespace zsLib
                   event->mDataTemplate = dataTemplate;
 
                   {
-                    auto found = provider->mEvents.find(event->mName);
-                    if (found != provider->mEvents.end()) {
+                    auto foundEvent = provider->mEvents.find(event->mName);
+                    if (foundEvent != provider->mEvents.end()) {
                       {
-                        auto existingEvent = (*found).second;
+                        auto existingEvent = (*foundEvent).second;
                         if (event->mName != existingEvent->mName) goto reject_duplicate;
                         if (event->mSeverity != existingEvent->mSeverity) goto reject_duplicate;
                         if (event->mLevel != existingEvent->mLevel) goto reject_duplicate;
@@ -1027,9 +1027,9 @@ namespace zsLib
                   prepareProvider(mConfig);
 
                   {
-                    auto found = provider->mAliases.find(args[0]);
-                    if (found != provider->mAliases.end()) {
-                      auto existingAlias = (*found).second;
+                    auto foundEvent = provider->mAliases.find(args[0]);
+                    if (foundEvent != provider->mAliases.end()) {
+                      auto existingAlias = (*foundEvent).second;
                       if (existingAlias != args[1]) {
                         ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, String("Alias has been redefined \"") + args[0] + "\" in line: " + line);
                       }
@@ -1076,9 +1076,9 @@ namespace zsLib
                   }
 
                   {
-                    auto found = provider->mChannels.find(channel->mID);
-                    if (found != provider->mChannels.end()) {
-                      auto existingChannel = (*found).second;
+                    auto foundChannel = provider->mChannels.find(channel->mID);
+                    if (foundChannel != provider->mChannels.end()) {
+                      auto existingChannel = (*foundChannel).second;
                       if ((existingChannel->mID != channel->mID) ||
                         (existingChannel->mName != channel->mName) ||
                         (existingChannel->mType != channel->mType)) {
@@ -1103,8 +1103,8 @@ namespace zsLib
                   task->mName = provider->aliasLookup(args[0]);
 
                   {
-                    auto found = provider->mTasks.find(task->mName);
-                    if (found == provider->mTasks.end()) {
+                    auto foundTask = provider->mTasks.find(task->mName);
+                    if (foundTask == provider->mTasks.end()) {
                       provider->mTasks[task->mName] = task;
                     }
                   }
@@ -1122,8 +1122,8 @@ namespace zsLib
                   keyword->mName = provider->aliasLookup(args[0]);
                   
                   {
-                    auto found = provider->mKeywords.find(keyword->mName);
-                    if (found == provider->mKeywords.end()) {
+                    auto foundKeyword = provider->mKeywords.find(keyword->mName);
+                    if (foundKeyword == provider->mKeywords.end()) {
                       provider->mKeywords[keyword->mName] = keyword;
                     }
                   }
@@ -1141,8 +1141,8 @@ namespace zsLib
                   opCode->mName = provider->aliasLookup(args[0]);
 
                   {
-                    auto found = provider->mOpCodes.find(opCode->mName);
-                    if (found == provider->mOpCodes.end()) {
+                    auto foundOpCode = provider->mOpCodes.find(opCode->mName);
+                    if (foundOpCode == provider->mOpCodes.end()) {
                       provider->mOpCodes[opCode->mName] = opCode;
                     }
                   }
@@ -1162,18 +1162,18 @@ namespace zsLib
 
                   IEventingTypes::TaskPtr task;
                   {
-                    auto found = provider->mTasks.find(taskName);
-                    if (found == provider->mTasks.end()) {
+                    auto foundTask = provider->mTasks.find(taskName);
+                    if (foundTask == provider->mTasks.end()) {
                       ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, String("Task is missing \"") + taskName + "\" in line: " + line);
                     }
-                    task = (*found).second;
+                    task = (*foundTask).second;
                   }
 
                   opCode->mTask = task;
 
                   {
-                    auto found = task->mOpCodes.find(opCode->mName);
-                    if (found == task->mOpCodes.end()) {
+                    auto foundOpCode = task->mOpCodes.find(opCode->mName);
+                    if (foundOpCode == task->mOpCodes.end()) {
                       task->mOpCodes[opCode->mName] = opCode;
                     }
                   }
@@ -1219,11 +1219,11 @@ namespace zsLib
                   prepareProvider(mConfig);
                   String eventName = provider->aliasLookup(args[0]);
                   String eventValue = provider->aliasLookup(args[1]);
-                  auto found = provider->mEvents.find(eventName);
-                  if (found == provider->mEvents.end()) {
+                  auto foundEvent = provider->mEvents.find(eventName);
+                  if (foundEvent == provider->mEvents.end()) {
                     ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Event name not found \"" + eventName + "\" in line: " + line);
                   }
-                  auto event = (*found).second;
+                  auto event = (*foundEvent).second;
                   try {
                     auto newValue = Numeric<decltype(event->mValue)>(eventValue);
                     if (0 != event->mValue) {
@@ -1255,10 +1255,10 @@ namespace zsLib
                     ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Invalid level \"" + subsystemLevel + "\" in line: " + line);
                   }
 
-                  auto found = provider->mSubsystems.find(subsystemName);
-                  if (found != provider->mSubsystems.end()) {
+                  auto foundSubsystem = provider->mSubsystems.find(subsystemName);
+                  if (foundSubsystem != provider->mSubsystems.end()) {
                     auto hash1 = subsystem->hash();
-                    auto hash2 = (*found).second->hash();
+                    auto hash2 = (*foundSubsystem).second->hash();
                     if (hash1 != hash2) {
                       tool::output() << "[Warning] Subsystem default level has changed \"" << subsystem->mName << "\" and new level is \"" << zsLib::Log::toString(subsystem->mLevel) << "\"\n";
                     }
@@ -2005,7 +2005,7 @@ namespace zsLib
           {
             addEOL(profilesEl);
             //<EventCollector Id="EventCollector_zsLib_Verbose" Name="zsLib Event Collector" Private="false" ProcessPrivate="false" Secure="false" Realtime="false">
-            //  <BufferSize Value="1024"/>
+            //  <BufferSize Value="2048"/>
             //  <Buffers Value="40"/>
             //</EventCollector>
             {
@@ -2019,13 +2019,13 @@ namespace zsLib
               addEOL(eventCollectorEl);
               {
                 ElementPtr bufferSizeEl = Element::create("BufferSize");
-                bufferSizeEl->setAttribute("Value", "1024");
+                bufferSizeEl->setAttribute("Value", "2048");
                 eventCollectorEl->adoptAsLastChild(bufferSizeEl);
                 addEOL(eventCollectorEl);
               }
               {
                 ElementPtr bufferEl = Element::create("Buffers");
-                bufferEl->setAttribute("Value", "1024");
+                bufferEl->setAttribute("Value", "2048");
                 eventCollectorEl->adoptAsLastChild(bufferEl);
                 addEOL(eventCollectorEl);
               }
@@ -2449,13 +2449,12 @@ namespace zsLib
             {
               String getCurrentSubsystemStr;
               if ("x" == event->mSubsystem) {
-                ss << "  if (ZS_EVENTING_IS_LOGGING(" << getEventingHandleFunctionWithNamespace << ", " << keywordValue << ", " << Log::toString(event->mLevel) << ")) { \\\n";
+                ss << "  if (ZS_EVENTING_CHECK_IF_LOGGING(" << getEventingHandleFunctionWithNamespace << ", " << keywordValue << ", " << Log::toString(event->mLevel) << ")) { \\\n";
                 getCurrentSubsystemStr = "(ZS_GET_SUBSYSTEM())";
               } else {
-                ss << "  if (ZS_EVENTING_IS_SUBSYSTEM_LOGGING(" << getEventingHandleFunctionWithNamespace << ", " << keywordValue << ", xSubsystem, " << Log::toString(event->mLevel) << ")) { \\\n";
+                ss << "  if (ZS_EVENTING_CHECK_IF_SUBSYSTEM_LOGGING(" << getEventingHandleFunctionWithNamespace << ", " << keywordValue << ", xSubsystem, " << Log::toString(event->mLevel) << ")) { \\\n";
                 getCurrentSubsystemStr = "(xSubsystem)";
               }
-              
 
               size_t totalDataTypes = 0;
               size_t totalPointerTypes = 0;
@@ -2481,7 +2480,7 @@ namespace zsLib
 #define ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES (3)
               
               ss << "    ::zsLib::eventing::USE_EVENT_DATA_DESCRIPTOR xxDescriptors[" << string(ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES+totalTypes) << "]; \\\n";
-              ss << "    size_t xxLineNumber = __LINE__; \\\n";
+              ss << "    uint32_t xxLineNumber = __LINE__; \\\n";
               ss << "    \\\n";
               ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_ASTR(&(xxDescriptors[0]), " << getCurrentSubsystemStr << ".getName()); \\\n";
               ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_ASTR(&(xxDescriptors[1]), __func__); \\\n";
@@ -2576,7 +2575,7 @@ namespace zsLib
                       String oldValueStrPlus1 = "(xValue" + string(loop+1) + ")";
                       
                       ss << "    auto " << newValueStr << " = " << originalValueStr << "; \\\n";
-                      ss << "    size_t " << newValueStrPlus1 << " {static_cast<size_t>" << oldValueStrPlus1 << "}; \\\n";
+                      ss << "    uint32_t " << newValueStrPlus1 << " {static_cast<uint32_t>" << oldValueStrPlus1 << "}; \\\n";
                       ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_VALUE(&(xxDescriptors[" << current << "]), &(" << newValueStrPlus1 << "), sizeof(" << newValueStrPlus1 << ")); \\\n";
                       ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_BUFFER(&(xxDescriptors[" << string(current+1) << "]), " << newValueStr << ", " << newValueStrPlus1 << "); \\\n";
 
@@ -2661,16 +2660,12 @@ namespace zsLib
             "\n"
             "#else /* ZS_EVENTING_NOOP */\n"
             "\n"
-            "#ifndef ZS_EVENTING_IS_SUBSYSTEM_LOGGING\n"
-            "#define ZS_EVENTING_IS_SUBSYSTEM_LOGGING(xSubsystem, xLevel)\n"
-            "#endif /* ZS_EVENTING_IS_SUBSYSTEM_LOGGING */\n"
-            "\n"
-            "#ifndef ZS_EVENTING_IS_LOGGING\n"
-            "#define ZS_EVENTING_IS_LOGGING(xLevel)\n"
-            "#endif /* ZS_EVENTING_IS_LOGGING */\n"
+            "#ifndef ZS_EVENTING_GET_CURRENT_SUBSYSTEM_NAME\n"
+            "#define ZS_EVENTING_GET_CURRENT_SUBSYSTEM_NAME()                                                            ((ZS_GET_SUBSYSTEM()).getName())\n"
+            "#endif /* ZS_EVENTING_GET_CURRENT_SUBSYSTEM_NAME */\n"
             "\n"
             "#ifndef ZS_EVENTING_GET_SUBSYSTEM_NAME\n"
-            "#define ZS_EVENTING_GET_SUBSYSTEM_NAME ((const char *)NULL)\n"
+            "#define ZS_EVENTING_GET_SUBSYSTEM_NAME(xSubsystem)                                                          ((xSubsystem).getName())\n"
             "#endif /* ZS_EVENTING_GET_SUBSYSTEM_NAME */\n"
             "\n"
             "#ifndef ZS_EVENTING_EXCLUSIVE\n"
@@ -2691,8 +2686,15 @@ namespace zsLib
             "#ifndef _WIN32\n"
             "\n"
             "#ifndef ZS_EVENTING_REGISTER\n"
-            "#define ZS_EVENTING_REGISTER(xProviderName)\n"
-            "#define ZS_EVENTING_UNREGISTER(xProviderName)\n"
+            "#define ZS_EVENTING_REGISTER(xProviderName)                               ;\n"
+            "#define ZS_EVENTING_UNREGISTER(xProviderName)                             ;\n"
+            "\n"
+            "#define ZS_EVENTING_IS_LOGGING(xLevel)                                    (::zsLib::internal::Log::returnFalse())\n"
+            "#define ZS_EVENTING_IS_LOGGING_VALUE(xLevelValue)                         (::zsLib::internal::Log::returnFalse())\n"
+            "#define ZS_EVENTING_IS_SUBSYSTEM_LOGGING(xSubsystem, xLevel)              (::zsLib::internal::Log::returnFalse())\n"
+            "\n"
+            "#define ZS_EVENTING_GET_CURRENT_SUBSYSTEM_NAME()                          ((ZS_GET_SUBSYSTEM()).getName())\n"
+            "#define ZS_EVENTING_GET_SUBSYSTEM_NAME(xSubsystem)                        ((xSubsystem).getName())\n"
             "\n";
 
           for (int index = 0; index <= 38; ++index)
@@ -2702,7 +2704,7 @@ namespace zsLib
             {
               ss << ", xType" << string(paramIndex) << ", xName" << string(paramIndex) << ", xValue" << string(paramIndex);
             }
-            ss << ")\n";
+            ss << ") ;\n";
           }
 
           ss << "\n";
@@ -2714,7 +2716,7 @@ namespace zsLib
             {
               ss << ", xType" << string(paramIndex) << "AndName" << string(paramIndex) << ", xValue" << string(paramIndex);
             }
-            ss << ")\n";
+            ss << ") ;\n";
           }
 
           ss <<
@@ -2731,6 +2733,18 @@ namespace zsLib
             "#ifndef ZS_EVENTING_REGISTER\n"
             "#define ZS_EVENTING_REGISTER(xProviderName)                                     ZS_INTERNAL_REGISTER_EVENTING_##xProviderName()\n"
             "#define ZS_EVENTING_UNREGISTER(xProviderName)                                   ZS_INTERNAL_UNREGISTER_EVENTING_##xProviderName()\n"
+            "\n"
+            "#ifndef ZS_EVENTING_IS_SUBSYSTEM_LOGGING\n"
+            "#define ZS_EVENTING_IS_SUBSYSTEM_LOGGING(xSubsystem, xLevel)                    (((xSubsystem).getEventingLevel()) >= ::zsLib::Log::xLevel)\n"
+            "#endif /* ZS_EVENTING_IS_SUBSYSTEM_LOGGING */\n"
+            "\n"
+            "#ifndef ZS_EVENTING_IS_LOGGING\n"
+            "#define ZS_EVENTING_IS_LOGGING(xLevel)                                          (((ZS_GET_SUBSYSTEM()).getEventingLevel()) >= ::zsLib::Log::xLevel)\n"
+            "#endif /* ZS_EVENTING_IS_LOGGING */\n"
+            "\n"
+            "#ifndef ZS_EVENTING_IS_LOGGING_VALUE\n"
+            "#define ZS_EVENTING_IS_LOGGING_VALUE(xLevelValue)                               (((ZS_GET_SUBSYSTEM()).getEventingLevel()) >= (xLevelValue))\n"
+            "#endif /* ZS_EVENTING_IS_LOGGING_VALUE */\n"
             "\n";
 
           for (int index = 0; index <= 38; ++index)
@@ -2768,14 +2782,6 @@ namespace zsLib
           }
 
           ss << "#endif /* ZS_EVENTING_REGISTER */\n\n";
-
-          ss <<
-            "#ifndef ZS_EVENTING_IS_LOGGING\n"
-            "#define ZS_EVENTING_IS_LOGGING(xLevel)\n"
-            "#define ZS_EVENTING_IS_SUBSYSTEM_LOGGING(xSubsystem, xLevel)\n"
-            "#define ZS_EVENTING_GET_CURRENT_SUBSYSTEM_NAME() ((const char *)NULL)\n"
-            "#define ZS_EVENTING_GET_SUBSYSTEM_NAME(xSubsystem) #xSubsystem\n"
-            "#endif /*ZS_EVENTING_IS_LOGGING */\n\n";
 
           ss << "#define ZS_INTERNAL_REGISTER_EVENTING_" << provider->mName << "() EventRegister" << provider->mName << "()\n";
           ss << "#define ZS_INTERNAL_UNREGISTER_EVENTING_" << provider->mName << "() EventUnregister" << provider->mName << "()\n\n";

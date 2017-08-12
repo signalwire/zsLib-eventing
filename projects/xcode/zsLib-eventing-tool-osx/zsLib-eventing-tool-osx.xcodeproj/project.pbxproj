@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		001E91E31E5EB37C00980069 /* zsLib_eventing_tool_CommandLine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91D71E5EB37C00980069 /* zsLib_eventing_tool_CommandLine.cpp */; };
-		001E91E41E5EB37C00980069 /* zsLib_eventing_tool_EventingCompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91D81E5EB37C00980069 /* zsLib_eventing_tool_EventingCompiler.cpp */; };
+		001E91E41E5EB37C00980069 /* zsLib_eventing_tool_EventingCompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91D81E5EB37C00980069 /* zsLib_eventing_tool_EventingCompiler.cpp */; settings = {COMPILER_FLAGS = "-Wno-documentation"; }; };
 		001E91E51E5EB37C00980069 /* zsLib_eventing_tool_GenerateHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91D91E5EB37C00980069 /* zsLib_eventing_tool_GenerateHelper.cpp */; };
 		001E91E61E5EB37C00980069 /* zsLib_eventing_tool_GenerateStructCx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91DA1E5EB37C00980069 /* zsLib_eventing_tool_GenerateStructCx.cpp */; };
 		001E91E71E5EB37C00980069 /* zsLib_eventing_tool_GenerateStructHeader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91DB1E5EB37C00980069 /* zsLib_eventing_tool_GenerateStructHeader.cpp */; };
@@ -19,6 +19,12 @@
 		001E91EC1E5EB37C00980069 /* zsLib_eventing_tool_IDLCompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91E01E5EB37C00980069 /* zsLib_eventing_tool_IDLCompiler.cpp */; };
 		001E91ED1E5EB37C00980069 /* zsLib_eventing_tool_Monitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91E11E5EB37C00980069 /* zsLib_eventing_tool_Monitor.cpp */; };
 		001E91EE1E5EB37C00980069 /* zsLib_eventing_tool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91E21E5EB37C00980069 /* zsLib_eventing_tool.cpp */; };
+		0057799F1E96826A004B0E53 /* zsLib_eventing_tool_GenerateJson.h in Headers */ = {isa = PBXBuildFile; fileRef = 0057799C1E96826A004B0E53 /* zsLib_eventing_tool_GenerateJson.h */; };
+		005779A01E96826A004B0E53 /* zsLib_eventing_tool_GenerateStructC.h in Headers */ = {isa = PBXBuildFile; fileRef = 0057799D1E96826A004B0E53 /* zsLib_eventing_tool_GenerateStructC.h */; };
+		005779A11E96826A004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.h in Headers */ = {isa = PBXBuildFile; fileRef = 0057799E1E96826A004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.h */; };
+		005779A51E968278004B0E53 /* zsLib_eventing_tool_GenerateJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005779A21E968278004B0E53 /* zsLib_eventing_tool_GenerateJson.cpp */; };
+		005779A61E968278004B0E53 /* zsLib_eventing_tool_GenerateStructC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005779A31E968278004B0E53 /* zsLib_eventing_tool_GenerateStructC.cpp */; };
+		005779A71E968278004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005779A41E968278004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,6 +53,12 @@
 		001E91F91E5EB3B600980069 /* zsLib_eventing_tool_IDLCompiler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_tool_IDLCompiler.h; sourceTree = "<group>"; };
 		001E91FA1E5EB3B600980069 /* zsLib_eventing_tool_Monitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_tool_Monitor.h; sourceTree = "<group>"; };
 		001E91FB1E5EB3B600980069 /* zsLib_eventing_tool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_tool.h; sourceTree = "<group>"; };
+		0057799C1E96826A004B0E53 /* zsLib_eventing_tool_GenerateJson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_tool_GenerateJson.h; sourceTree = "<group>"; };
+		0057799D1E96826A004B0E53 /* zsLib_eventing_tool_GenerateStructC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_tool_GenerateStructC.h; sourceTree = "<group>"; };
+		0057799E1E96826A004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_tool_GenerateStructDotNet.h; sourceTree = "<group>"; };
+		005779A21E968278004B0E53 /* zsLib_eventing_tool_GenerateJson.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zsLib_eventing_tool_GenerateJson.cpp; sourceTree = "<group>"; };
+		005779A31E968278004B0E53 /* zsLib_eventing_tool_GenerateStructC.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zsLib_eventing_tool_GenerateStructC.cpp; sourceTree = "<group>"; };
+		005779A41E968278004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zsLib_eventing_tool_GenerateStructDotNet.cpp; sourceTree = "<group>"; };
 		008697BB1DE3F1E9009D669C /* libzsLib-eventing-tool-osx.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libzsLib-eventing-tool-osx.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		008697DE1DE3F20A009D669C /* ICommandLine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ICommandLine.h; sourceTree = "<group>"; };
 		008697DF1DE3F20A009D669C /* ICompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ICompiler.h; sourceTree = "<group>"; };
@@ -119,7 +131,10 @@
 				001E91D71E5EB37C00980069 /* zsLib_eventing_tool_CommandLine.cpp */,
 				001E91D81E5EB37C00980069 /* zsLib_eventing_tool_EventingCompiler.cpp */,
 				001E91D91E5EB37C00980069 /* zsLib_eventing_tool_GenerateHelper.cpp */,
+				005779A21E968278004B0E53 /* zsLib_eventing_tool_GenerateJson.cpp */,
+				005779A31E968278004B0E53 /* zsLib_eventing_tool_GenerateStructC.cpp */,
 				001E91DA1E5EB37C00980069 /* zsLib_eventing_tool_GenerateStructCx.cpp */,
+				005779A41E968278004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.cpp */,
 				001E91DB1E5EB37C00980069 /* zsLib_eventing_tool_GenerateStructHeader.cpp */,
 				001E91DC1E5EB37C00980069 /* zsLib_eventing_tool_GenerateStructImpHeader.cpp */,
 				001E91DD1E5EB37C00980069 /* zsLib_eventing_tool_GenerateStructImplCpp.cpp */,
@@ -139,7 +154,10 @@
 				001E91F01E5EB3B600980069 /* zsLib_eventing_tool_CommandLine.h */,
 				001E91F11E5EB3B600980069 /* zsLib_eventing_tool_EventingCompiler.h */,
 				001E91F21E5EB3B600980069 /* zsLib_eventing_tool_GenerateHelper.h */,
+				0057799C1E96826A004B0E53 /* zsLib_eventing_tool_GenerateJson.h */,
+				0057799D1E96826A004B0E53 /* zsLib_eventing_tool_GenerateStructC.h */,
 				001E91F31E5EB3B600980069 /* zsLib_eventing_tool_GenerateStructCx.h */,
+				0057799E1E96826A004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.h */,
 				001E91F41E5EB3B600980069 /* zsLib_eventing_tool_GenerateStructHeader.h */,
 				001E91F51E5EB3B600980069 /* zsLib_eventing_tool_GenerateStructImplCpp.h */,
 				001E91F61E5EB3B600980069 /* zsLib_eventing_tool_GenerateStructImplHeader.h */,
@@ -159,6 +177,9 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				005779A11E96826A004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.h in Headers */,
+				0057799F1E96826A004B0E53 /* zsLib_eventing_tool_GenerateJson.h in Headers */,
+				005779A01E96826A004B0E53 /* zsLib_eventing_tool_GenerateStructC.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -223,11 +244,14 @@
 				001E91E91E5EB37C00980069 /* zsLib_eventing_tool_GenerateStructImplCpp.cpp in Sources */,
 				001E91E51E5EB37C00980069 /* zsLib_eventing_tool_GenerateHelper.cpp in Sources */,
 				001E91E31E5EB37C00980069 /* zsLib_eventing_tool_CommandLine.cpp in Sources */,
+				005779A71E968278004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.cpp in Sources */,
 				001E91EE1E5EB37C00980069 /* zsLib_eventing_tool.cpp in Sources */,
 				001E91EA1E5EB37C00980069 /* zsLib_eventing_tool_GenerateTypesHeader.cpp in Sources */,
 				001E91ED1E5EB37C00980069 /* zsLib_eventing_tool_Monitor.cpp in Sources */,
 				001E91E41E5EB37C00980069 /* zsLib_eventing_tool_EventingCompiler.cpp in Sources */,
+				005779A51E968278004B0E53 /* zsLib_eventing_tool_GenerateJson.cpp in Sources */,
 				001E91E61E5EB37C00980069 /* zsLib_eventing_tool_GenerateStructCx.cpp in Sources */,
+				005779A61E968278004B0E53 /* zsLib_eventing_tool_GenerateStructC.cpp in Sources */,
 				001E91E71E5EB37C00980069 /* zsLib_eventing_tool_GenerateStructHeader.cpp in Sources */,
 				001E91EB1E5EB37C00980069 /* zsLib_eventing_tool_Helper.cpp in Sources */,
 				001E91EC1E5EB37C00980069 /* zsLib_eventing_tool_IDLCompiler.cpp in Sources */,
@@ -265,14 +289,17 @@
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_SHADOW = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
@@ -316,9 +343,12 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_SHADOW = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;

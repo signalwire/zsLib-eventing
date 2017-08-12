@@ -590,6 +590,8 @@ namespace zsLib
 
         virtual StructPtr toStruct() const override {return ZS_DYNAMIC_PTR_CAST(Struct, toContext());}
 
+        bool hasExistingNonForwardedData() const;
+
         StructPtr getRootStruct() const;
       };
 
@@ -683,6 +685,7 @@ namespace zsLib
         virtual void resolveTypedefs() throw (InvalidContent) override;
 
         String calculateTemplateID() const;
+        StructPtr getParentStruct() const;
       };
 
       static void createTemplatedStructTypeForwards(

@@ -196,6 +196,33 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
+        void GenerateHelper::insertBlob(
+                                        std::stringstream &ss,
+                                        const String &indentStr,
+                                        const char *blob
+                                        )
+        {
+          if (NULL == blob) return;
+
+          bool lastWasEol {true};
+
+          const char *p = blob;
+          while ('\0' != *p)
+          {
+            if ('\n' == *p) {
+              ss << *p;
+              lastWasEol = true;
+              ++p;
+              continue;
+            }
+            if (lastWasEol) ss << indentStr;
+            lastWasEol = false;
+            ss << *p;
+            ++p;
+          }
+        }
+
+        //---------------------------------------------------------------------
         bool GenerateHelper::isBuiltInType(TypePtr type)
         {
           if (!type) return false;
@@ -276,12 +303,26 @@ namespace zsLib
           return true;
         }
 
+
+        //-------------------------------------------------------------------
+        bool GenerateHelper::hasEventHandlers(StructPtr structObj)
+        {
+          if (!structObj) return false;
+
+          for (auto iter = structObj->mMethods.begin(); iter != structObj->mMethods.end(); ++iter) {
+            auto method = (*iter);
+            if (method->hasModifier(Modifier_Method_EventHandler)) return true;
+          }
+          return false;
+        }
+
         //-------------------------------------------------------------------
         bool GenerateHelper::needsDefaultConstructor(StructPtr structObj)
         {
           if (!structObj) return false;
 
           if (structObj->hasModifier(Modifier_Static)) return false;
+          if (hasOnlyStaticMethods(structObj)) return false;
 
           for (auto iter = structObj->mMethods.begin(); iter != structObj->mMethods.end(); ++iter)
           {
@@ -303,62 +344,68 @@ namespace zsLib
         }
 
         //-------------------------------------------------------------------
+        String GenerateHelper::getBasicTypeString(IEventingTypes::PredefinedTypedefs type)
+        {
+          switch (type)
+          {
+            case PredefinedTypedef_void:        return "void";
+            case PredefinedTypedef_bool:        return "bool";
+            case PredefinedTypedef_uchar:       return "unsigned char";
+            case PredefinedTypedef_char:        return "char";
+            case PredefinedTypedef_schar:       return "signed char";
+            case PredefinedTypedef_ushort:      return "unsigned short";
+            case PredefinedTypedef_short:       return "short";
+            case PredefinedTypedef_sshort:      return "signed short";
+            case PredefinedTypedef_uint:        return "unsigned int";
+            case PredefinedTypedef_int:         return "int";
+            case PredefinedTypedef_sint:        return "signed int";
+            case PredefinedTypedef_ulong:       return "unsigned long";
+            case PredefinedTypedef_long:        return "long";
+            case PredefinedTypedef_slong:       return "signed long";
+            case PredefinedTypedef_ulonglong:   return "unsigned long long";
+            case PredefinedTypedef_longlong:    return "long long";
+            case PredefinedTypedef_slonglong:   return "signed long long";
+            case PredefinedTypedef_uint8:       return "uint8_t";
+            case PredefinedTypedef_int8:        return "int8_t";
+            case PredefinedTypedef_sint8:       return "int8_t";
+            case PredefinedTypedef_uint16:      return "uint16_t";
+            case PredefinedTypedef_int16:       return "int16_t";
+            case PredefinedTypedef_sint16:      return "int16_t";
+            case PredefinedTypedef_uint32:      return "uint32_t";
+            case PredefinedTypedef_int32:       return "int32_t";
+            case PredefinedTypedef_sint32:      return "int32_t";
+            case PredefinedTypedef_uint64:      return "uint64_t";
+            case PredefinedTypedef_int64:       return "int64_t";
+            case PredefinedTypedef_sint64:      return "int64_t";
+
+            case PredefinedTypedef_byte:        return "uint8_t";
+            case PredefinedTypedef_word:        return "uint16_t";
+            case PredefinedTypedef_dword:       return "uint32_t";
+            case PredefinedTypedef_qword:       return "uint64_t";
+
+            case PredefinedTypedef_float:       return "float";
+            case PredefinedTypedef_double:      return "double";
+            case PredefinedTypedef_ldouble:     return "long double";
+            case PredefinedTypedef_float32:     return "float";
+            case PredefinedTypedef_float64:     return "double";
+
+            case PredefinedTypedef_pointer:     return "uint64_t";
+
+            case PredefinedTypedef_binary:      return "SecureByteBlockPtr";
+            case PredefinedTypedef_size:        return "uint64_t";
+
+            case PredefinedTypedef_string:      return "String";
+            case PredefinedTypedef_astring:     return "String";
+            case PredefinedTypedef_wstring:     return "::std::wstring";
+          }
+          return String();
+        }
+
+        //-------------------------------------------------------------------
         String GenerateHelper::getBasicTypeString(BasicTypePtr type)
         {
           if (!type) return String();
-          switch (type->mBaseType)
-          {
-          case PredefinedTypedef_void:        return "void";
-          case PredefinedTypedef_bool:        return "bool";
-          case PredefinedTypedef_uchar:       return "unsigned char";
-          case PredefinedTypedef_char:        return "char";
-          case PredefinedTypedef_schar:       return "signed char";
-          case PredefinedTypedef_ushort:      return "unsigned short";
-          case PredefinedTypedef_short:       return "short";
-          case PredefinedTypedef_sshort:      return "signed short";
-          case PredefinedTypedef_uint:        return "unsigned int";
-          case PredefinedTypedef_int:         return "int";
-          case PredefinedTypedef_sint:        return "signed int";
-          case PredefinedTypedef_ulong:       return "unsigned long";
-          case PredefinedTypedef_long:        return "long";
-          case PredefinedTypedef_slong:       return "signed long";
-          case PredefinedTypedef_ulonglong:   return "unsigned long long";
-          case PredefinedTypedef_longlong:    return "long long";
-          case PredefinedTypedef_slonglong:   return "signed long long";
-          case PredefinedTypedef_uint8:       return "uint8_t";
-          case PredefinedTypedef_int8:        return "int8_t";
-          case PredefinedTypedef_sint8:       return "int8_t";
-          case PredefinedTypedef_uint16:      return "uint16_t";
-          case PredefinedTypedef_int16:       return "int16_t";
-          case PredefinedTypedef_sint16:      return "int16_t";
-          case PredefinedTypedef_uint32:      return "uint32_t";
-          case PredefinedTypedef_int32:       return "int32_t";
-          case PredefinedTypedef_sint32:      return "int32_t";
-          case PredefinedTypedef_uint64:      return "uint64_t";
-          case PredefinedTypedef_int64:       return "int64_t";
-          case PredefinedTypedef_sint64:      return "int64_t";
-
-          case PredefinedTypedef_byte:        return "uint8_t";
-          case PredefinedTypedef_word:        return "uint16_t";
-          case PredefinedTypedef_dword:       return "uint32_t";
-          case PredefinedTypedef_qword:       return "uint64_t";
-
-          case PredefinedTypedef_float:       return "float";
-          case PredefinedTypedef_double:      return "double";
-          case PredefinedTypedef_ldouble:     return "long double";
-          case PredefinedTypedef_float32:     return "float";
-          case PredefinedTypedef_float64:     return "double";
-
-          case PredefinedTypedef_pointer:     return "uint64_t";
-
-          case PredefinedTypedef_binary:      return "SecureByteBlockPtr";
-          case PredefinedTypedef_size:        return "uint64_t";
-
-          case PredefinedTypedef_string:      return "String";
-          case PredefinedTypedef_astring:     return "String";
-          case PredefinedTypedef_wstring:     return "::std::wstring";
-          }
-          return String();
+          return getBasicTypeString(type->mBaseType);
         }
 
       } // namespace internal

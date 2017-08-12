@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		005779B21E968321004B0E53 /* zsLib_eventing_IDLTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 005779B11E968321004B0E53 /* zsLib_eventing_IDLTypes.h */; };
+		005779B41E96832C004B0E53 /* zsLib_eventing_IDLTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005779B31E96832C004B0E53 /* zsLib_eventing_IDLTypes.cpp */; };
+		005779BC1E9683BD004B0E53 /* IIDLTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 005779BB1E9683BD004B0E53 /* IIDLTypes.h */; };
 		008666481DEE6E8500CBA4FD /* zsLib_eventing_RemoteEventing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008666461DEE6E8500CBA4FD /* zsLib_eventing_RemoteEventing.cpp */; };
 		008697991DE3F0BA009D669C /* zsLib_eventing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0086977C1DE3F0BA009D669C /* zsLib_eventing.cpp */; };
 		0086979A1DE3F0BA009D669C /* zsLib_eventing_EventingTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0086977D1DE3F0BA009D669C /* zsLib_eventing_EventingTypes.cpp */; };
@@ -15,6 +18,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		005779B11E968321004B0E53 /* zsLib_eventing_IDLTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_IDLTypes.h; sourceTree = "<group>"; };
+		005779B31E96832C004B0E53 /* zsLib_eventing_IDLTypes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zsLib_eventing_IDLTypes.cpp; sourceTree = "<group>"; };
+		005779BB1E9683BD004B0E53 /* IIDLTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IIDLTypes.h; sourceTree = "<group>"; };
 		008666461DEE6E8500CBA4FD /* zsLib_eventing_RemoteEventing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zsLib_eventing_RemoteEventing.cpp; sourceTree = "<group>"; };
 		0086664A1DEE6E9300CBA4FD /* zsLib_eventing_RemoteEventing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = zsLib_eventing_RemoteEventing.h; sourceTree = "<group>"; };
 		0086664C1DEE6EA500CBA4FD /* IRemoteEventing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRemoteEventing.h; sourceTree = "<group>"; };
@@ -79,6 +85,7 @@
 				008697811DE3F0BA009D669C /* IEventingTypes.h */,
 				008697821DE3F0BA009D669C /* IHasher.h */,
 				008697831DE3F0BA009D669C /* IHelper.h */,
+				005779BB1E9683BD004B0E53 /* IIDLTypes.h */,
 				0086664C1DEE6EA500CBA4FD /* IRemoteEventing.h */,
 				008697981DE3F0BA009D669C /* types.h */,
 			);
@@ -92,6 +99,7 @@
 				0086977D1DE3F0BA009D669C /* zsLib_eventing_EventingTypes.cpp */,
 				0086977E1DE3F0BA009D669C /* zsLib_eventing_Hasher.cpp */,
 				0086977F1DE3F0BA009D669C /* zsLib_eventing_Helper.cpp */,
+				005779B31E96832C004B0E53 /* zsLib_eventing_IDLTypes.cpp */,
 				008666461DEE6E8500CBA4FD /* zsLib_eventing_RemoteEventing.cpp */,
 			);
 			path = cpp;
@@ -104,6 +112,7 @@
 				008697861DE3F0BA009D669C /* zsLib_eventing_EventingTypes.h */,
 				008697871DE3F0BA009D669C /* zsLib_eventing_Hasher.h */,
 				008697881DE3F0BA009D669C /* zsLib_eventing_Helper.h */,
+				005779B11E968321004B0E53 /* zsLib_eventing_IDLTypes.h */,
 				0086664A1DEE6E9300CBA4FD /* zsLib_eventing_RemoteEventing.h */,
 			);
 			path = internal;
@@ -116,6 +125,8 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				005779BC1E9683BD004B0E53 /* IIDLTypes.h in Headers */,
+				005779B21E968321004B0E53 /* zsLib_eventing_IDLTypes.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -180,6 +191,7 @@
 				0086979C1DE3F0BA009D669C /* zsLib_eventing_Helper.cpp in Sources */,
 				0086979B1DE3F0BA009D669C /* zsLib_eventing_Hasher.cpp in Sources */,
 				0086979A1DE3F0BA009D669C /* zsLib_eventing_EventingTypes.cpp in Sources */,
+				005779B41E96832C004B0E53 /* zsLib_eventing_IDLTypes.cpp in Sources */,
 				008697991DE3F0BA009D669C /* zsLib_eventing.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -215,14 +227,17 @@
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_SHADOW = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
@@ -266,9 +281,12 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_SHADOW = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;

@@ -389,7 +389,6 @@ namespace zsLib
           std::stringstream observerSS;
           std::stringstream observerMethodsSS;
 
-          bool foundCtor = false;
           bool foundEventHandler = false;
           bool firstMethod = true;
           for (auto iterMethods = structObj->mMethods.begin(); iterMethods != structObj->mMethods.end(); ++iterMethods)
@@ -419,13 +418,36 @@ namespace zsLib
                 observerMethodsSS << indentStr << "  size_t count {};\n";
                 observerMethodsSS << indentStr << "  {\n";
                 observerMethodsSS << indentStr << "    ::zsLib::AutoLock lock(wrapper_observerLock);\n";
-                observerMethodsSS << indentStr << "    WrapperObserverWeakListPtr oldList;\n";
-                observerMethodsSS << indentStr << "    WrapperObserverWeakListPtr newList(make_shared<WrapperObserverWeakList>());\n";
-                observerMethodsSS << indentStr << "    if (observer) { newList->push_back(observer); }\n";
+                observerMethodsSS << indentStr << "    WrapperObserverWeakListPtr oldList = wrapper_observers;\n";
+                observerMethodsSS << indentStr << "    auto newList = make_shared<WrapperObserverWeakList>();\n";
+                observerMethodsSS << indentStr << "    bool changed {false};\n";
+                observerMethodsSS << indentStr << "    if (observer) { newList->push_back(observer); changed = true; }\n";
                 observerMethodsSS << indentStr << "    for (auto iter = oldList->begin(); iter != oldList->end(); ++iter) {\n";
                 observerMethodsSS << indentStr << "      WrapperObserverPtr existingObserver = (*iter).lock();\n";
-                observerMethodsSS << indentStr << "      if (observer) { newList->push_back(existingObserver); }\n";
+                observerMethodsSS << indentStr << "      if (!observer) { changed = true; continue; }\n";
+                observerMethodsSS << indentStr << "      newList->push_back(existingObserver);\n";
                 observerMethodsSS << indentStr << "    }\n";
+                observerMethodsSS << indentStr << "    if (!changed) return;\n";
+                observerMethodsSS << indentStr << "    count = newList->size();\n";
+                observerMethodsSS << indentStr << "    wrapper_observers = newList;\n";
+                observerMethodsSS << indentStr << "  }\n";
+                observerMethodsSS << indentStr << "  wrapper_onObserverCountChanged(count);\n";
+                observerMethodsSS << indentStr << "}\n";
+                observerMethodsSS << indentStr << "void wrapper_uninstallObserver(WrapperObserverPtr observer)\n";
+                observerMethodsSS << indentStr << "{\n";
+                observerMethodsSS << indentStr << "  size_t count {};\n";
+                observerMethodsSS << indentStr << "  {\n";
+                observerMethodsSS << indentStr << "    ::zsLib::AutoLock lock(wrapper_observerLock);\n";
+                observerMethodsSS << indentStr << "    WrapperObserverWeakListPtr oldList = wrapper_observers;\n";
+                observerMethodsSS << indentStr << "    auto newList = make_shared<WrapperObserverWeakList>();\n";
+                observerMethodsSS << indentStr << "    bool skipped {false};\n";
+                observerMethodsSS << indentStr << "    for (auto iter = oldList->begin(); iter != oldList->end(); ++iter) {\n";
+                observerMethodsSS << indentStr << "      WrapperObserverPtr existingObserver = (*iter).lock();\n";
+                observerMethodsSS << indentStr << "      if (!observer) {skipped = true; continue;}\n";
+                observerMethodsSS << indentStr << "      if (observer == existingObserver) {skipped = true; continue;}\n";
+                observerMethodsSS << indentStr << "      newList->push_back(existingObserver);\n";
+                observerMethodsSS << indentStr << "    }\n";
+                observerMethodsSS << indentStr << "    if (!skipped) return;\n";
                 observerMethodsSS << indentStr << "    count = newList->size();\n";
                 observerMethodsSS << indentStr << "    wrapper_observers = newList;\n";
                 observerMethodsSS << indentStr << "  }\n";
@@ -488,7 +510,6 @@ namespace zsLib
 
             if (isCtor) {
               ss << "void wrapper_init_" << getStructInitName(structObj) << "(";
-              foundCtor = true;
             } else {
               ss << getWrapperTypeString(methodObj->hasModifier(Modifier_Optional), methodObj->mResult);
               ss << " " << methodObj->mName << "(";

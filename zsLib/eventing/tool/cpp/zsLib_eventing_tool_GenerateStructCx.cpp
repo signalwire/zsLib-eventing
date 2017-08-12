@@ -967,10 +967,9 @@ namespace zsLib
           cppSS << "{\n";
           cppSS << "  ::zsLib::Time t = day_point(jan / 1 / 1601);\n";
           cppSS << "\n";
-          cppSS << "  auto nano = ::zsLib::toMilliseconds(zsLib::Nanoseconds(static_cast<::zsLib::Nanoseconds::rep>(value.UniversalTime) * static_cast<::zsLib::Nanoseconds::rep>(100)));\n";
+          cppSS << "  auto nano = std::chrono::duration_cast<::zsLib::Time::duration>(zsLib::Nanoseconds(static_cast<::zsLib::Nanoseconds::rep>(value.UniversalTime) * static_cast<::zsLib::Nanoseconds::rep>(100)));\n";
           cppSS << "\n";
-          cppSS << "  auto result = t + nano;\n";
-          cppSS << "  return zsLib::timeSinceEpoch(result);\n";
+          cppSS << "  return t + nano;\n";
           cppSS << "}\n";
           cppSS << "\n";
         }
@@ -1047,16 +1046,16 @@ namespace zsLib
                 auto templatedStruct = (*iterPromise).second;
                 if (!templatedStruct) continue;
 
-                auto foundType = templatedStruct->mTemplateArguments.begin();
-                if (foundType == templatedStruct->mTemplateArguments.end()) continue;
+                auto foundArgType = templatedStruct->mTemplateArguments.begin();
+                if (foundArgType == templatedStruct->mTemplateArguments.end()) continue;
 
-                auto resolveType = (*foundType);
+                auto resolveType = (*foundArgType);
                 if (!resolveType) continue;
 
                 TypePtr rejectType;
                 {
-                  (++foundType);
-                  if (foundType != templatedStruct->mTemplateArguments.end()) rejectType = *foundType;
+                  (++foundArgType);
+                  if (foundArgType != templatedStruct->mTemplateArguments.end()) rejectType = *foundArgType;
                 }
 
                 String promiseWithStr = "PromiseWithHolderPtr";
@@ -1144,10 +1143,10 @@ namespace zsLib
                 auto templatedStruct = (*iterRej).second;
                 if (!templatedStruct) continue;
 
-                auto foundType = templatedStruct->mTemplateArguments.begin();
-                if (foundType == templatedStruct->mTemplateArguments.end()) continue;
+                auto foundArgType = templatedStruct->mTemplateArguments.begin();
+                if (foundArgType == templatedStruct->mTemplateArguments.end()) continue;
 
-                auto rejectionType = (*foundType);
+                auto rejectionType = (*foundArgType);
                 if (!rejectionType) continue;
                 generatePromiseRejection(helperFile, indentStr, rejectionType);
               }
@@ -1372,12 +1371,10 @@ namespace zsLib
             }
           }
 
-          bool hasConstructor = false;
           bool hasEvents = false;
           for (auto iter = structObj->mMethods.begin(); iter != structObj->mMethods.end(); ++iter) {
             auto method = (*iter);
             if (method->hasModifier(Modifier_Method_EventHandler)) hasEvents = true;
-            if (method->hasModifier(Modifier_Method_Ctor)) hasConstructor = true;
           }
 
           ss << "\n";
@@ -1595,8 +1592,6 @@ namespace zsLib
             bool isToString = ("ToString" == fixName(method->mName)) && ("::string" == method->mResult->getPathName()) && (0 == method->mArguments.size());
             bool isStatic = method->hasModifier(Modifier_Static);
 
-            String delegateName;
-
             std::stringstream implSS;
 
             if (!createConstructors) {
@@ -1670,17 +1665,17 @@ namespace zsLib
               cppSS << dashedStr;
               cppSS << "void " << fixNamePath(structObj) << "::WrapperObserverImpl::" << method->mName << "(";
 
-              String delegateName = fixName(method->getModifierValue(Modifier_Method_EventHandler, 0));
-              if (!delegateName.hasData()) {
-                delegateName = fixStructName(structObj) + "_";
+              String delegateNameStr = fixName(method->getModifierValue(Modifier_Method_EventHandler, 0));
+              if (!delegateNameStr.hasData()) {
+                delegateNameStr = fixStructName(structObj) + "_";
                 if (method->hasModifier(Modifier_AltName)) {
-                  delegateName += fixName(method->getModifierValue(Modifier_AltName, 0));
+                  delegateNameStr += fixName(method->getModifierValue(Modifier_AltName, 0));
                 } else {
-                  delegateName += fixName(method->mName);
+                  delegateNameStr += fixName(method->mName);
                 }
-                delegateName += "Delegate";
+                delegateNameStr += "Delegate";
               }
-              prestructDelegateSS << structFile.mHeaderIndentStr << "public delegate void " << delegateName << "(";
+              prestructDelegateSS << structFile.mHeaderIndentStr << "public delegate void " << delegateNameStr << "(";
               if (method->mArguments.size() > 1) {
                 observerSS << "\n";
                 observerSS << indentStr << "  ";
@@ -1690,7 +1685,7 @@ namespace zsLib
                 prestructDelegateSS << structFile.mHeaderIndentStr << "  ";
               }
 
-              headerMethodsSS << indentStr << "event " << delegateName << "^ " << fixName(method->mName) << ";\n";
+              headerMethodsSS << indentStr << "event " << delegateNameStr << "^ " << fixName(method->mName) << ";\n";
             } else {
               cppSS << dashedStr;
 
@@ -1952,12 +1947,12 @@ namespace zsLib
             }
 
             TypePtr foundType = (*found);
-            ss << indentStr << "static Windows::Foundation::Collections::IVector< " << getCxType(false, foundType, true) << " >^ " << getToCxName(templatedStruct) << "(shared_ptr< std::list< " << getCppType(false, foundType) << " > > values);\n";
-            ss << indentStr << "static shared_ptr< std::list< " << getCppType(false, foundType) << "> > " << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IVector< " << getCxType(false, foundType) << " >^ values);\n";
+            ss << indentStr << "static Windows::Foundation::Collections::IVectorView< " << getCxType(false, foundType, true) << " >^ " << getToCxName(templatedStruct) << "(shared_ptr< std::list< " << getCppType(false, foundType) << " > > values);\n";
+            ss << indentStr << "static shared_ptr< std::list< " << getCppType(false, foundType) << "> > " << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IVectorView< " << getCxType(false, foundType) << " >^ values);\n";
             ss << "\n";
 
             cppSS << dashedStr;
-            cppSS << "Windows::Foundation::Collections::IVector< " << getCxType(false, foundType, true) << " >^ Internal::Helper::" << getToCxName(templatedStruct) << "(shared_ptr< std::list< " << getCppType(false, foundType) << " > > values)\n";
+            cppSS << "Windows::Foundation::Collections::IVectorView< " << getCxType(false, foundType, true) << " >^ Internal::Helper::" << getToCxName(templatedStruct) << "(shared_ptr< std::list< " << getCppType(false, foundType) << " > > values)\n";
             cppSS << "{\n";
             cppSS << "  if (!values) return nullptr;\n";
             cppSS << "  auto result = ref new Platform::Collections::Vector< " << getCxType(false, foundType) << " >();\n";
@@ -1965,12 +1960,12 @@ namespace zsLib
             cppSS << "  {\n";
             cppSS << "    result->Append(" << getToCxName(foundType) << "(*iter));\n";
             cppSS << "  }\n";
-            cppSS << "  return result;\n";
+            cppSS << "  return result->GetView();\n";
             cppSS << "}\n";
             cppSS << "\n";
 
             cppSS << dashedStr;
-            cppSS << "shared_ptr< std::list<" << getCppType(false, foundType) << "> > Internal::Helper::" << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IVector< " << getCxType(false, foundType) << " >^ values)\n";
+            cppSS << "shared_ptr< std::list<" << getCppType(false, foundType) << "> > Internal::Helper::" << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IVectorView< " << getCxType(false, foundType) << " >^ values)\n";
             cppSS << "{\n";
             cppSS << "  if (!values) return shared_ptr< std::list< " << getCppType(false, foundType) << " > >();\n";
             cppSS << "  auto result = make_shared< std::list< " << getCppType(false, foundType) << " > >();\n";
@@ -2014,12 +2009,12 @@ namespace zsLib
             }
             TypePtr valueType = (*found);
 
-            ss << indentStr << "static Windows::Foundation::Collections::IMap< " << getCxType(false, keyType, true) << ", " << getCxType(false, valueType, true)  << " >^ " << getToCxName(templatedStruct) << "(shared_ptr< std::map< " << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > > values);\n";
+            ss << indentStr << "static Windows::Foundation::Collections::IMapView< " << getCxType(false, keyType, true) << ", " << getCxType(false, valueType, true)  << " >^ " << getToCxName(templatedStruct) << "(shared_ptr< std::map< " << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > > values);\n";
             ss << indentStr << "static shared_ptr< std::map<" << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > > " << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IMap< " << getCxType(false, keyType) << ", " << getCxType(false, valueType) << " >^ values);\n";
             ss << "\n";
 
             cppSS << dashedStr;
-            cppSS << "Windows::Foundation::Collections::IMap< " << getCxType(false, keyType, true) << ", " << getCxType(false, valueType, true) << " >^ Internal::Helper::" << getToCxName(templatedStruct) << "(shared_ptr< std::map< " << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > > values)\n";
+            cppSS << "Windows::Foundation::Collections::IMapView< " << getCxType(false, keyType, true) << ", " << getCxType(false, valueType, true) << " >^ Internal::Helper::" << getToCxName(templatedStruct) << "(shared_ptr< std::map< " << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > > values)\n";
             cppSS << "{\n";
             cppSS << "  if (!values) return nullptr;\n";
             cppSS << "  auto result = ref new Platform::Collections::Map< " << getCxType(false, keyType) << ", " << getCxType(false, valueType)  << " >();\n";
@@ -2027,12 +2022,12 @@ namespace zsLib
             cppSS << "  {\n";
             cppSS << "    result->Insert(" << getToCxName(keyType) << "((*iter).first), " << getToCxName(valueType) << "((*iter).second));\n";
             cppSS << "  }\n";
-            cppSS << "  return result;\n";
+            cppSS << "  return result->GetView();\n";
             cppSS << "}\n";
             cppSS << "\n";
 
             cppSS << dashedStr;
-            cppSS << "shared_ptr< std::map<" << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > > Internal::Helper::" << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IMap< " << getCxType(false, keyType) << ", " << getCxType(false, valueType) << " >^ values)\n";
+            cppSS << "shared_ptr< std::map<" << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > > Internal::Helper::" << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IMapView< " << getCxType(false, keyType) << ", " << getCxType(false, valueType) << " >^ values)\n";
             cppSS << "{\n";
             cppSS << "  if (!values) return shared_ptr< std::map< " << getCppType(false, keyType) << ", " << getCppType(false, valueType) << " > >();\n";
             cppSS << "  auto result = make_shared< std::map<" << getCppType(false, keyType) << ", " << getCppType(false, valueType) << "> >();\n";
@@ -2070,12 +2065,12 @@ namespace zsLib
 
             TypePtr keyType = (*found);
 
-            ss << indentStr << "static Windows::Foundation::Collections::IMap< " << getCxType(false, keyType, true) << ", Platform::Object^ >^ " << getToCxName(templatedStruct) << "(shared_ptr< std::set< " << getCppType(false, keyType) << " > > values);\n";
-            ss << indentStr << "static shared_ptr< std::set< " << getCppType(false, keyType) << " > > " << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IMap< " << getCxType(false, keyType) << ", Platform::Object^ >^ values);\n";
+            ss << indentStr << "static Windows::Foundation::Collections::IMapView< " << getCxType(false, keyType, true) << ", Platform::Object^ >^ " << getToCxName(templatedStruct) << "(shared_ptr< std::set< " << getCppType(false, keyType) << " > > values);\n";
+            ss << indentStr << "static shared_ptr< std::set< " << getCppType(false, keyType) << " > > " << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IMapView< " << getCxType(false, keyType) << ", Platform::Object^ >^ values);\n";
             ss << "\n";
 
             cppSS << dashedStr;
-            cppSS << "Windows::Foundation::Collections::IMap< " << getCxType(false, keyType, true) << ", Platform::Object^ >^ Internal::Helper::" << getToCxName(templatedStruct) << "(shared_ptr< std::set< " << getCppType(false, keyType) << " > > values)\n";
+            cppSS << "Windows::Foundation::Collections::IMapView< " << getCxType(false, keyType, true) << ", Platform::Object^ >^ Internal::Helper::" << getToCxName(templatedStruct) << "(shared_ptr< std::set< " << getCppType(false, keyType) << " > > values)\n";
             cppSS << "{\n";
             cppSS << "  if (!values) return nullptr;\n";
             cppSS << "  auto result = ref new Platform::Collections::Map< " << getCxType(false, keyType) << ", Platform::Object^ >();\n";
@@ -2083,12 +2078,12 @@ namespace zsLib
             cppSS << "  {\n";
             cppSS << "    result->Insert(" << getToCxName(keyType) << "(*iter), nullptr);\n";
             cppSS << "  }\n";
-            cppSS << "  return result;\n";
+            cppSS << "  return result->GetView();\n";
             cppSS << "}\n";
             cppSS << "\n";
 
             cppSS << dashedStr;
-            cppSS << "shared_ptr< std::set< " << getCppType(false, keyType) << " > > Internal::Helper::" << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IMap< " << getCxType(false, keyType) << ", Platform::Object^ >^ values)\n";
+            cppSS << "shared_ptr< std::set< " << getCppType(false, keyType) << " > > Internal::Helper::" << getFromCxName(templatedStruct) << "(Windows::Foundation::Collections::IMapView< " << getCxType(false, keyType) << ", Platform::Object^ >^ values)\n";
             cppSS << "{\n";
             cppSS << "  if (!values) return shared_ptr< std::set< " << getCppType(false, keyType) << " > >();\n";
             cppSS << "  auto result = make_shared< std::set<" << getCppType(false, keyType) << "> >();\n";
@@ -2249,20 +2244,17 @@ namespace zsLib
               String specialTemplatePost;
 
               {
-                auto parent = type->getParent();
-                if (parent) {
-                  auto parentStruct = parent->toStruct();
-                  if (parentStruct) {
-                    if (parentStruct->hasModifier(Modifier_Special)) {
-                      specialName = parentStruct->getPathName();
-                      if ("::std::set" == specialName) {
-                        templatedTypeStr = "Windows::Foundation::Collections::IMap< ";
-                        specialTemplatePost = ", Platform::Object^";
-                      }
-                      if ("::std::list" == specialName) templatedTypeStr = "Windows::Foundation::Collections::IVector< ";
-                      if ("::std::map" == specialName) templatedTypeStr = "Windows::Foundation::Collections::IMap< ";
-                      if ("::zs::PromiseWith" == specialName) templatedTypeStr = "Windows::Foundation::IAsyncOperation< ";
+                auto parentStruct = templatedType->getParentStruct();
+                if (parentStruct) {
+                  if (parentStruct->hasModifier(Modifier_Special)) {
+                    specialName = parentStruct->getPathName();
+                    if ("::std::set" == specialName) {
+                      templatedTypeStr = "Windows::Foundation::Collections::IMapView< ";
+                      specialTemplatePost = ", Platform::Object^";
                     }
+                    if ("::std::list" == specialName) templatedTypeStr = "Windows::Foundation::Collections::IVectorView< ";
+                    if ("::std::map" == specialName) templatedTypeStr = "Windows::Foundation::Collections::IMapView< ";
+                    if ("::zs::PromiseWith" == specialName) templatedTypeStr = "Windows::Foundation::IAsyncOperation< ";
                   }
                 }
               }
@@ -2330,19 +2322,20 @@ namespace zsLib
             auto basicType = type->toBasicType();
             if (basicType) {
               switch (basicType->mBaseType) {
-              case IEventingTypes::PredefinedTypedef_bool:      return "Boolean";
+                case IEventingTypes::PredefinedTypedef_bool:      return "Boolean";
 
-              case IEventingTypes::PredefinedTypedef_binary:    return "Binary";
+                case IEventingTypes::PredefinedTypedef_binary:    return "Binary";
 
-              case IEventingTypes::PredefinedTypedef_ulong:     return "HelperULong";
-              case IEventingTypes::PredefinedTypedef_long:
-              case IEventingTypes::PredefinedTypedef_slong:     return "HelperLong";
+                case IEventingTypes::PredefinedTypedef_ulong:     return "HelperULong";
+                case IEventingTypes::PredefinedTypedef_long:
+                case IEventingTypes::PredefinedTypedef_slong:     return "HelperLong";
 
-              case IEventingTypes::PredefinedTypedef_float:     return "HelperFloat";
+                case IEventingTypes::PredefinedTypedef_float:     return "HelperFloat";
 
-              case IEventingTypes::PredefinedTypedef_string:
-              case IEventingTypes::PredefinedTypedef_astring:
-              case IEventingTypes::PredefinedTypedef_wstring:   return "String";
+                case IEventingTypes::PredefinedTypedef_string:
+                case IEventingTypes::PredefinedTypedef_astring:
+                case IEventingTypes::PredefinedTypedef_wstring:   return "String";
+                default:                                          break;
               }
               auto result = getBasicCxTypeString(false, basicType);
               return fixName(result);

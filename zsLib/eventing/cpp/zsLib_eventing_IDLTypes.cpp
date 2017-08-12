@@ -364,9 +364,7 @@ namespace zsLib
     //-------------------------------------------------------------------------
     IIDLTypes::ContextPtr IIDLTypes::Context::getRoot() const
     {
-      auto parent = getParent();
-      if (!parent) return ContextPtr();
-      
+      auto parent = toContext();
       while (true)
       {
         auto temp = parent->mContext.lock();
@@ -374,6 +372,7 @@ namespace zsLib
 
         parent = temp;
       }
+      return parent;
     }
 
     //-------------------------------------------------------------------------
@@ -730,6 +729,7 @@ namespace zsLib
           aliasEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("out", (*iter).second));
           aliasesEl->adoptAsLastChild(aliasEl);
         }
+        rootEl->adoptAsLastChild(aliasesEl);
       }
       
       if (mDefinedExclusives.size() > 0) {
@@ -738,6 +738,7 @@ namespace zsLib
           auto exclusiveStr = (*iter);
           exclusivesEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("exclusive", exclusiveStr));
         }
+        rootEl->adoptAsLastChild(exclusivesEl);
       }
 
       if (mGlobal) {
@@ -1779,9 +1780,9 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     IIDLTypes::TypedefTypePtr IIDLTypes::TypedefType::createForwards(
-                                                                             ContextPtr context,
-                                                                             const ElementPtr &el
-                                                                             ) throw (InvalidContent)
+                                                                     ContextPtr context,
+                                                                     const ElementPtr &el
+                                                                     ) throw (InvalidContent)
     {
       auto pThis(make_shared<TypedefType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -1930,10 +1931,10 @@ namespace zsLib
       for (auto iter = linkedTypedefs.begin(); iter != linkedTypedefs.end(); ++iter) {
         auto typedefObj = (*iter);
         
-        for (auto iter = typedefObj->mModifiers.begin(); iter != typedefObj->mModifiers.end(); ++iter)
+        for (auto iterInner = typedefObj->mModifiers.begin(); iterInner != typedefObj->mModifiers.end(); ++iterInner)
         {
-          auto name = (*iter).first;
-          auto values = (*iter).second;
+          auto name = (*iterInner).first;
+          auto values = (*iterInner).second;
           
           if (mModifiers.end() != mModifiers.find(name)) {
             ZS_THROW_CUSTOM(InvalidContent, String("Not allowed to combine these type modifiers, modifier=") + name);
@@ -2042,9 +2043,9 @@ namespace zsLib
     
     //-------------------------------------------------------------------------
     IIDLTypes::StructPtr IIDLTypes::Struct::createForwards(
-                                                                   ContextPtr context,
-                                                                   const ElementPtr &el
-                                                                   ) throw (InvalidContent)
+                                                           ContextPtr context,
+                                                           const ElementPtr &el
+                                                           ) throw (InvalidContent)
     {
       auto pThis(make_shared<Struct>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2069,6 +2070,7 @@ namespace zsLib
 
           genericsEl->adoptAsLastChild(genericType->createElement());
         }
+        rootEl->adoptAsLastChild(genericsEl);
       }
 
       if (mGenericDefaultTypes.size() > 0) {
@@ -2086,6 +2088,7 @@ namespace zsLib
           }
           templateDefaultsEl->adoptAsLastChild(templateEl);
         }
+        rootEl->adoptAsLastChild(templateDefaultsEl);
       }
 
       if (mGenerics.size() > 0) {
@@ -2095,6 +2098,7 @@ namespace zsLib
           auto templatedStruct = (*iter).second;
           templateStructsEl->adoptAsLastChild(templatedStruct->createElement());
         }
+        rootEl->adoptAsLastChild(templateStructsEl);
       }
 
       if (mIsARelationships.size() > 0) {
@@ -2518,6 +2522,22 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
+    bool IIDLTypes::Struct::hasExistingNonForwardedData() const
+    {
+      if (mGenerics.size() > 0) return true;
+      if (mGenericDefaultTypes.size() > 0) return true;
+      if (mTemplatedStructs.size() > 0) return true;
+      if (mIsARelationships.size() > 0) return true;
+      if (mEnums.size() > 0) return true;
+      if (mStructs.size() > 0) return true;
+      if (mTypedefs.size() > 0) return true;
+      if (mProperties.size() > 0) return true;
+      if (mMethods.size() > 0) return true;
+
+      return false;
+    }
+
+    //-------------------------------------------------------------------------
     IIDLTypes::StructPtr IIDLTypes::Struct::getRootStruct() const
     {
       StructPtr structObj = toStruct();
@@ -2748,6 +2768,8 @@ namespace zsLib
       
       ElementPtr rootEl = Element::create(objectName);
 
+      Context::write(rootEl);
+
       if (mTemplateArguments.size() > 0) {
         ElementPtr templateArgumentsEl = Element::create("templateArguments");
 
@@ -2763,6 +2785,7 @@ namespace zsLib
           }
           templateArgumentsEl->adoptAsLastChild(templateArgumentEl);
         }
+        rootEl->adoptAsLastChild(templateArgumentsEl);
       }
 
       return rootEl;
@@ -2867,6 +2890,14 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
+    IIDLTypes::StructPtr IIDLTypes::TemplatedStructType::getParentStruct() const
+    {
+      auto parent = getParent();
+      if (!parent) return StructPtr();
+      return parent->toStruct();
+    }
+
+    //-------------------------------------------------------------------------
     void IIDLTypes::createTemplatedStructTypeForwards(
                                                       ContextPtr context,
                                                       ElementPtr templatedStructsEl,
@@ -2969,6 +3000,8 @@ namespace zsLib
       if (NULL == objectName) objectName = "property";
       
       ElementPtr rootEl = Element::create(objectName);
+
+      Context::write(rootEl);
 
       if (mDefaultValue.hasData()) {
         rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("default", mDefaultValue));
@@ -3116,6 +3149,8 @@ namespace zsLib
       
       ElementPtr rootEl = Element::create(objectName);
 
+      Context::write(rootEl);
+
       if (mResult) {
         auto resultEl = Element::create("result");
         resultEl->adoptAsLastChild(mResult->createReferenceTypeElement());
@@ -3128,6 +3163,7 @@ namespace zsLib
           auto propertyObj = (*iter);
           argumentsEl->adoptAsLastChild(propertyObj->createElement("argument"));
         }
+        rootEl->adoptAsLastChild(argumentsEl);
       }
 
       if (mThrows.size() > 0) {
@@ -3138,6 +3174,7 @@ namespace zsLib
           throwEl->adoptAsLastChild(throwObj->createReferenceTypeElement());
           throwsEl->adoptAsLastChild(throwEl);
         }
+        rootEl->adoptAsLastChild(throwsEl);
       }
 
       return rootEl;

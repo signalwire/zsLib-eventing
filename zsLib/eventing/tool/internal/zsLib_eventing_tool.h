@@ -39,6 +39,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Monitor.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateHelper.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateJson.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructCx.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplCpp.h>
