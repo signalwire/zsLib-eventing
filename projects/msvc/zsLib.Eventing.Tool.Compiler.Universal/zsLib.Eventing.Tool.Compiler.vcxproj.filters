@@ -250,6 +250,9 @@
     <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_IDLTypes.cpp">
       <Filter>zsLib\eventing\cpp</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_RangeSelection.cpp">
+      <Filter>zsLib\cpp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -521,6 +524,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\zsLib\eventing\IIDLTypes.h">
       <Filter>zsLib\eventing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_RangeSelection.h">
+      <Filter>zsLib\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\RangeSelection.h">
+      <Filter>zsLib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

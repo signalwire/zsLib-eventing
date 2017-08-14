@@ -41,6 +41,11 @@ either expressed or implied, of the FreeBSD Project.
 #include <cryptopp/base64.h>
 #include <cryptopp/osrng.h>
 
+#include <zsLib/SafeInt.h>
+
+#ifdef max
+#undef max
+#endif //max
 
 namespace zsLib { namespace eventing { ZS_DECLARE_SUBSYSTEM(zsLib_eventing); } }
 
@@ -331,19 +336,22 @@ namespace zsLib
     //-------------------------------------------------------------------------
     size_t IHelper::random(size_t minValue, size_t maxValue)
     {
-      ZS_THROW_INVALID_ARGUMENT_IF(minValue > maxValue)
-        if (minValue == maxValue) return minValue;
+      ZS_THROW_INVALID_ARGUMENT_IF(minValue > maxValue);
 
-      auto range = (maxValue - minValue) + 1;
+      if (minValue == maxValue) return minValue;
+
+      // warning: this only works on unsigned types
+      uint64_t range = SafeInt<decltype(range)>(maxValue - minValue);
+      if (range < std::numeric_limits<decltype(maxValue)>::max()) {
+        ++range;
+      }
 
       decltype(range) value = 0;
 
       AutoSeededRandomPool rng;
       rng.GenerateBlock((BYTE *)&value, sizeof(value));
 
-      value = minValue + (value % range);
-
-      return value;
+      return minValue + SafeInt<decltype(maxValue)>(value % range);
     }
 
 
