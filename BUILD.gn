@@ -2,230 +2,34 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-config("zslib_eventing_config") {
-    if  (is_win) {
-        cflags_cc = [ 
-            "/WX-",
-            "/wd4068",
-        ]
-    }
-    
-    include_dirs = [ 
-        ".",
-        "..",
-        "../zsLib",
-        "../zsLib/zsLib/extras",
-    ]
-}
-
-zslib_eventing_sources = [
-    "zsLib/eventing/eventing.h",
-    "zsLib/eventing/IEventingTypes.h",
-    "zsLib/eventing/IHasher.h",
-    "zsLib/eventing/IHelper.h",
-    "zsLib/eventing/IIDLTypes.h",
-    "zsLib/eventing/IRemoteEventing.h",
-    "zsLib/eventing/types.h",
-    "zsLib/eventing/cpp/zsLib_eventing.cpp",
-    "zsLib/eventing/cpp/zsLib_eventing_EventingTypes.cpp",
-    "zsLib/eventing/cpp/zsLib_eventing_Hasher.cpp",
-    "zsLib/eventing/cpp/zsLib_eventing_Helper.cpp",
-    "zsLib/eventing/cpp/zsLib_eventing_IDLTypes.cpp",
-    "zsLib/eventing/cpp/zsLib_eventing_RemoteEventing.cpp",
-    "zsLib/eventing/internal/types.h",
-    "zsLib/eventing/internal/zsLib_eventing_EventingTypes.h",
-    "zsLib/eventing/internal/zsLib_eventing_Hasher.h",
-    "zsLib/eventing/internal/zsLib_eventing_Helper.h",
-    "zsLib/eventing/internal/zsLib_eventing_IDLTypes.h",
-    "zsLib/eventing/internal/zsLib_eventing_RemoteEventing.h",
-]
-
-# Only compile the compiler for the host architecture.
-#if (current_toolchain == host_toolchain) {
-
-    zslib_sources = [
-        "../zsLib/zsLib/date.h",
-        "../zsLib/zsLib/Event.h",
-        "../zsLib/zsLib/Exception.h",
-        "../zsLib/zsLib/helpers.h",
-        "../zsLib/zsLib/IFactory.h",
-        "../zsLib/zsLib/IHelper.h",
-        "../zsLib/zsLib/IMessageQueue.h",
-        "../zsLib/zsLib/IMessageQueueManager.h",
-        "../zsLib/zsLib/IMessageQueueThread.h",
-        "../zsLib/zsLib/IMessageQueueThreadPool.h",
-        "../zsLib/zsLib/IPAddress.h",
-        "../zsLib/zsLib/ISettings.h",
-        "../zsLib/zsLib/ITimer.h",
-        "../zsLib/zsLib/IWakeDelegate.h",
-        "../zsLib/zsLib/Log.h",
-        "../zsLib/zsLib/MessageQueueAssociator.h",
-        "../zsLib/zsLib/Numeric.h",
-        "../zsLib/zsLib/Promise.h",
-        "../zsLib/zsLib/Proxy.h",
-        "../zsLib/zsLib/ProxySubscriptions.h",
-        "../zsLib/zsLib/SafeInt.h",
-        "../zsLib/zsLib/Singleton.h",
-        "../zsLib/zsLib/Socket.h",
-        "../zsLib/zsLib/String.h",
-        "../zsLib/zsLib/Stringize.h",
-        "../zsLib/zsLib/TearAway.h",
-        "../zsLib/zsLib/types.h",
-        "../zsLib/zsLib/WeightedMovingAverage.h",
-        "../zsLib/zsLib/XML.h",
-        "../zsLib/zsLib/zsLib.h",
-        "../zsLib/zsLib/cpp/zsLib.cpp",
-        "../zsLib/zsLib/cpp/zsLib_Event.cpp",
-        "../zsLib/zsLib/cpp/zsLib_Exception.cpp",
-        "../zsLib/zsLib/cpp/zsLib_Helper.cpp",
-        "../zsLib/zsLib/cpp/zsLib_helpers.cpp",
-        "../zsLib/zsLib/cpp/zsLib_IPAddress.cpp",
-        "../zsLib/zsLib/cpp/zsLib_Log.cpp",
-        "../zsLib/zsLib/cpp/zsLib_MessageQueue.cpp",
-        "../zsLib/zsLib/cpp/zsLib_MessageQueueManager.cpp",
-        "../zsLib/zsLib/cpp/zsLib_MessageQueueThread.cpp",
-        "../zsLib/zsLib/cpp/zsLib_MessageQueueThreadBasic.cpp",
-        "../zsLib/zsLib/cpp/zsLib_MessageQueueThreadPool.cpp",
-        "../zsLib/zsLib/cpp/zsLib_MessageQueueThreadUsingBlackberryChannels.cpp",
-        "../zsLib/zsLib/cpp/zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWindows.cpp",
-        "../zsLib/zsLib/cpp/zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWinUWP.cpp",
-        "../zsLib/zsLib/cpp/zsLib_MessageQueueThreadUsingMainThreadMessageQueueForApple.cpp",
-        "../zsLib/zsLib/cpp/zsLib_Numeric.cpp",
-        "../zsLib/zsLib/cpp/zsLib_Promise.cpp",
-        "../zsLib/zsLib/cpp/zsLib_Proxy.cpp",
-        "../zsLib/zsLib/cpp/zsLib_Settings.cpp",
-        "../zsLib/zsLib/cpp/zsLib_Singleton.cpp",
-        "../zsLib/zsLib/cpp/zsLib_Socket.cpp",
-        "../zsLib/zsLib/cpp/zsLib_SocketMonitor.cpp",
-        "../zsLib/zsLib/cpp/zsLib_String.cpp",
-        "../zsLib/zsLib/cpp/zsLib_Stringize.cpp",
-        "../zsLib/zsLib/cpp/zsLib_Timer.cpp",
-        "../zsLib/zsLib/cpp/zsLib_TimerMonitor.cpp",
-        "../zsLib/zsLib/cpp/zsLib_WindowsEventProviderLogger.cpp",
-        "../zsLib/zsLib/cpp/zsLib_XML.cpp",
-        "../zsLib/zsLib/cpp/zsLib_XMLAttribute.cpp",
-        "../zsLib/zsLib/cpp/zsLib_XMLComment.cpp",
-        "../zsLib/zsLib/cpp/zsLib_XMLDeclaration.cpp",
-        "../zsLib/zsLib/cpp/zsLib_XMLDocument.cpp",
-        "../zsLib/zsLib/cpp/zsLib_XMLElement.cpp",
-        "../zsLib/zsLib/cpp/zsLib_XMLGenerator.cpp",
-        "../zsLib/zsLib/cpp/zsLib_XMLNode.cpp",
-        "../zsLib/zsLib/cpp/zsLib_XMLParser.cpp",
-        "../zsLib/zsLib/cpp/zsLib_XMLParserPos.cpp",
-        "../zsLib/zsLib/cpp/zsLib_XMLParserWarningTypes.cpp",
-        "../zsLib/zsLib/cpp/zsLib_XMLText.cpp",
-        "../zsLib/zsLib/cpp/zsLib_XMLUnknown.cpp",
-        "../zsLib/zsLib/eventing/EventTypes.h",
-        "../zsLib/zsLib/eventing/Log.h",
-        "../zsLib/zsLib/eventing/noop.h",
-        "../zsLib/zsLib/eventing/internal/zsLib_eventing_EventTypes.h",
-        "../zsLib/zsLib/eventing/internal/zsLib_eventing_Log.h ",
-        "../zsLib/zsLib/extras/zsLib_Rx64GetAddapterAddresses.cpp",
-        "../zsLib/zsLib/extras/uuid/config.h",
-        "../zsLib/zsLib/extras/uuid/uuid.h",
-        "../zsLib/zsLib/extras/uuid/uuid_types.h",
-        "../zsLib/zsLib/extras/uuid/uuidd.h",
-        "../zsLib/zsLib/extras/uuid/uuidP.h",
-        "../zsLib/zsLib/internal/platform.h",
-        "../zsLib/zsLib/internal/types.h",
-        "../zsLib/zsLib/internal/zsLib.events.h",
-        "../zsLib/zsLib/internal/zsLib.events_win.h",
-        "../zsLib/zsLib/internal/zsLib.events_win_etw.h",
-        "../zsLib/zsLib/internal/zsLib_Event.h",
-        "../zsLib/zsLib/internal/zsLib_Exception.h",
-        "../zsLib/zsLib/internal/zsLib_Helper.h",
-        "../zsLib/zsLib/internal/zsLib_IPAddress.h",
-        "../zsLib/zsLib/internal/zsLib_Log.h",
-        "../zsLib/zsLib/internal/zsLib_MessageQueue.h",
-        "../zsLib/zsLib/internal/zsLib_MessageQueueManager.h",
-        "../zsLib/zsLib/internal/zsLib_MessageQueueThread.h",
-        "../zsLib/zsLib/internal/zsLib_MessageQueueThreadBasic.h",
-        "../zsLib/zsLib/internal/zsLib_MessageQueueThreadPool.h",
-        "../zsLib/zsLib/internal/zsLib_MessageQueueThreadUsingBlackberryChannels.h",
-        "../zsLib/zsLib/internal/zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWindows.h",
-        "../zsLib/zsLib/internal/zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWinUWP.h",
-        "../zsLib/zsLib/internal/zsLib_MessageQueueThreadUsingMainThreadMessageQueueForApple.h",
-        "../zsLib/zsLib/internal/zsLib_Numeric.h",
-        "../zsLib/zsLib/internal/zsLib_Promise.h",
-        "../zsLib/zsLib/internal/zsLib_Proxy.h",
-        "../zsLib/zsLib/internal/zsLib_ProxyPack.h",
-        "../zsLib/zsLib/internal/zsLib_ProxySubscriptions.h",
-        "../zsLib/zsLib/internal/zsLib_Settings.h",
-        "../zsLib/zsLib/internal/zsLib_Singleton.h",
-        "../zsLib/zsLib/internal/zsLib_Socket.h",
-        "../zsLib/zsLib/internal/zsLib_SocketMonitor.h",
-        "../zsLib/zsLib/internal/zsLib_Stringize.h",
-        "../zsLib/zsLib/internal/zsLib_TearAway.h",
-        "../zsLib/zsLib/internal/zsLib_Timer.h",
-        "../zsLib/zsLib/internal/zsLib_TimerMonitor.h",
-        "../zsLib/zsLib/internal/zsLib_XML.h",
-    ]
-    executable("zslib-eventing-tool") {
-
-      configs += [ ":zslib_eventing_config" ]
-      configs -= [ "//build/config/compiler:chromium_code" ]
-      configs += [ "//build/config/compiler:no_chromium_code" ]
-      
-      sources = zslib_sources
-      sources += zslib_eventing_sources
-      sources += [
-        "zsLib/eventing/tool/ICommandLine.h",
-        "zsLib/eventing/tool/ICompiler.h",
-        "zsLib/eventing/tool/OutputStream.h",
-        "zsLib/eventing/tool/tool.h",
-        "zsLib/eventing/tool/types.h",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_CommandLine.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_EventingCompiler.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateHelper.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateJson.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructC.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructCx.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructDotNet.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructHeader.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructImpHeader.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructImplCpp.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateTypesHeader.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_Helper.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_IDLCompiler.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_Monitor.cpp",
-        "zsLib/eventing/tool/internal/types.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_CommandLine.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_EventingCompiler.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateHelper.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateJson.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructC.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructCx.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructDotNet.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplCpp.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplHeader.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateTypesHeader.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_Monitor.h",
-      ]
-
-      deps = [
-        "../cryptopp",
-        # Default manifest on Windows (a no-op elsewhere).
-        "//build/win:default_exe_manifest",
-      ]
-       
-      defines = [
-        "ZSLIB_EVENTING_NOOP",
-        "_UNICODE",
-        "UNICODE",
-      ]
-    }
-#}
-
 static_library("zslib_eventing") {
 
-    configs += [ ":zslib_eventing_config" ]
-    
-    sources = zslib_eventing_sources
+    configs -= [ "//build/config/compiler:no_rtti" ]
+    if (!is_win) {
+      configs -= [ "//build/config/gcc:no_exceptions" ]
+    }
+    configs -= [ "//build/config/compiler:chromium_code" ]
+    sources = [
+      "zsLib/eventing/eventing.h",
+      "zsLib/eventing/IEventingTypes.h",
+      "zsLib/eventing/IHasher.h",
+      "zsLib/eventing/IHelper.h",
+      "zsLib/eventing/IIDLTypes.h",
+      "zsLib/eventing/IRemoteEventing.h",
+      "zsLib/eventing/types.h",
+      "zsLib/eventing/cpp/zsLib_eventing.cpp",
+      "zsLib/eventing/cpp/zsLib_eventing_EventingTypes.cpp",
+      "zsLib/eventing/cpp/zsLib_eventing_Hasher.cpp",
+      "zsLib/eventing/cpp/zsLib_eventing_Helper.cpp",
+      "zsLib/eventing/cpp/zsLib_eventing_IDLTypes.cpp",
+      "zsLib/eventing/cpp/zsLib_eventing_RemoteEventing.cpp",
+      "zsLib/eventing/internal/types.h",
+      "zsLib/eventing/internal/zsLib_eventing_EventingTypes.h",
+      "zsLib/eventing/internal/zsLib_eventing_Hasher.h",
+      "zsLib/eventing/internal/zsLib_eventing_Helper.h",
+      "zsLib/eventing/internal/zsLib_eventing_IDLTypes.h",
+      "zsLib/eventing/internal/zsLib_eventing_RemoteEventing.h",
+    ]
 
     defines = [
     "_LIB",
