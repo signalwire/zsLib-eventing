@@ -196,7 +196,7 @@ zslib_eventing_sources = [
       "zsLib/eventing/tool/internal/zsLib_eventing_tool_EventingCompiler.h",
       "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateHelper.h",
       "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateJson.h",
-      "sLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructC.h",
+      "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructC.h",
       "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructCx.h",
       "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructDotNet.h",
       "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h",
