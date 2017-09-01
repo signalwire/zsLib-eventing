@@ -10,7 +10,19 @@ config("zslib_eventing_config") {
         "/wd4290",
       ]
     }
-      
+      cflags_cc = [ 
+        "-std=c++11",
+        "-stdlib=libstdc++",
+        "-g",
+        "-Wall",
+        "-Wno-unknown-pragmas",
+        "-Wno-documentation",
+        "-Wno-unused-local-typedefs",
+        "-Wno-pragmas",
+      ]
+
+      ldflags = [ "-stdlib=libstdc++" ]
+  
     include_dirs = [ 
       ".",
       "..",
@@ -163,8 +175,9 @@ zslib_eventing_sources = [
 
     configs += [ ":zslib_eventing_config" ]
     configs -= [ "//build/config/compiler:chromium_code" ]
-    configs += [ "//build/config/compiler:no_chromium_code" ]
-    
+    configs -= [ "//build/config/compiler:no_rtti" ]
+    configs -= [ "//build/config/gcc:no_exceptions" ]
+
     sources = zslib_sources
     sources += zslib_eventing_sources
     sources += [
@@ -239,9 +252,6 @@ static_library("zslib-eventing") {
 
     configs += [ ":zslib_eventing_config" ]
     configs -= [ "//build/config/compiler:no_rtti" ]
-    if (!is_win) {
-      configs -= [ "//build/config/gcc:no_exceptions" ]
-    }
     configs -= [ "//build/config/compiler:chromium_code" ]
     sources = zslib_eventing_sources
 
