@@ -12,7 +12,12 @@ config("zslib_eventing_config") {
     }
       cflags_cc = [ 
         "-std=c++11",
-        "-stdlib=libstdc++",
+#        "-stdlib=libstdc++",
+"-stdlib=libc++",
+"-nostdinc++",
+"-nodefaultlibs",
+"-lc++", 
+"-lc++abi", 
         "-g",
         "-Wall",
         "-Wno-unknown-pragmas",
@@ -21,7 +26,8 @@ config("zslib_eventing_config") {
         "-Wno-pragmas",
       ]
 
-      ldflags = [ "-stdlib=libstdc++" ]
+#defines = [ "__QNX__=1" ]
+#      ldflags = [ "-stdlib=libstdc++" ]
   
     include_dirs = [ 
       ".",
@@ -226,6 +232,9 @@ zslib_eventing_sources = [
       #"//third_party/winuwp_compat:wrap_main_utf8_cc",
       # Default manifest on Windows (a no-op elsewhere).
       "//build/win:default_exe_manifest",
+
+      "//buildtools/third_party/libc++",
+      "//buildtools/third_party/libc++abi",
     ]
      
     if (!is_win) {
