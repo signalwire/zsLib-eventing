@@ -176,7 +176,7 @@ zslib_eventing_sources = [
     "../zsLib/zsLib/internal/zsLib_XML.h",
   ]
  
- executable("zslib-eventing-tool") {
+ executable("zslib-eventing-tool-compiler") {
 
     configs += [ ":zslib_eventing_config" ]
     configs -= [ "//build/config/compiler:chromium_code" ]
@@ -247,10 +247,6 @@ zslib_eventing_sources = [
         "../zsLib/zsLib/eventing/internal/zsLib_eventing_Log.h",
         "../zsLib/zsLib/internal/zsLib.events_win_etw.h",
         "projects/msvc/zsLib.Eventing.Tool.Compiler.Win32/main.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructC.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructDotNet.cpp",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructC.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructDotNet.h",
       ]
     }
     defines = [
