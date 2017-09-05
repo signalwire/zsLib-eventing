@@ -27,7 +27,6 @@ config("zslib_eventing_config") {
       ]
 
 #defines = [ "__QNX__=1" ]
-#      ldflags = [ "-stdlib=libstdc++" ]
   
     include_dirs = [ 
       ".",
@@ -234,9 +233,13 @@ zslib_eventing_sources = [
       "//build/win:default_exe_manifest",
 
       "//buildtools/third_party/libc++",
-      "//buildtools/third_party/libc++abi",
     ]
      
+    if (is_linux) {
+      lib_dirs = [ "/usr/lib/x86_64-linux-gnu/" ]
+      libs = [ "uuid" ]
+    }
+
     if (!is_win) {
     sources -= [
         "zsLib/eventing/IIDLTypes.h",
