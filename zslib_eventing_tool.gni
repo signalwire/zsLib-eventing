@@ -24,6 +24,11 @@ template("compile_event_macro") {
 
 template("compile_single_event_macro") {
     compiled_action(target_name) {
+    
+      if (defined(invoker.public_deps)) {
+        public_deps = invoker.public_deps
+      }
+      
       tool = "//ortc/zsLib-eventing:zslib-eventing-tool"
 
       inputs = invoker.sources
@@ -37,6 +42,8 @@ template("compile_single_event_macro") {
       if (defined(invoker.deps)) {
         deps = invoker.deps
       }
+      
+      
     }
 }
 

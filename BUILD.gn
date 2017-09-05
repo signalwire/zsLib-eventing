@@ -9,15 +9,14 @@ config("zslib_eventing_config") {
         "/wd4068",
         "/wd4290",
       ]
-    }
+    } else {
       cflags_cc = [ 
         "-std=c++11",
-#        "-stdlib=libstdc++",
-"-stdlib=libc++",
-"-nostdinc++",
-"-nodefaultlibs",
-"-lc++", 
-"-lc++abi", 
+        "-stdlib=libc++",
+        "-nostdinc++",
+        "-nodefaultlibs",
+        "-lc++", 
+        "-lc++abi", 
         "-g",
         "-Wall",
         "-Wno-unknown-pragmas",
@@ -26,7 +25,7 @@ config("zslib_eventing_config") {
         "-Wno-pragmas",
       ]
 
-#defines = [ "__QNX__=1" ]
+    }
   
     include_dirs = [ 
       ".",
@@ -57,6 +56,41 @@ zslib_eventing_sources = [
     "zsLib/eventing/internal/zsLib_eventing_IDLTypes.h",
     "zsLib/eventing/internal/zsLib_eventing_RemoteEventing.h",
   ]
+  
+zslib_eventing_tool_sources = [
+    "zsLib/eventing/tool/cpp/zsLib_eventing_tool.cpp",
+    "zsLib/eventing/tool/cpp/zsLib_eventing_tool_CommandLine.cpp",
+    "zsLib/eventing/tool/cpp/zsLib_eventing_tool_Monitor.cpp",
+    "zsLib/eventing/tool/cpp/zsLib_eventing_tool_EventingCompiler.cpp",
+    "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateHelper.cpp",
+    "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateJson.cpp",
+    "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructCx.cpp",
+    "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructHeader.cpp",
+    "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructImpHeader.cpp",
+    "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructImplCpp.cpp",
+    "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateTypesHeader.cpp",
+    "zsLib/eventing/tool/cpp/zsLib_eventing_tool_Helper.cpp",
+    "zsLib/eventing/tool/cpp/zsLib_eventing_tool_IDLCompiler.cpp",
+    "zsLib/eventing/tool/internal/types.h",
+    "zsLib/eventing/tool/internal/zsLib_eventing_tool.h",
+    "zsLib/eventing/tool/internal/zsLib_eventing_tool_CommandLine.h",
+    "zsLib/eventing/tool/internal/zsLib_eventing_tool_Monitor.h",
+    "zsLib/eventing/tool/internal/zsLib_eventing_tool_EventingCompiler.h",
+    "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateHelper.h",
+    "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateJson.h",
+    "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructCx.h",
+    "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h",
+    "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplCpp.h",
+    "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplHeader.h",
+    "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateTypesHeader.h",
+    "zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h",
+    "zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h",
+    "zsLib/eventing/tool/ICommandLine.h",
+    "zsLib/eventing/tool/ICompiler.h",
+    "zsLib/eventing/tool/OutputStream.h",
+    "zsLib/eventing/tool/tool.h",
+    "zsLib/eventing/tool/types.h",
+]
 
  zslib_sources = [
     "../zsLib/zsLib/date.h",
@@ -178,52 +212,24 @@ zslib_eventing_sources = [
  
  executable("zslib-eventing-tool-compiler") {
 
+    
     configs += [ ":zslib_eventing_config" ]
     configs -= [ "//build/config/compiler:chromium_code" ]
     configs -= [ "//build/config/compiler:no_rtti" ]
-    configs -= [ "//build/config/gcc:no_exceptions" ]
-
+    
+    if (!is_win) {
+      configs -= [ "//build/config/gcc:no_exceptions" ]
+    }
     sources = zslib_sources
     sources += zslib_eventing_sources
-    sources += [
+    sources += zslib_eventing_tool_sources
+    sources += [    
       "projects/msvc/zsLib.Eventing.Tool.Compiler.Win32/main.cpp",
       "projects/linux/codelite/zsLib-eventing-tool-compiler/main.cpp",
-      "zsLib/eventing/tool/ICommandLine.h",
-      "zsLib/eventing/tool/ICompiler.h",
-      "zsLib/eventing/tool/OutputStream.h",
-      "zsLib/eventing/tool/tool.h",
-      "zsLib/eventing/tool/types.h",
-      "zsLib/eventing/tool/cpp/zsLib_eventing_tool.cpp",
-      "zsLib/eventing/tool/cpp/zsLib_eventing_tool_CommandLine.cpp",
-      "zsLib/eventing/tool/cpp/zsLib_eventing_tool_EventingCompiler.cpp",
-      "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateHelper.cpp",
-      "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateJson.cpp",
       "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructC.cpp",
-      "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructCx.cpp",
       "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructDotNet.cpp",
-      "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructHeader.cpp",
-      "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructImpHeader.cpp",
-      "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructImplCpp.cpp",
-      "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateTypesHeader.cpp",
-      "zsLib/eventing/tool/cpp/zsLib_eventing_tool_Helper.cpp",
-      "zsLib/eventing/tool/cpp/zsLib_eventing_tool_IDLCompiler.cpp",
-      "zsLib/eventing/tool/cpp/zsLib_eventing_tool_Monitor.cpp",
-      "zsLib/eventing/tool/internal/types.h",
-      "zsLib/eventing/tool/internal/zsLib_eventing_tool.h",
-      "zsLib/eventing/tool/internal/zsLib_eventing_tool_CommandLine.h",
-      "zsLib/eventing/tool/internal/zsLib_eventing_tool_EventingCompiler.h",
-      "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateHelper.h",
-      "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateJson.h",
       "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructC.h",
-      "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructCx.h",
       "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructDotNet.h",
-      "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h",
-      "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplCpp.h",
-      "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplHeader.h",
-      "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateTypesHeader.h",
-      "zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h",
-      "zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h",
-      "zsLib/eventing/tool/internal/zsLib_eventing_tool_Monitor.h",
     ]
 
     deps = [
@@ -231,11 +237,12 @@ zslib_eventing_sources = [
       #"//third_party/winuwp_compat:wrap_main_utf8_cc",
       # Default manifest on Windows (a no-op elsewhere).
       "//build/win:default_exe_manifest",
-
-      "//buildtools/third_party/libc++",
     ]
      
     if (is_linux) {
+      deps += [
+        "//buildtools/third_party/libc++",
+    ]
       lib_dirs = [ "/usr/lib/x86_64-linux-gnu/" ]
       libs = [ "uuid" ]
     }
@@ -262,6 +269,18 @@ static_library("zslib-eventing") {
     configs -= [ "//build/config/compiler:no_rtti" ]
     configs -= [ "//build/config/compiler:chromium_code" ]
     sources = zslib_eventing_sources
+
+    defines = [
+    "_LIB",
+  ]
+}
+
+static_library("zslib-eventing-tool") {
+
+    configs += [ ":zslib_eventing_config" ]
+    configs -= [ "//build/config/compiler:no_rtti" ]
+    configs -= [ "//build/config/compiler:chromium_code" ]
+    sources = zslib_eventing_tool_sources
 
     defines = [
     "_LIB",
