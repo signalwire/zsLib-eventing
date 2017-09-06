@@ -2,13 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//build/compiled_action.gni")
+#import("//build/compiled_action.gni")
 
 template("compile_event_macro") {
-    compiled_action_foreach(target_name) {
-      tool = "//ortc/zsLib-eventing:zslib-eventing-tool"
-
-      inputs = invoker.sources
+    action(target_name) {
+      #tool = "//ortc/zsLib-eventing:zslib-eventing-tool"
+      script = "runEventCompiler.py"
+      sources = invoker.sources
       outputs = invoker.outputs
       args = [
         "-c",
@@ -23,19 +23,21 @@ template("compile_event_macro") {
 }
 
 template("compile_single_event_macro") {
-    compiled_action(target_name) {
+    action(target_name) {
     
       if (defined(invoker.public_deps)) {
         public_deps = invoker.public_deps
       }
       
-      tool = "//ortc/zsLib-eventing:zslib-eventing-tool"
+      #tool = "//ortc/zsLib-eventing:zslib-eventing-tool"
 
-      inputs = invoker.sources
+      script = "runEventCompiler.py"
+      
+      sources = invoker.sources
       outputs = invoker.outputs
       args = [
         "-c",
-        inputs[0],
+        sources[0],
         "-o",
         rebase_path(target_gen_dir, root_build_dir) + "/{{source_name_part}}",
       ]
