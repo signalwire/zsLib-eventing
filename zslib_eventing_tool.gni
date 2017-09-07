@@ -10,24 +10,15 @@ template("compile_event_macro") {
       script = "//ortc/runEventCompiler.py"
 
       sources = invoker.sources
-      #outputs = invoker.outputs
-      #eventOutput = invoker.eventOutput
 
-      #outputs = [ "$target_gen_dir/{{source_name_part}}" ]
+
       outputs = [ 
         "$target_out_dir/{{source_name_part}}.o",
       ]
 
       args = [
         "{{source}}",
-        #"{{eventOutput}}",
-        #rebase_path(eventOutput[0], root_build_dir) + "/{{source_name_part}}.json",
-        rebase_path(outputs[0], root_build_dir),
       ]
-      depfile = outputs[0] + ".d"
-      if (defined(invoker.deps)) {
-        deps = invoker.deps
-      }
     }
 }
 
@@ -42,11 +33,11 @@ template("compile_single_event_macro") {
       
       sources = invoker.sources
       outputs = invoker.outputs
-      eventOutput = invoker.eventOutput
+      #eventOutput = invoker.eventOutput
 
       args = [
         rebase_path(sources[0], root_build_dir),
-        rebase_path(eventOutput[0], root_build_dir),
+        #rebase_path(eventOutput[0], root_build_dir),
       ]
       if (defined(invoker.deps)) {
         deps = invoker.deps
