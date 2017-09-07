@@ -266,8 +266,13 @@ zslib_eventing_tool_sources = [
 static_library("zslib-eventing") {
 
     configs += [ ":zslib_eventing_config" ]
-    configs -= [ "//build/config/compiler:no_rtti" ]
     configs -= [ "//build/config/compiler:chromium_code" ]
+    configs -= [ "//build/config/compiler:no_rtti" ]
+    
+    if (!is_win) {
+      configs -= [ "//build/config/gcc:no_exceptions" ]
+    }
+    
     sources = zslib_eventing_sources
 
     defines = [
@@ -277,9 +282,14 @@ static_library("zslib-eventing") {
 
 static_library("zslib-eventing-tool") {
 
-    configs += [ ":zslib_eventing_config" ]
-    configs -= [ "//build/config/compiler:no_rtti" ]
+   configs += [ ":zslib_eventing_config" ]
     configs -= [ "//build/config/compiler:chromium_code" ]
+    configs -= [ "//build/config/compiler:no_rtti" ]
+    
+    if (!is_win) {
+      configs -= [ "//build/config/gcc:no_exceptions" ]
+    }
+
     sources = zslib_eventing_tool_sources
 
     defines = [

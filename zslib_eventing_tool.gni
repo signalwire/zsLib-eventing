@@ -31,15 +31,15 @@ template("compile_single_event_macro") {
       
       #tool = "//ortc/zsLib-eventing:zslib-eventing-tool"
 
-      script = "runEventCompiler.py"
+      script = "//ortc/runEventCompiler.py"
       
       sources = invoker.sources
       outputs = invoker.outputs
+      eventOutput = invoker.eventOutput
+
       args = [
-        "-c",
-        sources[0],
-        "-o",
-        rebase_path(target_gen_dir, root_build_dir) + "/{{source_name_part}}",
+        rebase_path(sources[0], root_build_dir),
+        rebase_path(eventOutput[0], root_build_dir),
       ]
       if (defined(invoker.deps)) {
         deps = invoker.deps
