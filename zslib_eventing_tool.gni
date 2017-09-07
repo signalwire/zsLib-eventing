@@ -5,17 +5,26 @@
 #import("//build/compiled_action.gni")
 
 template("compile_event_macro") {
-    action(target_name) {
-      #tool = "//ortc/zsLib-eventing:zslib-eventing-tool"
-      script = "runEventCompiler.py"
+    action_foreach(target_name) {
+
+      script = "//ortc/runEventCompiler.py"
+
       sources = invoker.sources
-      outputs = invoker.outputs
-      args = [
-        "-c",
-        "{{source}}",
-        "-o",
-        rebase_path(target_gen_dir, root_build_dir) + "/{{source_name_part}}",
+      #outputs = invoker.outputs
+      #eventOutput = invoker.eventOutput
+
+      #outputs = [ "$target_gen_dir/{{source_name_part}}" ]
+      outputs = [ 
+        "$target_out_dir/{{source_name_part}}.o",
       ]
+
+      args = [
+        "{{source}}",
+        #"{{eventOutput}}",
+        #rebase_path(eventOutput[0], root_build_dir) + "/{{source_name_part}}.json",
+        rebase_path(outputs[0], root_build_dir),
+      ]
+      depfile = outputs[0] + ".d"
       if (defined(invoker.deps)) {
         deps = invoker.deps
       }
@@ -28,8 +37,6 @@ template("compile_single_event_macro") {
       if (defined(invoker.public_deps)) {
         public_deps = invoker.public_deps
       }
-      
-      #tool = "//ortc/zsLib-eventing:zslib-eventing-tool"
 
       script = "//ortc/runEventCompiler.py"
       
