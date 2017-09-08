@@ -11,7 +11,6 @@ template("compile_event_macro") {
 
       sources = invoker.sources
 
-
       outputs = [ 
         "$target_out_dir/{{source_name_part}}.o",
       ]
@@ -19,30 +18,25 @@ template("compile_event_macro") {
       args = [
         "{{source}}",
       ]
+
+      deps = [ "//ortc/zsLib-eventing:zslib-eventing-tool-compiler" ]
+
     }
 }
 
 template("compile_single_event_macro") {
     action(target_name) {
-    
-      if (defined(invoker.public_deps)) {
-        public_deps = invoker.public_deps
-      }
 
       script = "//ortc/runEventCompiler.py"
       
       sources = invoker.sources
       outputs = invoker.outputs
-      #eventOutput = invoker.eventOutput
 
       args = [
         rebase_path(sources[0], root_build_dir),
-        #rebase_path(eventOutput[0], root_build_dir),
       ]
-      if (defined(invoker.deps)) {
-        deps = invoker.deps
-      }
       
+      deps = [ "//ortc/zsLib-eventing:zslib-eventing-tool-compiler" ]
       
     }
 }
