@@ -11,8 +11,9 @@ template("compile_event_macro") {
 
       sources = invoker.sources
 
+      #Not of interest. Added just because outputs is required by action
       outputs = [ 
-        "$target_out_dir/{{source_name_part}}.o",
+        "$target_out_dir/{{source_name_part}}",
       ]
 
       args = [
@@ -30,7 +31,11 @@ template("compile_single_event_macro") {
       script = "//ortc/runEventCompiler.py"
       
       sources = invoker.sources
-      outputs = invoker.outputs
+      
+      #Not of interest. Added just because outputs is required by action
+      outputs = [ 
+        "$target_out_dir/{source_name_part}",
+      ]
 
       args = [
         rebase_path(sources[0], root_build_dir),
