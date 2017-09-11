@@ -210,58 +210,60 @@ zslib_eventing_tool_sources = [
     "../zsLib/zsLib/internal/zsLib_XML.h",
   ]
  
- executable("zslib-eventing-tool-compiler") {
+ if (host_toolchain == current_toolchain) {
+  executable("zslib-eventing-tool-compiler") {
 
-    
-    configs += [ ":zslib_eventing_config" ]
-    configs -= [ "//build/config/compiler:chromium_code" ]
-    configs -= [ "//build/config/compiler:no_rtti" ]
-    
-    if (!is_win) {
-      configs -= [ "//build/config/gcc:no_exceptions" ]
-    }
-    sources = zslib_sources
-    sources += zslib_eventing_sources
-    sources += zslib_eventing_tool_sources
-    sources += [    
-      "projects/msvc/zsLib.Eventing.Tool.Compiler.Win32/main.cpp",
-      "projects/linux/codelite/zsLib-eventing-tool-compiler/main.cpp",
-      "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructC.cpp",
-      "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructDotNet.cpp",
-      "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructC.h",
-      "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructDotNet.h",
-    ]
-
-    deps = [
-      "../cryptopp",
-      #"//third_party/winuwp_compat:wrap_main_utf8_cc",
-      # Default manifest on Windows (a no-op elsewhere).
-      "//build/win:default_exe_manifest",
-    ]
-     
-    if (is_linux) {
-      deps += [
-        "//buildtools/third_party/libc++",
-    ]
-      lib_dirs = [ "/usr/lib/x86_64-linux-gnu/" ]
-      libs = [ "uuid" ]
-    }
-
-    if (!is_win) {
-    sources -= [
-        "zsLib/eventing/IIDLTypes.h",
-        "../zsLib/zsLib/eventing/internal/zsLib_eventing_EventTypes.h",
-        "../zsLib/zsLib/eventing/internal/zsLib_eventing_Log.h",
-        "../zsLib/zsLib/internal/zsLib.events_win_etw.h",
+      
+      configs += [ ":zslib_eventing_config" ]
+      configs -= [ "//build/config/compiler:chromium_code" ]
+      configs -= [ "//build/config/compiler:no_rtti" ]
+      
+      if (!is_win) {
+        configs -= [ "//build/config/gcc:no_exceptions" ]
+      }
+      sources = zslib_sources
+      sources += zslib_eventing_sources
+      sources += zslib_eventing_tool_sources
+      sources += [    
         "projects/msvc/zsLib.Eventing.Tool.Compiler.Win32/main.cpp",
+        "projects/linux/codelite/zsLib-eventing-tool-compiler/main.cpp",
+        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructC.cpp",
+        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructDotNet.cpp",
+        "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructC.h",
+        "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructDotNet.h",
+      ]
+
+      deps = [
+        "../cryptopp",
+        #"//third_party/winuwp_compat:wrap_main_utf8_cc",
+        # Default manifest on Windows (a no-op elsewhere).
+        "//build/win:default_exe_manifest",
+      ]
+      
+      if (is_linux) {
+        deps += [
+          "//buildtools/third_party/libc++",
+      ]
+        lib_dirs = [ "/usr/lib/x86_64-linux-gnu/" ]
+        libs = [ "uuid" ]
+      }
+
+      if (!is_win) {
+      sources -= [
+          "zsLib/eventing/IIDLTypes.h",
+          "../zsLib/zsLib/eventing/internal/zsLib_eventing_EventTypes.h",
+          "../zsLib/zsLib/eventing/internal/zsLib_eventing_Log.h",
+          "../zsLib/zsLib/internal/zsLib.events_win_etw.h",
+          "projects/msvc/zsLib.Eventing.Tool.Compiler.Win32/main.cpp",
+        ]
+      }
+      defines = [
+        "ZSLIB_EVENTING_NOOP",
+        "_UNICODE",
+        "UNICODE",
       ]
     }
-    defines = [
-      "ZSLIB_EVENTING_NOOP",
-      "_UNICODE",
-      "UNICODE",
-    ]
-  }
+ }
 
 static_library("zslib-eventing") {
 

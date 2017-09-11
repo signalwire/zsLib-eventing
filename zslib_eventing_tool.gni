@@ -46,3 +46,24 @@ template("compile_single_event_macro") {
     }
 }
 
+template("compile_idl_macro") {
+    action(target_name) {
+
+      script = "//ortc/runIDLCompiler.py"
+      
+      sources = invoker.sources
+      
+      #Not of interest. Added just because outputs is required by action
+      outputs = [ 
+        "$target_out_dir/{source_name_part}",
+      ]
+
+      args = [
+        rebase_path(sources[0], root_build_dir),
+      ]
+      
+      deps = [ "//ortc/zsLib-eventing:zslib-eventing-tool-compiler" ]
+      
+    }
+}
+
