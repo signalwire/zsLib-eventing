@@ -1,0 +1,71 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+#import("//build/compiled_action.gni")
+
+template("compile_event_macro") {
+    action_foreach(target_name) {
+
+      script = "//ortc/runEventCompiler.py"
+
+      sources = invoker.sources
+
+      #Not of interest. Added just because outputs is required by action
+      outputs = [ 
+        "$target_out_dir/{{source_name_part}}",
+      ]
+
+      args = [
+        "{{source}}",
+      ]
+
+      deps = [ "//ortc/zsLib-eventing:zslib-eventing-tool-compiler" ]
+
+    }
+}
+
+template("compile_single_event_macro") {
+    action(target_name) {
+
+      script = "//ortc/runEventCompiler.py"
+      
+      sources = invoker.sources
+      
+      #Not of interest. Added just because outputs is required by action
+      outputs = [ 
+        "$target_out_dir/{source_name_part}",
+      ]
+
+      args = [
+        rebase_path(sources[0], root_build_dir),
+      ]
+      
+      deps = [ "//ortc/zsLib-eventing:zslib-eventing-tool-compiler" ]
+      
+    }
+}
+
+template("compile_idl_macro") {
+    action(target_name) {
+
+      script = "//ortc/runIDLCompiler.py"
+      
+      sources = invoker.sources
+      sourcePathPrefix = invoker.sourcePathPrefix
+
+      #Not of interest. Added just because outputs is required by action
+      outputs = [ 
+        "$target_out_dir/{source_name_part}",
+      ]
+
+      args = [
+        rebase_path(sources[0], root_build_dir),
+        sourcePathPrefix,
+      ]
+      
+      deps = [ "//ortc/zsLib-eventing:zslib-eventing-tool-compiler" ]
+      
+    }
+}
+
