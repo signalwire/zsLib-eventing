@@ -59,9 +59,11 @@ template("compile_idl_macro") {
       sourcePathPrefix = invoker.sourcePathPrefix
 
       #Not of interest. Added just because outputs is required by action
-      outputs = [ 
-        "$target_out_dir/{source_name_part}",
-      ]
+      #outputs = [ 
+      #  "$target_out_dir/{source_name_part}",
+      #]
+
+      outputs = invoker.outputs
 
       args = [
         rebase_path(sources[0], root_build_dir),
