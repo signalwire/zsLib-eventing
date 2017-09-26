@@ -199,7 +199,8 @@ namespace zsLib
         void GenerateHelper::insertBlob(
                                         std::stringstream &ss,
                                         const String &indentStr,
-                                        const char *blob
+                                        const char *blob,
+                                        bool blankLineHasIndent
                                         )
         {
           if (NULL == blob) return;
@@ -209,13 +210,16 @@ namespace zsLib
           const char *p = blob;
           while ('\0' != *p)
           {
+            if (lastWasEol) {
+              if ((blankLineHasIndent) || ('\n' != *p))
+                ss << indentStr;
+            }
             if ('\n' == *p) {
               ss << *p;
               lastWasEol = true;
               ++p;
               continue;
             }
-            if (lastWasEol) ss << indentStr;
             lastWasEol = false;
             ss << *p;
             ++p;

@@ -72,7 +72,8 @@ namespace zsLib
           static void insertBlob(
                                  std::stringstream &ss,
                                  const String &indentStr,
-                                 const char *blob
+                                 const char *blob,
+                                 bool blankLineHasIndent = false
                                  );
 
           static bool isBuiltInType(TypePtr type);

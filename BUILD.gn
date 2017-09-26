@@ -71,6 +71,9 @@ zslib_eventing_tool_sources = [
     "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructImpHeader.cpp",
     "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructImplCpp.cpp",
     "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateTypesHeader.cpp",
+    "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructC.cpp",
+    "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructDotNet.cpp",
+    "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructPython.cpp",
     "zsLib/eventing/tool/cpp/zsLib_eventing_tool_Helper.cpp",
     "zsLib/eventing/tool/cpp/zsLib_eventing_tool_IDLCompiler.cpp",
     "zsLib/eventing/tool/internal/types.h",
@@ -84,6 +87,9 @@ zslib_eventing_tool_sources = [
     "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h",
     "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplCpp.h",
     "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplHeader.h",
+    "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructC.h",
+    "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructDotNet.h",
+    "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructPython.h",
     "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateTypesHeader.h",
     "zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h",
     "zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h",
@@ -112,10 +118,6 @@ zslib_eventing_tool_sources = [
       sources += [    
         "projects/msvc/zsLib.Eventing.Tool.Compiler.Win32/main.cpp",
         "projects/linux/codelite/zsLib-eventing-tool-compiler/main.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructC.cpp",
-        "zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructDotNet.cpp",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructC.h",
-        "zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructDotNet.h",
       ]
 
       deps = [
