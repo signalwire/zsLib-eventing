@@ -519,6 +519,7 @@ namespace zsLib
               if ("::zs::Seconds" == specialName) return "wrapper::zs_Seconds_wrapperToHandle";
               if ("::zs::Minutes" == specialName) return "wrapper::zs_Minutes_wrapperToHandle";
               if ("::zs::Hours" == specialName) return "wrapper::zs_Hours_wrapperToHandle";
+              if ("::zs::Days" == specialName) return "wrapper::zs_Days_wrapperToHandle";
               if ("::std::set" == specialName) return String("wrapper::") + fixType(type) + "_wrapperToHandle";
               if ("::std::list" == specialName) return String("wrapper::") + fixType(type) + "_wrapperToHandle";
               if ("::std::map" == specialName) return String("wrapper::") + fixType(type) + "_wrapperToHandle";
@@ -3728,6 +3729,7 @@ namespace zsLib
           processTypesSpecialStruct(ss, context->findType("::zs::Seconds"));
           processTypesSpecialStruct(ss, context->findType("::zs::Minutes"));
           processTypesSpecialStruct(ss, context->findType("::zs::Hours"));
+          processTypesSpecialStruct(ss, context->findType("::zs::Days"));
         }
 
         //---------------------------------------------------------------------

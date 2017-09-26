@@ -1740,23 +1740,23 @@ namespace zsLib
           prepareApiBasicTypes(apiFile, IEventingTypes::PredefinedTypedef_uint64);
           prepareApiBasicTypes(apiFile, IEventingTypes::PredefinedTypedef_sint64);
 
-          //prepareApiBoxing(apiFile, IEventingTypes::PredefinedTypedef_byte);
-          //prepareApiBoxing(apiFile, IEventingTypes::PredefinedTypedef_word);
-          //prepareApiBoxing(apiFile, IEventingTypes::PredefinedTypedef_dword);
-          //prepareApiBoxing(apiFile, IEventingTypes::PredefinedTypedef_qword);
+          //prepareApiBasicTypes(apiFile, IEventingTypes::PredefinedTypedef_byte);
+          //prepareApiBasicTypes(apiFile, IEventingTypes::PredefinedTypedef_word);
+          //prepareApiBasicTypes(apiFile, IEventingTypes::PredefinedTypedef_dword);
+          //prepareApiBasicTypes(apiFile, IEventingTypes::PredefinedTypedef_qword);
 
           prepareApiBasicTypes(apiFile, IEventingTypes::PredefinedTypedef_float);
           prepareApiBasicTypes(apiFile, IEventingTypes::PredefinedTypedef_double);
           prepareApiBasicTypes(apiFile, IEventingTypes::PredefinedTypedef_ldouble);
-          //prepareApiBoxing(apiFile, IEventingTypes::PredefinedTypedef_float32);
-          //prepareApiBoxing(apiFile, IEventingTypes::PredefinedTypedef_float64);
+          //prepareApiBasicTypes(apiFile, IEventingTypes::PredefinedTypedef_float32);
+          //prepareApiBasicTypes(apiFile, IEventingTypes::PredefinedTypedef_float64);
 
-          prepareApiBoxing(apiFile, IEventingTypes::PredefinedTypedef_pointer);
+          prepareApiBasicTypes(apiFile, IEventingTypes::PredefinedTypedef_pointer);
 
-          //prepareApiBoxing(apiFile, IEventingTypes::PredefinedTypedef_binary);
-          prepareApiBoxing(apiFile, IEventingTypes::PredefinedTypedef_size);
+          //prepareApiBasicTypes(apiFile, IEventingTypes::PredefinedTypedef_binary);
+          prepareApiBasicTypes(apiFile, IEventingTypes::PredefinedTypedef_size);
 
-          //prepareApiBoxing(apiFile, IEventingTypes::PredefinedTypedef_string);
+          //prepareApiBasicTypes(apiFile, IEventingTypes::PredefinedTypedef_string);
 
           apiFile.endRegion("Basic Types API helpers");
           apiFile.endHelpersRegion("Basic Types helpers");
