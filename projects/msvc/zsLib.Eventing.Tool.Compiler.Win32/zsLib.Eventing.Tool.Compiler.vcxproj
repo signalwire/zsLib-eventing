@@ -157,6 +157,7 @@
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructC.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructCx.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructDotNet.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructPython.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructHeader.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructImpHeader.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructImplCpp.cpp" />
@@ -260,6 +261,7 @@
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructC.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructCx.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructDotNet.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructPython.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructHeader.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructImplCpp.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructImplHeader.h" />
