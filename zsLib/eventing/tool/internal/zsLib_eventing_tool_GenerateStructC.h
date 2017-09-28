@@ -331,12 +331,12 @@ namespace zsLib
           #pragma mark
 
           //-------------------------------------------------------------------
-          virtual String targetKeyword() override;
-          virtual String targetKeywordHelp() override;
-          virtual void targetOutput(
-                                    const String &inPathStr,
-                                    const ICompilerTypes::Config &config
-                                    ) throw (Failure) override;
+          String targetKeyword() override;
+          String targetKeywordHelp() override;
+          void targetOutput(
+                            const String &inPathStr,
+                            const ICompilerTypes::Config &config
+                            ) throw (Failure) override;
         };
          
       } // namespace internal

@@ -154,34 +154,40 @@ zslib_eventing_tool_sources = [
 
 static_library("zslib-eventing") {
 
-    configs += [ ":zslib_eventing_config" ]
-    configs -= [ "//build/config/compiler:chromium_code" ]
-    configs -= [ "//build/config/compiler:no_rtti" ]
-    
-    if (!is_win) {
-      configs -= [ "//build/config/gcc:no_exceptions" ]
-    }
-    
-    sources = zslib_eventing_sources
+  configs += [ ":zslib_eventing_config" ]
+  configs -= [ "//build/config/compiler:chromium_code" ]
+  configs -= [ "//build/config/compiler:no_rtti" ]
+  
+  if (!is_win) {
+    configs -= [ "//build/config/gcc:no_exceptions" ]
+  }
+  
+  sources = zslib_eventing_sources
 
-    defines = [
+  defines = [
     "_LIB",
   ]
+
+  # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+  configs -= [ "//build/config/clang:find_bad_constructs" ]
 }
 
 static_library("zslib-eventing-tool") {
 
-   configs += [ ":zslib_eventing_config" ]
-    configs -= [ "//build/config/compiler:chromium_code" ]
-    configs -= [ "//build/config/compiler:no_rtti" ]
-    
-    if (!is_win) {
-      configs -= [ "//build/config/gcc:no_exceptions" ]
-    }
+  configs += [ ":zslib_eventing_config" ]
+  configs -= [ "//build/config/compiler:chromium_code" ]
+  configs -= [ "//build/config/compiler:no_rtti" ]
 
-    sources = zslib_eventing_tool_sources
+  if (!is_win) {
+    configs -= [ "//build/config/gcc:no_exceptions" ]
+  }
 
-    defines = [
+  sources = zslib_eventing_tool_sources
+
+  defines = [
     "_LIB",
   ]
+
+  # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+  configs -= [ "//build/config/clang:find_bad_constructs" ]
 }

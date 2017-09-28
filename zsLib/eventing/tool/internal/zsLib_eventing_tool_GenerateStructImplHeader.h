@@ -75,12 +75,12 @@ namespace zsLib
                                                StringSet &includedHeaders,
                                                std::stringstream &ss
                                                );
-          virtual String targetKeyword() override;
-          virtual String targetKeywordHelp() override;
-          virtual void targetOutput(
-                                    const String &pathStr,
-                                    const ICompilerTypes::Config &config
-                                    ) throw (Failure) override;
+          String targetKeyword() override;
+          String targetKeywordHelp() override;
+          void targetOutput(
+                            const String &pathStr,
+                            const ICompilerTypes::Config &config
+                            ) throw (Failure) override;
         };
 
       } // namespace internal

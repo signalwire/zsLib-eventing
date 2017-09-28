@@ -75,15 +75,8 @@ namespace zsLib
 
       class StdOutputStream : public IOutputDelegate
       {
-        virtual void output(const char *str) const override
-        {
-          std::cout << str;
-        }
-
-        virtual void output(const wchar_t *str) const override
-        {
-          std::cout << str;
-        }
+        void output(const char *str) const override;
+        void output(const wchar_t *str) const override;
       };
 
       //-----------------------------------------------------------------------

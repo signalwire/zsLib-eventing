@@ -49,6 +49,19 @@ namespace zsLib
         static tool_ostream gStream;
         return gStream;
       }
-    }
-  }
-}
+
+      //-----------------------------------------------------------------------
+      void StdOutputStream::output(const char *str) const
+      {
+        std::cout << str;
+      }
+
+      //-----------------------------------------------------------------------
+      void StdOutputStream::output(const wchar_t *str) const
+      {
+        std::cout << str;
+      }
+
+    } // tool
+  } // eventing
+} // zsLib
