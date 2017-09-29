@@ -89,21 +89,9 @@ namespace zsLib
 
       class DebugOutputStream : public IOutputDelegate
       {
-        //---------------------------------------------------------------------
-        virtual void output(const char *str) const override
-        {
-#ifdef _WIN32
-          OutputDebugStringA(str);
-#endif //_WIN32
-        }
+        void output(const char *str) const override;
 
-        //---------------------------------------------------------------------
-        virtual void output(const wchar_t *str) const override
-        {
-#ifdef _WIN32
-          OutputDebugStringW(str);
-#endif //_WIN32
-        }
+        void output(const wchar_t *str) const override;
       };
 
       //-----------------------------------------------------------------------

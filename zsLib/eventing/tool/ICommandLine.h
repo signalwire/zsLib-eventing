@@ -99,6 +99,9 @@ namespace zsLib
           bool mOutputJSON {};
           String mSecret;
           StringList mSubscribeProviders;
+
+          MonitorInfo();
+          ~MonitorInfo();
         };
       };
 

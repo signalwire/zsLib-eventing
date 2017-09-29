@@ -238,7 +238,7 @@ namespace zsLib
                               ) throw (InvalidContentWithLine)
         {
           ZS_DECLARE_TYPEDEF_PTR(std::stringstream, StringStream);
-          
+
           const char *startPos = p;
 
           while ('\0' != *p)
@@ -348,7 +348,7 @@ namespace zsLib
                 outArguments[index] = result;
                 ++index;
               }
-              
+
               StringStreamUniPtr emptySS(new StringStream());
               ss.swap(emptySS);
               lastWasSpace = true;
@@ -366,7 +366,7 @@ namespace zsLib
                            ) throw (InvalidArgument)
         {
           if (0 == index) return false;
-          
+
           auto found = indexes.find(index);
           if (found == indexes.end()) {
             indexes.insert(index);
@@ -387,13 +387,13 @@ namespace zsLib
                              ) throw (InvalidArgument)
         {
           if (0 == index) return false;
-          
+
           auto found = indexes.find(index);
           if (found == indexes.end()) {
             indexes.insert(index);
             return true;
           }
-          
+
           if (throwIfFound) {
             ZS_THROW_INVALID_ARGUMENT(String("Duplicate value: ") + string(index));
           }
@@ -777,7 +777,7 @@ namespace zsLib
                   String channelID = provider->aliasLookup(args[4]);
                   String taskID = provider->aliasLookup(args[5]);
                   String opCode = provider->aliasLookup(args[6]);
-                  
+
                   std::list<String> keywordIDs;
 
                   auto findKeywordPos = taskID.find("/");
@@ -786,7 +786,7 @@ namespace zsLib
                     taskID = taskID.substr(0, findKeywordPos);
                     taskID.trim();
                     taskID = provider->aliasLookup(taskID);
-                    
+
                     while (true)
                     {
                       findKeywordPos = keywordsStr.find("/");
@@ -795,11 +795,11 @@ namespace zsLib
                         keywordIDs.push_back(provider->aliasLookup(keywordsStr));
                         break;
                       }
-                      
+
                       String keywordID = keywordsStr.substr(0, findKeywordPos);
                       keywordID.trim();
                       keywordIDs.push_back(provider->aliasLookup(keywordID));
-                      
+
                       keywordsStr = keywordsStr.substr(findKeywordPos + 1);
                     }
                   }
@@ -831,7 +831,7 @@ namespace zsLib
                       }
                     }
                   }
-                  
+
                   // map keywords
                   {
                     for (auto iterKeywords = keywordIDs.begin(); iterKeywords != keywordIDs.end(); ++iterKeywords)
@@ -1117,10 +1117,10 @@ namespace zsLib
                     ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, currentLine, "Invalid number of arguments in keyword \"" + string(args.size()) + "\" in line: " + line);
                   }
                   prepareProvider(mConfig);
-                  
+
                   auto keyword = IEventingTypes::Keyword::create();
                   keyword->mName = provider->aliasLookup(args[0]);
-                  
+
                   {
                     auto foundKeyword = provider->mKeywords.find(keyword->mName);
                     if (foundKeyword == provider->mKeywords.end()) {
@@ -1245,10 +1245,10 @@ namespace zsLib
                   prepareProvider(mConfig);
                   String subsystemName = provider->aliasLookup(args[0]);
                   String subsystemLevel = provider->aliasLookup(args[1]);
-                  
+
                   auto subsystem = IEventingTypes::Subsystem::create();
                   subsystem->mName = subsystemName;
-                  
+
                   try {
                     subsystem->mLevel = zsLib::Log::toLevel(subsystemLevel);
                   } catch (const InvalidArgument &) {
@@ -1322,7 +1322,7 @@ namespace zsLib
             {
               auto task = (*iter).second;
               if (0 != task->mValue) continue;
-              
+
               while (!insert(consumedIndexes, current, false)) { ++current; }
               task->mValue = current;
             }
@@ -1413,10 +1413,10 @@ namespace zsLib
           } catch (const InvalidArgument &e) {
             ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Task OpCode index is not valid: " + e.message());
           }
-          
+
           try {
             Index64Set consumedIndexes;
-            
+
             for (auto iter = provider->mKeywords.begin(); iter != provider->mKeywords.end(); ++iter)
             {
               auto keyword = (*iter).second;
@@ -1429,7 +1429,7 @@ namespace zsLib
             {
               auto keyword = (*iter).second;
               if (0 != keyword->mMask) continue;
-              
+
               bool foundKeywordBitmask {};
 
               do {
@@ -1446,7 +1446,7 @@ namespace zsLib
                 for (auto iterSet = consumedIndexes.begin(); iterSet != consumedIndexes.end(); ++iterSet) {
                   auto &mask = (*iterSet);
                   if (mask == current) continue;  // skip if it was the same one added
-                  
+
                   if (0 != (mask & current)) {
                     foundKeywordBitmask = true;
                     break;
@@ -1665,7 +1665,7 @@ namespace zsLib
             providerEl->adoptAsLastChild(tasksEl);
             addEOL(providerEl);
           }
-          
+
           //<keywords>
           //  <keyword name="Read" mask="0x1" symbol="KEYWORD_READ" message="$(string.Keyword.Read)" />
           //</keywords>
@@ -1734,7 +1734,7 @@ namespace zsLib
             providerEl->adoptAsLastChild(opCodesEl);
             addEOL(providerEl);
           }
-          
+
           if (provider->mDataTemplates.size() > 0) {
             addEOL(dataTemplatesEl);
             for (auto iter = provider->mDataTemplates.begin(); iter != provider->mDataTemplates.end(); ++iter)
@@ -1801,18 +1801,18 @@ namespace zsLib
                     case IEventingTypes::PredefinedTypedef_short:
                     case IEventingTypes::PredefinedTypedef_sshort:      dataTemplateEl->adoptAsLastChild(createDataEl("Int16", dataType->mValueName)); addEOL(dataTemplateEl); break;
                     case IEventingTypes::PredefinedTypedef_int:
-                    case IEventingTypes::PredefinedTypedef_sint:        
+                    case IEventingTypes::PredefinedTypedef_sint:
                     case IEventingTypes::PredefinedTypedef_int64:
                     case IEventingTypes::PredefinedTypedef_sint64:
                     case IEventingTypes::PredefinedTypedef_long:
                     case IEventingTypes::PredefinedTypedef_longlong:
-                    case IEventingTypes::PredefinedTypedef_slonglong:   
+                    case IEventingTypes::PredefinedTypedef_slonglong:
                     case IEventingTypes::PredefinedTypedef_slong:       dataTemplateEl->adoptAsLastChild(createDataEl("Int64", dataType->mValueName)); addEOL(dataTemplateEl); break;
                     case IEventingTypes::PredefinedTypedef_size:
                     case IEventingTypes::PredefinedTypedef_uint:
                     case IEventingTypes::PredefinedTypedef_qword:
                     case IEventingTypes::PredefinedTypedef_uint64:
-                    case IEventingTypes::PredefinedTypedef_ulong:       
+                    case IEventingTypes::PredefinedTypedef_ulong:
                     case IEventingTypes::PredefinedTypedef_ulonglong:   dataTemplateEl->adoptAsLastChild(createDataEl("UInt64", dataType->mValueName)); addEOL(dataTemplateEl); break;
                     case IEventingTypes::PredefinedTypedef_dword:
                     case IEventingTypes::PredefinedTypedef_uint32:      dataTemplateEl->adoptAsLastChild(createDataEl("UInt32", dataType->mValueName)); addEOL(dataTemplateEl); break;
@@ -1831,7 +1831,7 @@ namespace zsLib
 
                     case IEventingTypes::PredefinedTypedef_binary:      goto next;
 
-                    case IEventingTypes::PredefinedTypedef_string:      
+                    case IEventingTypes::PredefinedTypedef_string:
                     case IEventingTypes::PredefinedTypedef_astring:     dataTemplateEl->adoptAsLastChild(createDataEl("AnsiString", dataType->mValueName)); addEOL(dataTemplateEl); break;
                     case IEventingTypes::PredefinedTypedef_wstring:     dataTemplateEl->adoptAsLastChild(createDataEl("UnicodeString", dataType->mValueName)); addEOL(dataTemplateEl); break;
                   }
@@ -2263,7 +2263,7 @@ namespace zsLib
           ss << "  namespace eventing {\n";
 
           ss << getFunctions();
-          
+
           String getEventingHandleFunction = "getEventHandle_" + provider->mName + "()";
           String getEventingHandleFunctionWithNamespace = "::zsLib::eventing::" + getEventingHandleFunction;
 
@@ -2296,7 +2296,7 @@ namespace zsLib
 //              static const USE_EVENT_DESCRIPTOR description {0,0,0,0,0,0,0x8000000000000000};
 //              return &description;
 //            }
-            
+
 //            typedef struct _EVENT_DESCRIPTOR {
 //              USHORT    Id;
 //              UCHAR     Version;
@@ -2322,13 +2322,13 @@ namespace zsLib
             }
 
             keywordValue += "ULL)";
-            
+
             {
               ss << "\n";
               ss << "    inline const USE_EVENT_DESCRIPTOR *getEventDescriptor_" << event->mName << "()\n";
               ss << "    {\n";
               ss << "      static const USE_EVENT_DESCRIPTOR description {";
-              
+
               ss << string(event->mValue) << ", ";
               ss << "0, "; // version not supported
               if (event->mChannel) {
@@ -2337,25 +2337,25 @@ namespace zsLib
                 ss << "0, ";
               }
               ss <<  string(static_cast<std::underlying_type<IEventingTypes::PredefinedLevels>::type>(IEventingTypes::toPredefinedLevel(event->mSeverity, event->mLevel))) << ", ";
-              
+
               if (event->mOpCode) {
                 ss << string(event->mOpCode->mValue) << ", ";
               } else {
                 ss << "0, ";
               }
-              
+
               if (event->mTask) {
                 ss << string(event->mTask->mValue) << ", ";
               } else {
                 ss << "0, ";
               }
-              
+
               ss << keywordValue;
               ss << "};\n";
               ss << "      return &description;\n";
               ss << "    }\n";
             }
-            
+
 //            enum EventParameterTypes
 //            {
 //              EventParameterType_Boolean = 1,
@@ -2366,7 +2366,7 @@ namespace zsLib
 //              EventParameterType_Binary = 16 | 32,
 //              EventParameterType_String = 16 | 64,
 //            };
-            
+
 
             {
               ss << "\n";
@@ -2377,7 +2377,7 @@ namespace zsLib
               ss << "        {EventParameterType_AString},\n";
               ss << "        {EventParameterType_AString},\n";
               ss << "        {EventParameterType_UnsignedInteger}";
-              
+
               if (event->mDataTemplate) {
                 bool nextMustBeSize = false;
                 for (auto iterDataType = event->mDataTemplate->mDataTypes.begin(); iterDataType != event->mDataTemplate->mDataTypes.end(); ++iterDataType) {
@@ -2421,7 +2421,7 @@ namespace zsLib
                   ss << "        {EventParameterType_" << typeStr << "}";
                 }
               }
-              
+
               ss << "\n";
               ss << "      };\n";
               ss << "      return &(descriptions[0]);\n";
@@ -2474,11 +2474,11 @@ namespace zsLib
                   }
                 }
               }
-              
+
               size_t totalTypes = totalDataTypes + totalPointerTypes + totalStringTypes;
-              
+
 #define ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES (3)
-              
+
               ss << "    ::zsLib::eventing::USE_EVENT_DATA_DESCRIPTOR xxDescriptors[" << string(ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES+totalTypes) << "]; \\\n";
               ss << "    uint32_t xxLineNumber = __LINE__; \\\n";
               ss << "    \\\n";
@@ -2486,7 +2486,7 @@ namespace zsLib
               ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_ASTR(&(xxDescriptors[1]), __func__); \\\n";
               ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_VALUE(&(xxDescriptors[2]), &xxLineNumber, sizeof(xxLineNumber)); \\\n";
               ss << "    \\\n";
-              
+
               size_t current = ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES;
 
               bool nextMustBeSize = false;
@@ -2570,10 +2570,10 @@ namespace zsLib
 
                     case IEventingTypes::PredefinedTypedef_binary: {
                       isDataType = false;
-                      
+
                       String newValueStrPlus1 = "xxVal" + string(current+1);
                       String oldValueStrPlus1 = "(xValue" + string(loop+1) + ")";
-                      
+
                       ss << "    auto " << newValueStr << " = " << originalValueStr << "; \\\n";
                       ss << "    uint32_t " << newValueStrPlus1 << " {static_cast<uint32_t>" << oldValueStrPlus1 << "}; \\\n";
                       ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_VALUE(&(xxDescriptors[" << current << "]), &(" << newValueStrPlus1 << "), sizeof(" << newValueStrPlus1 << ")); \\\n";
@@ -3014,7 +3014,7 @@ namespace zsLib
         for (ICompilerTypes::Modes index = ICompilerTypes::Mode_First; index <= ICompilerTypes::Mode_Last; index = static_cast<ICompilerTypes::Modes>(static_cast<std::underlying_type<ICompilerTypes::Modes>::type>(index) + 1)) {
           if (0 == str.compareNoCase(ICompilerTypes::toString(index))) return index;
         }
-        
+
         ZS_THROW_INVALID_ARGUMENT(String("mode is not understood:") + value);
         return ICompilerTypes::Mode_First;
       }
@@ -3028,6 +3028,24 @@ namespace zsLib
           case Mode_IDL:              return "idl";
         }
         return "unknown";
+      }
+
+      //-----------------------------------------------------------------------
+      //-----------------------------------------------------------------------
+      //-----------------------------------------------------------------------
+      //-----------------------------------------------------------------------
+      #pragma mark
+      #pragma mark ICompilerTypes::Config
+      #pragma mark
+
+      //-----------------------------------------------------------------------
+      ICompilerTypes::Config::Config()
+      {
+      }
+
+      //-----------------------------------------------------------------------
+      ICompilerTypes::Config::~Config()
+      {
       }
 
       //-----------------------------------------------------------------------

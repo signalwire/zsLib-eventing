@@ -72,8 +72,18 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         #pragma mark
-        #pragma mark GenerateStructDotNet::ApiFile
+        #pragma mark GenerateStructDotNet::BaseFile
         #pragma mark
+
+        //---------------------------------------------------------------------
+        GenerateStructDotNet::BaseFile::BaseFile()
+        {
+        }
+
+        //---------------------------------------------------------------------
+        GenerateStructDotNet::BaseFile::~BaseFile()
+        {
+        }
 
         //---------------------------------------------------------------------
         void GenerateStructDotNet::BaseFile::usingTypedef(
@@ -245,6 +255,26 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         #pragma mark
+        #pragma mark GenerateStructDotNet::ApiFile
+        #pragma mark
+
+        //---------------------------------------------------------------------
+        GenerateStructDotNet::ApiFile::ApiFile() :
+          helpersSS_(postStructSS_),
+          helpersEndSS_(postStructEndSS_) 
+        {
+        }
+
+        //---------------------------------------------------------------------
+        GenerateStructDotNet::ApiFile::~ApiFile()
+        {
+        }
+
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
         #pragma mark GenerateStructDotNet::StructFile
         #pragma mark
 
@@ -258,8 +288,8 @@ namespace zsLib
           delegateSS_(structDeclationsSS_),
           struct_(structObj),
           isStaticOnly_(GenerateHelper::hasOnlyStaticMethods(structObj)),
-          hasEvents_(GenerateHelper::hasEventHandlers(structObj)),
           isDictionary(structObj->hasModifier(Modifier_Struct_Dictionary)),
+          hasEvents_(GenerateHelper::hasEventHandlers(structObj)),
           shouldInheritException_((!isStaticOnly_) && shouldDeriveFromException(baseFile, structObj))
         {
           if ((!isStaticOnly_) &&
@@ -272,6 +302,11 @@ namespace zsLib
               shouldDefineInterface_ = (!((bool)found));
             }
           }
+        }
+
+        //---------------------------------------------------------------------
+        GenerateStructDotNet::StructFile::~StructFile()
+        {
         }
 
         //---------------------------------------------------------------------

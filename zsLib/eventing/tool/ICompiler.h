@@ -74,6 +74,9 @@ namespace zsLib
 
         struct Config
         {
+          Config();
+          ~Config();
+          
           Modes                 mMode {Mode_First};
           IDLCompilerTargetMap  mIDLOutputs;
           String                mConfigFile;

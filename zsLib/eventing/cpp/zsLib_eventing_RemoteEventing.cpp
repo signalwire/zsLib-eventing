@@ -98,7 +98,7 @@ namespace zsLib
         }
         
         //-----------------------------------------------------------------------
-        virtual void notifySettingsApplyDefaults() override
+        void notifySettingsApplyDefaults() override
         {
           ISettings::setUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_DATA_SIZE, (2*1024));
           ISettings::setUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_PACKED_SIZE, (128*1024));
@@ -116,6 +116,24 @@ namespace zsLib
         RemoteEventingSettingsDefaults::singleton();
       }
       
+      //-----------------------------------------------------------------------
+      //-----------------------------------------------------------------------
+      //-----------------------------------------------------------------------
+      //-----------------------------------------------------------------------
+      #pragma mark
+      #pragma mark IRemoteEventingInternalTypes
+      #pragma mark
+
+      //-----------------------------------------------------------------------
+      IRemoteEventingInternalTypes::ProviderInfo::ProviderInfo()
+      {
+      }
+
+      //-----------------------------------------------------------------------
+      IRemoteEventingInternalTypes::ProviderInfo::~ProviderInfo()
+      {
+      }
+
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
@@ -198,7 +216,7 @@ namespace zsLib
         
         for (auto iter = mCleanUpProviderInfos.begin(); iter != mCleanUpProviderInfos.end(); ++iter)
         {
-          auto info = (*iter);
+          auto *info = (*iter);
           Log::EventingAtomDataArray providerArray;
           if (Log::getEventingWriterInfo(info->mHandle, info->mProviderID, info->mProviderName, info->mProviderHash, &providerArray)) {
             providerArray[mEventingAtomIndex] = 0;
@@ -252,6 +270,12 @@ namespace zsLib
         return pThis;
       }
       
+      //-----------------------------------------------------------------------
+      PUID RemoteEventing::getID() const
+      {
+        return mID;
+      }
+
       //-----------------------------------------------------------------------
       void RemoteEventing::shutdown()
       {
@@ -869,7 +893,7 @@ namespace zsLib
 
         bool requested = false;
         for (auto iter = mRemoteRegisteredProvidersByUUID.begin(); iter != mRemoteRegisteredProvidersByUUID.end(); ++iter) {
-          auto checkProvider = (*iter).second;
+          auto *checkProvider = (*iter).second;
           if (provider->mProviderName == checkProvider->mProviderName) {
             requestSetRemoteEventProviderLogging(provider->mProviderName, keywords);
             requested = true;
@@ -989,7 +1013,7 @@ namespace zsLib
         setState(State_ShuttingDown);
         
         for (auto iter = mRemoteRegisteredProvidersByUUID.begin(); iter != mRemoteRegisteredProvidersByUUID.end(); ++iter) {
-          auto provider = (*iter).second;
+          auto *provider = (*iter).second;
           Log::setEventingLogging(provider->mHandle, mID, false);
           Log::unregisterEventingWriter(provider->mHandle);
         }
@@ -1262,7 +1286,7 @@ namespace zsLib
         }
         for (auto iter = mRequestedRemoteProviderKeywordLevel.begin(); iter != mRequestedRemoteProviderKeywordLevel.end(); ++iter)
         {
-          auto provider = (*iter).second;
+          auto *provider = (*iter).second;
           Log::setEventingLogging(provider->mHandle, mID, false);
         }
         mRequestedRemoteProviderKeywordLevel.clear();
@@ -1285,7 +1309,7 @@ namespace zsLib
         
         mRemoteSubsystems.clear();
         for (auto iter = mRemoteRegisteredProvidersByUUID.begin(); iter != mRemoteRegisteredProvidersByUUID.end(); ++iter) {
-          auto provider = (*iter).second;
+          auto *provider = (*iter).second;
           Log::setEventingLogging(provider->mHandle, mID, false);
           Log::unregisterEventingWriter(provider->mHandle);
         }
@@ -1803,7 +1827,7 @@ namespace zsLib
                 return;
               }
               
-              auto provider = (*found).second;
+              auto *provider = (*found).second;
 
               {
                 auto foundUUDI = mRemoteRegisteredProvidersByUUID.find(provider->mProviderID);
@@ -1929,7 +1953,7 @@ namespace zsLib
           return;
         }
         
-        auto provider = (*found).second;
+        auto *provider = (*found).second;
 
         try {
           KeywordBitmaskType bitmask = Numeric<KeywordBitmaskType>(bitmaskStr);
@@ -1973,7 +1997,7 @@ namespace zsLib
           try {
             bitmask = Numeric<KeywordBitmaskType>(keywordStr);
             for (auto iter = mLocalAnnouncedProviders.begin(); iter != mLocalAnnouncedProviders.end(); ++iter) {
-              auto providerInfo = (*iter).second;
+              auto *providerInfo = (*iter).second;
               if (providerInfo->mProviderName == providerStr) {
                 if (0 == bitmask) {
                   auto found = mRequestedRemoteProviderKeywordLevel.find(providerInfo->mHandle);
@@ -2025,7 +2049,7 @@ namespace zsLib
           return;
         }
         
-        auto provider = (*found).second;
+        auto *provider = (*found).second;
         if (!provider->mSelfRegistered) {
           ZS_LOG_ERROR(Debug, log("event about provider that was not registered from remote party") + ZS_PARAMIZE(remoteHandle));
           return;
@@ -2187,7 +2211,7 @@ namespace zsLib
         }
         
         for (auto iter = mLocalAnnouncedProviders.begin(); iter != mLocalAnnouncedProviders.end(); ++iter) {
-          auto &info = (*iter).second;
+          auto *info = (*iter).second;
           announceProviderToRemote(info);
         }
         

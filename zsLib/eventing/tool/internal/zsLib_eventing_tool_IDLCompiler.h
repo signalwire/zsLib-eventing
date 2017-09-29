@@ -128,7 +128,7 @@ namespace zsLib
                       );
           ~IDLCompiler();
 
-          IDLCompiler(const Noop &) {}
+          IDLCompiler(const Noop &);
 
           static void installDefaultTargets();
 
@@ -139,7 +139,7 @@ namespace zsLib
 
           static IDLCompilerPtr create(const Config &config);
 
-          virtual void process() throw (Failure, FailureWithLine);
+          void process() throw (Failure, FailureWithLine) override;
 
         protected:
           //-------------------------------------------------------------------

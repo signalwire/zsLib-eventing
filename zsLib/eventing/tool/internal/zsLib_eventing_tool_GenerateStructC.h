@@ -85,6 +85,9 @@ namespace zsLib
             StringSet cAlreadyIncluded_;
             StringSet cppAlreadyIncluded_;
 
+            HelperFile();
+            ~HelperFile();
+
             void headerIncludeC(const String &headerFile);
             void headerIncludeCpp(const String &headerFile);
             void includeC(const String &headerFile);
@@ -113,6 +116,9 @@ namespace zsLib
             StringSet headerCppAlreadyIncluded_;
             StringSet cAlreadyIncluded_;
             StringSet cppAlreadyIncluded_;
+
+            StructFile();
+            ~StructFile();
 
             void headerIncludeC(const String &headerFile);
             void headerIncludeCpp(const String &headerFile);

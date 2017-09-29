@@ -70,7 +70,7 @@ namespace zsLib
 
           static EventingCompilerPtr create(const Config &config);
 
-          virtual void process() throw (Failure, FailureWithLine);
+          void process() throw (Failure, FailureWithLine) override;
 
         protected:
           //-------------------------------------------------------------------

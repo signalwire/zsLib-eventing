@@ -86,6 +86,9 @@ namespace zsLib
 
             StringSet alreadyUsing_;
 
+            BaseFile();
+            ~BaseFile();
+
             void indentMore() { indent_ += "    "; }
             void indentLess() { indent_ = indent_.substr(0, indent_.length() - 4); }
 
@@ -116,9 +119,8 @@ namespace zsLib
             std::stringstream &helpersSS_;
             std::stringstream &helpersEndSS_;
 
-            ApiFile() :
-              helpersSS_(postStructSS_),
-              helpersEndSS_(postStructEndSS_) {}
+            ApiFile();
+            ~ApiFile();
 
             void startHelpersRegion(const String &region) { startOtherRegion(region, false); }
             void endHelpersRegion(const String &region) { endOtherRegion(region, false); }
@@ -138,6 +140,7 @@ namespace zsLib
                        BaseFile &baseFile,
                        StructPtr structObj
                        );
+            ~StructFile();
 
             StructPtr struct_;
             bool isStaticOnly_ {};

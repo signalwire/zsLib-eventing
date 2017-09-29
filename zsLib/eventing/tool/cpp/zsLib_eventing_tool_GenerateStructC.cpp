@@ -85,6 +85,16 @@ namespace zsLib
         #pragma mark
 
         //---------------------------------------------------------------------
+        GenerateStructC::HelperFile::HelperFile()
+        {
+        }
+        
+        //---------------------------------------------------------------------
+        GenerateStructC::HelperFile::~HelperFile()
+        {
+        }
+
+        //---------------------------------------------------------------------
         void GenerateStructC::HelperFile::headerIncludeC(const String &headerFile)
         {
           doInclude(headerFile, headerCIncludeSS_, headerCAlreadyIncluded_);
@@ -122,6 +132,16 @@ namespace zsLib
         #pragma mark
         #pragma mark GenerateStructC::StructFile
         #pragma mark
+
+        //---------------------------------------------------------------------
+        GenerateStructC::StructFile::StructFile()
+        {
+        }
+        
+        //---------------------------------------------------------------------
+        GenerateStructC::StructFile::~StructFile()
+        {
+        }
 
         //---------------------------------------------------------------------
         void GenerateStructC::StructFile::headerIncludeC(const String &headerFile)

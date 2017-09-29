@@ -79,6 +79,9 @@ namespace zsLib
             StringSet mHeaderAlreadyIncluded;
             StringSet mCppAlreadyIncluded;
 
+            HelperFile();
+            ~HelperFile();
+
             void includeHeader(const String &headerFile);
             void includeCpp(const String &headerFile);
           };
@@ -98,6 +101,9 @@ namespace zsLib
             String mHeaderStructIndentStr;
 
             StringSet mCppAlreadyIncluded;
+
+            StructFile();
+            ~StructFile();
 
             void includeCpp(const String &headerFile);
           };
@@ -256,6 +262,9 @@ namespace zsLib
             StringSet processedTypes_;
             StringSet structProcessedTypes_;
             StringSet templatedProcessedTypes_;
+
+            IncludeProcessedInfo();
+            ~IncludeProcessedInfo();
           };
 
           static void includeCppForType(

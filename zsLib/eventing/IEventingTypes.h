@@ -292,8 +292,9 @@ namespace zsLib
         DataTemplateMap mDataTemplates;
         SubsystemMap mSubsystems;
 
-        Provider() {}
+        Provider();
         Provider(const ElementPtr &rootEl) throw (InvalidContent);
+        ~Provider();
 
         static ProviderPtr create()                     { return make_shared<Provider>(); }
         static ProviderPtr create(const ElementPtr &el) { if (!el) return ProviderPtr(); return make_shared<Provider>(el); }
@@ -390,11 +391,12 @@ namespace zsLib
 
         size_t    mValue {};
 
-        Task() {}
+        Task();
         Task(
              const ElementPtr &rootEl,
              const AliasMap *aliases = NULL
              ) throw (InvalidContent);
+        ~Task();
 
         static TaskPtr create() { return make_shared<Task>(); }
         static TaskPtr create(
@@ -459,11 +461,12 @@ namespace zsLib
 
         size_t      mValue {};
 
-        OpCode() {}
+        OpCode();
         OpCode(
                const ElementPtr &rootEl,
                const AliasMap *aliases = NULL
                ) throw (InvalidContent);
+        ~OpCode();
 
         static OpCodePtr create() { return make_shared<OpCode>(); }
         static OpCodePtr create(
@@ -505,11 +508,12 @@ namespace zsLib
 
         String hash() const;
 
-        Event() {}
+        Event();
         Event(
               const ElementPtr &rootEl,
               const AliasMap *aliases = NULL
               ) throw (InvalidContent);
+        ~Event();
 
         static EventPtr create() { return make_shared<Event>(); }
         static EventPtr create(
@@ -541,11 +545,12 @@ namespace zsLib
         String mID;
         DataTypeList mDataTypes;
 
-        DataTemplate() {}
+        DataTemplate();
         DataTemplate(
                      const ElementPtr &rootEl,
                      const AliasMap *aliases = NULL
                      ) throw (InvalidContent);
+        ~DataTemplate();
 
         static DataTemplatePtr create() { return make_shared<DataTemplate>(); }
         static DataTemplatePtr create(
@@ -576,12 +581,13 @@ namespace zsLib
         PredefinedTypedefs mType {PredefinedTypedef_First};
         String             mValueName;
 
-        DataType() {}
+        DataType();
         DataType(
                  const ElementPtr &rootEl,
                  const TypedefMap *typedefs = NULL,
                  const AliasMap *aliases = NULL
                  ) throw (InvalidContent);
+        ~DataType();
 
         static DataTypePtr create() { return make_shared<DataType>(); }
         static DataTypePtr create(
@@ -612,11 +618,13 @@ namespace zsLib
         SubsystemName mName;
         Log::Level mLevel {Log::Level::Level_First};
 
-        Subsystem() {}
+        Subsystem();
         Subsystem(
                   const ElementPtr &rootEl,
                   const AliasMap *aliases = NULL
                   ) throw (InvalidContent);
+        ~Subsystem();
+
         static SubsystemPtr create() { return make_shared<Subsystem>(); }
         static SubsystemPtr create(
                                    const ElementPtr &el,

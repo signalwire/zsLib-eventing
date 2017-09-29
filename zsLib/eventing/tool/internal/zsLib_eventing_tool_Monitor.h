@@ -103,6 +103,9 @@ namespace zsLib
             String mProviderName;
             String mProviderUniqueHash;
             EventMap mEvents;
+
+            ProviderInfo();
+            ~ProviderInfo();
           };
 
           typedef std::set<ProviderInfo *> ProviderInfoSet;
@@ -129,71 +132,71 @@ namespace zsLib
           #pragma mark Monitor::ISingletonManagerDelegate
           #pragma mark
           
-          virtual void notifySingletonCleanup() override;
+          void notifySingletonCleanup() override;
 
           //-------------------------------------------------------------------
           #pragma mark
           #pragma mark Monitor::ITimerDelegate
           #pragma mark
 
-          virtual void onTimer(ITimerPtr timer) override;
+          void onTimer(ITimerPtr timer) override;
 
           //-------------------------------------------------------------------
           #pragma mark
           #pragma mark Monitor::IWakeDelegate
           #pragma mark
 
-          virtual void onWake() override;
+          void onWake() override;
 
           //-------------------------------------------------------------------
           #pragma mark
           #pragma mark Monitor::IRemoteEventingDelegate
           #pragma mark
 
-          virtual void onRemoteEventingStateChanged(
-                                                    IRemoteEventingPtr connection,
-                                                    States state
-                                                    ) override;
+          void onRemoteEventingStateChanged(
+                                            IRemoteEventingPtr connection,
+                                            States state
+                                            ) override;
           
-          virtual void onRemoteEventingRemoteSubsystem(
-                                                       IRemoteEventingPtr connection,
-                                                       const char *subsystemName
-                                                       ) override;
+          void onRemoteEventingRemoteSubsystem(
+                                               IRemoteEventingPtr connection,
+                                               const char *subsystemName
+                                               ) override;
 
-          virtual void onRemoteEventingRemoteProvider(
-                                                      UUID providerID,
-                                                      const char *providerName,
-                                                      const char *providerUniqueHash
-                                                      ) override;
-          virtual void onRemoteEventingRemoteProviderGone(const char *providerName) override;
+          void onRemoteEventingRemoteProvider(
+                                              UUID providerID,
+                                              const char *providerName,
+                                              const char *providerUniqueHash
+                                              ) override;
+          void onRemoteEventingRemoteProviderGone(const char *providerName) override;
           
-          virtual void onRemoteEventingRemoteProviderStateChange(
-                                                                 const char *providerName,
-                                                                 KeywordBitmaskType keywords
-                                                                 ) override;
+          void onRemoteEventingRemoteProviderStateChange(
+                                                         const char *providerName,
+                                                         KeywordBitmaskType keywords
+                                                         ) override;
 
-          virtual void onRemoteEventingLocalDroppedEvents(
-                                                          IRemoteEventingPtr connection,
-                                                          size_t totalDropped
-                                                          ) override;
-          virtual void onRemoteEventingRemoteDroppedEvents(
-                                                           IRemoteEventingPtr connection,
-                                                           size_t totalDropped
-                                                           ) override;
+          void onRemoteEventingLocalDroppedEvents(
+                                                  IRemoteEventingPtr connection,
+                                                  size_t totalDropped
+                                                  ) override;
+          void onRemoteEventingRemoteDroppedEvents(
+                                                   IRemoteEventingPtr connection,
+                                                   size_t totalDropped
+                                                   ) override;
 
           //-------------------------------------------------------------------
           #pragma mark
           #pragma mark Monitor::ILogEventingProviderDelegate
           #pragma mark
 
-          virtual void notifyEventingProviderRegistered(
-                                                        ProviderHandle handle,
-                                                        EventingAtomDataArray eventingAtomDataArray
-                                                        ) override;
-          virtual void notifyEventingProviderUnregistered(
-                                                          ProviderHandle handle,
-                                                          EventingAtomDataArray eventingAtomDataArray
-                                                          ) override;
+          void notifyEventingProviderRegistered(
+                                                ProviderHandle handle,
+                                                EventingAtomDataArray eventingAtomDataArray
+                                                ) override;
+          void notifyEventingProviderUnregistered(
+                                                  ProviderHandle handle,
+                                                  EventingAtomDataArray eventingAtomDataArray
+                                                  ) override;
 
           //-------------------------------------------------------------------
           #pragma mark
@@ -203,16 +206,16 @@ namespace zsLib
           // (ignored) virtual void notifyNewSubsystem(zsLib::Subsystem &inSubsystem) {}
           
           // notification of a log event
-          virtual void notifyWriteEvent(
-                                        ProviderHandle handle,
-                                        EventingAtomDataArray eventingAtomDataArray,
-                                        Severity severity,
-                                        Level level,
-                                        EVENT_DESCRIPTOR_HANDLE descriptor,
-                                        EVENT_PARAMETER_DESCRIPTOR_HANDLE paramDescriptor,
-                                        EVENT_DATA_DESCRIPTOR_HANDLE dataDescriptor,
-                                        size_t dataDescriptorCount
-                                        ) override;
+          void notifyWriteEvent(
+                                ProviderHandle handle,
+                                EventingAtomDataArray eventingAtomDataArray,
+                                Severity severity,
+                                Level level,
+                                EVENT_DESCRIPTOR_HANDLE descriptor,
+                                EVENT_PARAMETER_DESCRIPTOR_HANDLE paramDescriptor,
+                                EVENT_DATA_DESCRIPTOR_HANDLE dataDescriptor,
+                                size_t dataDescriptorCount
+                                ) override;
 
         protected:
           //-------------------------------------------------------------------

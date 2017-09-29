@@ -597,9 +597,19 @@ namespace zsLib
     #pragma mark
 
     //-------------------------------------------------------------------------
+    IEventingTypes::Provider::Provider()
+    {
+    }
+
+    //-------------------------------------------------------------------------
     IEventingTypes::Provider::Provider(const ElementPtr &rootEl) throw(InvalidContent)
     {
       parse(rootEl);
+    }
+
+    //-------------------------------------------------------------------------
+    IEventingTypes::Provider::~Provider()
+    {
     }
 
     //-------------------------------------------------------------------------
@@ -1160,6 +1170,11 @@ namespace zsLib
     #pragma mark
 
     //-------------------------------------------------------------------------
+    IEventingTypes::Task::Task()
+    {
+    }
+
+    //-------------------------------------------------------------------------
     IEventingTypes::Task::Task(
                                const ElementPtr &rootEl,
                                const AliasMap *aliases
@@ -1179,6 +1194,11 @@ namespace zsLib
       createOpCodes(rootEl->findFirstChildElement("opcodes"), mOpCodes, aliases);
     }
 
+    //-------------------------------------------------------------------------
+    IEventingTypes::Task::~Task()
+    {
+    }
+    
     //-------------------------------------------------------------------------
     ElementPtr IEventingTypes::Task::createElement(const char *objectName) const
     {
@@ -1333,6 +1353,11 @@ namespace zsLib
     #pragma mark
 
     //-------------------------------------------------------------------------
+    IEventingTypes::OpCode::OpCode()
+    {
+    }
+
+    //-------------------------------------------------------------------------
     IEventingTypes::OpCode::OpCode(
                                    const ElementPtr &rootEl,
                                    const AliasMap *aliases
@@ -1350,6 +1375,11 @@ namespace zsLib
       }
     }
 
+    //-------------------------------------------------------------------------
+    IEventingTypes::OpCode::~OpCode()
+    {
+    }
+    
     //-------------------------------------------------------------------------
     ElementPtr IEventingTypes::OpCode::createElement(const char *objectName) const
     {
@@ -1412,6 +1442,11 @@ namespace zsLib
     #pragma mark
 
     //-------------------------------------------------------------------------
+    IEventingTypes::Event::Event()
+    {
+    }
+
+    //-------------------------------------------------------------------------
     IEventingTypes::Event::Event(
                                  const ElementPtr &rootEl,
                                  const AliasMap *aliases
@@ -1432,6 +1467,11 @@ namespace zsLib
       } catch (const InvalidArgument &e) {
         ZS_THROW_CUSTOM(InvalidContent, String("Event level is invalid: ") + e.message());
       }
+    }
+
+    //-------------------------------------------------------------------------
+    IEventingTypes::Event::~Event()
+    {
     }
 
     //-------------------------------------------------------------------------
@@ -1615,12 +1655,22 @@ namespace zsLib
     #pragma mark
 
     //-------------------------------------------------------------------------
+    IEventingTypes::DataTemplate::DataTemplate()
+    {
+    }
+
+    //-------------------------------------------------------------------------
     IEventingTypes::DataTemplate::DataTemplate(
                                                const ElementPtr &rootEl,
                                                const AliasMap *aliases
                                                ) throw (InvalidContent)
     {
       mID = UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("id"));
+    }
+
+    //-------------------------------------------------------------------------
+    IEventingTypes::DataTemplate::~DataTemplate()
+    {
     }
 
     //-------------------------------------------------------------------------
@@ -1664,7 +1714,7 @@ namespace zsLib
       for (auto iter = mDataTypes.begin(); iter != mDataTypes.end(); ++iter)
       {
         auto dataType = (*iter);
-        auto typeStr = IEventingTypes::toString(dataType->mType);
+        auto *typeStr = IEventingTypes::toString(dataType->mType);
         hasher->update(typeStr);
         hasher->update(":");
         hasher->update(dataType->mValueName);
@@ -1724,6 +1774,11 @@ namespace zsLib
     #pragma mark
 
     //-------------------------------------------------------------------------
+    IEventingTypes::DataType::DataType()
+    {
+    }
+
+    //-------------------------------------------------------------------------
     IEventingTypes::DataType::DataType(
                                        const ElementPtr &rootEl,
                                        const TypedefMap *typedefs,
@@ -1751,6 +1806,11 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
+    IEventingTypes::DataType::~DataType()
+    {
+    }
+
+    //-------------------------------------------------------------------------
     ElementPtr IEventingTypes::DataType::createElement(const char *objectName) const
     {
       if (NULL == objectName) objectName = "dataType";
@@ -1768,7 +1828,7 @@ namespace zsLib
     {
       auto hasher = IHasher::sha256();
 
-      auto typeStr = IEventingTypes::toString(mType);
+      auto *typeStr = IEventingTypes::toString(mType);
       hasher->update(typeStr);
       hasher->update(":");
       hasher->update(mValueName);
@@ -1805,6 +1865,11 @@ namespace zsLib
     #pragma mark
     
     //-------------------------------------------------------------------------
+    IEventingTypes::Subsystem::Subsystem()
+    {
+    }
+
+    //-------------------------------------------------------------------------
     IEventingTypes::Subsystem::Subsystem(
                                          const ElementPtr &rootEl,
                                          const AliasMap *aliases
@@ -1822,6 +1887,11 @@ namespace zsLib
       }
     }
     
+    //-------------------------------------------------------------------------
+    IEventingTypes::Subsystem::~Subsystem()
+    {
+    }
+
     //-------------------------------------------------------------------------
     ElementPtr IEventingTypes::Subsystem::createElement(const char *objectName) const
     {

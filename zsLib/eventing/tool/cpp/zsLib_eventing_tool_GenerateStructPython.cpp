@@ -72,8 +72,18 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         #pragma mark
-        #pragma mark GenerateStructPython::ApiFile
+        #pragma mark GenerateStructPython::BaseFile
         #pragma mark
+
+        //---------------------------------------------------------------------
+        GenerateStructPython::BaseFile::BaseFile()
+        {
+        }
+
+        //---------------------------------------------------------------------
+        GenerateStructPython::BaseFile::~BaseFile()
+        {
+        }
 
         //---------------------------------------------------------------------
         void GenerateStructPython::BaseFile::usingTypedef(
@@ -278,6 +288,27 @@ namespace zsLib
               shouldDefineInterface_ = (!((bool)found));
             }
           }
+        }
+
+        
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        #pragma mark
+        #pragma mark GenerateStructPython::ApiFile
+        #pragma mark
+
+        //---------------------------------------------------------------------
+        GenerateStructPython::ApiFile::ApiFile() :
+          helpersSS_(postStructSS_),
+          helpersEndSS_(postStructEndSS_)
+        {
+        }
+
+        //---------------------------------------------------------------------
+        GenerateStructPython::ApiFile::~ApiFile()
+        {
         }
 
         //---------------------------------------------------------------------
@@ -1193,7 +1224,7 @@ namespace zsLib
           }
 
           {
-            auto &ss = apiFile.namespaceSS_;
+            //auto &ss = apiFile.namespaceSS_;
           }
 
           {
@@ -1265,7 +1296,7 @@ namespace zsLib
         //---------------------------------------------------------------------
         void GenerateStructPython::finalizeApiFile(ApiFile &apiFile)
         {
-          auto &indentStr = apiFile.indent_;
+          //auto &indentStr = apiFile.indent_;
 
           apiFile.endRegion("Struct API helpers");
           apiFile.endHelpersRegion("Struct helpers");

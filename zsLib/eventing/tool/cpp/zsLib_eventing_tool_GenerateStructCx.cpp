@@ -66,6 +66,16 @@ namespace zsLib
         #pragma mark
 
         //---------------------------------------------------------------------
+        GenerateStructCx::HelperFile::HelperFile()
+        {
+        }
+
+        //---------------------------------------------------------------------
+        GenerateStructCx::HelperFile::~HelperFile()
+        {
+        }
+
+        //---------------------------------------------------------------------
         void GenerateStructCx::HelperFile::includeHeader(const String &headerFile)
         {
           auto &ss = mHeaderIncludeSS;
@@ -94,6 +104,16 @@ namespace zsLib
         #pragma mark
         #pragma mark GenerateStructCx::StructFile
         #pragma mark
+
+        //---------------------------------------------------------------------
+        GenerateStructCx::StructFile::StructFile()
+        {
+        }
+
+        //---------------------------------------------------------------------
+        GenerateStructCx::StructFile::~StructFile()
+        {
+        }
 
         //---------------------------------------------------------------------
         void GenerateStructCx::StructFile::includeCpp(const String &headerFile)
@@ -481,7 +501,7 @@ namespace zsLib
             auto top = allParents.begin();
             StructPtr parentStructObj = (*top);
             allParents.erase(top);
-            
+
             if (structObj != parentStructObj) {
               insertInto(parentStructObj, currentNamePath, ioDerivesInfo);
             }
@@ -1570,7 +1590,7 @@ namespace zsLib
           {
             auto relatedType = (*iter).second;
             if (!relatedType) continue;
-            
+
             {
               auto subStructObj = relatedType->toStruct();
               if (subStructObj) {
@@ -2415,6 +2435,16 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
+        GenerateStructCx::IncludeProcessedInfo::IncludeProcessedInfo()
+        {
+        }
+
+        //---------------------------------------------------------------------
+        GenerateStructCx::IncludeProcessedInfo::~IncludeProcessedInfo()
+        {
+        }
+
+        //---------------------------------------------------------------------
         void GenerateStructCx::includeCppForType(
                                                  StructFile &structFile,
                                                  TypePtr type
@@ -2486,7 +2516,7 @@ namespace zsLib
             }
           }
         }
-        
+
         //---------------------------------------------------------------------
         void GenerateStructCx::includeTemplatedStructForType(
                                                              IncludeProcessedInfo &processed,

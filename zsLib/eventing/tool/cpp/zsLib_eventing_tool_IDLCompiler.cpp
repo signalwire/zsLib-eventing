@@ -103,7 +103,7 @@ namespace zsLib
                                      )
         {
           const char *startPos = p;
-          
+
           while (true)
           {
             Helper::skipToEOL(p);
@@ -143,7 +143,7 @@ namespace zsLib
           if ("interaction" == str) return true;
           return false;
         }
-        
+
         //---------------------------------------------------------------------
         static TokenPtr getCPPDirectiveToken(
                                              const char * &p,
@@ -170,7 +170,7 @@ namespace zsLib
 
           return result;
         }
-        
+
         //---------------------------------------------------------------------
         static TokenPtr getCPPDocToken(
                                        const char * &p,
@@ -180,16 +180,16 @@ namespace zsLib
           if ('/' != *p) return TokenPtr();
           if ('/' != *(p+1)) return TokenPtr();
           if ('/' != *(p+2)) return TokenPtr();
-          
+
           p += 3;
 
           if (' ' == *p) ++p;
 
           const char *start = p;
           Helper::skipToEOL(p);
-          
+
           String str(start, static_cast<size_t>(p - start));
-          
+
           auto result = make_shared<Token>();
           result->mTokenType = IDLCompiler::TokenType_Documentation;
           result->mToken = str + "\n";
@@ -199,7 +199,7 @@ namespace zsLib
 
           return result;
         }
-        
+
         //---------------------------------------------------------------------
         static TokenPtr getQuoteToken(
                                       const char * &p,
@@ -207,7 +207,7 @@ namespace zsLib
                                       )
         {
           ULONG currentLine = ioLineCount;
-          
+
           const char *start = p;
           if (!Helper::skipQuote(p, &ioLineCount)) return TokenPtr();
 
@@ -225,10 +225,10 @@ namespace zsLib
                                      ) throw (FailureWithLine)
         {
           ULONG currentLine = ioLineCount;
-          
+
           const char *start = p;
           if ('\'' != *p) return TokenPtr();
-          
+
           ++p;
           if ('\\' == *p) {
             Helper::decodeCEscape(p, ioLineCount);
@@ -252,7 +252,7 @@ namespace zsLib
                                        )
         {
           const char *start = p;
-          
+
           bool foundNegative = false;
 
           if ('-' == *start) {
@@ -264,9 +264,9 @@ namespace zsLib
           if (!isdigit(*start)) return TokenPtr();
 
           p = start;
-          
+
           int base = 10;
-          
+
           if ('0' == *p) {
             switch (*(p+1)) {
               case 'x':
@@ -354,11 +354,11 @@ namespace zsLib
               default: goto check_exponent;
             }
           }
-          
+
         check_exponent:
           {
             const char *exponentStart = p;
-            
+
             if (('e' != *p) &&
                 ('E' != *p)) {
               goto check_postfix;
@@ -366,7 +366,7 @@ namespace zsLib
             if (10 != base) goto check_postfix;
 
             ++p;
-            
+
             bool foundExponentNumber = false;
             if (('-' == *p) ||
                 ('+' == *p)) {
@@ -384,16 +384,16 @@ namespace zsLib
               goto done;
             }
           }
-          
+
         check_postfix:
           {
             const char *postFixStart = p;
-            
+
             bool mUnsigned = false;
             bool mFloat = false;
             size_t foundLongs = 0;
             bool lastWasLong = false;
-            
+
             while (true)
             {
               switch (*p) {
@@ -433,14 +433,14 @@ namespace zsLib
                   goto done;
                 }
               }
-              
+
             not_long:
               {
                 ++p;
                 lastWasLong = false;
                 continue;
               }
-              
+
             invalid_postfix:
               {
                 p = postFixStart;
@@ -448,11 +448,11 @@ namespace zsLib
               }
             }
           }
-          
+
         done:
           {
           }
-          
+
           auto result = make_shared<Token>();
           result->mTokenType = IDLCompiler::TokenType_Number;
           result->mToken = String(start, static_cast<size_t>(p - start));
@@ -471,21 +471,21 @@ namespace zsLib
         {
           if ((!isalpha(*p)) &&
               ('_' != *p)) return TokenPtr();
-          
+
           const char *start = p;
-          
+
           while ((isalnum(*p)) ||
                  ('_' == *p)) {
             ++p;
           }
-          
+
           auto result = make_shared<Token>();
           result->mTokenType = IDLCompiler::TokenType_Identifier;
           result->mToken = String(start, static_cast<size_t>(p - start));
           result->mLineCount = lineCount;
           return result;
         }
-        
+
         //---------------------------------------------------------------------
         static TokenPtr getOperatorToken(
                                          const char * &p,
@@ -552,13 +552,13 @@ namespace zsLib
           while ('\0' != *p) {
             test = valid;
             test += String(p, static_cast<size_t>(1));
-            
+
             for (int index = 0; NULL != operators[index]; ++index)
             {
               if (test == operators[index]) goto next;
             }
             goto done;
-            
+
           next:
             {
               valid = test;
@@ -569,7 +569,7 @@ namespace zsLib
         done:
           {
           }
-          
+
           auto result = make_shared<Token>();
           result->mTokenType = IDLCompiler::TokenType_Operator;
           if (";" == valid) {
@@ -604,7 +604,7 @@ namespace zsLib
           result->mLineCount = lineCount;
           return result;
         }
-        
+
         //---------------------------------------------------------------------
         static TokenPtr getUnknownToken(
                                         const char * &p,
@@ -612,9 +612,9 @@ namespace zsLib
                                         )
         {
           if (!p) return TokenPtr();
-          
+
           if ('\0' == *p) return TokenPtr();
-          
+
           auto result = make_shared<Token>();
           result->mTokenType = IDLCompiler::TokenType_Unknown;
           result->mToken = String(p, static_cast<size_t>(1));
@@ -631,17 +631,17 @@ namespace zsLib
                                      )
         {
           if (!p) return TokenPtr();
-          
+
           while ('\0' != *p)
           {
             ULONG activeLine = ioLineCount;
-            
+
             if (Helper::skipWhitespaceExceptEOL(p)) continue;
             if (Helper::skipEOL(p, &ioLineCount)) {
               ioStartOfLine = true;
               continue;
             }
-            
+
             if (ioStartOfLine) {
               if ('#' == *p) {
                 skipPreprocessor(p, ioLineCount);
@@ -676,7 +676,7 @@ namespace zsLib
               ioStartOfLine = true;
               continue;
             }
-            
+
             {
               auto result = getQuoteToken(p, ioLineCount);
               if (result) {
@@ -684,7 +684,7 @@ namespace zsLib
                 return result;
               }
             }
-            
+
             {
               auto result = getNumberToken(p, ioLineCount);
               if (result) {
@@ -692,7 +692,7 @@ namespace zsLib
                 return result;
               }
             }
-            
+
             {
               auto result = getIdentifierToken(p, ioLineCount);
               if (result) {
@@ -700,7 +700,7 @@ namespace zsLib
                 return result;
               }
             }
-            
+
             {
               auto result = getOperatorToken(p, ioLineCount);
               if (result) {
@@ -708,7 +708,7 @@ namespace zsLib
                 return result;
               }
             }
-            
+
             {
               auto result = getUnknownToken(p, ioLineCount);
               if (result) {
@@ -730,7 +730,7 @@ namespace zsLib
         {
           bool startOfLine = true;
           ULONG lineCount = startLineNumber;
-          
+
           while (true)
           {
             auto token = getNextToken(p, startOfLine, lineCount);
@@ -739,7 +739,7 @@ namespace zsLib
             outTokens.push_back(token);
           }
         }
-        
+
         //---------------------------------------------------------------------
         void replaceAliases(
                             TokenList &ioTokens,
@@ -750,14 +750,14 @@ namespace zsLib
           {
             auto current = iter_doNotUse;
             ++iter_doNotUse;
-            
+
             auto token = (*current);
             auto found = aliases.find(token->mToken);
             if (found == aliases.end()) continue;
 
             TokenList replacementTokens;
             tokenize((*found).second.c_str(), replacementTokens, token->mLineCount);
-            
+
             for (auto iterReplace = replacementTokens.rbegin(); iterReplace != replacementTokens.rend(); ++iterReplace)
             {
               auto replaceToken = (*iterReplace);
@@ -855,6 +855,10 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         IDLCompiler::~IDLCompiler()
+        {
+        }
+        //---------------------------------------------------------------------
+        IDLCompiler::IDLCompiler(const Noop &)
         {
         }
 
@@ -1053,11 +1057,11 @@ namespace zsLib
           extractNextToken(what);  // skip "namespace"
 
           token = extractNextToken(what);
-          
+
           if (TokenType_Identifier != token->mTokenType) {
             ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " missing identifier");
           }
-          
+
           String namespaceStr = token->mToken;
 
           token = extractNextToken(what);
@@ -1127,7 +1131,7 @@ namespace zsLib
 
             // extract until ";" found
             String namespacePathStr;
-              
+
             token = extractNextToken(what);
             while (TokenType_SemiColon != token->mTokenType) {
               namespacePathStr += token->mToken;
@@ -1172,7 +1176,7 @@ namespace zsLib
           auto token = peekNextToken(what);
           if (!token->isIdentifier("typedef")) return false;
           extractNextToken(what);  // skip "typedef"
-          
+
           TokenList typeTokens;
 
           token = extractNextToken(what);
@@ -1187,11 +1191,11 @@ namespace zsLib
 
           TokenPtr lastToken = typeTokens.back();
           typeTokens.pop_back();
-          
+
           if (TokenType_Identifier != lastToken->mTokenType) {
             ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("typedef identifier was not found"));
           }
-          
+
           String typeName = lastToken->mToken;
 
           tool::output() << "[Info] Found typedef: " << typeName << "\n";
@@ -1204,7 +1208,7 @@ namespace zsLib
         bool IDLCompiler::parseStruct(ContextPtr context) throw (FailureWithLine)
         {
           const char *what = "interface/struct";
-          
+
           auto token = peekNextToken(what);
           if (TokenType_Identifier != token->mTokenType) return false;
 
@@ -1227,7 +1231,7 @@ namespace zsLib
             }
             return false;
           }
-          
+
           extractNextToken(what); // skip "struct/interface" keyword
 
           token = extractNextToken(what);
@@ -1267,14 +1271,14 @@ namespace zsLib
             while (hasMoreTokens()) {
               if (parseComma()) continue;
               token = extractNextToken(what); // get generic name
-              
+
               if (TokenType_Identifier != token->mTokenType) {
                 ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " template expecting generic name");
               }
 
               auto genericType = GenericType::create(newStruct);
               genericType->mName = token->mToken;
-              
+
               TypePtr defaultType;
 
               TokenList typeTokens;
@@ -1288,7 +1292,7 @@ namespace zsLib
                   foundDefault = true;
                 }
               }
-              
+
               if ((foundDefault) &&
                   (!defaultType)) {
                 ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " template expecting default type");
@@ -1301,7 +1305,7 @@ namespace zsLib
           }
 
           token = peekNextToken(what);
-          
+
           if (TokenType_ColonOperator == token->mTokenType) {
             extractNextToken(what); // skip ":"
 
@@ -1337,10 +1341,10 @@ namespace zsLib
           if (!token->isOpenBrace(TokenType_CurlyBrace)) {
             ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " template expecting generic name");
           }
-          
+
           TokenList structTokens;
           extractToClosingBraceToken(what, structTokens);
-          
+
           pushTokens(structTokens);
 
           TokenTypeSet searchTypes;
@@ -1386,7 +1390,7 @@ namespace zsLib
               ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting a peek ahead token to be found that does not exist of type \"{}()=;\"");
             }
           }
-          
+
           popTokens();  // structTokens
 
           return true;
@@ -1530,7 +1534,7 @@ namespace zsLib
             ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting property types");
           }
 
-          auto property = Property::create(context);          
+          auto property = Property::create(context);
           fillContext(property);
           property->mName = nameToken->mToken;
 
@@ -1622,7 +1626,7 @@ namespace zsLib
             if (parseComma()) continue;
             TokenList argumentTokens;
             extractToComma(what, argumentTokens);
-            
+
             pushTokens(argumentTokens);
 
             TokenPtr argumentNameToken;
@@ -1733,12 +1737,12 @@ namespace zsLib
           extractNextToken(what);
           return true;
         }
-        
+
         //---------------------------------------------------------------------
         bool IDLCompiler::parseModifiers() throw (FailureWithLine)
         {
           const char *what = "modifiers";
-          
+
           auto token = peekNextToken(what);
           if (!token->isOpenBrace(TokenType_SquareBrace)) return false;
 
@@ -1746,7 +1750,7 @@ namespace zsLib
           extractToClosingBraceToken(what, allModifierTokens);
 
           pushTokens(allModifierTokens);
-          
+
           while (hasMoreTokens()) {
             if (parseComma()) continue; // skip over comma
             TokenList modifierTokens;
@@ -1758,10 +1762,10 @@ namespace zsLib
             if (TokenType_Identifier != token->mTokenType) {
               ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting identifier");
             }
-            
+
             String modiferNameStr = token->mToken;
             modiferNameStr.toLower();
-            
+
             try {
               auto modifier = toModifier(modiferNameStr);
               auto totalParams = getTotalParams(modifier);
@@ -1802,7 +1806,7 @@ namespace zsLib
                   ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting parameters");
                 }
               }
-              
+
               if (-1 != totalParams) {
                 if (totalParams != SafeInt<decltype(totalParams)>(values.size())) {
                   ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String(what) + " expecting total parameter mismatch: " + string(totalParams) + ", found=" + string(values.size()));
@@ -1940,7 +1944,7 @@ namespace zsLib
         ElementPtr IDLCompiler::getDirectives()
         {
           if (mPendingDirectives.size() < 1) return ElementPtr();
-          
+
           ElementPtr rootEl = Element::create("directives");
 
           while (mPendingDirectives.size() > 0) {
@@ -1962,7 +1966,7 @@ namespace zsLib
             existingDocumentation = rootEl;
             return;
           }
-          
+
           auto childEl = rootEl->getFirstChild();
           while (childEl) {
             auto nextEl = childEl->getNextSibling();
@@ -1993,9 +1997,9 @@ namespace zsLib
         void IDLCompiler::mergeModifiers(ContextPtr context) throw (FailureWithLine)
         {
           const char *what = "merge modifiers";
-          
+
           if (!context) return;
-          
+
           for (auto iter = mPendingModifiers.begin(); iter != mPendingModifiers.end(); ++iter)
           {
             auto &name = (*iter).first;
@@ -2022,10 +2026,10 @@ namespace zsLib
         String IDLCompiler::makeTypenameFromTokens(const TokenList &tokens) throw (InvalidContent)
         {
           String result;
-          
+
           bool lastWasIdentifier = false;
           bool lastWasScope = false;
-          
+
           for (auto iter = tokens.begin(); iter != tokens.end(); ++iter)
           {
             auto token = (*iter);
@@ -2045,7 +2049,7 @@ namespace zsLib
               lastWasScope = true;
             }
           }
-          
+
           return result;
         }
 
@@ -2167,9 +2171,9 @@ namespace zsLib
           }
 
           auto existingTokens = getTokens();
-          
+
           insertBefore(*existingTokens, tokens);
-          
+
           TokenPtr firstToken;
           if (existingTokens->size() > 0) {
             firstToken = existingTokens->front();
@@ -2197,13 +2201,13 @@ namespace zsLib
             tokens = insertTheseTokens;
             return;
           }
-          
+
           for (auto iter = insertTheseTokens.rbegin(); iter != insertTheseTokens.rend(); ++iter)
           {
             tokens.push_front(*iter);
           }
         }
-        
+
         //---------------------------------------------------------------------
         void IDLCompiler::insertAfter(
                                           TokenList &tokens,
@@ -2214,7 +2218,7 @@ namespace zsLib
             tokens = insertTheseTokens;
             return;
           }
-          
+
           for (auto iter = insertTheseTokens.begin(); iter != insertTheseTokens.end(); ++iter)
           {
             tokens.push_back(*iter);
@@ -2322,7 +2326,7 @@ namespace zsLib
               }
               break;
             }
-            
+
             if ((processBrackets) &&
                 (token->isBrace())) {
               putBackToken(token);
@@ -2372,10 +2376,10 @@ namespace zsLib
           {
             auto name = (*iter).first;
             auto type = (*iter).second;
-            
+
             auto found = currentNamespace->findType(String(), name, options);
             if (found) continue;
-            
+
             auto newTypedef = TypedefType::create(currentNamespace);
             newTypedef->mName = name;
             newTypedef->mOriginalType = type;
@@ -2386,7 +2390,7 @@ namespace zsLib
           {
             auto name = (*iter).first;
             auto type = (*iter).second;
-            
+
             auto found = currentNamespace->findType(String(), name, options);
             if (found) continue;
 
@@ -2444,7 +2448,7 @@ namespace zsLib
           auto type = findTypeOrCreateTypedef(context, typeTokens, createdTypedef);
 
           TypePtr originalType = type;
-          
+
           if (!createdTypedef) {
             createdTypedef = TypedefType::create(context);
             createdTypedef->mOriginalType = type;
@@ -2452,25 +2456,25 @@ namespace zsLib
           } else {
             originalType = createdTypedef->mOriginalType.lock();
           }
-          
+
           if (!originalType) {
             ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("typedef original type was not found"));
           }
-          
+
           createdTypedef->mName = typeName;
           fillContext(createdTypedef);
-          
+
           {
             auto namespaceObj = context->toNamespace();
             if (namespaceObj) {
-              
+
               auto found = namespaceObj->mTypedefs.find(typeName);
               if (found != namespaceObj->mTypedefs.end()) return;  // assume types are the same
               namespaceObj->mTypedefs[createdTypedef->getMappingName()] = createdTypedef;
               return;
             }
           }
-          
+
           {
             auto structObj = context->toStruct();
             if (structObj) {
@@ -2480,7 +2484,7 @@ namespace zsLib
               return;
             }
           }
-          
+
           ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("typedef found in context that does not allow typedefs"));
         }
 
@@ -2501,7 +2505,7 @@ namespace zsLib
 
           structObj->mIsARelationships[type->getPathName()] = type;
         }
-        
+
         //---------------------------------------------------------------------
         IDLCompiler::StructPtr IDLCompiler::processStructForward(
                                                                  ContextPtr context,
@@ -2510,7 +2514,7 @@ namespace zsLib
                                                                  ) throw (FailureWithLine)
         {
           if (wasCreated) *wasCreated = false;
-          
+
           {
             auto namespaceObj = context->toNamespace();
             if (namespaceObj) {
@@ -2520,17 +2524,17 @@ namespace zsLib
                 fillContext(result);
                 return (*found).second;
               }
-              
+
               if (wasCreated) *wasCreated = true;
               StructPtr structObj = Struct::create(context);
               structObj->mName = typeName;
               fillContext(structObj);
-              
+
               namespaceObj->mStructs[structObj->getMappingName()] = structObj;
               return structObj;
             }
           }
-          
+
           {
             auto outerStructObj = context->toStruct();
             if (outerStructObj) {
@@ -2540,7 +2544,7 @@ namespace zsLib
                 fillContext(result);
                 return (*found).second;
               }
-              
+
               if (wasCreated) *wasCreated = true;
               StructPtr structObj = Struct::create(context);
               structObj->mName = typeName;
@@ -2562,7 +2566,7 @@ namespace zsLib
         #pragma mark
         #pragma mark IDLCompilerHelper
         #pragma mark
-        
+
         class IDLCompilerHelper : protected IDLCompiler
         {
         public:
@@ -2584,15 +2588,15 @@ namespace zsLib
 
             bool mLastWasTypename {false};
             bool mLastWasScope {false};
-            
+
             String mTypeName;
-            
+
             //-----------------------------------------------------------------
             void throwInvalidModifier() throw (InvalidContent)
             {
               ZS_THROW_CUSTOM(InvalidContent, "has invalid type modifier");
             }
-            
+
             //-----------------------------------------------------------------
             void insert(const String &modifierStr) throw (InvalidContent)
             {
@@ -2664,7 +2668,7 @@ namespace zsLib
               mLastWasScope = false;
               mTypeName += modifierStr;
             }
-            
+
             //-----------------------------------------------------------------
             void insertScope() throw (InvalidContent)
             {
@@ -2673,12 +2677,12 @@ namespace zsLib
               mLastWasScope = true;
               mTypeName += "::";
             }
-            
+
             //-----------------------------------------------------------------
             PredefinedTypedefs mergePredefined(PredefinedTypedefs existingBasicType) throw (InvalidContent)
             {
               PredefinedTypedefs &newBasicType = existingBasicType;
-              
+
               switch (existingBasicType) {
                 case PredefinedTypedef_void:
                 {
@@ -2852,7 +2856,7 @@ namespace zsLib
                   if (mUnsigned) newBasicType = PredefinedTypedef_uint64;
                   break;
                 }
-                  
+
                 case PredefinedTypedef_float:
                 case PredefinedTypedef_float32:
                 case PredefinedTypedef_float64:
@@ -2874,7 +2878,7 @@ namespace zsLib
                 case PredefinedTypedef_binary:
                 case PredefinedTypedef_string:
                 case PredefinedTypedef_astring:
-                case PredefinedTypedef_wstring: 
+                case PredefinedTypedef_wstring:
                 {
                   if (mSigned || mUnsigned || mChar || mShort || mInt || (mTotalLongs > 0) || mFloat || mDouble) throwInvalidModifier();
                   break;
@@ -2903,7 +2907,7 @@ namespace zsLib
                 if (mTotalLongs > 0) return PredefinedTypedef_ldouble;
                 return PredefinedTypedef_double;
               }
-              
+
               if (mTotalLongs > 1) {
                 if (mUnsigned) return PredefinedTypedef_ulonglong;
                 if (mSigned) return PredefinedTypedef_slonglong;
@@ -2915,7 +2919,7 @@ namespace zsLib
                 if (mSigned) return PredefinedTypedef_slong;
                 return PredefinedTypedef_long;
               }
-              
+
               if (mInt) {
                 if (mUnsigned) return PredefinedTypedef_uint;
                 if (mSigned) return PredefinedTypedef_sint;
@@ -2939,14 +2943,14 @@ namespace zsLib
 
                 BasicTypePtr basicType;
                 TypedefTypePtr typedefObj = existingType ? existingType->toTypedefType() : TypedefTypePtr();
-                
+
                 if (typedefObj) {
                   typedefObj->resolveTypedefs();
                 }
 
                 while (typedefObj) {
                   TypePtr foundType = typedefObj->mOriginalType.lock();
-                  
+
                   if (foundType) {
                     basicType = foundType->toBasicType();
                     typedefObj = foundType->toTypedefType();
@@ -3065,7 +3069,7 @@ namespace zsLib
           try
           {
             pushTokens(pretemplateTokens);
-            
+
             IDLCompilerHelper::FoundBasicTypeModifiers modifiers;
 
             while (hasMoreTokens()) {
@@ -3100,7 +3104,7 @@ namespace zsLib
 
               auto structObj = originalType->toStruct();
               if (structObj) {
-                
+
                 if (templateTypes.size() > 0) {
                   auto templatedStruct = TemplatedStructType::create(structObj);
                   templatedStruct->mTemplateArguments = templateTypes;
@@ -3127,14 +3131,14 @@ namespace zsLib
 
                   auto hashID = templatedStruct->calculateTemplateID();
                   templatedStruct->mName = hashID;
-                  
+
                   auto found = structObj->mTemplatedStructs.find(hashID);
                   if (found == structObj->mTemplatedStructs.end()) {
                     structObj->mTemplatedStructs[hashID] = templatedStruct;
                   } else {
                     templatedStruct = (*found).second;
                   }
-                  
+
                   if (outCreatedTypedef) {
                     auto replacementTypedef = TypedefType::create(outCreatedTypedef->getParent());
                     replacementTypedef->copyContentsFrom(outCreatedTypedef);

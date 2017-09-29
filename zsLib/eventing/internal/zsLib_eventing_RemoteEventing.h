@@ -80,6 +80,9 @@ namespace zsLib
           String mProviderName;
           String mProviderHash;
           KeywordBitmaskType mBitmask {};
+
+          ProviderInfo();
+          ~ProviderInfo();
         };
       };
 
@@ -214,61 +217,61 @@ namespace zsLib
                                                  Seconds maxWaitToBindTimeInSeconds
                                                  );
 
-        virtual PUID getID() const override { return mID; }
+        PUID getID() const override;
 
-        virtual void shutdown() override;
+        void shutdown() override;
 
-        virtual States getState() const override;
+        States getState() const override;
 
-        virtual void setRemoteLevel(
-                                    const char *remoteSubsystemName,
-                                    Level level
-                                    ) override;
+        void setRemoteLevel(
+                            const char *remoteSubsystemName,
+                            Level level
+                            ) override;
 
         //---------------------------------------------------------------------
         #pragma mark
         #pragma mark RemoteEventing => IWakeDelegate
         #pragma mark
 
-        virtual void onWake() override;
+        void onWake() override;
 
         //---------------------------------------------------------------------
         #pragma mark
         #pragma mark RemoteEventing => ITimerDelegate
         #pragma mark
 
-        virtual void onTimer(ITimerPtr timer) override;
+        void onTimer(ITimerPtr timer) override;
         
         //---------------------------------------------------------------------
         #pragma mark
         #pragma mark RemoteEventing => ISocketDelegate
         #pragma mark
 
-        virtual void onReadReady(SocketPtr socket) override;
-        virtual void onWriteReady(SocketPtr socket) override;
-        virtual void onException(SocketPtr socket) override;
+        void onReadReady(SocketPtr socket) override;
+        void onWriteReady(SocketPtr socket) override;
+        void onException(SocketPtr socket) override;
         
         //---------------------------------------------------------------------
         #pragma mark
         #pragma mark RemoteEventing => ILogEventingProviderDelegate
         #pragma mark
 
-        virtual void notifyNewSubsystem(zsLib::Subsystem &inSubsystem) override;
+        void notifyNewSubsystem(zsLib::Subsystem &inSubsystem) override;
         
-        virtual void notifyEventingProviderRegistered(
-                                                      ProviderHandle handle,
-                                                      EventingAtomDataArray eventingAtomDataArray
-                                                      ) override;
-        virtual void notifyEventingProviderUnregistered(
-                                                        ProviderHandle handle,
-                                                        EventingAtomDataArray eventingAtomDataArray
-                                                        ) override;
+        void notifyEventingProviderRegistered(
+                                              ProviderHandle handle,
+                                              EventingAtomDataArray eventingAtomDataArray
+                                              ) override;
+        void notifyEventingProviderUnregistered(
+                                                ProviderHandle handle,
+                                                EventingAtomDataArray eventingAtomDataArray
+                                                ) override;
 
-        virtual void notifyEventingProviderLoggingStateChanged(
-                                                               ProviderHandle handle,
-                                                               EventingAtomDataArray eventingAtomDataArray,
-                                                               KeywordBitmaskType keywords
-                                                               ) override;
+        void notifyEventingProviderLoggingStateChanged(
+                                                       ProviderHandle handle,
+                                                       EventingAtomDataArray eventingAtomDataArray,
+                                                       KeywordBitmaskType keywords
+                                                       ) override;
         
         //---------------------------------------------------------------------
         #pragma mark
@@ -277,37 +280,37 @@ namespace zsLib
         
         // (duplicate) virtual void notifyNewSubsystem(zsLib::Subsystem &inSubsystem) override;
         
-        virtual void notifyWriteEvent(
-                                      ProviderHandle handle,
-                                      EventingAtomDataArray eventingAtomDataArray,
-                                      Severity severity,
-                                      Level level,
-                                      EVENT_DESCRIPTOR_HANDLE descriptor,
-                                      EVENT_PARAMETER_DESCRIPTOR_HANDLE parameterDescriptor,
-                                      EVENT_DATA_DESCRIPTOR_HANDLE dataDescriptor,
-                                      size_t dataDescriptorCount
-                                      ) override;
+        void notifyWriteEvent(
+                              ProviderHandle handle,
+                              EventingAtomDataArray eventingAtomDataArray,
+                              Severity severity,
+                              Level level,
+                              EVENT_DESCRIPTOR_HANDLE descriptor,
+                              EVENT_PARAMETER_DESCRIPTOR_HANDLE parameterDescriptor,
+                              EVENT_DATA_DESCRIPTOR_HANDLE dataDescriptor,
+                              size_t dataDescriptorCount
+                              ) override;
         
         //---------------------------------------------------------------------
         #pragma mark
         #pragma mark RemoteEventing => IRemoteEventingAsyncDelegate
         #pragma mark
 
-        virtual void onRemoteEventingSubscribeLogger() override;
-        virtual void onRemoteEventingUnsubscribeLogger() override;
-        virtual void onRemoteEventingNewSubsystem(const char *subsystemName) override;
+        void onRemoteEventingSubscribeLogger() override;
+        void onRemoteEventingUnsubscribeLogger() override;
+        void onRemoteEventingNewSubsystem(const char *subsystemName) override;
 
-        virtual void onRemoteEventingProviderRegistered(ProviderInfo *info) override;
-        virtual void onRemoteEventingProviderUnregistered(ProviderInfo *info) override;
-        virtual void onRemoteEventingProviderLoggingStateChanged(
-                                                                 ProviderInfo *info,
-                                                                 KeywordBitmaskType keyword
-                                                                 ) override;
+        void onRemoteEventingProviderRegistered(ProviderInfo *info) override;
+        void onRemoteEventingProviderUnregistered(ProviderInfo *info) override;
+        void onRemoteEventingProviderLoggingStateChanged(
+                                                         ProviderInfo *info,
+                                                         KeywordBitmaskType keyword
+                                                         ) override;
 
-        virtual void onRemoteEventingWriteEvent(
-                                                ByteQueuePtr message,
-                                                size_t currentSize
-                                                ) override;
+        void onRemoteEventingWriteEvent(
+                                        ByteQueuePtr message,
+                                        size_t currentSize
+                                        ) override;
         
       protected:
         //---------------------------------------------------------------------

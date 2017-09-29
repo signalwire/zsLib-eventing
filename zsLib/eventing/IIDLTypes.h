@@ -47,7 +47,7 @@ namespace zsLib
         class IDLCompiler;
       }
     }
-    
+
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
@@ -153,7 +153,7 @@ namespace zsLib
       {
       public:
         friend class tool::internal::IDLCompiler;
-        
+
       protected:
         struct make_private {};
 
@@ -162,35 +162,35 @@ namespace zsLib
         {
           bool mSearchParents {true};
         };
-        
+
       public:
         ContextWeakPtr mContext;
         String mName;
-        
+
         ElementPtr mDocumentation;
         StringListMap mModifiers;
 
       public:
-        virtual ~Context() {mThisWeak.reset();}
+        virtual ~Context();
 
-        virtual ContextPtr toContext() const                          {return mThisWeak.lock();}
-        virtual ProjectPtr toProject() const                          {return ProjectPtr();}
-        virtual NamespacePtr toNamespace() const                      {return NamespacePtr();}
-        virtual TypePtr toType() const                                {return TypePtr();}
-        virtual BasicTypePtr toBasicType() const                      {return BasicTypePtr();}
-        virtual EnumTypePtr toEnumType() const                        {return EnumTypePtr();}
-        virtual EnumTypeValuePtr toEnumTypeValue() const              {return EnumTypeValuePtr();}
-        virtual TypedefTypePtr toTypedefType() const                  {return TypedefTypePtr();}
-        virtual GenericTypePtr toGenericType() const                  {return GenericTypePtr();}
-        virtual TemplatedStructTypePtr toTemplatedStructType() const  {return TemplatedStructTypePtr();}
-        virtual StructPtr toStruct() const                            {return StructPtr();}
-        virtual PropertyPtr toProperty() const                        {return PropertyPtr();}
-        virtual MethodPtr toMethod() const                            {return MethodPtr();}
+        virtual ContextPtr toContext() const;
+        virtual ProjectPtr toProject() const;
+        virtual NamespacePtr toNamespace() const;
+        virtual TypePtr toType() const;
+        virtual BasicTypePtr toBasicType() const;
+        virtual EnumTypePtr toEnumType() const;
+        virtual EnumTypeValuePtr toEnumTypeValue() const;
+        virtual TypedefTypePtr toTypedefType() const;
+        virtual GenericTypePtr toGenericType() const;
+        virtual TemplatedStructTypePtr toTemplatedStructType() const;
+        virtual StructPtr toStruct() const;
+        virtual PropertyPtr toProperty() const;
+        virtual MethodPtr toMethod() const;
 
         virtual ElementPtr createElement(const char *objectName = NULL) const = 0;
         virtual String hash() const;
-        
-        virtual String getMappingName() const         {return mName;}
+
+        virtual String getMappingName() const;
 
         ContextPtr getParent() const;
         ContextPtr getRoot() const;
@@ -207,7 +207,7 @@ namespace zsLib
                                  const String &typeName,
                                  const FindTypeOptions &options
                                  ) const;
-        
+
         virtual bool hasModifier(Modifiers modifier) const;
         virtual String getModifierValue(
                                         Modifiers modifier,
@@ -217,7 +217,7 @@ namespace zsLib
                                        Modifiers modifier,
                                        StringList &outValues
                                        ) const;
-        
+
         virtual void clearModifier(Modifiers modifier);
         virtual void setModifier(Modifiers modifier);
         virtual void setModifier(
@@ -229,16 +229,16 @@ namespace zsLib
                                  const StringList &values
                                  );
 
-        virtual void resolveTypedefs() throw (InvalidContent) {}
-        virtual bool fixTemplateHashMapping() {return false;}
+        virtual void resolveTypedefs() throw (InvalidContent);
+        virtual bool fixTemplateHashMapping();
 
         virtual String aliasLookup(const String &value);
-        
+
       protected:
         Context(
                 const make_private &,
                 ContextPtr context
-                ) : mContext(context) {}
+                );
 
         void init();
         void init(const ElementPtr &rootEl) throw (InvalidContent);
@@ -262,11 +262,12 @@ namespace zsLib
 
         NamespacePtr mGlobal;
         BasicTypeMap mBasicTypes;
-        
+
         ValueSet mDefinedExclusives;
 
-        Project(const make_private &v) : Context(v, ContextPtr()) {}
-        
+        Project(const make_private &v);
+        ~Project() override;
+
       protected:
         void init();
         void init(const ElementPtr &rootEl) throw (InvalidContent);
@@ -275,22 +276,22 @@ namespace zsLib
         static ProjectPtr create();
         static ProjectPtr create(const ElementPtr &el) throw (InvalidContent);
 
-        virtual ElementPtr createElement(const char *objectName = NULL) const override;
-        virtual void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
-        virtual String hash() const override;
+        ElementPtr createElement(const char *objectName = NULL) const override;
+        void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
+        String hash() const override;
 
-        virtual TypePtr findType(
-                                 const String &pathStr,
-                                 const String &typeName,
-                                 const FindTypeOptions &options
-                                 ) const override;
-        virtual void resolveTypedefs() throw (InvalidContent) override;
-        virtual bool fixTemplateHashMapping() override;
-        virtual String aliasLookup(const String &value) override;
+        TypePtr findType(
+                         const String &pathStr,
+                         const String &typeName,
+                         const FindTypeOptions &options
+                         ) const override;
+        void resolveTypedefs() throw (InvalidContent) override;
+        bool fixTemplateHashMapping() override;
+        String aliasLookup(const String &value) override;
 
         BasicTypePtr findBasicType(IEventingTypes::PredefinedTypedefs basicType) const;
 
-        virtual ProjectPtr toProject() const override {return ZS_DYNAMIC_PTR_CAST(Project, toContext());}
+        ProjectPtr toProject() const override;
 
       protected:
         void createBaseTypes();
@@ -311,8 +312,9 @@ namespace zsLib
         Namespace(
                   const make_private &v,
                   ContextPtr context
-                  ) : Context(v, context) {}
-        
+                  );
+        ~Namespace() override;
+
       protected:
         void init();
         void init(const ElementPtr &rootEl) throw (InvalidContent);
@@ -324,18 +326,18 @@ namespace zsLib
                                            const ElementPtr &el
                                            ) throw (InvalidContent);
 
-        virtual NamespacePtr toNamespace() const override {return ZS_DYNAMIC_PTR_CAST(Namespace, toContext());}
-        
-        virtual ElementPtr createElement(const char *objectName = NULL) const override;
-        virtual void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
-        virtual String hash() const override;
-        virtual TypePtr findType(
+        NamespacePtr toNamespace() const override;
+
+        ElementPtr createElement(const char *objectName = NULL) const override;
+        void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
+        String hash() const override;
+        TypePtr findType(
                                  const String &pathStr,
                                  const String &typeName,
                                  const FindTypeOptions &options
                                  ) const override;
-        virtual void resolveTypedefs() throw (InvalidContent) override;
-        virtual bool fixTemplateHashMapping() override;
+        void resolveTypedefs() throw (InvalidContent) override;
+        bool fixTemplateHashMapping() override;
 
         virtual NamespacePtr findNamespace(const String &nameWithPath) const;
         virtual NamespacePtr findNamespace(
@@ -368,16 +370,17 @@ namespace zsLib
         Type(
              const make_private &v,
              ContextPtr context
-             ) : Context(v, context) {}
+             );
+        ~Type() override;
 
-        virtual TypePtr toType() const override {return ZS_DYNAMIC_PTR_CAST(Type, toContext());}
+        TypePtr toType() const override;
 
         static TypePtr createReferencedType(
                                             ContextPtr context,
                                             ElementPtr parentEl
                                             ) throw (InvalidContent);
 
-        virtual TypePtr getOriginalType() const {return toType();}
+        virtual TypePtr getOriginalType() const;
 
         ElementPtr createReferenceTypeElement() const;
       };
@@ -390,23 +393,24 @@ namespace zsLib
       struct BasicType : public Type
       {
         PredefinedTypedefs mBaseType {PredefinedTypedef_First};
-        
+
         BasicType(
                   const make_private &v,
                   ContextPtr context
-                  ) : Type(v, context) {}
+                  );
+        ~BasicType() override;
 
       protected:
         void init();
         void init(const ElementPtr &rootEl) throw (InvalidContent);
-        
+
       public:
         static BasicTypePtr create(ContextPtr context);
-        
-        virtual BasicTypePtr toBasicType() const override {return ZS_DYNAMIC_PTR_CAST(BasicType, toContext());}
 
-        virtual ElementPtr createElement(const char *objectName = NULL) const override;
-        virtual String hash() const override;
+        BasicTypePtr toBasicType() const override;
+
+        ElementPtr createElement(const char *objectName = NULL) const override;
+        String hash() const override;
       };
 
       //-----------------------------------------------------------------------
@@ -423,24 +427,25 @@ namespace zsLib
         EnumType(
                  const make_private &v,
                  ContextPtr context
-                 ) : Type(v, context) {}
+                 );
+        ~EnumType() override;
 
       protected:
         void init();
         void init(const ElementPtr &rootEl) throw (InvalidContent);
-        
+
       public:
         static EnumTypePtr create(ContextPtr context);
         static EnumTypePtr createForwards(
                                           ContextPtr context,
                                           const ElementPtr &el
                                           ) throw (InvalidContent);
-        
-        virtual EnumTypePtr toEnumType() const override {return ZS_DYNAMIC_PTR_CAST(EnumType, toContext());}
-        
-        virtual ElementPtr createElement(const char *objectName = NULL) const override;
-        virtual void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
-        virtual String hash() const override;
+
+        EnumTypePtr toEnumType() const override;
+
+        ElementPtr createElement(const char *objectName = NULL) const override;
+        void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
+        String hash() const override;
       };
 
       static void createEnumForwards(
@@ -468,21 +473,22 @@ namespace zsLib
         EnumTypeValue(
                       const make_private &v,
                       ContextPtr context
-                      ) : Context(v, context) {}
+                      );
+        ~EnumTypeValue() override;
 
       protected:
         void init();
         void init(const ElementPtr &rootEl) throw (InvalidContent);
-        
+
       public:
         static EnumTypeValuePtr create(ContextPtr context);
         static EnumTypeValuePtr create(ContextPtr context, const ElementPtr &el) throw (InvalidContent);
 
-        virtual EnumTypeValuePtr toEnumTypeValue() const override {return ZS_DYNAMIC_PTR_CAST(EnumTypeValue, toContext());}
-        
-        virtual ElementPtr createElement(const char *objectName = NULL) const override;
-        virtual void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
-        virtual String hash() const override;
+        EnumTypeValuePtr toEnumTypeValue() const override;
+
+        ElementPtr createElement(const char *objectName = NULL) const override;
+        void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
+        String hash() const override;
       };
 
       static void createEnumValues(
@@ -503,12 +509,13 @@ namespace zsLib
         TypedefType(
                     const make_private &v,
                     ContextPtr context
-                    ) : Type(v, context) {}
+                    );
+        ~TypedefType() override;
 
       protected:
         void init();
         void init(const ElementPtr &rootEl) throw (InvalidContent);
-        
+
       public:
         static TypedefTypePtr create(ContextPtr context);
         static TypedefTypePtr createForwards(
@@ -516,15 +523,15 @@ namespace zsLib
                                              const ElementPtr &el
                                              ) throw (InvalidContent);
 
-        virtual TypedefTypePtr toTypedefType() const override {return ZS_DYNAMIC_PTR_CAST(TypedefType, toContext());}
+        TypedefTypePtr toTypedefType() const override;
 
-        virtual ElementPtr createElement(const char *objectName = NULL) const override;
-        virtual void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
-        virtual String hash() const override;
+        ElementPtr createElement(const char *objectName = NULL) const override;
+        void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
+        String hash() const override;
 
-        virtual void resolveTypedefs() throw (InvalidContent) override;
+        void resolveTypedefs() throw (InvalidContent) override;
 
-        virtual TypePtr getOriginalType() const override;
+        TypePtr getOriginalType() const override;
       };
 
       static void createTypedefForwards(
@@ -563,12 +570,13 @@ namespace zsLib
         Struct(
                const make_private &v,
                ContextPtr context
-               ) : Type(v, context) {}
+               );
+        ~Struct() override;
 
       protected:
         void init();
         void init(const ElementPtr &rootEl) throw (InvalidContent);
-        
+
       public:
         static StructPtr create(ContextPtr context);
         static StructPtr createForwards(
@@ -576,19 +584,19 @@ namespace zsLib
                                         const ElementPtr &el
                                         ) throw (InvalidContent);
 
-        virtual ElementPtr createElement(const char *objectName = NULL) const override;
-        virtual void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
-        virtual String hash() const override;
+        ElementPtr createElement(const char *objectName = NULL) const override;
+        void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
+        String hash() const override;
 
-        virtual TypePtr findType(
-                                 const String &pathStr,
-                                 const String &typeName,
-                                 const FindTypeOptions &options
-                                 ) const override;
-        virtual void resolveTypedefs() throw (InvalidContent) override;
-        virtual bool fixTemplateHashMapping() override;
+        TypePtr findType(
+                         const String &pathStr,
+                         const String &typeName,
+                         const FindTypeOptions &options
+                         ) const override;
+        void resolveTypedefs() throw (InvalidContent) override;
+        bool fixTemplateHashMapping() override;
 
-        virtual StructPtr toStruct() const override {return ZS_DYNAMIC_PTR_CAST(Struct, toContext());}
+        StructPtr toStruct() const override;
 
         bool hasExistingNonForwardedData() const;
 
@@ -618,12 +626,13 @@ namespace zsLib
         GenericType(
                     const make_private &v,
                     ContextPtr context
-                    ) : Type(v, context) {}
+                    );
+        ~GenericType() override;
 
       protected:
         void init();
         void init(const ElementPtr &rootEl) throw (InvalidContent);
-        
+
       public:
         static GenericTypePtr create(ContextPtr context);
         static GenericTypePtr createForward(
@@ -631,11 +640,11 @@ namespace zsLib
                                             const ElementPtr &el
                                             ) throw (InvalidContent);
 
-        virtual GenericTypePtr toGenericType() const override {return ZS_DYNAMIC_PTR_CAST(GenericType, toContext());}
-        
-        virtual ElementPtr createElement(const char *objectName = NULL) const override;
-        virtual void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
-        virtual String hash() const override;
+        GenericTypePtr toGenericType() const override;
+
+        ElementPtr createElement(const char *objectName = NULL) const override;
+        void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
+        String hash() const override;
       };
 
       static void createGenericForwards(
@@ -663,12 +672,13 @@ namespace zsLib
         TemplatedStructType(
                             const make_private &v,
                             ContextPtr context
-                            ) : Type(v, context) {}
+                            );
+        ~TemplatedStructType() override;
 
       protected:
         void init();
         void init(const ElementPtr &rootEl) throw (InvalidContent);
-        
+
       public:
         static TemplatedStructTypePtr create(ContextPtr context);
         static TemplatedStructTypePtr createForwards(
@@ -676,13 +686,13 @@ namespace zsLib
                                                      const ElementPtr &el
                                                      ) throw (InvalidContent);
 
-        virtual TemplatedStructTypePtr toTemplatedStructType() const override {return ZS_DYNAMIC_PTR_CAST(TemplatedStructType, toContext());}
-        
-        virtual ElementPtr createElement(const char *objectName = NULL) const override;
-        virtual void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
-        virtual String hash() const override;
+        TemplatedStructTypePtr toTemplatedStructType() const override;
 
-        virtual void resolveTypedefs() throw (InvalidContent) override;
+        ElementPtr createElement(const char *objectName = NULL) const override;
+        void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
+        String hash() const override;
+
+        void resolveTypedefs() throw (InvalidContent) override;
 
         String calculateTemplateID() const;
         StructPtr getParentStruct() const;
@@ -709,29 +719,30 @@ namespace zsLib
       {
         TypePtr mType;
         String mDefaultValue;
-        
+
         Property(
                  const make_private &v,
                  ContextPtr context
-                 ) : Context(v, context) {}
-        
+                 );
+        ~Property() override;
+
       protected:
         void init();
         void init(const ElementPtr &rootEl) throw (InvalidContent);
-        
+
       public:
         static PropertyPtr create(ContextPtr context);
         static PropertyPtr create(
                                   ContextPtr context,
                                   const ElementPtr &el
                                   ) throw (InvalidContent);
-        
-        virtual PropertyPtr toProperty() const override {return ZS_DYNAMIC_PTR_CAST(Property, toContext());}
-        
-        virtual ElementPtr createElement(const char *objectName = NULL) const override;
-        virtual String hash() const override;
 
-        virtual void resolveTypedefs() throw (InvalidContent) override;
+        PropertyPtr toProperty() const override;
+
+        ElementPtr createElement(const char *objectName = NULL) const override;
+        String hash() const override;
+
+        void resolveTypedefs() throw (InvalidContent) override;
       };
 
       static void createProperties(
@@ -751,29 +762,30 @@ namespace zsLib
         PropertyList mArguments;
 
         TypeList mThrows;
-        
+
         Method(
                const make_private &v,
                ContextPtr context
-               ) : Context(v, context) {}
+               );
+        ~Method() override;
 
       protected:
         void init();
         void init(const ElementPtr &rootEl) throw (InvalidContent);
-        
+
       public:
         static MethodPtr create(ContextPtr context);
         static MethodPtr create(
                                 ContextPtr context,
                                 const ElementPtr &el
                                 ) throw (InvalidContent);
-        
-        virtual MethodPtr toMethod() const override {return ZS_DYNAMIC_PTR_CAST(Method, toContext());}
-        
-        virtual ElementPtr createElement(const char *objectName = NULL) const override;
-        virtual String hash() const override;
 
-        virtual void resolveTypedefs() throw (InvalidContent) override;
+        MethodPtr toMethod() const override;
+
+        ElementPtr createElement(const char *objectName = NULL) const override;
+        String hash() const override;
+
+        void resolveTypedefs() throw (InvalidContent) override;
       };
 
       static void createMethods(
