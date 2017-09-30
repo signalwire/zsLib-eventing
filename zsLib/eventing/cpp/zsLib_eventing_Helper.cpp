@@ -341,10 +341,12 @@ namespace zsLib
       if (minValue == maxValue) return minValue;
 
       // warning: this only works on unsigned types
-      uint64_t range = SafeInt<decltype(range)>(maxValue - minValue);
+      decltype(maxValue) range = SafeInt<decltype(range)>(maxValue - minValue);
       if (range < std::numeric_limits<decltype(maxValue)>::max()) {
         ++range;
       }
+
+      if (0 == range) return minValue;
 
       decltype(range) value = 0;
 
@@ -353,7 +355,6 @@ namespace zsLib
 
       return minValue + SafeInt<decltype(maxValue)>(value % range);
     }
-
 
     //-------------------------------------------------------------------------
     int IHelper::compare(
