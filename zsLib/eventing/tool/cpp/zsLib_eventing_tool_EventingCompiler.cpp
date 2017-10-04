@@ -3044,9 +3044,31 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
+      ICompilerTypes::Config::Config(const Config &source)
+      {
+        (*this) = source;
+      }
+
+      //-----------------------------------------------------------------------
       ICompilerTypes::Config::~Config()
       {
       }
+
+      //-----------------------------------------------------------------------
+      ICompilerTypes::Config &ICompilerTypes::Config::operator=(const Config &source)
+      {
+        mMode = source.mMode;
+        mIDLOutputs = source.mIDLOutputs;
+        mConfigFile = source.mConfigFile;
+        mSourceFiles = source.mSourceFiles;
+        mOutputName = source.mOutputName;
+        mAuthor = source.mAuthor;
+        mProvider = source.mProvider;
+        mProject = source.mProject;
+
+        return *this;
+      }
+
 
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------

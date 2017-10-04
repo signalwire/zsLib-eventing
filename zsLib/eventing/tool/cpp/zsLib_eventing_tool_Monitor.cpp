@@ -266,7 +266,7 @@ namespace zsLib
           mThisWeak.reset();
           
           for (auto iter = mCleanProviderInfos.begin(); iter != mCleanProviderInfos.end(); ++iter) {
-            auto info = (*iter);
+            auto *info = (*iter);
             
             EventingAtomDataArray eventingArray = NULL;
             if (Log::getEventingWriterInfo(info->mHandle, info->mProviderID, info->mProviderName, info->mProviderUniqueHash, &eventingArray)) {

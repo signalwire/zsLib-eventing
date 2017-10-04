@@ -148,6 +148,7 @@ namespace zsLib
                        BaseFile &baseFile,
                        StructPtr structObj
                        );
+            ~StructFile();
 
             StructPtr struct_;
             bool isStaticOnly_ {};

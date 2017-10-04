@@ -101,7 +101,10 @@ namespace zsLib
           StringList mSubscribeProviders;
 
           MonitorInfo();
+          MonitorInfo(const MonitorInfo &source);
           ~MonitorInfo();
+
+          MonitorInfo &operator=(const MonitorInfo &source);
         };
       };
 
