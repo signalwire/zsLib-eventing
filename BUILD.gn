@@ -168,8 +168,10 @@ static_library("zslib-eventing") {
     "_LIB",
   ]
 
-  # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
-  configs -= [ "//build/config/clang:find_bad_constructs" ]
+  if (is_linux) {
+    # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
 }
 
 static_library("zslib-eventing-tool") {
@@ -188,6 +190,8 @@ static_library("zslib-eventing-tool") {
     "_LIB",
   ]
 
-  # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
-  configs -= [ "//build/config/clang:find_bad_constructs" ]
+  if (is_linux) {
+    # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
 }
