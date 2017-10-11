@@ -1,615 +1,204 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Event.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Exception.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Helper.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_helpers.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_IPAddress.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Log.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueue.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueManager.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThread.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadBasic.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadPool.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingBlackberryChannels.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWindows.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWinUWP.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingMainThreadMessageQueueForApple.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Numeric.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Promise.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Proxy.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_RangeSelection.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Settings.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Singleton.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Socket.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_SocketMonitor.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_String.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Stringize.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Timer.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_TimerMonitor.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_WindowsEventProviderLogger.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XML.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLAttribute.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLComment.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLDeclaration.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLDocument.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLElement.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLGenerator.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLNode.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLParser.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLParserPos.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLParserWarningTypes.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLText.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLUnknown.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\clear.c" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\compare.c" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\copy.c" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\gen_uuid.c" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\gen_uuid_nt.c" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\isnull.c" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\pack.c" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\parse.c" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\tst_uuid.c" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\unpack.c" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\unparse.c" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\uuid_time.c" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\win32\strptime.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_EventingTypes.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_Hasher.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_Helper.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_IDLTypes.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_RemoteEventing.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_CommandLine.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_EventingCompiler.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateHelper.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateJson.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructC.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructCx.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructDotNet.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructPython.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructHeader.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructImpHeader.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructImplCpp.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateTypesHeader.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_Helper.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_IDLCompiler.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_Monitor.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Event.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Exception.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_helpers.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_IPAddress.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Log.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueue.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThread.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadBasic.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadPool.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingBlackberryChannels.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWindows.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWinUWP.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingMainThreadMessageQueueForApple.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Numeric.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Promise.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Proxy.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Singleton.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Socket.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_SocketMonitor.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_String.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Stringize.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Timer.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_TimerMonitor.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XML.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLAttribute.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLComment.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLDeclaration.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLDocument.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLElement.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLGenerator.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLNode.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLParser.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLParserPos.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLParserWarningTypes.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLText.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLUnknown.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\compare.c">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\copy.c">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\gen_uuid.c">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\gen_uuid_nt.c">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\isnull.c">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\pack.c">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\parse.c">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\tst_uuid.c">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\unpack.c">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\unparse.c">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\uuid_time.c">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\clear.c">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\win32\strptime.cpp">
-      <Filter>zsLib\extras\win32</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_EventingTypes.cpp">
-      <Filter>zsLib\eventing\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_Hasher.cpp">
-      <Filter>zsLib\eventing\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_Helper.cpp">
-      <Filter>zsLib\eventing\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing.cpp">
-      <Filter>zsLib\eventing\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_CommandLine.cpp">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool.cpp">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_WindowsEventProviderLogger.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueManager.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Settings.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Helper.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_RemoteEventing.cpp">
-      <Filter>zsLib\eventing\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_Monitor.cpp">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\cpp\zsLib_eventing_IDLTypes.cpp">
-      <Filter>zsLib\eventing\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_EventingCompiler.cpp">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_IDLCompiler.cpp">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_Helper.cpp">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructHeader.cpp">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateTypesHeader.cpp">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructImpHeader.cpp">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructImplCpp.cpp">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructCx.cpp">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateHelper.cpp">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateJson.cpp">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructC.cpp">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructDotNet.cpp">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_RangeSelection.cpp">
-      <Filter>zsLib\cpp</Filter>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueAssociator.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="zsLib">
-      <UniqueIdentifier>{0d617bf5-ba75-4aca-8efc-df600c4c9493}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="zsLib\cpp">
-      <UniqueIdentifier>{a97e6f75-552c-4ce0-871a-c1ad02e57c50}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="zsLib\eventing">
-      <UniqueIdentifier>{d93edff8-3da3-42ee-bda2-4b5c817c8933}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="zsLib\extras">
-      <UniqueIdentifier>{73b1d210-1f2b-42f5-8291-8c582836aff8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="zsLib\internal">
-      <UniqueIdentifier>{0f3514e4-b74c-4583-befe-ab864f302f25}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="zsLib\eventing\internal">
-      <UniqueIdentifier>{332fc081-4bcd-489a-9cda-01cc734e4626}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="zsLib\extras\win32">
-      <UniqueIdentifier>{c98ca8ba-caf5-4b6f-8da9-9068de9ff37d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="zsLib\extras\uuid">
-      <UniqueIdentifier>{d8c9ea6e-5d93-408a-a1e2-1f1fd2a8ac82}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="zsLib\eventing\cpp">
-      <UniqueIdentifier>{feb54bf5-a0e0-433d-a638-f90aca5ff4ac}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="zsLib\eventing\tool">
-      <UniqueIdentifier>{5a074268-9e9a-4e08-9017-547fe985dd90}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="zsLib\eventing\tool\cpp">
-      <UniqueIdentifier>{3fcba23a-fea4-4a14-a322-50e5f5c34aeb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="zsLib\eventing\tool\internal">
-      <UniqueIdentifier>{04d58746-12cb-4d5b-bb8b-4a655d058a9c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="zsLib\idl">
-      <UniqueIdentifier>{9be6eed1-12d7-4799-bf84-ecf9295e7542}</UniqueIdentifier>
-    </Filter>
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\date.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Event.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\EventTypes.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\internal\zsLib_eventing_EventTypes.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\internal\zsLib_eventing_Log.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\Log.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\noop.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Exception.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\extras\uuid\config.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\extras\uuid\uuid.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\extras\uuid\uuidd.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\extras\uuid\uuidP.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\extras\uuid\uuid_types.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\helpers.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\IFactory.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\IHelper.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\IMessageQueue.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\IMessageQueueManager.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\platform.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\types.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Event.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Exception.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Helper.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_IPAddress.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Log.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueue.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueManager.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThread.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadBasic.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadPool.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingBlackberryChannels.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWindows.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWinUWP.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingMainThreadMessageQueueForApple.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Numeric.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Promise.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Proxy.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_ProxyPack.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_ProxySubscriptions.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_RangeSelection.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Settings.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Singleton.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Socket.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_SocketMonitor.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Stringize.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_TearAway.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Timer.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_TimerMonitor.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_XML.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\IPAddress.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\ISettings.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\IWakeDelegate.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Log.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\MessageQueueAssociator.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\IMessageQueueThread.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\IMessageQueueThreadPool.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Numeric.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Promise.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Proxy.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\ProxySubscriptions.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\RangeSelection.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\SafeInt.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Singleton.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Socket.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\String.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\Stringize.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\TearAway.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\ITimer.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\types.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\WeightedMovingAverage.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\XML.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\zsLib.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\eventing.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\IEventingTypes.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\IHasher.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\IHelper.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\IIDLTypes.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\types.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_EventingTypes.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_Hasher.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_Helper.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_IDLTypes.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_RemoteEventing.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\IRemoteEventing.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\ICommandLine.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\ICompiler.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\types.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_CommandLine.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_EventingCompiler.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateHelper.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateJson.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructC.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructCx.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructDotNet.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructPython.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructHeader.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructImplCpp.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructImplHeader.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateTypesHeader.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_Helper.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_IDLCompiler.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_Monitor.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\OutputStream.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\tool.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\types.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\types.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\helpers.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\IPAddress.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\Log.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\MessageQueueAssociator.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\Numeric.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\Promise.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\Proxy.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\ProxySubscriptions.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\SafeInt.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\Singleton.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\Socket.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\String.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\Stringize.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\TearAway.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\types.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\WeightedMovingAverage.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\XML.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\zsLib.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\date.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\Event.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\Exception.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\Log.h">
-      <Filter>zsLib\eventing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\noop.h">
-      <Filter>zsLib\eventing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\internal\zsLib_eventing_Log.h">
-      <Filter>zsLib\eventing\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Event.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Exception.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_IPAddress.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Log.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueue.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThread.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadBasic.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadPool.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingBlackberryChannels.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWindows.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWinUWP.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingMainThreadMessageQueueForApple.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Numeric.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Promise.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Proxy.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_ProxyPack.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_ProxySubscriptions.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Singleton.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Socket.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_SocketMonitor.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Stringize.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_TearAway.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Timer.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_TimerMonitor.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_XML.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\platform.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\types.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\extras\uuid\config.h">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\extras\uuid\uuid.h">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\extras\uuid\uuid_types.h">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\extras\uuid\uuidd.h">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\extras\uuid\uuidP.h">
-      <Filter>zsLib\extras\uuid</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\IHasher.h">
-      <Filter>zsLib\eventing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\IHelper.h">
-      <Filter>zsLib\eventing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\types.h">
-      <Filter>zsLib\eventing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\eventing.h">
-      <Filter>zsLib\eventing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\IEventingTypes.h">
-      <Filter>zsLib\eventing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_Hasher.h">
-      <Filter>zsLib\eventing\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_Helper.h">
-      <Filter>zsLib\eventing\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\internal\types.h">
-      <Filter>zsLib\eventing\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_EventingTypes.h">
-      <Filter>zsLib\eventing\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool.h">
-      <Filter>zsLib\eventing\tool\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\types.h">
-      <Filter>zsLib\eventing\tool\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\OutputStream.h">
-      <Filter>zsLib\eventing\tool</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\tool.h">
-      <Filter>zsLib\eventing\tool</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\ICommandLine.h">
-      <Filter>zsLib\eventing\tool</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\ICompiler.h">
-      <Filter>zsLib\eventing\tool</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\IMessageQueue.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\IMessageQueueThread.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\IMessageQueueThreadPool.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\ITimer.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\IWakeDelegate.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\IMessageQueueManager.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueManager.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\ISettings.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Settings.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\IHelper.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_Helper.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\IFactory.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_RemoteEventing.h">
-      <Filter>zsLib\eventing\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\IRemoteEventing.h">
-      <Filter>zsLib\eventing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_Monitor.h">
-      <Filter>zsLib\eventing\tool\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\EventTypes.h">
-      <Filter>zsLib\eventing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\eventing\internal\zsLib_eventing_EventTypes.h">
-      <Filter>zsLib\eventing\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\internal\zsLib_eventing_IDLTypes.h">
-      <Filter>zsLib\eventing\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\IIDLTypes.h">
-      <Filter>zsLib\eventing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_IDLCompiler.h">
-      <Filter>zsLib\eventing\tool\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_EventingCompiler.h">
-      <Filter>zsLib\eventing\tool\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_Helper.h">
-      <Filter>zsLib\eventing\tool\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\types.h">
-      <Filter>zsLib\eventing\tool</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructHeader.h">
-      <Filter>zsLib\eventing\tool\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateTypesHeader.h">
-      <Filter>zsLib\eventing\tool\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructImplHeader.h">
-      <Filter>zsLib\eventing\tool\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructImplCpp.h">
-      <Filter>zsLib\eventing\tool\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructCx.h">
-      <Filter>zsLib\eventing\tool\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateHelper.h">
-      <Filter>zsLib\eventing\tool\internal</Filter>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\RangeSelection.h">
-      <Filter>zsLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_RangeSelection.h">
-      <Filter>zsLib\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateJson.h">
-      <Filter>zsLib\eventing\tool\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructC.h">
-      <Filter>zsLib\eventing\tool\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructDotNet.h">
-      <Filter>zsLib\eventing\tool\internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_CommandLine.h">
-      <Filter>zsLib\eventing\tool\cpp</Filter>
-    </ClInclude>
+    <Midl Include="..\..\..\..\zsLib\zsLib\idl\std.idl" />
+    <Midl Include="..\..\..\..\zsLib\zsLib\idl\zsLib.idl" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\..\..\..\zsLib\zsLib\license.txt">
-      <Filter>zsLib</Filter>
-    </Text>
+    <None Include="..\..\..\..\zsLib\zsLib\cpp\zsLib.events.json" />
+    <None Include="..\..\..\..\zsLib\zsLib\idl\config.json" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\zsLib\zsLib\cpp\zsLib.events.json">
-      <Filter>zsLib\cpp</Filter>
-    </None>
-    <None Include="..\..\..\..\zsLib\zsLib\idl\config.json">
-      <Filter>zsLib\idl</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Midl Include="..\..\..\..\zsLib\zsLib\idl\std.idl">
-      <Filter>zsLib\idl</Filter>
-    </Midl>
-    <Midl Include="..\..\..\..\zsLib\zsLib\idl\zsLib.idl">
-      <Filter>zsLib\idl</Filter>
-    </Midl>
+    <Text Include="..\..\..\..\zsLib\zsLib\license.txt" />
   </ItemGroup>
 </Project>
