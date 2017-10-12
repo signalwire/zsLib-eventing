@@ -66,6 +66,7 @@
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLParserWarningTypes.cpp" />
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLText.cpp" />
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_XMLUnknown.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueAssociator.cpp" />
     <ClCompile Include="..\..\..\..\zsLib\zsLib\extras\uuid\clear.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
