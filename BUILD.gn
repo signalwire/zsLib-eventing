@@ -14,11 +14,6 @@ config("zslib_eventing_config") {
     } else {
       cflags_cc = [ 
         "-std=c++11",
-        "-stdlib=libc++",
-        "-nostdinc++",
-        "-nodefaultlibs",
-        "-lc++", 
-        "-lc++abi", 
         "-g",
         "-Wall",
         "-Wno-unknown-pragmas",
