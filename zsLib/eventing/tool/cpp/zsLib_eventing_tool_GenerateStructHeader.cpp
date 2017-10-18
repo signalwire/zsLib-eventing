@@ -205,6 +205,7 @@ namespace zsLib
                 if ("::zs::Seconds" == specialName) return makeOptional(isOptional, "::zsLib::Seconds");
                 if ("::zs::Minutes" == specialName) return makeOptional(isOptional, "::zsLib::Minutes");
                 if ("::zs::Hours" == specialName) return makeOptional(isOptional, "::zsLib::Hours");
+                if ("::zs::Days" == specialName) return makeOptional(isOptional, "::zsLib::Days");
               }
 
               return makeOptional(isOptional, "wrapper" + structType->getPathName() + "Ptr");

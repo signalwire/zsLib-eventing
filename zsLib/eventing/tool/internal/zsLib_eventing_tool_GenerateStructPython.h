@@ -162,6 +162,7 @@ namespace zsLib
 
           static GenerateStructPythonPtr create();
 
+          static String fixName(const String &originalName);
           static String fixNamespace(NamespacePtr namespaceObj);
           static String fixNamePath(ContextPtr context);
 

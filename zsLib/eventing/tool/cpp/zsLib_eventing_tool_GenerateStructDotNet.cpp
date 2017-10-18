@@ -155,6 +155,7 @@ namespace zsLib
                   if ("::zs::Seconds" == specialName) goto define_using_default;
                   if ("::zs::Minutes" == specialName) goto define_using_default;
                   if ("::zs::Hours" == specialName) goto define_using_default;
+                  if ("::zs::Days" == specialName) goto define_using_default;
                   return;
                 }
               define_using_default: {}
@@ -502,6 +503,7 @@ namespace zsLib
                 if ("::zs::Seconds" == specialName) return "System.TimeSpan";
                 if ("::zs::Minutes" == specialName) return "System.TimeSpan";
                 if ("::zs::Hours" == specialName) return "System.TimeSpan";
+                if ("::zs::Days" == specialName) return "System.TimeSpan";
 
                 if ("::zs::exceptions::Exception" == specialName) return "System.Exception";
                 if ("::zs::exceptions::InvalidArgument" == specialName) return "System.ArgumentException";

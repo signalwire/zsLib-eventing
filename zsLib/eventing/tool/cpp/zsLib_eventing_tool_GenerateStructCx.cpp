@@ -562,6 +562,9 @@ namespace zsLib
           generateBinaryHelper(helperFile);
           generateExceptionHelper(helperFile);
 
+          if (derives.end() != derives.find("::zs::Days")) {
+            generateDurationHelper(helperFile, "Days");
+          }
           if (derives.end() != derives.find("::zs::Hours")) {
             generateDurationHelper(helperFile, "Hours");
           }
@@ -2244,6 +2247,7 @@ namespace zsLib
                 if ("::zs::Seconds" == specialName) return makeCxOptional(isOptional, "Windows::Foundation::TimeSpan");
                 if ("::zs::Minutes" == specialName) return makeCxOptional(isOptional, "Windows::Foundation::TimeSpan");
                 if ("::zs::Hours" == specialName) return makeCxOptional(isOptional, "Windows::Foundation::TimeSpan");
+                if ("::zs::Days" == specialName) return makeCxOptional(isOptional, "Windows::Foundation::TimeSpan");
               }
               return makeCxOptional(false, fixNamePath(structType) + "^");
             }
@@ -2382,6 +2386,7 @@ namespace zsLib
               if ("::zs::Seconds" == specialName) return String("Seconds");
               if ("::zs::Minutes" == specialName) return String("Minutes");
               if ("::zs::Hours" == specialName) return String("Hours");
+              if ("::zs::Days" == specialName) return String("Days");
 
               if ("::zs::PromiseWith" == specialName) return String("PromiseWith");
               if ("::std::set" == specialName) return String("Set");
@@ -2493,6 +2498,7 @@ namespace zsLib
               if ("::zs::Seconds" == specialName) return;
               if ("::zs::Minutes" == specialName) return;
               if ("::zs::Hours" == specialName) return;
+              if ("::zs::Days" == specialName) return;
 
               if ("::std::list" == specialName) return;
               if ("::std::map" == specialName) return;
