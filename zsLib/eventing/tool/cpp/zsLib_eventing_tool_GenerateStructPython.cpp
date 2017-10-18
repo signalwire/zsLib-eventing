@@ -1819,11 +1819,11 @@ namespace zsLib
         {
           auto &indentStr = apiFile.indent_;
 
-          apiFile.usingTypedef(basicType, getPythonCType(basicType));
-
           String cTypeStr = GenerateStructC::fixCType(basicType);
 
           auto pathStr = GenerateStructC::fixBasicType(basicType);
+
+          apiFile.usingTypedef(cTypeStr, getPythonCType(basicType));
 
           {
             auto &ss = apiFile.structSS_;
