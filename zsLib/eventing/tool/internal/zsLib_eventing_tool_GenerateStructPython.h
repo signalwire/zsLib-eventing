@@ -94,7 +94,8 @@ namespace zsLib
 
             void usingTypedef(
                               const String &usingType,
-                              const String &originalType = String()
+                              const String &originalType = String(),
+                              const String &asType = String()
                               );
             void usingTypedef(IEventingTypes::PredefinedTypedefs type);
             void usingTypedef(TypePtr type);
@@ -165,8 +166,10 @@ namespace zsLib
           static String fixName(const String &originalName);
           static String fixNamespace(NamespacePtr namespaceObj);
           static String fixNamePath(ContextPtr context);
+          static String flattenPath(const String &originalName);
 
           static String getPythonConvertedCType(IEventingTypes::PredefinedTypedefs type);
+          static String getPythonConvertedCType(TypePtr type);
           static String getPythonCType(IEventingTypes::PredefinedTypedefs type);
           static String getPythonToCType(
                                          const String &inputValue,
@@ -336,6 +339,8 @@ namespace zsLib
           static void processInheritance(
                                          ApiFile &apiFile,
                                          StructFile &structFile,
+                                         StructFile &interfaceFile,
+                                         StructPtr rootStructObj,
                                          StructPtr structObj,
                                          bool &first
                                          );
@@ -344,6 +349,7 @@ namespace zsLib
                                     ApiFile &apiFile,
                                     InitFile &initFile,
                                     StructFile &structFile,
+                                    StructFile &interfaceFile,
                                     StructPtr rootStructObj,
                                     StructPtr structObj
                                     );
@@ -356,28 +362,33 @@ namespace zsLib
           static void processMethods(
                                      ApiFile &apiFile,
                                      StructFile &structFile,
+                                     StructFile &interfaceFile,
                                      StructPtr rootStructObj,
                                      StructPtr structObj
                                      );
           static void processProperties(
                                         ApiFile &apiFile,
                                         StructFile &structFile,
+                                        StructFile &interfaceFile,
                                         StructPtr rootStructObj,
                                         StructPtr structObj
                                         );
           static void processEventHandlers(
                                            ApiFile &apiFile,
                                            StructFile &structFile,
+                                           StructFile &interfaceFile,
                                            StructPtr structObj
                                            );
           static void processEventHandlersStart(
                                                 ApiFile &apiFile,
                                                 StructFile &structFile,
+                                                StructFile &interfaceFile,
                                                 StructPtr structObj
                                                 );
           static void processEventHandlersEnd(
                                               ApiFile &apiFile,
                                               StructFile &structFile,
+                                              StructFile &interfaceFile,
                                               StructPtr structObj
                                               );
 

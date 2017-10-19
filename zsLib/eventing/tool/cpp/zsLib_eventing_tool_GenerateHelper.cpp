@@ -261,6 +261,7 @@ namespace zsLib
               if ("::zs::Seconds" == specialName) return true;
               if ("::zs::Minutes" == specialName) return true;
               if ("::zs::Hours" == specialName) return true;
+              if ("::zs::Days" == specialName) return true;
               if ("::std::set" == specialName) return true;
               if ("::std::list" == specialName) return true;
               if ("::std::map" == specialName) return true;
