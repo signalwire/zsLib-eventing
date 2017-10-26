@@ -1358,6 +1358,7 @@ namespace zsLib
           apiFile.usingTypedef("callback_event_t", "c_void_p");
           apiFile.usingTypedef("event_observer_t", "c_void_p");
           apiFile.usingTypedef("const_char_star_t", "c_char_p");
+          apiFile.usingTypedef("CFUNCTYPE", "CFUNCTYPE");
 
           {
             auto &ss = apiFile.structSS_;
@@ -1374,7 +1375,7 @@ namespace zsLib
               "def callback_wrapperInstall(function):\n"
               "    callbackDef = CFUNCTYPE(None, callback_event_t)\n"
               "    cCallback = callbackDef(function)\n"
-              "    __callback_wrapperInstall(cCallback)\n"
+              "    Api.__callback_wrapperInstall(cCallback)\n"
               "\n"
               "__callback_wrapperObserverDestroy = __lib.callback_wrapperObserverDestroy\n"
               "__callback_wrapperObserverDestroy.restype = None\n"
@@ -1382,7 +1383,7 @@ namespace zsLib
               "\n"
               "@staticmethod\n"
               "def callback_wrapperObserverDestroy(handle: event_observer_t):\n"
-              "    __callback_wrapperObserverDestroy(handle)\n"
+              "    Api.__callback_wrapperObserverDestroy(handle)\n"
               "\n"
               "__callback_event_wrapperDestroy = __lib.callback_event_wrapperDestroy\n"
               "__callback_event_wrapperDestroy.restype = None\n"
@@ -1390,7 +1391,7 @@ namespace zsLib
               "\n"
               "@staticmethod\n"
               "def callback_event_wrapperDestroy(handle: callback_event_t):\n"
-              "    __callback_event_wrapperDestroy(handle)\n"
+              "    Api.__callback_event_wrapperDestroy(handle)\n"
               "\n"
               "__callback_event_wrapperInstanceId = __lib.callback_event_wrapperInstanceId\n"
               "__callback_event_wrapperInstanceId.restype = instance_id_t\n"
@@ -1398,7 +1399,7 @@ namespace zsLib
               "\n"
               "@staticmethod\n"
               "def callback_event_wrapperInstanceId(handle: callback_event_t) -> instance_id_t:\n"
-              "    return __callback_event_wrapperInstanceId(handle)\n"
+              "    return Api.__callback_event_wrapperInstanceId(handle)\n"
               "\n"
               "__callback_event_get_observer = __lib.callback_event_get_observer\n"
               "__callback_event_get_observer.restype = event_observer_t\n"
@@ -1406,7 +1407,7 @@ namespace zsLib
               "\n"
               "@staticmethod\n"
               "def callback_event_get_observer(handle: callback_event_t) -> event_observer_t:\n"
-              "    return __callback_event_get_observer(handle)\n"
+              "    return Api.__callback_event_get_observer(handle)\n"
               "\n"
               "__callback_event_get_namespace_actual = __lib.callback_event_get_namespace_actual\n"
               "__callback_event_get_namespace_actual.restype = const_char_star_t\n"
@@ -1414,11 +1415,14 @@ namespace zsLib
               "\n"
               "@staticmethod\n"
               "def callback_event_get_namespace_actual(handle: callback_event_t) -> const_char_star_t:\n"
-              "    return __lib.callback_event_get_namespace_actual(handle)\n"
+              "    return Api.__callback_event_get_namespace_actual(handle)\n"
               "\n"
               "@staticmethod\n"
               "def callback_event_get_namespace(handle: callback_event_t) -> str:\n"
-              "    return callback_event_get_namespace_actual(handle).value\n"
+              "    result = Api.callback_event_get_namespace_actual(handle)\n"
+              "    if (result is None):\n"
+              "        return None\n"
+              "    return result.decode('utf-8')\n"
               "\n"
               "__callback_event_get_class_actual = __lib.callback_event_get_class_actual\n"
               "__callback_event_get_class_actual.restype = const_char_star_t\n"
@@ -1426,10 +1430,13 @@ namespace zsLib
               "\n"
               "@staticmethod\n"
               "def callback_event_get_class_actual(handle: callback_event_t) -> const_char_star_t:\n"
-              "    return __callback_event_get_class_actual(handle)\n"
+              "    return Api.__callback_event_get_class_actual(handle)\n"
               "\n"
               "def callback_event_get_class(handle: callback_event_t) -> str:\n"
-              "    return callback_event_get_class_actual(handle).value\n"
+              "    result = Api.callback_event_get_class_actual(handle)\n"
+              "    if (result is None):\n"
+              "        return None\n"
+              "    return result.decode('utf-8')\n"
               "\n"
               "__callback_event_get_method_actual = __lib.callback_event_get_method_actual\n"
               "__callback_event_get_method_actual.restype = const_char_star_t\n"
@@ -1437,10 +1444,13 @@ namespace zsLib
               "\n"
               "@staticmethod\n"
               "def callback_event_get_method_actual(handle: callback_event_t) -> const_char_star_t:\n"
-              "    return __callback_event_get_method_actual(handle)\n"
+              "    return Api.__callback_event_get_method_actual(handle)\n"
               "\n"
               "def callback_event_get_method(handle: callback_event_t) -> str:\n"
-              "    return callback_event_get_method_actual(handle).value\n"
+              "    result =  Api.callback_event_get_method_actual(handle)\n"
+              "    if (result is None):\n"
+              "        return None\n"
+              "    return result.decode('utf-8')\n"
               "\n"
               "__callback_event_get_source = __lib.callback_event_get_source\n"
               "__callback_event_get_source.restype = generic_handle_t\n"
@@ -1448,7 +1458,7 @@ namespace zsLib
               "\n"
               "@staticmethod\n"
               "def callback_event_get_source(handle: callback_event_t) -> generic_handle_t:\n"
-              "    return __callback_event_get_source(handle)\n"
+              "    return Api.__callback_event_get_source(handle)\n"
               "\n"
               "__callback_event_get_source_instance_id = __lib.callback_event_get_source_instance_id\n"
               "__callback_event_get_source_instance_id.restype = generic_handle_t\n"
@@ -1456,7 +1466,7 @@ namespace zsLib
               "\n"
               "@staticmethod\n"
               "def callback_event_get_source_instance_id(handle: callback_event_t) -> instance_id_t:\n"
-              "    return __callback_event_get_source_instance_id(handle)\n"
+              "    return Api.__callback_event_get_source_instance_id(handle)\n"
               "\n"
               "__callback_event_get_data = __lib.callback_event_get_data\n"
               "__callback_event_get_data.restype = generic_handle_t\n"
@@ -1464,7 +1474,7 @@ namespace zsLib
               "\n"
               "@staticmethod\n"
               "def callback_event_get_data(handle: callback_event_t, argumentIndex: int) -> generic_handle_t:\n"
-              "    return __callback_event_get_data(handle, c_int(argumentIndex))\n"
+              "    return Api.__callback_event_get_data(handle, c_int(argumentIndex))\n"
               ;
             GenerateHelper::insertBlob(ss, indentStr, callbackHelpers, true);
 
@@ -1478,6 +1488,7 @@ namespace zsLib
 
             apiFile.usingTypedef("weakref");
             apiFile.usingTypedef("sys");
+            apiFile.usingTypedef("queue");
 
             static const char *callbackHelpers =
               "# delegate FireEventDelegate(target: object, methodName: str, handle: callback_event_t) -> None\n"
@@ -1487,46 +1498,53 @@ namespace zsLib
               "    \n"
               "    @staticmethod\n"
               "    def getSingleton():\n"
-              "      if (EventManager.__singleton is None):\n"
-              "       EventManager.__singleton = EventManager()\n"
-              "      return EventManager.__singleton\n"
+              "        if (Helpers.EventManager.__singleton is None):\n"
+              "            Helpers.EventManager.__singleton = Helpers.EventManager()\n"
+              "        return Helpers.EventManager.__singleton\n"
               "    \n"
-              "    class __Target:\n"
-              "        def __init__(self, target: object, fireDelegate):\n"
+              "    @staticmethod\n"
+              "    def getQueue():\n"
+              "        return Helpers.EventManager.getSingleton().__queue\n"
+              "    \n"
+              "    class Target:\n"
+              "        def __init__(self, target: object, targetCallback):\n"
               "          self.__target = weakref.ref(target)\n"              
-              "          self.__delegate = fireDelegate\n"
+              "          self.__delegate = targetCallback\n"
               "        \n"
               "        def fireEvent(self, methodName: str, handle: callback_event_t):\n"
               "            target = self.__target()\n"
               "            if (target is None):\n"
               "                return\n"
-              "            self.__delegate_(target, methodName, handle)\n"
+              "            self.__delegate(target, methodName, handle)\n"
+              "        \n"
+              "        def target(self):\n"
+              "            return self.__target()\n"
               "    \n"
-              "    class __InstanceObservers:\n"
+              "    class InstanceObservers:\n"
               "        def __init__(self):\n"
               "            self.__targets = []\n"
               "        \n"
-              "        def observeEvents(self, target: object, fireDelegate):\n"
+              "        def observeEvents(self, target: object, targetCallback):\n"
               "            oldList = self.__targets\n"
               "            newList = []\n"
               "            \n"
               "            for value in oldList:\n"
-              "                existingTarget = value.__target()\n"
+              "                existingTarget = value.target()\n"
               "                if (existingTarget is None):\n"
               "                    continue\n"
               "                if (id(existingTarget) == id(target)):\n"
               "                    continue\n"
               "                newList.append(value)\n"
               "            \n"
-              "            newList.append(__Target(target, targetCallback))\n"
+              "            newList.append(Helpers.EventManager.Target(target, targetCallback))\n"
               "            self.__targets = newList\n"
               "        \n"
               "        def observeEventsCancel(self, target: object):\n"
               "            oldList = self.__targets\n"
               "            newList = []\n"
               "            \n"
-              "            for value in OldList:\n"
-              "                existingTarget = value.__target()\n"
+              "            for value in oldList:\n"
+              "                existingTarget = value.target()\n"
               "                if (existingTarget is None):\n"
               "                    continue\n"
               "                if (id(existingTarget) == id(target)):\n"
@@ -1539,14 +1557,14 @@ namespace zsLib
               "        def targets(self):\n"
               "            return self.__targets\n"
               "    \n"
-              "    class __StructObservers:\n"
+              "    class StructObservers:\n"
               "        def __init__(self):\n"
               "            self.__observers = {}\n"
               "        \n"
               "        def observeEvents(self, source: instance_id_t, target: object, targetCallback):\n"
               "            observer = self.__observers.get(source)\n"
               "            if (observer is None):\n"
-              "                observer = __InstanceObservers()\n"
+              "                observer = Helpers.EventManager.InstanceObservers()\n"
               "                self.__observers[source] = observer\n"
               "            observer.observeEvents(target, targetCallback)\n"
               "        \n"
@@ -1561,14 +1579,14 @@ namespace zsLib
               "                return None\n"
               "            return observer.targets\n"
               "    \n"
-              "    class __Structs:\n"
+              "    class Structs:\n"
               "        def __init__(self):\n"
               "            self.__observers = {}\n"
               "        \n"
               "        def observeEvents(self, className: str, source: instance_id_t, target: object, targetCallback):\n"
               "            observer = self.__observers.get(className)\n"
               "            if (observer is None):\n"
-              "                observer = __StructObservers()\n"
+              "                observer = Helpers.EventManager.StructObservers()\n"
               "                self.__observers[className] = observer\n"
               "            observer.observeEvents(source, target, targetCallback)\n"
               "        \n"
@@ -1586,12 +1604,14 @@ namespace zsLib
               "    \n"
               "    def __init__(self):\n"
               "        self.__observers = {}\n"
-              "        $APINAMESPACE$.callback_wrapperInstall(handleEvent)\n"
+              "        self.__queue = queue.Queue(maxsize=0)\n"
+              "        self.__notifyCallback = None\n"
+              "        $APINAMESPACE$.callback_wrapperInstall(Helpers.EventManager.handleEvent)\n"
               "    \n"
-              "    def observeEvents(self, namespaceName: str, className: str, source: object, targetCallback):\n"
+              "    def observeEvents(self, namespaceName: str, className: str, source: object, target: object, targetCallback):\n"
               "        observer = self.__observers.get(namespaceName)\n"
               "        if (observer is None):\n"
-              "            observer = __Structs()\n"
+              "            observer = Helpers.EventManager.Structs()\n"
               "            self.__observers[namespaceName] = observer\n"
               "        observer.observeEvents(className, source, target, targetCallback)\n"
               "    \n"
@@ -1601,7 +1621,7 @@ namespace zsLib
               "            return\n"
               "        observer.observeEventsCancel(className, source, target)\n"
               "    \n"
-              "    def __handleEvent(self, handle: callback_event_t, namespaceName: str, methodName: str,    source: instance_id_t):\n"
+              "    def __handleEvent(self, handle: callback_event_t, namespaceName: str, className: str, methodName: str, source: instance_id_t):\n"
               "        observer = self.__observers.get(namespaceName)\n"
               "        if (observer is None):\n"
               "            return\n"
@@ -1612,26 +1632,55 @@ namespace zsLib
               "            target.fireEvent(methodName, handle)\n"
               "    \n"
               "    @staticmethod\n"
+              "    def setNotifyCallback(notifyCallback):\n"
+              "        singleton = Helpers.EventManager.getSingleton()\n"
+              "        singleton.__notifyCallback = notifyCallback\n"
+              "    \n"
+              "    @staticmethod\n"
               "    def handleEvent(handle: callback_event_t):\n"
               "        if (handle is None):\n"
               "            return\n"
+              "        singleton = Helpers.EventManager.getSingleton()\n"
+              "        singleton.__queue.put(handle)\n"
+              "        if (singleton.__notifyCallback is not None):\n"
+              "            singleton.__notifyCallback()\n"
+              "    \n"
+              "    def processEvent(block=True):\n"
+              "        queue = Helpers.EventManager.getQueue()\n"
+              "        #try:\n"
+              "        handle = queue.get(block)\n"
+              "        #except Exception:\n"
+              "        #    return\n"
               "        namespaceName = $APINAMESPACE$.callback_event_get_namespace(handle)\n"
               "        className = $APINAMESPACE$.callback_event_get_class(handle)\n"
               "        methodName = $APINAMESPACE$.callback_event_get_method(handle)\n"
               "        instanceId = $APINAMESPACE$.callback_event_get_source_instance_id(handle)\n"
-              "        EventManager.getSingleton().__handleEvent(handle, namespaceName, className, methodName, instanceId)\n"
+              "        Helpers.EventManager.getSingleton().__handleEvent(handle, namespaceName, className, methodName, instanceId)\n"
               "        $APINAMESPACE$.callback_event_wrapperDestroy(handle)\n"
               "\n"
               "@staticmethod\n"
               "def observeEvents(namespaceName: str, className: str, source: instance_id_t, target: object, targetCallback):\n"
-              "    EventManager.getSingleton().observeEvents(namespaceName, className, source, target, targetCallback)\n"
+              "    Helpers.EventManager.getSingleton().observeEvents(namespaceName, className, source, target, targetCallback)\n"
               "\n"
               "@staticmethod\n"
-              "def ObserveEventsCancel(namespaceName: str, className: str, source: instance_id_t, target: object):\n"
-              "    EventManager.getSingleton().observeEventsCancel(namespaceName, className, source, target)\n"
+              "def observeEventsCancel(namespaceName: str, className: str, source: instance_id_t, target: object):\n"
+              "    Helpers.EventManager.getSingleton().observeEventsCancel(namespaceName, className, source, target)\n"
+              "\n"
+              "@staticmethod\n"
+              "def processEvent(block=True):\n"
+              "    Helpers.EventManager.processEvent(block)\n"
+              "\n"
+              "@staticmethod\n"
+              "def setNotifyCallback(notifyCallback):\n"
+              "    Helpers.EventManager.setNotifyCallback(notifyCallback)\n"
+              "\n"
+              "@staticmethod\n"
+              "def getQueue():\n"
+              "    Helpers.EventManager.getQueue()\n"
+              "\n"
               ;
 
-              String apiNamespaceStr = "wrapper.Api";
+              String apiNamespaceStr = "Api";
 
               String callbackHelpersStr(callbackHelpers);
               callbackHelpersStr.replaceAll("$APINAMESPACE$", apiNamespaceStr);
@@ -1664,7 +1713,7 @@ namespace zsLib
               "\n"
               "@staticmethod\n"
               "def exception_wrapperCreate_exception() -> exception_handle_t:\n"
-              "    return __exception_wrapperCreate_exception()\n"
+              "    return Api.__exception_wrapperCreate_exception()\n"
               "\n"
               "__exception_wrapperDestroy = __lib.exception_wrapperDestroy\n"
               "__exception_wrapperDestroy.restype = None\n"
@@ -1672,7 +1721,7 @@ namespace zsLib
               "\n"
               "@staticmethod\n"
               "def exception_wrapperDestroy(handle: exception_handle_t):\n"
-              "    __exception_wrapperDestroy(handle)\n"
+              "    Api.__exception_wrapperDestroy(handle)\n"
               "\n"
               "__exception_wrapperInstanceId = __lib.exception_wrapperInstanceId\n"
               "__exception_wrapperInstanceId.restype = instance_id_t\n"
@@ -1680,7 +1729,7 @@ namespace zsLib
               "\n"
               "@staticmethod\n"
               "def exception_wrapperInstanceId(handle: exception_handle_t) -> instance_id_t:\n"
-              "    return __exception_wrapperInstanceId(handle)\n"
+              "    return Api.__exception_wrapperInstanceId(handle)\n"
               "\n"
               "__exception_hasException = __lib.exception_hasException\n"
               "__exception_hasException.restype = c_bool\n"
@@ -1688,7 +1737,7 @@ namespace zsLib
               "\n"
               "@staticmethod\n"
               "def exception_hasException(handle: exception_handle_t) -> bool:\n"
-              "    return bool(__exception_hasException(handle))\n"
+              "    return bool(Api.__exception_hasException(handle))\n"
               "\n"
               "__exception_what_actual = __lib.exception_what_actual\n"
               "__exception_what_actual.restype = c_char_p\n"
@@ -1696,7 +1745,7 @@ namespace zsLib
               "\n"
               "@staticmethod\n"
               "def exception_what_actual(handle: exception_handle_t) -> c_char_p:\n"
-              "    return __exception_what_actual(handle)\n"
+              "    return Api.__exception_what_actual(handle)\n"
               "\n"
               "@staticmethod\n"
               "def exception_what(handle: exception_handle_t) -> str:\n"
@@ -1712,7 +1761,7 @@ namespace zsLib
             auto &ss = apiFile.helpersSS_;
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def exception_FromC(handle: exception_handle_t) -> BaseException:\n";
-            ss << indentStr << "    if (not " << getApiPath() << ".exception_hasException(handle)):\n";
+            ss << indentStr << "    if (not Api.exception_hasException(handle)):\n";
             ss << indentStr << "      return None\n";
           }
 
@@ -1730,8 +1779,8 @@ namespace zsLib
             ss << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def exception_AdoptFromC(handle: exception_handle_t) -> BaseException:\n";
-            ss << indentStr << "    result = exception_FromC(handle)\n";
-            ss << indentStr << "    " << getApiPath() << ".exception_wrapperDestroy(handle)\n";
+            ss << indentStr << "    result = Helpers.exception_FromC(handle)\n";
+            ss << indentStr << "    Api.exception_wrapperDestroy(handle)\n";
             ss << indentStr << "    return result\n";
 
             apiFile.endHelpersRegion("Exception helpers");
@@ -1766,12 +1815,12 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def exception_is_" << exceptionName << "(handle: exception_handle_t) -> bool:\n";
-            ss << indentStr << "    return bool(__exception_is_" << exceptionName << "(handle))\n";
+            ss << indentStr << "    return bool(Api.__exception_is_" << exceptionName << "(handle))\n";
           }
 
           {
             auto &ss = apiFile.helpersSS_;
-            ss << indentStr << "    if (" << getApiPath() << ".exception_is_" << exceptionName << "(handle)):\n";
+            ss << indentStr << "    if (Api.exception_is_" << exceptionName << "(handle)):\n";
             ss << indentStr << "        return " << fixPythonType(contextStruct) << "(" << getApiPath() << ".exception_what(handle)";
             ss << ")\n";
           }
@@ -1950,7 +1999,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "() -> " << boxedTypeStr << ":\n";
-            ss << indentStr << "    return __box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "()\n";
+            ss << indentStr << "    return Api.__box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "()\n";
             ss << indentStr << "\n";
             ss << indentStr << "__box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "WithValue = __lib.box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "WithValue\n";
             ss << indentStr << "__box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "WithValue.restype = " << boxedTypeStr << "\n";
@@ -1958,7 +2007,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "WithValue(value: " << cTypeStr << ") -> " << boxedTypeStr << ":\n";
-            ss << indentStr << "    return __box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "WithValue(value)\n";
+            ss << indentStr << "    return Api.__box_" << cTypeStr << "_wrapperCreate_" << cTypeStr << "WithValue(value)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__box_" << cTypeStr << "_wrapperDestroy = __lib.box_" << cTypeStr << "_wrapperDestroy\n";
             ss << indentStr << "__box_" << cTypeStr << "_wrapperDestroy.restype = None\n";
@@ -1966,7 +2015,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def box_" << cTypeStr << "_wrapperDestroy(handle: " << boxedTypeStr << "):\n";
-            ss << indentStr << "    return __box_" << cTypeStr << "_wrapperDestroy(handle)\n";
+            ss << indentStr << "    return Api.__box_" << cTypeStr << "_wrapperDestroy(handle)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__box_" << cTypeStr << "_wrapperInstanceId = __lib.box_" << cTypeStr << "_wrapperInstanceId\n";
             ss << indentStr << "__box_" << cTypeStr << "_wrapperInstanceId.restype = instance_id_t\n";
@@ -1974,7 +2023,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def box_" << cTypeStr << "_wrapperInstanceId(handle: " << boxedTypeStr << ") -> instance_id_t:\n";
-            ss << indentStr << "    return __box_" << cTypeStr << "_wrapperInstanceId(handle)\n";
+            ss << indentStr << "    return Api.__box_" << cTypeStr << "_wrapperInstanceId(handle)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__box_" << cTypeStr << "_has_value = __lib.box_" << cTypeStr << "_has_value\n";
             ss << indentStr << "__box_" << cTypeStr << "_has_value.restype = c_bool\n";
@@ -1982,7 +2031,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def box_" << cTypeStr << "_has_value(handle: " << boxedTypeStr << " ) -> bool:\n";
-            ss << indentStr << "    return bool(__box_" << cTypeStr << "_has_value(handle))\n";
+            ss << indentStr << "    return bool(Api.__box_" << cTypeStr << "_has_value(handle))\n";
             ss << indentStr << "\n";
             ss << indentStr << "__box_" << cTypeStr << "_get_value = __lib.box_" << cTypeStr << "_get_value\n";
             ss << indentStr << "__box_" << cTypeStr << "_get_value.restype = " << cTypeStr << "\n";
@@ -1990,7 +2039,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def box_" << cTypeStr << "_get_value(handle: " << boxedTypeStr << ") -> " << cTypeStr << ":\n";
-            ss << indentStr << "    return __box_" + cTypeStr + "_get_value(handle)\n";
+            ss << indentStr << "    return Api.__box_" + cTypeStr + "_get_value(handle)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__box_" << cTypeStr << "_set_value = __lib.box_" << cTypeStr << "_set_value\n";
             ss << indentStr << "__box_" << cTypeStr << "_set_value.restype = None\n";
@@ -1998,7 +2047,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def " << "box_" << cTypeStr << "_set_value(handle: " << boxedTypeStr << ", value: " << cTypeStr << "):\n";
-            ss << indentStr << "    __box_" << cTypeStr << "_set_value(handle, value)\n";
+            ss << indentStr << "    Api.__box_" << cTypeStr << "_set_value(handle, value)\n";
             ss << indentStr << "\n";
           }
           {
@@ -2102,7 +2151,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def string_t_wrapperCreate_string() -> string_t:\n";
-            ss << indentStr << "    return __string_t_wrapperCreate_string()\n";
+            ss << indentStr << "    return Api.__string_t_wrapperCreate_string()\n";
             ss << indentStr << "\n";
             ss << indentStr << "__string_t_wrapperCreate_stringWithValue = __lib.string_t_wrapperCreate_stringWithValue\n";
             ss << indentStr << "__string_t_wrapperCreate_stringWithValue.restype = string_t\n";
@@ -2110,7 +2159,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def string_t_wrapperCreate_stringWithValue(value: str) -> string_t:\n";
-            ss << indentStr << "    return __string_t_wrapperCreate_stringWithValue(c_char_p(value))\n";
+            ss << indentStr << "    return Api.__string_t_wrapperCreate_stringWithValue(c_char_p(value))\n";
             ss << indentStr << "\n";
             ss << indentStr << "__string_t_wrapperDestroy = __lib.string_t_wrapperDestroy\n";
             ss << indentStr << "__string_t_wrapperDestroy.restype = None\n";
@@ -2118,7 +2167,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def string_t_wrapperDestroy(handle: string_t):\n";
-            ss << indentStr << "    __string_t_wrapperDestroy(handle)\n";
+            ss << indentStr << "    Api.__string_t_wrapperDestroy(handle)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__string_t_wrapperInstanceId = __lib.string_t_wrapperInstanceId\n";
             ss << indentStr << "__string_t_wrapperInstanceId.restype = None\n";
@@ -2126,7 +2175,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def string_t_wrapperInstanceId(handle: string_t) -> instance_id_t:\n";
-            ss << indentStr << "    return __string_t_wrapperInstanceId(handle)\n";
+            ss << indentStr << "    return Api.__string_t_wrapperInstanceId(handle)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__string_t_get_value_actual = __lib.string_t_get_value_actual\n";
             ss << indentStr << "__string_t_get_value_actual.restype = const_char_star_t\n";
@@ -2134,11 +2183,14 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def string_t_get_value_actual(handle: string_t) -> const_char_star_t:\n";
-            ss << indentStr << "    return __string_t_get_value_actual(handle)\n";
+            ss << indentStr << "    return Api.__string_t_get_value_actual(handle)\n";
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def string_t_get_value(handle: string_t) -> str:\n";
-            ss << indentStr << "    return string_t_get_value_actual(handle).value\n";
+            ss << indentStr << "    result = string_t_get_value_actual(handle)\n";
+            ss << indentStr << "    if (result is None):\n";
+            ss << indentStr << "        return None\n";
+            ss << indentStr << "    return result.decode('utf-8')\n";
             ss << indentStr << "\n";
             ss << indentStr << "__string_t_set_value = __lib.string_t_set_value\n";
             ss << indentStr << "__string_t_set_value.restype = None\n";
@@ -2146,7 +2198,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def string_t_set_value(handle: string_t, value: str):\n";
-            ss << indentStr << "    __string_t_set_value(handle, c_char_p(value))\n";
+            ss << indentStr << "    Api.__string_t_set_value(handle, c_char_p(value))\n";
             ss << indentStr << "\n";
           }
           apiFile.endRegion("String API helpers");
@@ -2197,7 +2249,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def binary_t_wrapperCreate_binary_t() -> binary_t:\n";
-            ss << indentStr << "    return __binary_t_wrapperCreate_binary_t()\n";
+            ss << indentStr << "    return Api.__binary_t_wrapperCreate_binary_t()\n";
             ss << indentStr << "\n";
             ss << indentStr << "__binary_t_wrapperCreate_binary_tWithValue = __lib.binary_t_wrapperCreate_binary_tWithValue\n";
             ss << indentStr << "__binary_t_wrapperCreate_binary_tWithValue.restype = binary_t\n";
@@ -2205,7 +2257,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def binary_t_wrapperCreate_binary_tWithValue(value: bytes, size: long) -> binary_t:\n";
-            ss << indentStr << "    return __binary_t_wrapperCreate_binary_tWithValue(ctypes.create_string_buffer(value, size), binary_size_t(size))\n";
+            ss << indentStr << "    return Api.__binary_t_wrapperCreate_binary_tWithValue(ctypes.create_string_buffer(value, size), binary_size_t(size))\n";
             ss << indentStr << "\n";
             ss << indentStr << "__binary_t_wrapperDestroy = __lib.binary_t_wrapperDestroy\n";
             ss << indentStr << "__binary_t_wrapperDestroy.restype = None\n";
@@ -2213,7 +2265,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def binary_t_wrapperDestroy(handle: binary_t):\n";
-            ss << indentStr << "    __binary_t_wrapperDestroy(handle)\n";
+            ss << indentStr << "    Api.__binary_t_wrapperDestroy(handle)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__binary_t_wrapperInstanceId = __lib.binary_t_wrapperInstanceId\n";
             ss << indentStr << "__binary_t_wrapperInstanceId.restype = instance_id_t\n";
@@ -2221,7 +2273,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def binary_t_wrapperInstanceId(handle: binary_t) -> instance_id_t:\n";
-            ss << indentStr << "    return __binary_t_wrapperInstanceId(handle)\n";
+            ss << indentStr << "    return Api.__binary_t_wrapperInstanceId(handle)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__binary_t_get_value = __lib.binary_t_get_value\n";
             ss << indentStr << "__binary_t_get_value.restype = c_void_p\n";
@@ -2229,7 +2281,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def binary_t_get_value(handle: binary_t) -> c_void_p:\n";
-            ss << indentStr << "    return __binary_t_get_value(handle)\n";
+            ss << indentStr << "    return Api.__binary_t_get_value(handle)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__binary_t_get_size = __lib.binary_t_get_size\n";
             ss << indentStr << "__binary_t_get_size.restype = binary_size_t\n";
@@ -2237,7 +2289,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def binary_t_get_size(handle: binary_t) -> long:\n";
-            ss << indentStr << "    return __binary_t_get_size(handle).value\n";
+            ss << indentStr << "    return Api.__binary_t_get_size(handle).value\n";
             ss << indentStr << "\n";
             ss << indentStr << "__binary_t_set_value = __lib.binary_t_set_value\n";
             ss << indentStr << "__binary_t_set_value.restype = None\n";
@@ -2245,7 +2297,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def binary_t_set_value(handle: binary_t, value: bytes, size: long):\n";
-            ss << indentStr << "    __binary_t_set_value(handle, ctypes.create_string_buffer(value, size), c_size_t(size))\n";
+            ss << indentStr << "    Api.__binary_t_set_value(handle, ctypes.create_string_buffer(value, size), c_size_t(size))\n";
             ss << indentStr << "\n";
           }
           apiFile.endRegion("Binary API helpers");
@@ -2329,7 +2381,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def zs_" << durationType << "_wrapperCreate_" << durationType << "() -> " << cTypeStr << ":\n";
-            ss << indentStr << "    return __zs_" << durationType << "_wrapperCreate_" << durationType << "()\n";
+            ss << indentStr << "    return Api.__zs_" << durationType << "_wrapperCreate_" << durationType << "()\n";
             ss << indentStr << "\n";
             ss << indentStr << "__zs_" << durationType << "_wrapperCreate_" << durationType << "WithValue = __lib.zs_" << durationType << "_wrapperCreate_" << durationType << "WithValue\n";
             ss << indentStr << "__zs_" << durationType << "_wrapperCreate_" << durationType << "WithValue.restype = " << cTypeStr << "\n";
@@ -2337,7 +2389,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def zs_" << durationType << "_wrapperCreate_" << durationType << "WithValue(value: long) -> " << cTypeStr << ":\n";
-            ss << indentStr << "    return __zs_" << durationType << "_wrapperCreate_" << durationType << "WithValue(value)\n";
+            ss << indentStr << "    return Api.__zs_" << durationType << "_wrapperCreate_" << durationType << "WithValue(value)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__zs_" << durationType << "_wrapperDestroy = __lib.zs_" << durationType << "_wrapperDestroy\n";
             ss << indentStr << "__zs_" << durationType << "_wrapperDestroy.restype = None\n";
@@ -2345,7 +2397,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def zs_" << durationType << "_wrapperDestroy(handle: " << cTypeStr << "):\n";
-            ss << indentStr << "    __zs_" << durationType << "_wrapperDestroy(handle)\n";
+            ss << indentStr << "    Api.__zs_" << durationType << "_wrapperDestroy(handle)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__zs_" << durationType << "_wrapperInstanceId = __lib.zs_" << durationType << "_wrapperInstanceId\n";
             ss << indentStr << "__zs_" << durationType << "_wrapperInstanceId.restype = instance_id_t\n";
@@ -2353,7 +2405,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def zs_" << durationType << "_wrapperInstanceId(handle: " << cTypeStr << ") -> instance_id_t:\n";
-            ss << indentStr << "    return __zs_" << durationType << "_wrapperInstanceId(handle)\n";
+            ss << indentStr << "    return Api.__zs_" << durationType << "_wrapperInstanceId(handle)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__zs_" << durationType << "_get_value = __lib.zs_" << durationType << "_get_value\n";
             ss << indentStr << "__zs_" << durationType << "_get_value.restype = c_long\n";
@@ -2361,7 +2413,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def zs_" << durationType << "_get_value(handle: " << cTypeStr << ") -> long:\n";
-            ss << indentStr << "    return __zs_" << durationType << "_get_value(handle).value\n";
+            ss << indentStr << "    return Api.__zs_" << durationType << "_get_value(handle).value\n";
             ss << indentStr << "\n";
             ss << indentStr << "__zs_" << durationType << "_set_value = __lib.zs_" << durationType << "_get_value\n";
             ss << indentStr << "__zs_" << durationType << "_set_value.restype = None\n";
@@ -2369,7 +2421,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def zs_" << durationType << "_set_value(handle: " << cTypeStr << ", value: long):\n";
-            ss << indentStr << "    __zs_" << durationType << "_set_value(handle, c_long(value))\n";
+            ss << indentStr << "    Api.__zs_" << durationType << "_set_value(handle, c_long(value))\n";
             ss << indentStr << "\n";
           }
           {
@@ -2484,7 +2536,7 @@ namespace zsLib
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def " << GenerateStructC::fixType(templatedStructType) << "_wrapperCreate_" << structType->getMappingName() << "() -> " << GenerateStructC::fixCType(templatedStructType) << ":\n";
-              ss << indentStr << "    return __" << GenerateStructC::fixType(templatedStructType) << "_wrapperCreate_" << structType->getMappingName() << "\n";
+              ss << indentStr << "    return Api.__" << GenerateStructC::fixType(templatedStructType) << "_wrapperCreate_" << structType->getMappingName() << "\n";
               ss << indentStr << "\n";
               ss << indentStr << "__" << GenerateStructC::fixType(templatedStructType) << "_wrapperDestroy = __lib." << GenerateStructC::fixType(templatedStructType) << "_wrapperDestroy\n";
               ss << indentStr << "__" << GenerateStructC::fixType(templatedStructType) << "_wrapperDestroy.restype = None\n";
@@ -2492,7 +2544,7 @@ namespace zsLib
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def " << GenerateStructC::fixType(templatedStructType) << "_wrapperDestroy(handle: " << GenerateStructC::fixCType(templatedStructType) << "):\n";
-              ss << indentStr << "    __" << GenerateStructC::fixType(templatedStructType) << "_wrapperDestroy(handle)\n";
+              ss << indentStr << "    Api.__" << GenerateStructC::fixType(templatedStructType) << "_wrapperDestroy(handle)\n";
               ss << indentStr << "\n";
               ss << indentStr << "__" << GenerateStructC::fixType(templatedStructType) << "_wrapperInstanceId = __lib." << GenerateStructC::fixType(templatedStructType) << "_wrapperInstanceId\n";
               ss << indentStr << "__" << GenerateStructC::fixType(templatedStructType) << "_wrapperInstanceId.restype = instance_id_t\n";
@@ -2500,7 +2552,7 @@ namespace zsLib
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def " << GenerateStructC::fixType(templatedStructType) << "_wrapperInstanceId(handle: " << GenerateStructC::fixCType(templatedStructType) << ") -> instance_id_t:\n";
-              ss << indentStr << "    return __" << GenerateStructC::fixType(templatedStructType) << "_wrapperInstanceId(handle)\n";
+              ss << indentStr << "    return Api.__" << GenerateStructC::fixType(templatedStructType) << "_wrapperInstanceId(handle)\n";
               if (isMap) {
                 ss << indentStr << "\n";
                 ss << indentStr << "__" << GenerateStructC::fixType(templatedStructType) << "_insert = __lib." << GenerateStructC::fixType(templatedStructType) << "_insert\n";
@@ -2509,7 +2561,7 @@ namespace zsLib
                 ss << indentStr << "\n";
                 ss << indentStr << "@staticmethod\n";
                 ss << indentStr << "def " << GenerateStructC::fixType(templatedStructType) << "_insert(handle: " << GenerateStructC::fixCType(templatedStructType) << ", key: " << fixCPythonType(keyType) << ", value: " << fixCPythonType(listType) << "):\n";
-                ss << indentStr << "    __" << GenerateStructC::fixType(templatedStructType) << "_insert(handle, key, value)\n";
+                ss << indentStr << "    Api.__" << GenerateStructC::fixType(templatedStructType) << "_insert(handle, key, value)\n";
               } else {
                 ss << indentStr << "\n";
                 ss << indentStr << "__" << GenerateStructC::fixType(templatedStructType) << "_insert = __lib." << GenerateStructC::fixType(templatedStructType) << "_insert\n";
@@ -2518,7 +2570,7 @@ namespace zsLib
                 ss << indentStr << "\n";
                 ss << indentStr << "@staticmethod\n";
                 ss << indentStr << "def " << GenerateStructC::fixType(templatedStructType) << "_insert(handle: " << GenerateStructC::fixCType(templatedStructType) << " , value: " << fixCPythonType(listType) << "):\n";
-                ss << indentStr << "     __" << GenerateStructC::fixType(templatedStructType) << "_insert(handle, value)\n";
+                ss << indentStr << "     Api.__" << GenerateStructC::fixType(templatedStructType) << "_insert(handle, value)\n";
               }
 
               ss << indentStr << "\n";
@@ -2528,7 +2580,7 @@ namespace zsLib
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def " << GenerateStructC::fixType(templatedStructType) << "_wrapperIterBegin(handle: " << GenerateStructC::fixCType(templatedStructType) << ") -> iterator_handle_t:\n";
-              ss << indentStr << "    return __" << GenerateStructC::fixType(templatedStructType) << "_wrapperInstanceId(handle)\n";
+              ss << indentStr << "    return Api.__" << GenerateStructC::fixType(templatedStructType) << "_wrapperInstanceId(handle)\n";
               ss << indentStr << "\n";
               ss << indentStr << "__" << GenerateStructC::fixType(templatedStructType) << "_wrapperIterNext = __lib." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterNext\n";
               ss << indentStr << "__" << GenerateStructC::fixType(templatedStructType) << "_wrapperIterNext.restype = None\n";
@@ -2536,7 +2588,7 @@ namespace zsLib
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def " << GenerateStructC::fixType(templatedStructType) << "_wrapperIterNext(iterHandle: iterator_handle_t):\n";
-              ss << indentStr << "    __" << GenerateStructC::fixType(templatedStructType) << "_wrapperIterNext(iterHandle)\n";
+              ss << indentStr << "    Api.__" << GenerateStructC::fixType(templatedStructType) << "_wrapperIterNext(iterHandle)\n";
               ss << indentStr << "\n";
               ss << indentStr << "__" << GenerateStructC::fixType(templatedStructType) << "_wrapperIterIsEnd = __lib." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterIsEnd\n";
               ss << indentStr << "__" << GenerateStructC::fixType(templatedStructType) << "_wrapperIterIsEnd.restype = c_bool\n";
@@ -2544,7 +2596,7 @@ namespace zsLib
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def " << GenerateStructC::fixType(templatedStructType) << "_wrapperIterIsEnd(handle: " << GenerateStructC::fixCType(templatedStructType) << ", iterHandle: iterator_handle_t) -> bool:\n";
-              ss << indentStr << "    return __" << GenerateStructC::fixType(templatedStructType) << "_wrapperIterIsEnd(handle, iterHandle).value\n";
+              ss << indentStr << "    return Api.__" << GenerateStructC::fixType(templatedStructType) << "_wrapperIterIsEnd(handle, iterHandle).value\n";
               if (isMap) {
                 ss << indentStr << "\n";
                 ss << indentStr << "__" << GenerateStructC::fixType(templatedStructType) << "_wrapperIterKey = __lib." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterKey\n";
@@ -2553,7 +2605,7 @@ namespace zsLib
                 ss << indentStr << "\n";
                 ss << indentStr << "@staticmethod\n";
                 ss << indentStr << "def " << GenerateStructC::fixType(templatedStructType) << "_wrapperIterKey(iterHandle: iterator_handle_t) -> " << fixCPythonType(keyType) << ":\n";
-                ss << indentStr << "    return __" + GenerateStructC::fixType(templatedStructType) + "_wrapperIterKey(iterHandle)\n";
+                ss << indentStr << "    return Api.__" + GenerateStructC::fixType(templatedStructType) + "_wrapperIterKey(iterHandle)\n";
               }
               ss << indentStr << "\n";
               ss << indentStr << "__" << GenerateStructC::fixType(templatedStructType) << "_wrapperIterValue = __lib." << GenerateStructC::fixType(templatedStructType) << "_wrapperIterValue\n";
@@ -2562,7 +2614,7 @@ namespace zsLib
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def " << GenerateStructC::fixType(templatedStructType) << "_wrapperIterValue(iterHandle: iterator_handle_t) -> " << fixCPythonType(listType) << " :\n";
-              ss << indentStr << "    return __" + GenerateStructC::fixType(templatedStructType) + "_wrapperIterValue(iterHandle)\n";
+              ss << indentStr << "    return Api.__" + GenerateStructC::fixType(templatedStructType) + "_wrapperIterValue(iterHandle)\n";
               ss << indentStr << "\n";
             }
             {
@@ -2702,7 +2754,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def zs_" << specialName << "_wrapperDestroy(handle: " << GenerateStructC::fixCType(contextStruct) << "):\n";
-            ss << indentStr << "    __zs_" << specialName << "_wrapperDestroy(handle)\n";
+            ss << indentStr << "    Api.__zs_" << specialName << "_wrapperDestroy(handle)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__zs_" << specialName << "_wrapperInstanceId = __lib.zs_" << specialName << "_wrapperInstanceId\n";
             ss << indentStr << "__zs_" << specialName << "_wrapperInstanceId.restype = instance_id_t\n";
@@ -2710,7 +2762,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def zs_" << specialName << "_wrapperInstanceId(handle: " << GenerateStructC::fixCType(contextStruct) << ") -> instance_id_t:\n";
-            ss << indentStr << "    return __zs_" << specialName << "_wrapperInstanceId(handle)\n";
+            ss << indentStr << "    return Api.__zs_" << specialName << "_wrapperInstanceId(handle)\n";
             if (isPromise) {
               ss << indentStr << "\n";
               ss << indentStr << "__zs_" << specialName << "_wrapperObserveEvents = __lib.zs_" << specialName << "_wrapperObserveEvents\n";
@@ -2719,7 +2771,7 @@ namespace zsLib
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def zs_" << specialName << "_wrapperObserveEvents(handle: " << GenerateStructC::fixCType(contextStruct) << ") -> event_observer_t:\n";
-              ss << indentStr << "    return __zs_" << specialName << "_wrapperObserveEvents(handle)\n";
+              ss << indentStr << "    return Api.__zs_" << specialName << "_wrapperObserveEvents(handle)\n";
               ss << indentStr << "\n";
               ss << indentStr << "__zs_" << specialName << "_get_id = __lib.zs_" << specialName << "_get_id\n";
               ss << indentStr << "__zs_" << specialName << "_get_id.restype = event_observer_t\n";
@@ -2727,7 +2779,7 @@ namespace zsLib
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def zs_" << specialName << "_get_id(handle: " << GenerateStructC::fixCType(contextStruct) << ") -> c_uint64:\n";
-              ss << indentStr << "    return __zs_" << specialName << "_get_id(handle)\n";
+              ss << indentStr << "    return Api.__zs_" << specialName << "_get_id(handle)\n";
               ss << indentStr << "\n";
               ss << indentStr << "__zs_" << specialName << "_isSettled = __lib.zs_" << specialName << "_isSettled\n";
               ss << indentStr << "__zs_" << specialName << "_isSettled.restype = c_bool\n";
@@ -2735,7 +2787,7 @@ namespace zsLib
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def zs_" << specialName << "_isSettled(handle: " << GenerateStructC::fixCType(contextStruct) << ") -> bool:\n";
-              ss << indentStr << "    return __zs_" << specialName << "_isSettled(handle).value\n";
+              ss << indentStr << "    return Api.__zs_" << specialName << "_isSettled(handle).value\n";
               ss << indentStr << "\n";
               ss << indentStr << "__zs_" << specialName << "_isResolved = __lib.zs_" << specialName << "_isResolved\n";
               ss << indentStr << "__zs_" << specialName << "_isResolved.restype = c_bool\n";
@@ -2743,7 +2795,7 @@ namespace zsLib
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def zs_" << specialName << "_isResolved(handle: " << GenerateStructC::fixCType(contextStruct) << ") -> bool:\n";
-              ss << indentStr << "    return __zs_" << specialName << "_isResolved(handle).value\n";
+              ss << indentStr << "    return Api.__zs_" << specialName << "_isResolved(handle).value\n";
               ss << indentStr << "\n";
               ss << indentStr << "__zs_" << specialName << "_isRejected = __lib.zs_" << specialName << "_isRejected\n";
               ss << indentStr << "__zs_" << specialName << "_isRejected.restype = c_bool\n";
@@ -2751,7 +2803,7 @@ namespace zsLib
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def zs_" << specialName << "_isRejected(handle: " << GenerateStructC::fixCType(contextStruct) << ") -> bool:\n";
-              ss << indentStr << "    return __zs_" << specialName << "_isRejected(handle).value\n";
+              ss << indentStr << "    return Api.__zs_" << specialName << "_isRejected(handle).value\n";
             }
             ss << indentStr << "\n";
           }
@@ -2855,7 +2907,7 @@ namespace zsLib
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def zs_PromiseWith_resolveValue_" << GenerateStructC::fixType(promiseType) << "(handle: zs_Promise_t) -> " << GenerateStructC::fixCType(promiseType) << ":\n";
-              ss << indentStr << "    return __zs_PromiseWith_resolveValue_" << GenerateStructC::fixType(promiseType) << "(handle)\n";
+              ss << indentStr << "    return Api.__zs_PromiseWith_resolveValue_" << GenerateStructC::fixType(promiseType) << "(handle)\n";
               ss << indentStr << "\n";
             }
             {
@@ -2950,7 +3002,7 @@ namespace zsLib
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def zs_PromiseWith_rejectReason_" << GenerateStructC::fixType(promiseType) << "(handle: zs_Promise_t) -> " << GenerateStructC::fixCType(promiseType) << ":\n";
-              ss << indentStr << "    return __zs_PromiseWith_rejectReason_" << GenerateStructC::fixType(promiseType) << "(handle)\n";
+              ss << indentStr << "    return Api.__zs_PromiseWith_rejectReason_" << GenerateStructC::fixType(promiseType) << "(handle)\n";
             }
             {
               auto &ss = apiFile.helpersSS_;
@@ -3034,6 +3086,27 @@ namespace zsLib
           String cTypeStr = GenerateStructC::fixCType(enumObj);
           String boxedTypeStr = "box_" + cTypeStr;
           String csTypeStr = fixPythonPathType(enumObj);
+          String csEnumName = fixName(enumObj->getMappingName());
+
+          auto parent = enumObj->getParent();
+          String fromStr;
+          String importNameStr;
+          String asStr;
+          String usageStr;
+          auto parentNamespace = parent->toNamespace();
+          if (parentNamespace) {
+            fromStr = fixNamespace(parentNamespace) + ".enums";
+            importNameStr = csEnumName;
+            asStr = csEnumName;
+            usageStr = importNameStr;
+          }
+          auto parentStruct = parent->toStruct();
+          if (parentStruct) {
+            fromStr = fixNamePath(parentStruct);
+            importNameStr = fixPythonPathType(parentStruct);
+            asStr = importNameStr;
+            usageStr = importNameStr + "." + csEnumName;
+          }
 
           apiFile.usingTypedef(cTypeStr, fixCsSystemType(enumObj->mBaseType));
           apiFile.usingTypedef(boxedTypeStr, "c_void_p");
@@ -3048,7 +3121,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def " << boxedTypeStr << "_wrapperCreate_" << boxedTypeStr << "() -> " << boxedTypeStr << ":\n";
-            ss << indentStr << "    return __" << boxedTypeStr << "_wrapperCreate_" << boxedTypeStr << "()\n";
+            ss << indentStr << "    return Api.__" << boxedTypeStr << "_wrapperCreate_" << boxedTypeStr << "()\n";
             ss << indentStr << "\n";
             ss << indentStr << "__" << boxedTypeStr << "_wrapperCreate_" << boxedTypeStr << "WithValue = __lib." << boxedTypeStr << "_wrapperCreate_" << boxedTypeStr << "WithValue\n";
             ss << indentStr << "__" << boxedTypeStr << "_wrapperCreate_" << boxedTypeStr << "WithValue.restype = " << boxedTypeStr << "\n";
@@ -3056,7 +3129,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def " << boxedTypeStr << "_wrapperCreate_" << boxedTypeStr << "WithValue(value: " << fixCPythonType(enumObj->mBaseType) << ") -> " << boxedTypeStr << ":\n";
-            ss << indentStr << "    return __" << boxedTypeStr << "_wrapperCreate_" << boxedTypeStr << "WithValue(value)\n";
+            ss << indentStr << "    return Api.__" << boxedTypeStr << "_wrapperCreate_" << boxedTypeStr << "WithValue(value)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__" << boxedTypeStr << "_wrapperDestroy = __lib." << boxedTypeStr << "_wrapperDestroy\n";
             ss << indentStr << "__" << boxedTypeStr << "_wrapperDestroy.restype = None\n";
@@ -3064,7 +3137,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def " << boxedTypeStr << "_wrapperDestroy(handle: " << boxedTypeStr << "):\n";
-            ss << indentStr << "    __" << boxedTypeStr << "_wrapperDestroy(handle)\n";
+            ss << indentStr << "    Api.__" << boxedTypeStr << "_wrapperDestroy(handle)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__" << boxedTypeStr << "_wrapperInstanceId = __lib." << boxedTypeStr << "_wrapperInstanceId\n";
             ss << indentStr << "__" << boxedTypeStr << "_wrapperInstanceId.restype = instance_id_t\n";
@@ -3072,7 +3145,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def " << boxedTypeStr << "_wrapperInstanceId(handle: " << boxedTypeStr << ") -> instance_id_t:\n";
-            ss << indentStr << "    return __" << boxedTypeStr << "_wrapperInstanceId(handle)\n";
+            ss << indentStr << "    return Api.__" << boxedTypeStr << "_wrapperInstanceId(handle)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__" << boxedTypeStr << "_has_value = __lib." << boxedTypeStr << "_has_value\n";
             ss << indentStr << "__" << boxedTypeStr << "_has_value.restype = c_bool\n";
@@ -3080,7 +3153,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def " << boxedTypeStr << "_has_value(handle: " << boxedTypeStr << ") -> bool:\n";
-            ss << indentStr << "    return __" << boxedTypeStr << "_has_value(handle).value\n";
+            ss << indentStr << "    return Api.__" << boxedTypeStr << "_has_value(handle).value\n";
             ss << indentStr << "\n";
             ss << indentStr << "__" << boxedTypeStr << "_get_value = __lib." << boxedTypeStr << "_get_value\n";
             ss << indentStr << "__" << boxedTypeStr << "_get_value.restype = " << fixCPythonType(enumObj->mBaseType) << "\n";
@@ -3088,7 +3161,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def " << boxedTypeStr << "_get_value(handle: " << boxedTypeStr << ") -> " << fixCPythonType(enumObj->mBaseType) << ":\n";
-            ss << indentStr << "    return __" << boxedTypeStr << "_get_value(handle)\n";
+            ss << indentStr << "    return Api.__" << boxedTypeStr << "_get_value(handle)\n";
             ss << indentStr << "\n";
             ss << indentStr << "__" << boxedTypeStr << "_set_value = __lib." << boxedTypeStr << "_set_value\n";
             ss << indentStr << "__" << boxedTypeStr << "_set_value.restype = " << fixCPythonType(enumObj->mBaseType) << "\n";
@@ -3096,7 +3169,7 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def " << boxedTypeStr << "_set_value(handle: " << boxedTypeStr << ", value: " << fixCPythonType(enumObj->mBaseType) << "):\n";
-            ss << indentStr << "    __" << boxedTypeStr << "_set_value(handle, value)\n";
+            ss << indentStr << "    Api.__" << boxedTypeStr << "_set_value(handle, value)\n";
             ss << indentStr << "\n";
           }
           {
@@ -3104,12 +3177,14 @@ namespace zsLib
             ss << indentStr << "\n";
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def " << cTypeStr << "_FromC(value: " << cTypeStr << "): # -> " << csTypeStr << ":\n";
-            ss << indentStr << "    return " << csTypeStr << "(" << getCToPythonType("value", enumObj->mBaseType) << ")\n";
+            ss << indentStr << "    from " << fromStr << " import " << importNameStr << " as " << asStr << "\n";
+            ss << indentStr << "    return " << usageStr << "(value)\n";
             ss << indentStr << "\n";
 
             ss << indentStr << "@staticmethod\n";
             ss << indentStr << "def " << cTypeStr << "_AdoptFromC(value: " << cTypeStr << "): # -> " << csTypeStr << ":\n";
-            ss << indentStr << "    return " << csTypeStr << "(" << getCToPythonType("value", enumObj->mBaseType) << ")\n";
+            ss << indentStr << "    from " << fromStr << " import " << importNameStr << " as " << asStr << "\n";
+            ss << indentStr << "    return " << usageStr << "(value)\n";
             ss << indentStr << "\n";
 
             ss << indentStr << "@staticmethod\n";
@@ -3182,7 +3257,7 @@ namespace zsLib
             auto &ss = enumFile.importSS_;
             ss << "# " ZS_EVENTING_GENERATED_BY "\n\n";
             ss << "\n";
-            ss << "from enum import Enum\n\n";
+            ss << "from aenum import Enum\n\n";
             ss << "from aenum import auto\n\n";
           }
 
@@ -3210,6 +3285,7 @@ namespace zsLib
 
             enumFile.indentMore();
 
+            bool first = true;
             for (auto iterVal = enumObj->mValues.begin(); iterVal != enumObj->mValues.end(); ++iterVal) {
               auto valueObj = (*iterVal);
 
@@ -3218,8 +3294,13 @@ namespace zsLib
               if (valueObj->mValue.hasData()) {
                 ss << " = " << valueObj->mValue;
               } else {
-                ss << " = auto()";
+                if (!first) {
+                  ss << " = auto()";
+                } else {
+                  ss << " = 0";
+                }
               }
+              first = false;
               ss << "\n";
             }
 
@@ -3406,9 +3487,9 @@ namespace zsLib
               }
               ss << indentStr << "\n";
               ss << indentStr << "def dispose(self):\n";
-              ss << indentStr << "    self.dispose(self, True)\n";
+              ss << indentStr << "    self.doDispose(True)\n";
               ss << indentStr << "\n";
-              ss << indentStr << "def dispose(self, disposing: bool):\n";
+              ss << indentStr << "def doDispose(self, disposing: bool):\n";
               ss << indentStr << "    if (self.__disposed == True):\n";
               ss << indentStr << "        return\n";
               ss << indentStr << "    if (self.__native is None):\n";
@@ -3420,19 +3501,19 @@ namespace zsLib
               ss << indentStr << "    self.__native = None\n";
               ss << indentStr << "\n";
               ss << indentStr << "def __del__(self):\n";
-              ss << indentStr << "    self.dispose(False)\n";
+              ss << indentStr << "    self.doDispose(False)\n";
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def " << fixedTypeStr << "_FromC(handle: " << cTypeStr << "): # -> " << csTypeStr << ":\n";
               ss << indentStr << "    if (handle is None):\n";
               ss << indentStr << "        return None\n";
-              ss << indentStr << "    return " << csTypeStr << "(__WrapperMakePrivate(), " << getApiPath() << "." << fixedTypeStr << "_wrapperClone(handle))\n";
+              ss << indentStr << "    return " << csTypeStr << "(None, " << getApiPath() << "." << fixedTypeStr << "_wrapperClone(handle))\n";
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def " << fixedTypeStr << "_AdoptFromC(handle: " << cTypeStr << "): # -> " << csTypeStr << ":\n";
               ss << indentStr << "    if (handle is None):\n";
               ss << indentStr << "        return None\n";
-              ss << indentStr << "    return " << csTypeStr << "(__WrapperMakePrivate(), handle)\n";
+              ss << indentStr << "    return " << csTypeStr << "(None, handle)\n";
               ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "# def " << fixedTypeStr << "_ToC(value: " << csTypeStr << ") -> " << cTypeStr << ":\n";
@@ -3456,7 +3537,7 @@ namespace zsLib
               ss << indentApiStr << "@staticmethod\n";
               ss << indentApiStr << "# def " << fixedTypeStr << "_wrapperClone(handle: " << cTypeStr << ") -> " << cTypeStr << ":\n";
               ss << indentApiStr << "def " << fixedTypeStr << "_wrapperClone(handle) -> " << cTypeStr << ":\n";
-              ss << indentApiStr << "    return __" << fixedTypeStr << "_wrapperClone(handle)\n";
+              ss << indentApiStr << "    return Api.__" << fixedTypeStr << "_wrapperClone(handle)\n";
               ss << indentApiStr << "\n";
               ss << indentApiStr << "__" << fixedTypeStr << "_wrapperDestroy = __lib." << fixedTypeStr << "_wrapperDestroy\n";
               ss << indentApiStr << "__" << fixedTypeStr << "_wrapperDestroy.restype = None\n";
@@ -3464,7 +3545,7 @@ namespace zsLib
               ss << indentApiStr << "\n";
               ss << indentApiStr << "@staticmethod\n";
               ss << indentApiStr << "def " << fixedTypeStr << "_wrapperDestroy(handle: " << cTypeStr << "):\n";
-              ss << indentApiStr << "    __" << fixedTypeStr << "_wrapperDestroy(handle)\n";
+              ss << indentApiStr << "    Api.__" << fixedTypeStr << "_wrapperDestroy(handle)\n";
               ss << indentApiStr << "\n";
               ss << indentApiStr << "__" << fixedTypeStr << "_wrapperInstanceId = __lib." << fixedTypeStr << "_wrapperInstanceId\n";
               ss << indentApiStr << "__" << fixedTypeStr << "_wrapperInstanceId.restype = instance_id_t\n";
@@ -3472,7 +3553,7 @@ namespace zsLib
               ss << indentApiStr << "\n";
               ss << indentApiStr << "@staticmethod\n";
               ss << indentApiStr << "def " << fixedTypeStr << "_wrapperInstanceId(handle: " << cTypeStr << ") -> instance_id_t:\n";
-              ss << indentApiStr << "    return __" << fixedTypeStr << "_wrapperInstanceId(handle)\n";
+              ss << indentApiStr << "    return Api.__" << fixedTypeStr << "_wrapperInstanceId(handle)\n";
               if (structFile.hasEvents_) {
                 apiFile.usingTypedef("event_observer_t", "c_void_p");
                 ss << indentApiStr << "\n";
@@ -3482,7 +3563,7 @@ namespace zsLib
                 ss << indentApiStr << "\n";
                 ss << indentApiStr << "@staticmethod\n";
                 ss << indentApiStr << "def " << fixedTypeStr << "_wrapperObserveEvents(handle: " << cTypeStr << ") -> event_observer_t:\n";
-                ss << indentApiStr << "    return __" << fixedTypeStr << "_wrapperObserveEvents(handle)\n";
+                ss << indentApiStr << "    return Api.__" << fixedTypeStr << "_wrapperObserveEvents(handle)\n";
               }
             }
             {
@@ -3491,16 +3572,19 @@ namespace zsLib
               ss << indentApiStr << "\n";
               ss << indentApiStr << "@staticmethod\n";
               ss << indentApiStr << "def " << fixedTypeStr << "_FromC(handle: " << cTypeStr << "): # -> " << fixPythonPathType(structObj) << ":\n";
-              ss << indentApiStr << "    return " << fixPythonPathType(structObj) << "." << fixedTypeStr << "_FromC(handle)\n";
+              ss << indentApiStr << "    from " << fixPythonPathType(structObj) << " import " << fixPythonType(structObj) << " as " << fixedTypeStr << "\n";
+              ss << indentApiStr << "    return " << fixedTypeStr << "." << fixedTypeStr << "_FromC(handle)\n";
               ss << indentApiStr << "\n";
               ss << indentApiStr << "@staticmethod\n";
               ss << indentApiStr << "def " << fixedTypeStr << "_AdoptFromC(handle: " << cTypeStr << "): # -> " << fixPythonPathType(structObj) <<  ":\n";
-              ss << indentApiStr << "    return " << fixPythonPathType(structObj) << "." << fixedTypeStr << "_AdoptFromC(handle)\n";
+              ss << indentApiStr << "    from " << fixPythonPathType(structObj) << " import " << fixPythonType(structObj) << " as " << fixedTypeStr << "\n";
+              ss << indentApiStr << "    return " << fixedTypeStr << "." << fixedTypeStr << "_AdoptFromC(handle)\n";
               ss << indentApiStr << "\n";
               ss << indentApiStr << "@staticmethod\n";
               ss << indentApiStr << "# def " << fixedTypeStr << "_ToC(value: " << fixPythonPathType(structObj) << ") -> " << cTypeStr << ":\n";
               ss << indentApiStr << "def " << fixedTypeStr << "_ToC(value) -> " << cTypeStr << ":\n";
-              ss << indentApiStr << "    return " << fixPythonPathType(structObj) << "." << fixedTypeStr << "_ToC(value)\n";
+              ss << indentApiStr << "    from " << fixPythonPathType(structObj) << " import " << fixPythonType(structObj) << " as " << fixedTypeStr << "\n";
+              ss << indentApiStr << "    return " << fixedTypeStr << "." << fixedTypeStr << "_ToC(value)\n";
               ss << indentApiStr << "\n";
             }
           }
@@ -3532,7 +3616,7 @@ namespace zsLib
                   ss << indentApiStr << "\n";
                   ss << indentApiStr << "@staticmethod\n";
                   ss << indentApiStr << "def " << GenerateStructC::fixType(structObj) << "_wrapperCastAs_" << GenerateStructC::fixType(relatedStruct) << "(handle: " << GenerateStructC::fixCType(structObj) << ") -> " << GenerateStructC::fixCType(relatedStruct) << ":\n";
-                  ss << indentApiStr << "    return __" << GenerateStructC::fixType(structObj) << "_wrapperCastAs_" << GenerateStructC::fixType(relatedStruct) << "(handle)\n";
+                  ss << indentApiStr << "    return Api.__" << GenerateStructC::fixType(structObj) << "_wrapperCastAs_" << GenerateStructC::fixType(relatedStruct) << "(handle)\n";
                 }
                 {
                   auto &indentStructStr = structFile.indent_;
@@ -3686,6 +3770,7 @@ namespace zsLib
           //}
           structFile.indentMore();
 
+          bool first = true;
           for (auto iter = enumObj->mValues.begin(); iter != enumObj->mValues.end(); ++iter) {
             auto valueObj = (*iter);
 
@@ -3693,8 +3778,13 @@ namespace zsLib
             if (valueObj->mValue.hasData()) {
               ss << " = " << valueObj->mValue;
             } else {
-              ss << " = auto()";
+              if (!first) {
+                ss << " = auto()";
+              } else {
+                ss << " = 0";
+              }
             }
+            first = false;
             ss << "\n";
           }
 
@@ -3712,6 +3802,7 @@ namespace zsLib
                                                   )
         {
           auto &indentStr = structFile.indent_;
+          String structName = GenerateStructCx::fixStructName(structObj);
 
           bool foundDllMethod {};
 
@@ -3728,7 +3819,7 @@ namespace zsLib
                 ss << indentApiStr << "@staticmethod\n";
                 apiFile.usingTypedef(rootStructObj);
                 ss << indentApiStr << "def " << GenerateStructC::fixType(rootStructObj) << "_wrapperCreate_" << rootStructObj->getMappingName() << "() -> " << GenerateStructC::fixCType(structObj) << ":\n";
-                ss << indentApiStr << "    return __" << GenerateStructC::fixType(rootStructObj) << "_wrapperCreate_" << rootStructObj->getMappingName() << "()\n";
+                ss << indentApiStr << "    return Api.__" << GenerateStructC::fixType(rootStructObj) << "_wrapperCreate_" << rootStructObj->getMappingName() << "()\n";
                 ss << indentApiStr << "\n";
               }
               {
@@ -3745,7 +3836,7 @@ namespace zsLib
                 ss << indentStr << "self.__native = " << getApiPath() << "." << GenerateStructC::fixType(rootStructObj) << "_wrapperCreate_" << altNameStr << "()\n";
 
                 if (structFile.hasEvents_) {
-                  ss << indentStr << "__wrapperObserveEvents()\n";
+                  ss << indentStr << "self.__wrapperObserveEvents()\n";
                 }
 
                 structFile.indentLess();
@@ -3880,7 +3971,7 @@ namespace zsLib
               if ((isConstructor) || (hasResult)) {
                 ss << "return ";
               }
-              ss << "__" << cMethodName << "(";
+              ss << "Api.__" << cMethodName << "(";
 
               first = true;
               if (method->mThrows.size() > 0) {
@@ -3910,12 +4001,21 @@ namespace zsLib
               auto &iSS = interfaceFile.interfaceSS_;
               auto &sSS = structFile.structSS_;
 
+              String altNameStr = method->getModifierValue(Modifier_AltName);
+              if (altNameStr.isEmpty()) {
+                altNameStr = method->getMappingName();
+              }
+
+              if (isConstructor) {
+                altNameStr.replaceAll(structName, "create");
+              }
+
               if (generateInterface) {
                 if (0 == loop) {
                   iSS << indentStr << "\n";
                   iSS << GenerateHelper::getDocumentation(indentStr + "# ", method, 80);
                 }
-                iSS << indentStr << (0 == loop ? "# ": "") << "def " << method->getMappingName() << "(";
+                iSS << indentStr << (0 == loop ? "# ": "") << "def " << altNameStr << "(";
               }
 
               if (0 == loop) {
@@ -3925,11 +4025,12 @@ namespace zsLib
                   sSS << indentStr << "@staticmethod\n";
                 }
               }
-              sSS << indentStr  << (0 == loop ? "# ": "") << "def " << (isConstructor ? String("__init__") : method->getMappingName()) << "(";
+              sSS << indentStr  << (0 == loop ? "# ": "") << "def " << (isConstructor ? altNameStr : altNameStr) << "(";
 
               bool first {true};
 
-              if (!isStatic) {
+              if ((!isStatic) && 
+                  (!isConstructor)) {
                 if (generateInterface) {
                   iSS << "self";
                 }
@@ -4026,6 +4127,7 @@ namespace zsLib
 
               if (isConstructor) {
                 structFile.usingTypedef(structObj);
+                ss << indentStr << "self = " << structName << "(None, None)\n";
                 ss << indentStr << "self.__native = ";
               }
 
@@ -4088,8 +4190,9 @@ namespace zsLib
               }
               if (isConstructor) {
                 if (structFile.hasEvents_) {
-                  ss << indentStr << "__wrapperObserveEvents()\n";
+                  ss << indentStr << "self.__wrapperObserveEvents()\n";
                 }
+                ss << indentStr << "return self";
               }
 
               if (rootStructObj != structObj) {
@@ -4322,7 +4425,7 @@ namespace zsLib
                 ss << indentApiStr << "\n";
                 ss << indentApiStr << "@staticmethod\n";
                 ss << indentApiStr << "def " << GenerateStructC::fixType(rootStructObj) << "_get_" << propertyObj->getMappingName() << "(" << (isStatic ? String() : "thisHandle: " + String(GenerateStructC::fixCType(rootStructObj))) << ") -> " << GenerateStructC::fixCType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << ":\n";
-                ss << indentApiStr << "    return __" << GenerateStructC::fixType(rootStructObj) << "_get_" << propertyObj->getMappingName() << "(" << (isStatic ? "" : "thisHandle") << ")\n";
+                ss << indentApiStr << "    return Api.__" << GenerateStructC::fixType(rootStructObj) << "_get_" << propertyObj->getMappingName() << "(" << (isStatic ? "" : "thisHandle") << ")\n";
               }
               if (hasSet) {
                 ss << indentApiStr << "\n";
@@ -4330,7 +4433,7 @@ namespace zsLib
                 ss << indentApiStr << "\n";
                 ss << indentApiStr << "@staticmethod\n";
                 ss << indentApiStr << "def " << GenerateStructC::fixType(rootStructObj) << "_set_" << propertyObj->getMappingName() << "(" << (isStatic ? String() : "thisHandle: " + String(GenerateStructC::fixCType(rootStructObj) + ", ")) << "value: " << (propertyObj->hasModifier(Modifier_Optional) ? String() : String()) << GenerateStructC::fixCType(propertyObj->hasModifier(Modifier_Optional), propertyObj->mType) << "):\n";
-                ss << indentApiStr << "    return __" << GenerateStructC::fixType(rootStructObj) << "_set_" << propertyObj->getMappingName() << "(" << (isStatic ? "" : "thisHandle, ") << "value)\n";
+                ss << indentApiStr << "    return Api.__" << GenerateStructC::fixType(rootStructObj) << "_set_" << propertyObj->getMappingName() << "(" << (isStatic ? "" : "thisHandle, ") << "value)\n";
               }
             }
 
