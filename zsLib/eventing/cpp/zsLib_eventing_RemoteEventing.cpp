@@ -217,9 +217,11 @@ namespace zsLib
         for (auto iter = mCleanUpProviderInfos.begin(); iter != mCleanUpProviderInfos.end(); ++iter)
         {
           auto *info = (*iter);
-          Log::EventingAtomDataArray providerArray;
-          if (Log::getEventingWriterInfo(info->mHandle, info->mProviderID, info->mProviderName, info->mProviderHash, &providerArray)) {
-            providerArray[mEventingAtomIndex] = 0;
+
+          zsLib::Log::GetEventingWriterInfoResult result;
+
+          if (Log::getEventingWriterInfo(info->mHandle, result)) {
+            result.atomArray_[mEventingAtomIndex] = 0;
           }
           delete info;
         }
@@ -515,11 +517,20 @@ namespace zsLib
           info = new ProviderInfo;
           info->mHandle = handle;
           info->mRelatedToRemoteEventingObjectID = mID;
-          if (!Log::getEventingWriterInfo(handle, info->mProviderID, info->mProviderName, info->mProviderHash)) {
+
+          zsLib::Log::GetEventingWriterInfoResult result;
+
+          result.includeJMAN_ = true;
+
+          if (!Log::getEventingWriterInfo(handle, result)) {
             ZS_LOG_WARNING(Detail, log("told about provider that does not exist") + ZS_PARAM("provider handle", string(handle)));
             delete info;
             return;
           }
+          info->mProviderID = result.providerID_;
+          info->mProviderName = result.providerName_;
+          info->mProviderHash = result.uniqueProviderHash_;
+          info->mProviderJMAN = result.jman_;
         }
         
         IRemoteEventingAsyncDelegatePtr pAsyncThis;
@@ -1830,9 +1841,9 @@ namespace zsLib
               auto *provider = (*found).second;
 
               {
-                auto foundUUDI = mRemoteRegisteredProvidersByUUID.find(provider->mProviderID);
-                if (foundUUDI != mRemoteRegisteredProvidersByUUID.end()) {
-                  mRemoteRegisteredProvidersByUUID.erase(foundUUDI);
+                auto foundUUID = mRemoteRegisteredProvidersByUUID.find(provider->mProviderID);
+                if (foundUUID != mRemoteRegisteredProvidersByUUID.end()) {
+                  mRemoteRegisteredProvidersByUUID.erase(foundUUID);
                 } else {
                   ZS_LOG_WARNING(Trace, log("notified remote provider is gone but provider UUID was not found"));
                 }
@@ -1861,7 +1872,15 @@ namespace zsLib
         String providerIDStr = IHelper::getElementText(rootEl->findLastChildElement("id"));
         String providerNameStr = IHelper::getElementText(rootEl->findLastChildElement("name"));
         String providerHashStr = IHelper::getElementText(rootEl->findLastChildElement("hash"));
-        
+        String base64JMan = IHelper::getElementText(rootEl->findLastChildElement("jman"));
+        String jman;
+        if (base64JMan.hasData()) {
+          auto bufferDecoded = IHelper::convertFromBase64(base64JMan);
+          if (bufferDecoded) {
+            jman = IHelper::convertToString(*bufferDecoded);
+          }
+        }
+
         ProviderInfo *provider {};
         
         try {
@@ -1881,6 +1900,7 @@ namespace zsLib
           provider->mRemoteHandle = remoteHandle;
           provider->mProviderName = providerNameStr;
           provider->mProviderHash = providerHashStr;
+          provider->mProviderJMAN = jman;
           provider->mSelfRegistered = true;
         } catch (const Numeric<UUID>::ValueOutOfRange &) {
           ZS_LOG_WARNING(Debug, log("remote provider announced by provider ID is not recognized") + ZS_PARAMIZE(providerIDStr));
@@ -1890,15 +1910,16 @@ namespace zsLib
         mRemoteRegisteredProvidersByUUID[provider->mProviderID] = provider;
         mRemoteRegisteredProvidersByRemoteHandle[provider->mRemoteHandle] = provider;
 
-        provider->mHandle = Log::registerEventingWriter(provider->mProviderID, provider->mProviderName, provider->mProviderHash);
+        provider->mHandle = Log::registerEventingWriter(provider->mProviderID, provider->mProviderName, provider->mProviderHash, jman);
 
-        EventingAtomDataArray atomArray {};
-        if (!Log::getEventingWriterInfo(provider->mHandle, provider->mProviderID, provider->mProviderName, provider->mProviderHash, &atomArray)) {
+        zsLib::Log::GetEventingWriterInfoResult result;
+
+        if (!Log::getEventingWriterInfo(provider->mHandle, result)) {
           ZS_LOG_WARNING(Detail, log("registered eventing writer but no information can be found") + ZS_PARAM("provider name", provider->mProviderName));
           return;
         }
 
-        ProviderInfo *existingProvider = reinterpret_cast<ProviderInfo *>(atomArray[mEventingAtomIndex]);
+        ProviderInfo *existingProvider = reinterpret_cast<ProviderInfo *>(result.atomArray_[mEventingAtomIndex]);
         if (existingProvider) {
           if (mID != existingProvider->mRelatedToRemoteEventingObjectID) {
             ZS_LOG_WARNING(Detail, log("existing provider belongs to unrelated remote eventing") + ZS_PARAM("id", existingProvider->mRelatedToRemoteEventingObjectID));
@@ -1906,7 +1927,7 @@ namespace zsLib
           }
           existingProvider->mRemoteHandle = remoteHandle;
         } else {
-          atomArray[mEventingAtomIndex] = reinterpret_cast<Log::EventingAtomData>(provider);
+          result.atomArray_[mEventingAtomIndex] = reinterpret_cast<Log::EventingAtomData>(provider);
         }
         
         if (mDelegate) {
@@ -2288,12 +2309,18 @@ namespace zsLib
           rootEl->adoptAsLastChild(IHelper::createElementWithText("id", string(provider->mProviderID)));
           rootEl->adoptAsLastChild(IHelper::createElementWithText("name", provider->mProviderName));
           rootEl->adoptAsLastChild(IHelper::createElementWithText("hash", provider->mProviderHash));
+          if (provider->mProviderJMAN.hasData()) {
+            auto base64Str = IHelper::convertToBase64(provider->mProviderJMAN);
+            if (base64Str.hasData()) {
+              rootEl->adoptAsLastChild(IHelper::createElementWithText("jman", base64Str));
+            }
+          }
         } else {
           rootEl->adoptAsLastChild(IHelper::createElementWithNumber("gone", (!announceNew) ? "true" : "false"));
         }
 
         sendData(MessageType_Notify, rootEl);
-        
+
         if (0 != provider->mBitmask) {
           announceProviderLoggingStateChangedToRemote(provider, provider->mBitmask);
         }

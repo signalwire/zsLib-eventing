@@ -269,8 +269,19 @@ namespace zsLib
     //-------------------------------------------------------------------------
     ElementPtr IHelper::read(const SecureByteBlock &buffer)
     {
-      if (0 == buffer.size()) ElementPtr();
+      if (0 == buffer.size()) return ElementPtr();
       DocumentPtr doc = Document::createFromAutoDetect(reinterpret_cast<const char *>(buffer.BytePtr()));
+      ElementPtr result = doc->getFirstChildElement();
+      if (!result) return ElementPtr();
+      result->orphan();
+      return result;
+    }
+
+    //-------------------------------------------------------------------------
+    ElementPtr IHelper::read(const String &str)
+    {
+      if (str.isEmpty()) return ElementPtr();
+      DocumentPtr doc = Document::createFromAutoDetect(str);
       ElementPtr result = doc->getFirstChildElement();
       if (!result) return ElementPtr();
       result->orphan();

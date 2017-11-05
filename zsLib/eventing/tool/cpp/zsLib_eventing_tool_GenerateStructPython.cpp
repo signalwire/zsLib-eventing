@@ -3503,6 +3503,9 @@ namespace zsLib
               ss << indentStr << "def __del__(self):\n";
               ss << indentStr << "    self.doDispose(False)\n";
               ss << indentStr << "\n";
+              ss << indentStr << "def internalGetNativeHandle(self):\n";
+              ss << indentStr << "    return self.__native\n";
+              ss << indentStr << "\n";
               ss << indentStr << "@staticmethod\n";
               ss << indentStr << "def " << fixedTypeStr << "_FromC(handle: " << cTypeStr << "): # -> " << csTypeStr << ":\n";
               ss << indentStr << "    if (handle is None):\n";
@@ -3520,7 +3523,7 @@ namespace zsLib
               ss << indentStr << "def " << fixedTypeStr << "_ToC(value) -> " << cTypeStr << ":\n";
               ss << indentStr << "    if (value is None):\n";
               ss << indentStr << "        return None\n";
-              ss << indentStr << "    return " << getApiPath() << "." << fixedTypeStr << "_wrapperClone(value.__native)\n";
+              ss << indentStr << "    return " << getApiPath() << "." << fixedTypeStr << "_wrapperClone(value.internalGetNativeHandle())\n";
               structFile.endRegion("To / From C routines");
             }
             {

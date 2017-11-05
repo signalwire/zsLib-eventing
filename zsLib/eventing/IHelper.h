@@ -55,6 +55,7 @@ namespace zsLib
 
       static ElementPtr read(const SecureByteBlockPtr buffer);
       static ElementPtr read(const SecureByteBlock &buffer);
+      static ElementPtr read(const String &str);
       static SecureByteBlockPtr writeJSON(
                                           const Document &doc,
                                           bool prettyPrint = true

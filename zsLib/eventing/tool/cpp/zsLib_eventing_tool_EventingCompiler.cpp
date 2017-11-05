@@ -486,7 +486,8 @@ namespace zsLib
               (mConfig.mProvider)) {
             writeXML(mConfig.mOutputName + "_win_etw.man", generateManifest("_win_etw.dll"));
             writeXML(mConfig.mOutputName + "_win_etw.wprp", generateWprp());
-            writeJSON(mConfig.mOutputName + ".jman", generateJsonMan());
+            auto jmanDoc = generateJsonMan();
+            writeJSON(mConfig.mOutputName + ".jman", mConfig.mOutputName + ".jman.h", jmanDoc);
             String outputXPlatformNameStr = mConfig.mOutputName + ".h";
             String outputWindowsNameStr = mConfig.mOutputName + "_win.h";
             String outputWindowsETWNameStr = mConfig.mOutputName + "_win_etw.h";
@@ -2277,7 +2278,7 @@ namespace zsLib
 
           ss << "#define ZS_INTERNAL_REGISTER_EVENTING_" << provider->mName << "() \\\n";
           ss << "    { \\\n";
-          ss << "      ZS_EVENTING_REGISTER_EVENT_WRITER(" << getEventingHandleFunctionWithNamespace << ", \"" << string(provider->mID) << "\", \"" << provider->mName << "\", \"" << provider->mUniqueHash << "\"); \\\n";
+          ss << "      ZS_EVENTING_REGISTER_EVENT_WRITER(" << getEventingHandleFunctionWithNamespace << ", \"" << string(provider->mID) << "\", \"" << provider->mName << "\", \"" << provider->mUniqueHash << "\", g" << provider->mName << "_JMANAsString); \\\n";
           for (auto iter = provider->mSubsystems.begin(); iter != provider->mSubsystems.end(); ++iter) {
             auto subsystem = (*iter).second;
             ss << "      ZS_EVENTING_REGISTER_SUBSYSTEM_DEFAULT_LEVEL(" << subsystem->mName << ", " << zsLib::Log::toString(subsystem->mLevel) << "); \\\n";
@@ -2971,12 +2972,182 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void EventingCompiler::writeJSON(const String &outputName, const DocumentPtr &doc) const throw (Failure)
+        SecureByteBlockPtr EventingCompiler::makeIntoCString(
+          std::stringstream &ssPrefix,
+          std::stringstream &ssPostFix,
+          const SecureByteBlock &buffer
+          )
+        {
+          ZS_THROW_INVALID_ASSUMPTION_IF(sizeof(char) != sizeof(BYTE));
+
+          if (buffer.SizeInBytes() < 1) return SecureByteBlockPtr();
+
+          String prefixStr = ssPrefix.str();
+          String postfixStr = ssPostFix.str();
+
+          size_t count = prefixStr.length() + postfixStr.length();
+
+          bool lastWasEOL = true;
+
+          // scope: count number of characters needed to hold escaped buffer
+          {
+            const char *p = reinterpret_cast<const char *>(buffer.BytePtr());
+
+            while ('\0' != *p) {
+
+              switch (*p) {
+                case ' ':  {
+                  if (lastWasEOL) goto skip_next;
+                  goto count_next;
+                }
+                case '\t': {
+                  if (lastWasEOL) goto skip_next;
+                  ++count;
+                  goto count_next;
+                }
+                case '\b':
+                case '\r':
+                case '\v':
+                case '\'':
+                case '\\':
+                case '\"': {
+                  ++count;
+                  lastWasEOL = false;
+                  goto count_next;
+                }
+                case '\n': {
+                  count += 4; // backslash, n character, end quote, \n character, start quote
+                  lastWasEOL = true;
+                  goto count_next;
+                }
+                default: {
+                  lastWasEOL = false;
+                  goto count_next;
+                }
+              }
+
+            count_next:
+              {
+                ++count;
+                ++p;
+                continue;
+              }
+
+            skip_next:
+              {
+                ++p;
+                continue;
+              }
+            }
+          }
+
+          SecureByteBlockPtr result(make_shared<SecureByteBlock>(count));
+
+          {
+            const char *p = reinterpret_cast<const char *>(buffer.BytePtr());
+            char *dest = reinterpret_cast<char *>(result->BytePtr());
+
+            memcpy(dest, prefixStr.c_str(), prefixStr.length());
+            dest += prefixStr.length();
+
+            char escape = 0;
+            lastWasEOL = true;
+
+            while ('\0' != *p) {
+              switch (*p) {
+                case ' ': {
+                  if (lastWasEOL) goto do_skip_next;
+                  goto put_next;
+                }
+                case '\t':  {
+                  if (lastWasEOL) goto do_skip_next;
+                  escape = 't'; goto do_escape;
+                }
+                case '\b':  escape = 'b'; goto do_escape;
+                case '\r':  escape = 'r'; goto do_escape;
+                case '\v':  escape = 'v'; goto do_escape;
+                case '\'':  escape = '\''; goto do_escape;
+                case '\\':  escape = '\\'; goto do_escape;
+                case '\"':  escape = '\"'; goto do_escape;
+                case '\n': {
+                  ++p;
+                  *dest = '\\';
+                  ++dest;
+                  *dest = 'n';
+                  ++dest;
+                  *dest = '\"';
+                  ++dest;
+                  *dest = '\n';
+                  ++dest;
+                  *dest = '\"';
+                  ++dest;
+                  lastWasEOL = true;
+                  break;
+                }
+                default: lastWasEOL = false; goto put_next;
+              }
+              continue;
+
+            do_escape:
+              {
+                lastWasEOL = false;
+                ++p;
+                *dest = '\\';
+                ++dest;
+                *dest = escape;
+                ++dest;
+                continue;
+              }
+
+            put_next:
+              {
+                *dest = *p;
+                ++p;
+                ++dest;
+                continue;
+              }
+
+            do_skip_next:
+              {
+                ++p;
+                continue;
+              }
+            }
+
+            memcpy(dest, postfixStr.c_str(), postfixStr.length());
+            dest += postfixStr.length();
+          }
+
+          return result;
+        }
+
+        //---------------------------------------------------------------------
+        void EventingCompiler::writeJSON(
+                                         const String &outputName,
+                                         const String &outputAsCName,
+                                         const DocumentPtr &doc
+                                         ) const throw (Failure)
         {
           if (!doc) return;
+
+          const ProviderPtr &provider = mConfig.mProvider;
+
           try {
             auto output = UseEventingHelper::writeJSON(*doc);
+
+            std::stringstream ssPrefix;
+            std::stringstream ssPostFix;
+
+            ssPrefix << "/* " ZS_EVENTING_GENERATED_BY " */\n\n";
+            ssPrefix << "static const char *g" << provider->mName << "_JMANAsString = \"";
+
+            ssPostFix << "\";\n";
+
             UseEventingHelper::saveFile(outputName, *output);
+            auto cString = makeIntoCString(ssPrefix, ssPostFix, *output);
+            if (cString) {
+              UseEventingHelper::saveFile(outputAsCName, *cString);
+            }
           } catch (const StdError &e) {
             ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Failed to save JSON file \"" + outputName + "\": " + " error=" + string(e.result()) + ", reason=" + e.message());
           }

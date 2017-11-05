@@ -268,9 +268,9 @@ namespace zsLib
           for (auto iter = mCleanProviderInfos.begin(); iter != mCleanProviderInfos.end(); ++iter) {
             auto *info = (*iter);
             
-            EventingAtomDataArray eventingArray = NULL;
-            if (Log::getEventingWriterInfo(info->mHandle, info->mProviderID, info->mProviderName, info->mProviderUniqueHash, &eventingArray)) {
-              eventingArray[mEventingAtom] = 0;
+            zsLib::Log::GetEventingWriterInfoResult result;
+            if (Log::getEventingWriterInfo(info->mHandle, result)) {
+              result.atomArray_[mEventingAtom] = 0;
             }
 
             delete (*iter);
@@ -523,10 +523,52 @@ namespace zsLib
 
               eventingAtomDataArray[mEventingAtom] = reinterpret_cast<EventingAtomData>(provider);
 
-              if (Log::getEventingWriterInfo(handle, provider->mProviderID, provider->mProviderName, provider->mProviderUniqueHash)) {
+              zsLib::Log::GetEventingWriterInfoResult result;
+
+              if (Log::getEventingWriterInfo(handle, result)) {
+
+                provider->mProviderID = result.providerID_;
+                provider->mProviderName = result.providerName_;
+                provider->mProviderUniqueHash = result.uniqueProviderHash_;
+
                 auto found = mProviders.find(provider->mProviderID);
                 if (found != mProviders.end()) {
+                  result.includeJMAN_ = true;
+                  if (Log::getEventingWriterInfo(handle, result)) {
+                    if (result.jman_.hasData()) {
+                      auto rootEl = IHelper::read(result.jman_);
 
+                      ProviderPtr providerJMAN;
+                      
+                      try {
+                        providerJMAN = Provider::create(rootEl);
+                      } catch (const InvalidContent &e) {
+                        if (!mMonitorInfo.mQuietMode) {
+                          tool::output() << "[Warning] Provider \"" << result.providerName_ << "\" JMAN contains invalid content.\n";
+                        }
+                      }
+                      if (providerJMAN) {
+                        mProviders[providerJMAN->mID] = providerJMAN;
+                        found = mProviders.find(result.providerID_);
+
+                        IRemoteEventingPtr remote = mRemote;
+
+                        postClosure([remote, providerJMAN] {
+                          for (auto iterSubsystem = providerJMAN->mSubsystems.begin(); iterSubsystem != providerJMAN->mSubsystems.end(); ++iterSubsystem) {
+                            auto subsystem = (*iterSubsystem).second;
+                            remote->setRemoteLevel(subsystem->mName, subsystem->mLevel);
+                          }
+                        });
+                      } else {
+                        if (!mMonitorInfo.mQuietMode) {
+                          tool::output() << "[Warning] Provider \"" << result.providerName_ << "\" JMAN failed to load.\n";
+                        }
+                      }
+                    }
+                  }
+                }
+
+                if (found != mProviders.end()) {
                   auto existingProvider = (*found).second;
 
                   if (existingProvider->mUniqueHash == provider->mProviderUniqueHash) {
