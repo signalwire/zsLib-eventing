@@ -79,6 +79,7 @@ namespace zsLib
           UUID mProviderID {};
           String mProviderName;
           String mProviderHash;
+          String mProviderJMAN;
           KeywordBitmaskType mBitmask {};
 
           ProviderInfo();

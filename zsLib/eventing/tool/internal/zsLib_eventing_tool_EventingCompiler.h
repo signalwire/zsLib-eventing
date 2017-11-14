@@ -96,7 +96,17 @@ namespace zsLib
                                                          ) const throw (Failure);
 
           void writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure);
-          void writeJSON(const String &outputName, const DocumentPtr &doc) const throw (Failure);
+
+          static SecureByteBlockPtr makeIntoCString(
+                                                    std::stringstream &ssPrefix,
+                                                    std::stringstream &ssPostFix,
+                                                    const SecureByteBlock &buffer
+                                                    );
+          void writeJSON(
+                         const String &outputName,
+                         const String &outputAsCName,
+                         const DocumentPtr &doc
+                         ) const throw (Failure);
           void writeBinary(const String &outputName, const SecureByteBlockPtr &buffer) const throw (Failure);
 
         private:
