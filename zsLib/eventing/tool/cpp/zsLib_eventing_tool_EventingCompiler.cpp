@@ -2972,11 +2972,11 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        SecureByteBlockPtr EventingCompiler::makeIntoCString(
-          std::stringstream &ssPrefix,
-          std::stringstream &ssPostFix,
-          const SecureByteBlock &buffer
-          )
+        SecureByteBlockPtr EventingCompiler::makeIntoCArray(
+                                                            std::stringstream &ssPrefix,
+                                                            std::stringstream &ssPostFix,
+                                                            const SecureByteBlock &buffer
+                                                            )
         {
           ZS_THROW_INVALID_ASSUMPTION_IF(sizeof(char) != sizeof(BYTE));
 
@@ -3005,18 +3005,8 @@ namespace zsLib
                   ++count;
                   goto count_next;
                 }
-                case '\b':
-                case '\r':
-                case '\v':
-                case '\'':
-                case '\\':
-                case '\"': {
-                  ++count;
-                  lastWasEOL = false;
-                  goto count_next;
-                }
                 case '\n': {
-                  count += 4; // backslash, n character, end quote, \n character, start quote
+                  ++count; // add end of line
                   lastWasEOL = true;
                   goto count_next;
                 }
@@ -3028,7 +3018,26 @@ namespace zsLib
 
             count_next:
               {
-                ++count;
+                ++count; // for first digit
+
+                if (*p < 0) {
+                  ++count; // for negative sign
+                  if (*p < -9) {
+                    ++count;  // for second digit
+                    if (*p < -99) {                      
+                      ++count;  // for third digit
+                    }
+                  }
+                }
+                if (*p > 9) {
+                  ++count; // for second digit
+                  if (*p > 99) {
+                    ++count; // for third digit
+                  }
+                }
+
+                ++count; // for comma
+                ++count; // for space
                 ++p;
                 continue;
               }
@@ -3050,8 +3059,8 @@ namespace zsLib
             memcpy(dest, prefixStr.c_str(), prefixStr.length());
             dest += prefixStr.length();
 
-            char escape = 0;
             lastWasEOL = true;
+            bool addEOL = false;
 
             while ('\0' != *p) {
               switch (*p) {
@@ -3061,49 +3070,40 @@ namespace zsLib
                 }
                 case '\t':  {
                   if (lastWasEOL) goto do_skip_next;
-                  escape = 't'; goto do_escape;
+                  goto put_next;
                 }
-                case '\b':  escape = 'b'; goto do_escape;
-                case '\r':  escape = 'r'; goto do_escape;
-                case '\v':  escape = 'v'; goto do_escape;
-                case '\'':  escape = '\''; goto do_escape;
-                case '\\':  escape = '\\'; goto do_escape;
-                case '\"':  escape = '\"'; goto do_escape;
                 case '\n': {
-                  ++p;
-                  *dest = '\\';
-                  ++dest;
-                  *dest = 'n';
-                  ++dest;
-                  *dest = '\"';
-                  ++dest;
-                  *dest = '\n';
-                  ++dest;
-                  *dest = '\"';
-                  ++dest;
+                  addEOL = true;
                   lastWasEOL = true;
-                  break;
+                  goto put_next;
                 }
                 default: lastWasEOL = false; goto put_next;
               }
               continue;
 
-            do_escape:
-              {
-                lastWasEOL = false;
-                ++p;
-                *dest = '\\';
-                ++dest;
-                *dest = escape;
-                ++dest;
-                continue;
-              }
-
             put_next:
               {
-                *dest = *p;
-                ++p;
+                int value = *p;
+                String strValue = string(value);
+                const char *tmp = strValue.c_str();
+                while ('\0' != *tmp) {
+                  *dest = *tmp;
+                  ++dest;
+                  ++tmp;
+                }
+
+                *dest = ',';
                 ++dest;
+
+                *dest = ' ';
+                ++dest;
+
+                ++p;
+                if (addEOL) {
+                  *dest = '\n';
+                  ++dest;
+                  addEOL = false;
+                }
                 continue;
               }
 
@@ -3139,12 +3139,12 @@ namespace zsLib
             std::stringstream ssPostFix;
 
             ssPrefix << "/* " ZS_EVENTING_GENERATED_BY " */\n\n";
-            ssPrefix << "static const char *g" << provider->mName << "_JMANAsString = \"";
+            ssPrefix << "static const char g" << provider->mName << "_JMANAsString [] = {";
 
-            ssPostFix << "\";\n";
+            ssPostFix << "0};\n";
 
             UseEventingHelper::saveFile(outputName, *output);
-            auto cString = makeIntoCString(ssPrefix, ssPostFix, *output);
+            auto cString = makeIntoCArray(ssPrefix, ssPostFix, *output);
             if (cString) {
               UseEventingHelper::saveFile(outputAsCName, *cString);
             }

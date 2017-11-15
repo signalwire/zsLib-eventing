@@ -97,11 +97,11 @@ namespace zsLib
 
           void writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure);
 
-          static SecureByteBlockPtr makeIntoCString(
-                                                    std::stringstream &ssPrefix,
-                                                    std::stringstream &ssPostFix,
-                                                    const SecureByteBlock &buffer
-                                                    );
+          static SecureByteBlockPtr makeIntoCArray(
+                                                   std::stringstream &ssPrefix,
+                                                   std::stringstream &ssPostFix,
+                                                   const SecureByteBlock &buffer
+                                                   );
           void writeJSON(
                          const String &outputName,
                          const String &outputAsCName,
