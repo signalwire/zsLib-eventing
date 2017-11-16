@@ -19,7 +19,6 @@
 		001E91C01E5EAD0C00980069 /* zsLib_eventing_tool_IDLCompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91B41E5EAD0C00980069 /* zsLib_eventing_tool_IDLCompiler.cpp */; };
 		001E91C11E5EAD0C00980069 /* zsLib_eventing_tool_Monitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91B51E5EAD0C00980069 /* zsLib_eventing_tool_Monitor.cpp */; };
 		001E91C21E5EAD0C00980069 /* zsLib_eventing_tool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 001E91B61E5EAD0C00980069 /* zsLib_eventing_tool.cpp */; };
-		005779C61E9684D7004B0E53 /* libcryptopp-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 005779C31E9684BC004B0E53 /* libcryptopp-osx.a */; };
 		005779D01E968597004B0E53 /* zsLib_eventing_tool_GenerateJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005779CD1E968597004B0E53 /* zsLib_eventing_tool_GenerateJson.cpp */; };
 		005779D11E968597004B0E53 /* zsLib_eventing_tool_GenerateStructC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005779CE1E968597004B0E53 /* zsLib_eventing_tool_GenerateStructC.cpp */; };
 		005779D21E968597004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005779CF1E968597004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.cpp */; };
@@ -72,19 +71,22 @@
 		00D8665A1DE38BCC00B7EB56 /* zsLib_XMLUnknown.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D866341DE38BCC00B7EB56 /* zsLib_XMLUnknown.cpp */; };
 		00D8665B1DE38BCC00B7EB56 /* zsLib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D866351DE38BCC00B7EB56 /* zsLib.cpp */; };
 		00D8667E1DE3933100B7EB56 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00D8667D1DE3933100B7EB56 /* CoreFoundation.framework */; };
+		52BE23AF1FB35FAD005E4A8A /* libcryptopp-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52BE23AC1FB35F01005E4A8A /* libcryptopp-osx.a */; };
+		52BE23B11FB36046005E4A8A /* zsLib_MessageQueueAssociator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 52BE23B01FB36046005E4A8A /* zsLib_MessageQueueAssociator.cpp */; };
+		52BE23B31FB360D1005E4A8A /* zsLib_eventing_tool_GenerateStructPython.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 52BE23B21FB360D1005E4A8A /* zsLib_eventing_tool_GenerateStructPython.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		005779C21E9684BC004B0E53 /* PBXContainerItemProxy */ = {
+		52BE23AB1FB35F01005E4A8A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 005779BE1E9684BC004B0E53 /* cryptopp-osx.xcodeproj */;
+			containerPortal = 52BE23A71FB35F01005E4A8A /* cryptopp-osx.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 009BBC571D976DC400B6B633;
 			remoteInfo = "cryptopp-osx";
 		};
-		005779C41E9684CB004B0E53 /* PBXContainerItemProxy */ = {
+		52BE23AD1FB35FA1005E4A8A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 005779BE1E9684BC004B0E53 /* cryptopp-osx.xcodeproj */;
+			containerPortal = 52BE23A71FB35F01005E4A8A /* cryptopp-osx.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 009BBC561D976DC400B6B633;
 			remoteInfo = "cryptopp-osx";
@@ -129,7 +131,6 @@
 		001E91CD1E5EAD3000980069 /* zsLib_eventing_tool_IDLCompiler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_tool_IDLCompiler.h; path = ../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_IDLCompiler.h; sourceTree = "<group>"; };
 		001E91CE1E5EAD3000980069 /* zsLib_eventing_tool_Monitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_tool_Monitor.h; path = ../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_Monitor.h; sourceTree = "<group>"; };
 		001E91CF1E5EAD3000980069 /* zsLib_eventing_tool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_tool.h; path = ../../../zsLib/eventing/tool/internal/zsLib_eventing_tool.h; sourceTree = "<group>"; };
-		005779BE1E9684BC004B0E53 /* cryptopp-osx.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "cryptopp-osx.xcodeproj"; path = "/Users/robin/Repos/ortclib/merged-idl-1st/ortclib-sdk/ortc/xplatform/zsLib-eventing/projects/xcode/../../../cryptopp/projects/xcode/cryptopp-osx/cryptopp-osx.xcodeproj"; sourceTree = "<absolute>"; };
 		005779CA1E968576004B0E53 /* zsLib_eventing_tool_GenerateJson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_tool_GenerateJson.h; path = ../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateJson.h; sourceTree = "<group>"; };
 		005779CB1E968576004B0E53 /* zsLib_eventing_tool_GenerateStructC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_tool_GenerateStructC.h; path = ../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructC.h; sourceTree = "<group>"; };
 		005779CC1E968576004B0E53 /* zsLib_eventing_tool_GenerateStructDotNet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zsLib_eventing_tool_GenerateStructDotNet.h; path = ../../../zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructDotNet.h; sourceTree = "<group>"; };
@@ -293,6 +294,9 @@
 		00D8667A1DE38BD800B7EB56 /* zsLib.events.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = zsLib.events.h; path = ../../../../zsLib/zsLib/internal/zsLib.events.h; sourceTree = "<group>"; };
 		00D8667B1DE38BD800B7EB56 /* zsLib.events.jman */ = {isa = PBXFileReference; lastKnownFileType = text; name = zsLib.events.jman; path = ../../../../zsLib/zsLib/internal/zsLib.events.jman; sourceTree = "<group>"; };
 		00D8667D1DE3933100B7EB56 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		52BE23A71FB35F01005E4A8A /* cryptopp-osx.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "cryptopp-osx.xcodeproj"; path = "../../../../cryptopp/projects/xcode/cryptopp-osx/cryptopp-osx.xcodeproj"; sourceTree = "<group>"; };
+		52BE23B01FB36046005E4A8A /* zsLib_MessageQueueAssociator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_MessageQueueAssociator.cpp; path = ../../../../zsLib/zsLib/cpp/zsLib_MessageQueueAssociator.cpp; sourceTree = "<group>"; };
+		52BE23B21FB360D1005E4A8A /* zsLib_eventing_tool_GenerateStructPython.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_eventing_tool_GenerateStructPython.cpp; path = ../../../zsLib/eventing/tool/cpp/zsLib_eventing_tool_GenerateStructPython.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -300,7 +304,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				005779C61E9684D7004B0E53 /* libcryptopp-osx.a in Frameworks */,
+				52BE23AF1FB35FAD005E4A8A /* libcryptopp-osx.a in Frameworks */,
 				00D8667E1DE3933100B7EB56 /* CoreFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -308,18 +312,10 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		005779BF1E9684BC004B0E53 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				005779C31E9684BC004B0E53 /* libcryptopp-osx.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		00D865951DE3723A00B7EB56 = {
 			isa = PBXGroup;
 			children = (
-				005779BE1E9684BC004B0E53 /* cryptopp-osx.xcodeproj */,
+				52BE23A71FB35F01005E4A8A /* cryptopp-osx.xcodeproj */,
 				00D865A01DE3723B00B7EB56 /* zsLib.Eventing.Compiler.Tool */,
 				00D865B71DE3755A00B7EB56 /* zsLib */,
 				00D8659F1DE3723B00B7EB56 /* Products */,
@@ -407,6 +403,7 @@
 		00D865B91DE3758500B7EB56 /* cpp */ = {
 			isa = PBXGroup;
 			children = (
+				52BE23B01FB36046005E4A8A /* zsLib_MessageQueueAssociator.cpp */,
 				00D866111DE38BCC00B7EB56 /* zsLib_Event.cpp */,
 				00D866121DE38BCC00B7EB56 /* zsLib_Exception.cpp */,
 				00D866131DE38BCC00B7EB56 /* zsLib_helpers.cpp */,
@@ -540,6 +537,7 @@
 		00D865BE1DE375AC00B7EB56 /* cpp */ = {
 			isa = PBXGroup;
 			children = (
+				52BE23B21FB360D1005E4A8A /* zsLib_eventing_tool_GenerateStructPython.cpp */,
 				001E91AB1E5EAD0C00980069 /* zsLib_eventing_tool_CommandLine.cpp */,
 				001E91AC1E5EAD0C00980069 /* zsLib_eventing_tool_EventingCompiler.cpp */,
 				001E91AD1E5EAD0C00980069 /* zsLib_eventing_tool_GenerateHelper.cpp */,
@@ -631,6 +629,14 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		52BE23A81FB35F01005E4A8A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				52BE23AC1FB35F01005E4A8A /* libcryptopp-osx.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -645,7 +651,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				005779C51E9684CB004B0E53 /* PBXTargetDependency */,
+				52BE23AE1FB35FA1005E4A8A /* PBXTargetDependency */,
 			);
 			name = zsLib.Eventing.Compiler.Tool;
 			productName = zsLib.Eventing.Compiler.Tool;
@@ -679,8 +685,8 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 005779BF1E9684BC004B0E53 /* Products */;
-					ProjectRef = 005779BE1E9684BC004B0E53 /* cryptopp-osx.xcodeproj */;
+					ProductGroup = 52BE23A81FB35F01005E4A8A /* Products */;
+					ProjectRef = 52BE23A71FB35F01005E4A8A /* cryptopp-osx.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -691,11 +697,11 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		005779C31E9684BC004B0E53 /* libcryptopp-osx.a */ = {
+		52BE23AC1FB35F01005E4A8A /* libcryptopp-osx.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = "libcryptopp-osx.a";
-			remoteRef = 005779C21E9684BC004B0E53 /* PBXContainerItemProxy */;
+			remoteRef = 52BE23AB1FB35F01005E4A8A /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -748,7 +754,9 @@
 				001E91BA1E5EAD0C00980069 /* zsLib_eventing_tool_GenerateStructCx.cpp in Sources */,
 				005779D01E968597004B0E53 /* zsLib_eventing_tool_GenerateJson.cpp in Sources */,
 				0058FDE51E15630C007548F6 /* zsLib_eventing_IDLTypes.cpp in Sources */,
+				52BE23B31FB360D1005E4A8A /* zsLib_eventing_tool_GenerateStructPython.cpp in Sources */,
 				00D8665B1DE38BCC00B7EB56 /* zsLib.cpp in Sources */,
+				52BE23B11FB36046005E4A8A /* zsLib_MessageQueueAssociator.cpp in Sources */,
 				009CEED51DF0B006000FF4D2 /* zsLib_eventing_RemoteEventing.cpp in Sources */,
 				009CEEDD1DF1C278000FF4D2 /* zsLib_WindowsEventProviderLogger.cpp in Sources */,
 				00D8664D1DE38BCC00B7EB56 /* zsLib_TimerMonitor.cpp in Sources */,
@@ -774,10 +782,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		005779C51E9684CB004B0E53 /* PBXTargetDependency */ = {
+		52BE23AE1FB35FA1005E4A8A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = "cryptopp-osx";
-			targetProxy = 005779C41E9684CB004B0E53 /* PBXContainerItemProxy */;
+			targetProxy = 52BE23AD1FB35FA1005E4A8A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -892,6 +900,7 @@
 			buildSettings = {
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -901,6 +910,7 @@
 			buildSettings = {
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
