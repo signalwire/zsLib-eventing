@@ -162,7 +162,7 @@
 		009CEED41DF0B006000FF4D2 /* zsLib_eventing_RemoteEventing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_eventing_RemoteEventing.cpp; path = ../../../zsLib/eventing/cpp/zsLib_eventing_RemoteEventing.cpp; sourceTree = "<group>"; };
 		009CEED61DF11455000FF4D2 /* types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = types.h; path = ../../../zsLib/eventing/types.h; sourceTree = "<group>"; };
 		009CEEDC1DF1C278000FF4D2 /* zsLib_WindowsEventProviderLogger.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zsLib_WindowsEventProviderLogger.cpp; path = ../../../../zsLib/zsLib/cpp/zsLib_WindowsEventProviderLogger.cpp; sourceTree = "<group>"; };
-		00D8659E1DE3723B00B7EB56 /* zsLib.Eventing.Compiler.Tool */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = zsLib.Eventing.Compiler.Tool; sourceTree = BUILT_PRODUCTS_DIR; };
+		00D8659E1DE3723B00B7EB56 /* zslib-eventing-tool-compiler */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "zslib-eventing-tool-compiler"; sourceTree = BUILT_PRODUCTS_DIR; };
 		00D865A11DE3723B00B7EB56 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		00D865C01DE38A5100B7EB56 /* eventing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = eventing.h; path = ../../../zsLib/eventing/eventing.h; sourceTree = "<group>"; };
 		00D865C11DE38A5100B7EB56 /* IEventingTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IEventingTypes.h; path = ../../../zsLib/eventing/IEventingTypes.h; sourceTree = "<group>"; };
@@ -326,7 +326,7 @@
 		00D8659F1DE3723B00B7EB56 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				00D8659E1DE3723B00B7EB56 /* zsLib.Eventing.Compiler.Tool */,
+				00D8659E1DE3723B00B7EB56 /* zslib-eventing-tool-compiler */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -640,9 +640,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		00D8659D1DE3723A00B7EB56 /* zsLib.Eventing.Compiler.Tool */ = {
+		00D8659D1DE3723A00B7EB56 /* zslib-eventing-tool-compiler */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 00D865A51DE3723B00B7EB56 /* Build configuration list for PBXNativeTarget "zsLib.Eventing.Compiler.Tool" */;
+			buildConfigurationList = 00D865A51DE3723B00B7EB56 /* Build configuration list for PBXNativeTarget "zslib-eventing-tool-compiler" */;
 			buildPhases = (
 				00D8659A1DE3723A00B7EB56 /* Sources */,
 				00D8659B1DE3723A00B7EB56 /* Frameworks */,
@@ -653,9 +653,9 @@
 			dependencies = (
 				52BE23AE1FB35FA1005E4A8A /* PBXTargetDependency */,
 			);
-			name = zsLib.Eventing.Compiler.Tool;
+			name = "zslib-eventing-tool-compiler";
 			productName = zsLib.Eventing.Compiler.Tool;
-			productReference = 00D8659E1DE3723B00B7EB56 /* zsLib.Eventing.Compiler.Tool */;
+			productReference = 00D8659E1DE3723B00B7EB56 /* zslib-eventing-tool-compiler */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -691,7 +691,7 @@
 			);
 			projectRoot = "";
 			targets = (
-				00D8659D1DE3723A00B7EB56 /* zsLib.Eventing.Compiler.Tool */,
+				00D8659D1DE3723A00B7EB56 /* zslib-eventing-tool-compiler */,
 			);
 		};
 /* End PBXProject section */
@@ -927,7 +927,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		00D865A51DE3723B00B7EB56 /* Build configuration list for PBXNativeTarget "zsLib.Eventing.Compiler.Tool" */ = {
+		00D865A51DE3723B00B7EB56 /* Build configuration list for PBXNativeTarget "zslib-eventing-tool-compiler" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				00D865A61DE3723B00B7EB56 /* Debug */,
