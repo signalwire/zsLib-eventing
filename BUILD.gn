@@ -25,6 +25,7 @@ config("zslib_eventing_config") {
     }
   
     include_dirs = [ 
+      "../../third_party",
       ".",
       "..",
       "../zsLib",
@@ -116,7 +117,7 @@ zslib_eventing_tool_sources = [
       ]
 
       deps = [
-        "../cryptopp",
+        "//third_party/cryptopp",
         #"//third_party/winuwp_compat:wrap_main_utf8_cc",
         # Default manifest on Windows (a no-op elsewhere).
         "//build/win:default_exe_manifest",
