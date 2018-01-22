@@ -1283,7 +1283,7 @@ namespace zsLib
               "    }\n"
               "\n"
               "    private class Structs\n"
-              "    {"
+              "    {\n"
               "        public System.Collections.Generic.Dictionary<string, StructObservers> observers_ = new System.Collections.Generic.Dictionary<string, StructObservers>();\n"
               "\n"
               "        public void ObserveEvents(\n"
@@ -1297,9 +1297,9 @@ namespace zsLib
               "            {\n"
               "                observer = new StructObservers();\n"
               "                this.observers_[className] = observer;\n"
-              "            }"
+              "            }\n"
               "            observer.ObserveEvents(source, target, targetCallback);\n"
-              "        }"
+              "        }\n"
               "\n"
               "        public void ObserveEventsCancel(\n"
               "            string className,\n"
@@ -1309,7 +1309,7 @@ namespace zsLib
               "            StructObservers observer = null;\n"
               "            if (!observers_.TryGetValue(className, out observer)) return;\n"
               "            observer.ObserveEventsCancel(source, target);\n"
-              "        }"
+              "        }\n"
               "\n"
               "        public System.Collections.Generic.List<Target> GetTargets(\n"
               "            string className,\n"
@@ -1324,12 +1324,13 @@ namespace zsLib
               "    }\n"
               "\n"
               "    private System.Collections.Generic.Dictionary<string, Structs> observers_ = new System.Collections.Generic.Dictionary<string, Structs>();\n"
+              "    private $APINAMESPACE$.WrapperCallbackFunction _handlerFunction = HandleEventCallback;\n"
               "\n"
               "    public static EventManager Singleton { get { return singleton_; } }\n"
               "\n"
               "    private EventManager()\n"
               "    {\n"
-              "        $APINAMESPACE$.callback_wrapperInstall(HandleEvent);\n"
+              "        $APINAMESPACE$.callback_wrapperInstall(_handlerFunction);\n"
               "    }\n"
               "\n"
               "    public void ObserveEvents(\n"
@@ -1387,7 +1388,7 @@ namespace zsLib
               "#if (__IOS__ && __UNIFIED__) || (__MACOS__)\n"
               "    [ObjCRuntime.MonoPInvokeCallback(typeof($APINAMESPACE$.WrapperCallbackFunction))]\n"
               "#endif\n"
-              "    private static void HandleEvent(callback_event_t handle)\n"
+              "    private static void HandleEventCallback(callback_event_t handle)\n"
               "    {\n"
               "        if (System.IntPtr.Zero == handle) return;\n"
               "        string namespaceName = $APINAMESPACE$.callback_event_get_namespace(handle);\n"
@@ -3562,7 +3563,7 @@ namespace zsLib
               if (!method->hasModifier(Modifier_Method_EventHandler)) continue;
               
               ss << indentStr << "if (\"" << method->getMappingName() << "\" == method) {\n";
-              ss << indentStr << "    ((" << fixCsType(structObj) << ")target)." << GenerateStructCx::fixName(method->getMappingName()) << "(";
+              ss << indentStr << "    ((" << fixCsType(structObj) << ")target)." << GenerateStructCx::fixName(method->getMappingName()) << "?.Invoke(";
               bool first {true};
               size_t index = 0;
               for (auto iterArgs = method->mArguments.begin(); iterArgs != method->mArguments.end(); ++iterArgs, ++index) {
