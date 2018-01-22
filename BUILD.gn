@@ -11,6 +11,10 @@ config("zslib_eventing_config") {
         "/wd4068",
         "/wd4290",
       ]
+      if (!is_winuwp)
+      {
+        cflags_cc += ["/EHsc"]
+      }
     } else {
       cflags_cc = [ 
         "-std=c++11",
