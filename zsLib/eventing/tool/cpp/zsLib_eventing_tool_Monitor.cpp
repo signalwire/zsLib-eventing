@@ -532,7 +532,7 @@ namespace zsLib
                 provider->mProviderUniqueHash = result.uniqueProviderHash_;
 
                 auto found = mProviders.find(provider->mProviderID);
-                if (found != mProviders.end()) {
+                if (found == mProviders.end()) {
                   result.includeJMAN_ = true;
                   if (Log::getEventingWriterInfo(handle, result)) {
                     if (result.jman_.hasData()) {

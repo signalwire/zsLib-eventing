@@ -106,7 +106,16 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      ICommandLineTypes::MonitorInfo::MonitorInfo(const MonitorInfo &)
+      ICommandLineTypes::MonitorInfo::MonitorInfo(const MonitorInfo &source) :
+        mMonitor(source.mMonitor),
+        mQuietMode(source.mQuietMode),
+        mIPAddress(source.mIPAddress),
+        mPort(source.mPort),
+        mTimeout(source.mTimeout),
+        mJMANFiles(source.mJMANFiles),
+        mOutputJSON(source.mOutputJSON),
+        mSecret(source.mSecret),
+        mSubscribeProviders(source.mSubscribeProviders)
       {
       }
 
@@ -124,7 +133,6 @@ namespace zsLib
         mPort = source.mPort;
         mTimeout = source.mTimeout;
         mJMANFiles = source.mJMANFiles;
-        mOutputJSON = source.mOutputJSON;
         mOutputJSON = source.mOutputJSON;
         mSecret = source.mSecret;
         mSubscribeProviders = source.mSubscribeProviders;
