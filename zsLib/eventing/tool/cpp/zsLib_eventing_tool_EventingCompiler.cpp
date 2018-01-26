@@ -1788,6 +1788,8 @@ namespace zsLib
               dataTemplateEl->setAttribute("tid", "T_" + hash);
               addEOL(dataTemplateEl);
 
+              dataTemplateEl->adoptAsLastChild(createDataEl("UInt64", "_timestamp"));
+              addEOL(dataTemplateEl);
               dataTemplateEl->adoptAsLastChild(createDataEl("UInt64", "_thread"));
               addEOL(dataTemplateEl);
               dataTemplateEl->adoptAsLastChild(createDataEl("AnsiString", "_subsystem"));
@@ -1802,7 +1804,8 @@ namespace zsLib
               {
                 auto dataType = (*iterDataTemplate);
 
-                if (("_thread" == dataType->mValueName) ||
+                if (("_timestamp" == dataType->mValueName) ||
+                    ("_thread" == dataType->mValueName) ||
                     ("_function" == dataType->mValueName) ||
                     ("_line" == dataType->mValueName) ||
                     ("_subsystem" == dataType->mValueName)) {
@@ -1899,6 +1902,8 @@ namespace zsLib
           {
             ElementPtr dataTemplateEl = Element::create("template");
             dataTemplateEl->setAttribute("tid", "T_Basic");
+            addEOL(dataTemplateEl);
+            dataTemplateEl->adoptAsLastChild(createDataEl("UInt64", "_timestamp"));
             addEOL(dataTemplateEl);
             dataTemplateEl->adoptAsLastChild(createDataEl("UInt64", "_thread"));
             addEOL(dataTemplateEl);
