@@ -233,13 +233,25 @@ namespace zsLib
         //---------------------------------------------------------------------
         void installDebugger()
         {
-#ifdef _DEBUG
           AutoRecursiveLock lock(mLock);
           remove(mDebugOutputInstall);
           auto stream = make_shared<DebugOutputStream>();
           mDebugOutputInstall = createPUID();
           install(mDebugOutputInstall, stream);
-#endif //_DEBUG
+        }
+
+        //---------------------------------------------------------------------
+        void uninstallStdOutput()
+        {
+          AutoRecursiveLock lock(mLock);
+          remove(mStdOutputInstall);
+        }
+
+        //---------------------------------------------------------------------
+        void uninstallDebugger()
+        {
+          AutoRecursiveLock lock(mLock);
+          remove(mStdOutputInstall);
         }
 
       protected:

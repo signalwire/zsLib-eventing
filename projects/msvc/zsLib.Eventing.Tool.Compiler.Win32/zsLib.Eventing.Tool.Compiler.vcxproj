@@ -279,9 +279,6 @@
     <ClInclude Include="..\..\..\zsLib\eventing\types.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\..\..\..\zsLib\zsLib\license.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="..\..\..\..\zsLib\zsLib\cpp\zsLib.events.json" />
     <None Include="..\..\..\..\zsLib\zsLib\idl\config.json">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>

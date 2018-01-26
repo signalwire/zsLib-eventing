@@ -39,6 +39,8 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <zsLib/IPAddress.h>
 
+#include <utility>
+
 namespace zsLib
 {
   namespace eventing
@@ -69,6 +71,7 @@ namespace zsLib
           Flag_Question,
           Flag_Help,
           Flag_HelpAlt,
+          Flag_Debugger,
           Flag_Source,
           Flag_OutputName,
           Flag_Author,
@@ -81,8 +84,9 @@ namespace zsLib
           Flag_MonitorJSON,
           Flag_MonitorProvider,
           Flag_MonitorSecret,
+          Flag_MonitorLogLevel,
 
-          Flag_Last = Flag_MonitorSecret,
+          Flag_Last = Flag_MonitorLogLevel,
         };
 
         static Flags toFlag(const char *str);
@@ -90,6 +94,9 @@ namespace zsLib
         
         struct MonitorInfo
         {
+          typedef std::pair<String, Log::Level> StringLevelPair;
+          typedef std::list<StringLevelPair> StringLevelPairList;
+
           bool mMonitor {};
           bool mQuietMode {};
           IPAddress mIPAddress;
@@ -99,6 +106,7 @@ namespace zsLib
           bool mOutputJSON {};
           String mSecret;
           StringList mSubscribeProviders;
+          StringLevelPairList mLogLevels;
 
           MonitorInfo();
           MonitorInfo(const MonitorInfo &source);

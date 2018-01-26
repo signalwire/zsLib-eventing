@@ -34,7 +34,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/eventing.h>
 #include <zsLib/eventing/internal/zsLib_eventing_RemoteEventing.h>
 
-namespace zsLib { namespace eventing { ZS_IMPLEMENT_SUBSYSTEM(zsLib_eventing); } }
+namespace zsLib { namespace eventing { ZS_IMPLEMENT_SUBSYSTEM(zslib_eventing); } }
 
 namespace zsLib
 {

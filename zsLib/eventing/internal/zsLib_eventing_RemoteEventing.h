@@ -226,7 +226,8 @@ namespace zsLib
 
         void setRemoteLevel(
                             const char *remoteSubsystemName,
-                            Level level
+                            Level level,
+                            bool setOnlyDefaultLevel
                             ) override;
 
         //---------------------------------------------------------------------
@@ -393,7 +394,10 @@ namespace zsLib
         
         void sendWelcome();
         void sendNotify();
-        void requestSetRemoteSubsystemLevel(SubsystemInfoPtr info);
+        void requestSetRemoteSubsystemLevel(
+                                            SubsystemInfoPtr info,
+                                            bool setOnlyDefaultLevel
+                                            );
         void requestSetRemoteEventProviderLogging(
                                                   const String &providerName,
                                                   KeywordBitmaskType bitmask
@@ -468,6 +472,7 @@ namespace zsLib
         SubsystemMap mLocalSubsystems;
         SubsystemMap mRemoteSubsystems;
         SubsystemMap mSetRemoteSubsystemsLevels;
+        SubsystemMap mSetDefaultRemoteSubsystemsLevels;
 
         ProviderInfoUUIDMap mLocalAnnouncedProviders;
         ProviderInfoUUIDMap mRemoteRegisteredProvidersByUUID;

@@ -53,7 +53,7 @@ either expressed or implied, of the FreeBSD Project.
 #undef max
 #endif //max
 
-namespace zsLib { namespace eventing { ZS_DECLARE_SUBSYSTEM(zsLib_eventing); } }
+namespace zsLib { namespace eventing { ZS_DECLARE_SUBSYSTEM(zslib_eventing); } }
 
 
 namespace zsLib

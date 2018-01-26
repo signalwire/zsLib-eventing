@@ -70,7 +70,33 @@ either expressed or implied, of the FreeBSD Project.
 
 #define ZS_EVENTING_METHOD_SUBSYSTEM_DEFAULT_LEVEL "SUBSYSTEM_DEFAULT_LEVEL"
 
-namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zsLib_eventing_tool) } } }
+static const char *gIgnoredMethods[] =
+{
+  "GET_LOG_LEVEL",
+  "GET_SUBSYSTEM_LOG_LEVEL",
+  "IS_LOGGING",
+  "IS_LOGGING_VALUE",
+  "IS_SUBSYSTEM_LOGGING",
+  "GET_CURRENT_SUBSYSTEM_NAME",
+  "GET_SUBSYSTEM_NAME",
+  "CHECK_IF_LOGGING",
+  "CHECK_IF_SUBSYSTEM_LOGGING",
+  "TRACE_OBJECT",
+  "TRACE_OBJECT_VALUE",
+  "TRACE_OBJECT_PTR",
+  "TRACE_OBJECT_PTR_VALUE",
+  "REGISTER_EVENT_WRITER",
+  "UNREGISTER_EVENT_WRITER",
+  "REGISTER_SUBSYSTEM_DEFAULT_LEVEL",
+  "WRITE_EVENT",
+  "EVENT_DATA_DESCRIPTOR_FILL_VALUE",
+  "EVENT_DATA_DESCRIPTOR_FILL_ASTR",
+  "EVENT_DATA_DESCRIPTOR_FILL_WSTR",
+  "EVENT_DATA_DESCRIPTOR_FILL_BUFFER",
+  NULL
+};
+
+namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zslib_eventing_tool) } } }
 
 namespace zsLib
 {
@@ -229,7 +255,7 @@ namespace zsLib
           return String();
         }
 
-        //---------------------------------------------------------------------
+        //------------------------------------m---------------------------------
         static void parseLine(
                               const char *p,
                               String &outMethod,
@@ -1270,7 +1296,22 @@ namespace zsLib
                   continue;
                 }
 
-                ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_METHOD_NOT_UNDERSTOOD, currentLine, "Method is not valid: " + method);
+                {
+                  for (int loopIgnored = 0; NULL != gIgnoredMethods[loopIgnored]; ++loopIgnored) {
+                    if (gIgnoredMethods[loopIgnored] == method) goto found_ignored;
+                  }
+                  goto not_found_ignored;
+                }
+
+              found_ignored:
+                {
+                  continue;
+                }
+
+              not_found_ignored:
+                {
+                  ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_METHOD_NOT_UNDERSTOOD, currentLine, "Method is not valid: " + method);
+                }
               }
             } catch (const InvalidContent &e) {
               ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Invalid content found: " + e.message());
@@ -1747,6 +1788,8 @@ namespace zsLib
               dataTemplateEl->setAttribute("tid", "T_" + hash);
               addEOL(dataTemplateEl);
 
+              dataTemplateEl->adoptAsLastChild(createDataEl("UInt64", "_thread"));
+              addEOL(dataTemplateEl);
               dataTemplateEl->adoptAsLastChild(createDataEl("AnsiString", "_subsystem"));
               addEOL(dataTemplateEl);
               dataTemplateEl->adoptAsLastChild(createDataEl("AnsiString", "_function"));
@@ -1759,7 +1802,8 @@ namespace zsLib
               {
                 auto dataType = (*iterDataTemplate);
 
-                if (("_function" == dataType->mValueName) ||
+                if (("_thread" == dataType->mValueName) ||
+                    ("_function" == dataType->mValueName) ||
                     ("_line" == dataType->mValueName) ||
                     ("_subsystem" == dataType->mValueName)) {
                   ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Function parameter cannot be named: " + dataType->mValueName);
@@ -1855,6 +1899,8 @@ namespace zsLib
           {
             ElementPtr dataTemplateEl = Element::create("template");
             dataTemplateEl->setAttribute("tid", "T_Basic");
+            addEOL(dataTemplateEl);
+            dataTemplateEl->adoptAsLastChild(createDataEl("UInt64", "_thread"));
             addEOL(dataTemplateEl);
             dataTemplateEl->adoptAsLastChild(createDataEl("AnsiString", "_subsystem"));
             addEOL(dataTemplateEl);
@@ -2375,6 +2421,8 @@ namespace zsLib
               ss << "    {\n";
               ss << "      static const USE_EVENT_PARAMETER_DESCRIPTOR descriptions [] =\n";
               ss << "      {\n";
+              ss << "        {EventParameterType_UnsignedInteger},\n";
+              ss << "        {EventParameterType_UnsignedInteger},\n";
               ss << "        {EventParameterType_AString},\n";
               ss << "        {EventParameterType_AString},\n";
               ss << "        {EventParameterType_UnsignedInteger}";
@@ -2478,14 +2526,18 @@ namespace zsLib
 
               size_t totalTypes = totalDataTypes + totalPointerTypes + totalStringTypes;
 
-#define ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES (3)
+#define ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES (5)
 
               ss << "    ::zsLib::eventing::USE_EVENT_DATA_DESCRIPTOR xxDescriptors[" << string(ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES+totalTypes) << "]; \\\n";
+              ss << "    uint64_t xxTimestamp = ZS_GET_CURRENT_TIMESTAMP_MS(); \\\n";
+              ss << "    uint64_t xxThreadID = ZS_GET_CURRENT_THREAD_ID(); \\\n";
               ss << "    uint32_t xxLineNumber = __LINE__; \\\n";
               ss << "    \\\n";
-              ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_ASTR(&(xxDescriptors[0]), " << getCurrentSubsystemStr << ".getName()); \\\n";
-              ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_ASTR(&(xxDescriptors[1]), __func__); \\\n";
-              ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_VALUE(&(xxDescriptors[2]), &xxLineNumber, sizeof(xxLineNumber)); \\\n";
+              ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_VALUE(&(xxDescriptors[0]), &xxTimestamp, sizeof(xxTimestamp)); \\\n";
+              ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_VALUE(&(xxDescriptors[1]), &xxThreadID, sizeof(xxThreadID)); \\\n";
+              ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_ASTR(&(xxDescriptors[2]), " << getCurrentSubsystemStr << ".getName()); \\\n";
+              ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_ASTR(&(xxDescriptors[3]), __func__); \\\n";
+              ss << "    ZS_EVENTING_EVENT_DATA_DESCRIPTOR_FILL_VALUE(&(xxDescriptors[4]), &xxLineNumber, sizeof(xxLineNumber)); \\\n";
               ss << "    \\\n";
 
               size_t current = ZS_EVENTING_TOTAL_BUILT_IN_DATA_EVENT_TYPES;

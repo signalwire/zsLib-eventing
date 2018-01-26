@@ -103,7 +103,8 @@ namespace zsLib
 
       virtual void setRemoteLevel(
                                   const char *remoteSubsystemName,
-                                  Level level
+                                  Level level,
+                                  bool setOnlyDefaultLevel
                                   ) = 0;
     };
 

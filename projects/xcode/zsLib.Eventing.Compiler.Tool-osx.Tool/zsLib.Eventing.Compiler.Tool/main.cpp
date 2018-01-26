@@ -12,7 +12,7 @@
 #include <iostream>
 #include <signal.h>
 
-namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zsLib_eventing_tool) } } }
+namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zslib_eventing_tool) } } }
 
 using namespace zsLib::eventing::tool;
 

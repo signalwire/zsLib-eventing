@@ -38,7 +38,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/IMessageQueueManager.h>
 #include <zsLib/Numeric.h>
 
-namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zsLib_eventing_tool) } } }
+namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zslib_eventing_tool) } } }
 
 namespace zsLib
 {
@@ -542,7 +542,7 @@ namespace zsLib
                       
                       try {
                         providerJMAN = Provider::create(rootEl);
-                      } catch (const InvalidContent &e) {
+                      } catch (const InvalidContent &) {
                         if (!mMonitorInfo.mQuietMode) {
                           tool::output() << "[Warning] Provider \"" << result.providerName_ << "\" JMAN contains invalid content.\n";
                         }
@@ -556,7 +556,7 @@ namespace zsLib
                         postClosure([remote, providerJMAN] {
                           for (auto iterSubsystem = providerJMAN->mSubsystems.begin(); iterSubsystem != providerJMAN->mSubsystems.end(); ++iterSubsystem) {
                             auto subsystem = (*iterSubsystem).second;
-                            remote->setRemoteLevel(subsystem->mName, subsystem->mLevel);
+                            remote->setRemoteLevel(subsystem->mName, subsystem->mLevel, true);
                           }
                         });
                       } else {
@@ -643,7 +643,7 @@ namespace zsLib
           ProviderInfo *provider = reinterpret_cast<ProviderInfo *>(eventingAtomDataArray[mEventingAtom]);
           if (!provider) return;
 
-          ++mTotalEvents;
+          size_t sequence = (++mTotalEvents);
 
           String output;
 
@@ -653,6 +653,7 @@ namespace zsLib
               auto event = (*found).second;
 
               ElementPtr rootEl = Element::create("event");
+              rootEl->adoptAsLastChild(IHelper::createElementWithNumber("sequence", string(sequence)));
               rootEl->adoptAsLastChild(IHelper::createElementWithText("severity", Log::toString(severity)));
               rootEl->adoptAsLastChild(IHelper::createElementWithText("level", Log::toString(level)));
               rootEl->adoptAsLastChild(IHelper::createElementWithTextAndJSONEncode("name", event->mName));
@@ -697,9 +698,11 @@ namespace zsLib
                 String valueName("unknown");
                 String value = valueAsString(paramDescriptor[index], dataDescriptor[index], isNumber);
                 switch (index) {
-                  case 0: valueName = "_subsystemName"; break;
-                  case 1: valueName = "_function"; break;
-                  case 2: valueName = "_line"; break;
+                  case 0: valueName = "_timestamp"; break;
+                  case 1: valueName = "_thread"; break;
+                  case 2: valueName = "_subsystemName"; break;
+                  case 3: valueName = "_function"; break;
+                  case 4: valueName = "_line"; break;
                 }
                 
                 if (isNumber) {
@@ -765,6 +768,7 @@ namespace zsLib
           
           if (!output.hasData()) {
             ElementPtr rootEl = Element::create("event");
+            rootEl->adoptAsLastChild(IHelper::createElementWithNumber("sequence", string(sequence)));
             rootEl->adoptAsLastChild(IHelper::createElementWithText("severity", Log::toString(severity)));
             rootEl->adoptAsLastChild(IHelper::createElementWithText("level", Log::toString(level)));
             rootEl->adoptAsLastChild(IHelper::createElementWithNumber("name", string(descriptor->Id)));
@@ -781,9 +785,11 @@ namespace zsLib
               String valueName("unknown");
               String value = valueAsString(paramDescriptor[index], dataDescriptor[index], isNumber);
               switch (index) {
-                case 0: valueName = "_subsystemName"; break;
-                case 1: valueName = "_function"; break;
-                case 2: valueName = "_line"; break;
+                case 0: valueName = "_timestamp"; break;
+                case 1: valueName = "_thread"; break;
+                case 2: valueName = "_subsystemName"; break;
+                case 3: valueName = "_function"; break;
+                case 4: valueName = "_line"; break;
               }
               
               if (isNumber) {
@@ -942,8 +948,13 @@ namespace zsLib
             auto provider = (*iter).second;
             for (auto iterSubsystem = provider->mSubsystems.begin(); iterSubsystem != provider->mSubsystems.end(); ++iterSubsystem) {
               auto subsystem = (*iterSubsystem).second;
-              mRemote->setRemoteLevel(subsystem->mName, subsystem->mLevel);
+              mRemote->setRemoteLevel(subsystem->mName, subsystem->mLevel, true);
             }
+          }
+          for (auto iter = mMonitorInfo.mLogLevels.begin(); iter != mMonitorInfo.mLogLevels.end(); ++iter) {
+            auto component = (*iter).first;
+            auto level = (*iter).second;
+            mRemote->setRemoteLevel(component, level, false);
           }
         }
         

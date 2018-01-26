@@ -42,7 +42,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/Socket.h>
 #include <zsLib/Singleton.h>
 
-namespace zsLib { namespace eventing { ZS_DECLARE_SUBSYSTEM(zsLib_eventing); } }
+namespace zsLib { namespace eventing { ZS_DECLARE_SUBSYSTEM(zslib_eventing); } }
 
 
 #define ZSLIB_EVENTING_REMOTE_EVENTING_MAX_DATA_DESCRIPTORS (80)
@@ -102,9 +102,9 @@ namespace zsLib
         {
           ISettings::setUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_DATA_SIZE, (2*1024));
           ISettings::setUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_PACKED_SIZE, (128*1024));
-          ISettings::setUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_OUTSTANDING_EVENTS, (256));
-          ISettings::setUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_QUEUED_ASYNC_DATA_BEFORED_EVENTS_DROPPED, (100*1024));
-          ISettings::setUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_QUEUED_OUTGOING_DATA_BEFORED_EVENTS_DROPPED, (100*1024));
+          ISettings::setUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_OUTSTANDING_EVENTS, (512));
+          ISettings::setUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_QUEUED_ASYNC_DATA_BEFORED_EVENTS_DROPPED, (500*1024));
+          ISettings::setUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_QUEUED_OUTGOING_DATA_BEFORED_EVENTS_DROPPED, (500*1024));
           ISettings::setUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_NOTIFY_TIMER, 5);
           ISettings::setBool(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_USE_IPV6, false);
         }
@@ -297,7 +297,8 @@ namespace zsLib
       //-----------------------------------------------------------------------
       void RemoteEventing::setRemoteLevel(
                                           const char *remoteSubsystemName,
-                                          Level level
+                                          Level level,
+                                          bool setOnlyDefaultLevel
                                           )
       {
         AutoRecursiveLock lock(mLock);
@@ -306,11 +307,15 @@ namespace zsLib
         info->mName = String(remoteSubsystemName);
         info->mLevel = level;
 
-        mSetRemoteSubsystemsLevels[info->mName] = info;
+        if (setOnlyDefaultLevel) {
+          mSetDefaultRemoteSubsystemsLevels[info->mName] = info;
+        } else {
+          mSetRemoteSubsystemsLevels[info->mName] = info;
+        }
 
         if (!isAuthorized()) return;
 
-        requestSetRemoteSubsystemLevel(info);
+        requestSetRemoteSubsystemLevel(info, setOnlyDefaultLevel);
       }
       
 
@@ -664,7 +669,11 @@ namespace zsLib
             dataSize = static_cast<decltype(dataSize)>(mMaxDataSize);
           }
           if (data.Ptr) {
-            packedSize += dataSize;
+            if (dataSize > mMaxDataSize) {
+              packedSize += static_cast<decltype(packedSize)>(mMaxDataSize);
+            } else {
+              packedSize += dataSize;
+            }
           }
         }
 
@@ -709,8 +718,9 @@ namespace zsLib
           auto &data = dataDescriptor[index];
           
           uint32_t dataSize = static_cast<uint32_t>(data.Size);
+          uint32_t putSize = dataSize;
           if (dataSize > mMaxDataSize) {
-            dataSize = static_cast<decltype(dataSize)>(mMaxDataSize);
+            putSize = dataSize = static_cast<decltype(dataSize)>(mMaxDataSize);
           }
           
           if (data.Ptr) {
@@ -755,11 +765,11 @@ namespace zsLib
                 }
                 default: {
                   // just put in raw format
-                  usePacked.Put((const BYTE *)(data.Ptr), data.Size);
+                  usePacked.Put((const BYTE *)(data.Ptr), putSize);
                 }
               }
             } else {
-              usePacked.Put((const BYTE *)(data.Ptr), data.Size);
+              usePacked.Put((const BYTE *)(data.Ptr), putSize);
             }
           } else {
             usePacked.PutWord32(static_cast<CryptoPP::word32>(0));
@@ -1999,12 +2009,27 @@ namespace zsLib
         if (ZSLIB_EVENTING_REMOTE_EVENTING_REQUEST_SET_SUBSYSTEM_LEVEL == typeStr) {
           String subsystemStr = IHelper::getElementText(rootEl->findFirstChildElement("subsystem"));
           String levelStr = IHelper::getElementText(rootEl->findFirstChildElement("level"));
+          String defaultOnlyStr = IHelper::getElementText(rootEl->findFirstChildElement("default"));
+
+          bool defaultOnly {};
+
+          try {
+            defaultOnly = Numeric<bool>(defaultOnlyStr);
+          } catch (const zsLib::Numeric<bool>::ValueOutOfRange &) {
+            ZS_LOG_WARNING(Detail, log("remote set subsystem request is not understood (ignored)") + ZS_PARAMIZE(subsystemStr) + ZS_PARAMIZE(levelStr) + ZS_PARAMIZE(defaultOnlyStr));
+            error = -1;
+            reason = "Default value was not understood: " + defaultOnlyStr;
+          }
 
           try {
             auto level = Log::toLevel(levelStr);
-            Log::setEventingLevelByName(subsystemStr, level);
+            if (defaultOnly) {
+              Log::setDefaultEventingLevelByName(subsystemStr, level);
+            } else {
+              Log::setEventingLevelByName(subsystemStr, level);
+            }
           } catch (const InvalidArgument &) {
-            ZS_LOG_WARNING(Detail, log("remote set subsystem request is not understood (ignored)") + ZS_PARAMIZE(subsystemStr) + ZS_PARAMIZE(subsystemStr));
+            ZS_LOG_WARNING(Detail, log("remote set subsystem request is not understood (ignored)") + ZS_PARAMIZE(subsystemStr) + ZS_PARAMIZE(levelStr) + ZS_PARAMIZE(defaultOnlyStr));
             error = -1;
             reason = "Level was not understood: " + levelStr;
           }
@@ -2236,9 +2261,13 @@ namespace zsLib
           announceProviderToRemote(info);
         }
         
+        for (auto iter = mSetDefaultRemoteSubsystemsLevels.begin(); iter != mSetDefaultRemoteSubsystemsLevels.end(); ++iter) {
+          auto &info = (*iter).second;
+          requestSetRemoteSubsystemLevel(info, true);
+        }
         for (auto iter = mSetRemoteSubsystemsLevels.begin(); iter != mSetRemoteSubsystemsLevels.end(); ++iter) {
           auto &info = (*iter).second;
-          requestSetRemoteSubsystemLevel(info);
+          requestSetRemoteSubsystemLevel(info, false);
         }
       }
 
@@ -2269,13 +2298,17 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::requestSetRemoteSubsystemLevel(SubsystemInfoPtr info)
+      void RemoteEventing::requestSetRemoteSubsystemLevel(
+                                                          SubsystemInfoPtr info,
+                                                          bool setOnlyDefaultLevel
+                                                          )
       {
         ElementPtr rootEl = Element::create("request");
         
         rootEl->adoptAsLastChild(IHelper::createElementWithText("type", ZSLIB_EVENTING_REMOTE_EVENTING_REQUEST_SET_SUBSYSTEM_LEVEL));
         rootEl->adoptAsLastChild(IHelper::createElementWithText("subsystem", info->mName));
         rootEl->adoptAsLastChild(IHelper::createElementWithText("level", zsLib::Log::toString(info->mLevel)));
+        rootEl->adoptAsLastChild(IHelper::createElementWithNumber("default", setOnlyDefaultLevel ? "true" : "false"));
 
         sendData(MessageType_Request, rootEl);
       }

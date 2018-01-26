@@ -40,7 +40,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/ISettings.h>
 #include <zsLib/Numeric.h>
 
-namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zsLib_eventing_tool) } } }
+namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zslib_eventing_tool) } } }
 
 namespace zsLib
 {
@@ -115,7 +115,8 @@ namespace zsLib
         mJMANFiles(source.mJMANFiles),
         mOutputJSON(source.mOutputJSON),
         mSecret(source.mSecret),
-        mSubscribeProviders(source.mSubscribeProviders)
+        mSubscribeProviders(source.mSubscribeProviders),
+        mLogLevels(source.mLogLevels)
       {
       }
 
@@ -136,6 +137,7 @@ namespace zsLib
         mOutputJSON = source.mOutputJSON;
         mSecret = source.mSecret;
         mSubscribeProviders = source.mSubscribeProviders;
+        mLogLevels = source.mLogLevels;
 
         return *this;
       }
@@ -171,6 +173,7 @@ namespace zsLib
           case Flag_Question:         return "?";
           case Flag_Help:             return "h";
           case Flag_HelpAlt:          return "help";
+          case Flag_Debugger:         return "debugger";
           case Flag_Source:           return "s";
           case Flag_OutputName:       return "o";
           case Flag_Author:           return "author";
@@ -183,6 +186,7 @@ namespace zsLib
           case Flag_MonitorJSON:      return "output-json";
           case Flag_MonitorProvider:  return "provider";
           case Flag_MonitorSecret:    return "secret";
+          case Flag_MonitorLogLevel:  return "level";
         }
         return "unknown";
       }
@@ -203,7 +207,8 @@ namespace zsLib
         output() <<
           " -?\n"
           " -h\n"
-          " -help         output this help text.\n"
+          " -help                                    - output this help text.\n"
+          " -debugger                                - redirect all output to debugger's output not to console\n"
           "\n"
           " -q                                      - suppress header\n"
           " -c            config_file_name          - input event provider json configuration file.\n"
@@ -228,6 +233,18 @@ namespace zsLib
           " -output-json                            - output events as json events to command line\n"
           " -provider     provider_name1...n        - subscribe to provider events by name\n"
           " -secret       connection_secret         - shared secret between client and server\n"
+          " -level        component_name level ...  - set component log level by name\n\n"
+          "               components:\n"
+          "               all                       - set all components to a specific log level\n"
+          "               ...                       - the name of the componenet to set the level\n\n"
+          "               levels:\n"
+          "               none                      - no logging\n"
+          "               basic                     - only most basic information is logged\n"
+          "               detail                    - add more details\n"
+          "               debug                     - sufficient for common debugging\n"
+          "               trace                     - trace the paths of execution\n"
+          "               insane                    - every possible bit of information is output\n\n"
+          "                                           NOTE: Too high a log level can impact performance\n"
           "\n";
       }
 
@@ -327,6 +344,9 @@ namespace zsLib
         ICommandLine::Flags flag {ICommandLine::Flag_None};
 
         String processedThusFar;
+        String incompleteLogComponet;
+
+        bool didDebugger {false};
 
         while (arguments.size() > 0)
         {
@@ -385,6 +405,15 @@ namespace zsLib
                 outputHelp();
                 return;
               }
+              case ICommandLine::Flag_Debugger:
+              {
+                if (!didDebugger) {
+                  output().installDebugger();
+                  output().uninstallStdOutput();
+                }
+                didDebugger = true;
+                goto processed_flag;
+              }
               case ICommandLine::Flag_Source:           goto process_flag;
               case ICommandLine::Flag_OutputName:       goto process_flag;
               case ICommandLine::Flag_Author:           goto process_flag;
@@ -403,6 +432,7 @@ namespace zsLib
               }
               case ICommandLine::Flag_MonitorProvider:  goto process_flag;
               case ICommandLine::Flag_MonitorSecret:    goto process_flag;
+              case ICommandLine::Flag_MonitorLogLevel:  goto process_flag;
             }
             ZS_THROW_INVALID_ARGUMENT("Internal error when processing argument: " + arg + " within context: " + processedThusFar);
           }
@@ -476,6 +506,29 @@ namespace zsLib
                 monitorInfo.mSecret = arg;
                 goto processed_flag;
               }
+              case ICommandLine::Flag_MonitorLogLevel: {
+                if (incompleteLogComponet.isEmpty()) {
+                  incompleteLogComponet = arg;
+                  goto process_flag;
+                }
+
+                Log::Level level {Log::None};
+                try {
+                  level = Log::toLevel(arg);
+                } catch (const zsLib::Exceptions::InvalidArgument &) {
+                  ZS_THROW_INVALID_ARGUMENT(String("Invalid log level when processing argument: ") + arg + " within context: " + processedThusFar);
+                }
+
+                if ("all" == incompleteLogComponet) {
+                  incompleteLogComponet = String();
+                }
+
+                monitorInfo.mLogLevels.push_back(MonitorInfo::StringLevelPair(incompleteLogComponet, level));
+                incompleteLogComponet.clear();
+
+                // continue to process log levels until the next flag
+                goto process_flag;
+              }
               default: break;
             }
 
@@ -492,6 +545,10 @@ namespace zsLib
           {
             continue;
           }
+        }
+
+        if (incompleteLogComponet.hasData()) {
+          ZS_THROW_INVALID_ARGUMENT(String("Log level is missing for component: ") + incompleteLogComponet + " within context: " + processedThusFar);
         }
 
         outMonitor = monitorInfo;

@@ -36,7 +36,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <sstream>
 
-namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zsLib_eventing_tool) } } }
+namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zslib_eventing_tool) } } }
 
 namespace zsLib
 {

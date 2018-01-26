@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zsLib_eventing_tool) } } }
+namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zslib_eventing_tool) } } }
 
 using namespace zsLib::eventing::tool;
 
@@ -50,7 +50,6 @@ int main(int argc, char * const argv[])
   }
 
   output().installStdOutput();
-  output().installDebugger();
 
   SetConsoleCtrlHandler(CtrlHandler, TRUE);
 
