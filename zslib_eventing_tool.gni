@@ -18,11 +18,10 @@ template("compile_event_macro") {
 
       args = [
         "{{source}}",
+        "$host_toolchain",
       ]
 
-      if (host_toolchain == current_toolchain) {
-        deps = [ "//ortc/zsLib-eventing:zslib-eventing-tool-compiler" ]
-      }
+      deps = [ "//ortc/zsLib-eventing:zslib-eventing-tool-compiler($host_toolchain)" ]
 
     }
 }
@@ -41,11 +40,10 @@ template("compile_single_event_macro") {
 
       args = [
         rebase_path(sources[0], root_build_dir),
+        "$host_toolchain",
       ]
 
-      if (host_toolchain == current_toolchain) {
-        deps = [ "//ortc/zsLib-eventing:zslib-eventing-tool-compiler" ]
-      }
+      deps = [ "//ortc/zsLib-eventing:zslib-eventing-tool-compiler($host_toolchain)" ]
 
     }
 }
@@ -68,11 +66,10 @@ template("compile_idl_macro") {
       args = [
         rebase_path(sources[0], root_build_dir),
         sourcePathPrefix,
+        "$host_toolchain",
       ]
 
-      if (host_toolchain == current_toolchain) {
-        deps = [ "//ortc/zsLib-eventing:zslib-eventing-tool-compiler" ]
-      }
+      deps = [ "//ortc/zsLib-eventing:zslib-eventing-tool-compiler($host_toolchain)" ]
 
     }
 }
