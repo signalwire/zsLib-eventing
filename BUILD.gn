@@ -135,6 +135,15 @@ zslib_eventing_tool_sources = [
         libs = [ "uuid" ]
       }
 
+      if (is_mac || is_ios) {
+        libs = [ "CoreFoundation.framework",
+                 "Foundation.framework"
+               ]
+        sources += [
+          "projects/xcode/zsLib.Eventing.Compiler.Tool-osx.Tool/zsLib.Eventing.Compiler.Tool/main.cpp",
+        ]
+      }
+
       if (!is_win) {
       sources -= [
           "zsLib/eventing/IIDLTypes.h",
