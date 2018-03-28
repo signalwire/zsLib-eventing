@@ -11,7 +11,7 @@ config("zslib_eventing_config") {
         "/wd4068",
         "/wd4290",
       ]
-      if (!is_target_winuwp)
+      if (current_os != "winuwp")
       {
         cflags_cc += ["/EHsc"]
       }
