@@ -101,7 +101,8 @@ zslib_eventing_tool_sources = [
 ]
 
 
- if (host_toolchain == current_toolchain) {
+if (host_toolchain == current_toolchain) {
+# if ((current_cpu == "x86") || (current_cpu == "x64") ) {
   executable("zslib-eventing-tool-compiler") {
 
       
@@ -121,11 +122,16 @@ zslib_eventing_tool_sources = [
       ]
 
       deps = [
-        "//third_party/cryptopp",
         #"//third_party/winuwp_compat:wrap_main_utf8_cc",
         # Default manifest on Windows (a no-op elsewhere).
         "//build/win:default_exe_manifest",
       ]
+      
+      if (is_win && (current_os != "winuwp")) {
+        deps += [ "//third_party/cryptopp(//build/toolchain/win:$current_cpu)", ]
+      } else {
+        deps += [ "//third_party/cryptopp", ]
+      }
       
       if (is_linux) {
         deps += [
