@@ -7,7 +7,7 @@
 template("compile_event_macro") {
     action_foreach(target_name) {
 
-      script = "//ortc/runEventCompiler.py"
+      script = "//third_party/ortc/runEventCompiler.py"
 
       sources = invoker.sources
 
@@ -21,7 +21,7 @@ template("compile_event_macro") {
         "$host_toolchain",
       ]
 
-      deps = [ "//ortc/zsLib-eventing:zslib-eventing-tool-compiler($host_toolchain)" ]
+      deps = [ "//third_party/ortc/zsLib-eventing:zslib-eventing-tool-compiler($host_toolchain)" ]
 
     }
 }
@@ -29,7 +29,7 @@ template("compile_event_macro") {
 template("compile_single_event_macro") {
     action(target_name) {
 
-      script = "//ortc/runEventCompiler.py"
+      script = "//third_party/ortc/runEventCompiler.py"
       
       sources = invoker.sources
       
@@ -43,7 +43,7 @@ template("compile_single_event_macro") {
         "$host_toolchain",
       ]
 
-      deps = [ "//ortc/zsLib-eventing:zslib-eventing-tool-compiler($host_toolchain)" ]
+      deps = [ "//third_party/ortc/zsLib-eventing:zslib-eventing-tool-compiler($host_toolchain)" ]
 
     }
 }
@@ -51,7 +51,7 @@ template("compile_single_event_macro") {
 template("compile_idl_macro") {
     action(target_name) {
 
-      script = "//ortc/runIDLCompiler.py"
+      script = "//third_party/ortc/runIDLCompiler.py"
       
       sources = invoker.sources
       sourcePathPrefix = invoker.sourcePathPrefix
@@ -69,7 +69,7 @@ template("compile_idl_macro") {
         "$host_toolchain",
       ]
 
-      deps = [ "//ortc/zsLib-eventing:zslib-eventing-tool-compiler($host_toolchain)" ]
+      deps = [ "//third_party/ortc/zsLib-eventing:zslib-eventing-tool-compiler($host_toolchain)" ]
 
     }
 }

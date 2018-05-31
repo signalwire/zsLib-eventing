@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//ortc/zsLib/zslib_sources.gni")
+import("//third_party/ortc/zsLib/zslib_sources.gni")
 
 config("zslib_eventing_config") {
     if  (is_win) {
@@ -29,7 +29,7 @@ config("zslib_eventing_config") {
     }
   
     include_dirs = [ 
-      "../../third_party",
+      "../..",
       ".",
       "..",
       "../zsLib",
