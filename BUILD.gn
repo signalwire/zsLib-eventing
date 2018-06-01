@@ -14,6 +14,9 @@ config("zslib_eventing_config") {
       if (current_os != "winuwp")
       {
         cflags_cc += ["/EHsc"]
+        defines = [
+          "CRYPTOPP_IGNORE_CALNG_LIMITATION",
+        ]
       }
     } else {
       cflags_cc = [ 
