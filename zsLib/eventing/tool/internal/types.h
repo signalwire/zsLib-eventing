@@ -67,6 +67,7 @@ namespace zsLib
         ZS_DECLARE_STRUCT_PTR(GenerateStructDotNet);
         ZS_DECLARE_STRUCT_PTR(GenerateStructPython);
         ZS_DECLARE_STRUCT_PTR(GenerateStructMsidl);
+        ZS_DECLARE_STRUCT_PTR(GenerateStructCppWinrt);
       }
     }
   }

@@ -37,6 +37,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructDotNet.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructPython.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructMsidl.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructCppWinrt.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateJson.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h>
 
@@ -3215,6 +3216,7 @@ namespace zsLib
           ICompiler::installTarget(internal::GenerateStructDotNet::create());
           ICompiler::installTarget(internal::GenerateStructPython::create());
           ICompiler::installTarget(internal::GenerateStructMsidl::create());
+          ICompiler::installTarget(internal::GenerateStructCppWinrt::create());
           ICompiler::installTarget(internal::GenerateJson::create());
         }
 

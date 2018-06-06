@@ -491,18 +491,6 @@ namespace zsLib
               markAllRelatedStructsAsNeedingInterface(needingInterfaceSet, structObj);
             }
           }
-
-#if 0
-          for (auto iter = structObj->mProperties.begin(); iter != structObj->mProperties.end(); ++iter) {
-            auto &type = (*iter)->mType;
-
-            auto structType = type->toStruct();
-            if (structType) {
-              if (structType->hasModifier(Modifier_Struct_Dictionary)) markAllRelatedStructsAsNeedingInterface(needingInterfaceSet, structType);
-              continue;
-            }
-          }
-#endif //0
         }
 
         //---------------------------------------------------------------------
@@ -1026,7 +1014,7 @@ namespace zsLib
             std::stringstream &handlerSS = (isEvent ? delegateEventHandlersSS : useSS);
             String &useIndentStrForMethod = (isEvent ? actualDelegateIndentStr : indentStr);
 
-            if (!useFirst) {
+            if ((!firstCtor) || (!firstMethod)) {
               handlerSS << "\n";
             }
 
