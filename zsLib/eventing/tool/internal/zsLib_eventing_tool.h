@@ -44,4 +44,5 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplCpp.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructImplHeader.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructMsidl.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateTypesHeader.h>
