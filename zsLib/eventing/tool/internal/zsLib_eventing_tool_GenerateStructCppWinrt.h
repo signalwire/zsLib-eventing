@@ -60,6 +60,8 @@ namespace zsLib
           typedef std::set<StructPtr> StructSet;
           ZS_DECLARE_PTR(StructSet);
           typedef std::map<NamePath, StructSet> NamePathStructSetMap;
+          struct GenerationOptions;
+          typedef GenerationOptions GO;
 
           struct HelperFile
           {
@@ -87,17 +89,19 @@ namespace zsLib
 
             void includeHeader(const String &headerFile);
             void includeCpp(const String &headerFile);
+
+            bool isStructNeedingInterface(StructPtr structObj) const;
           };
 
           struct StructFile
           {
             StructPtr struct_;
             std::stringstream headerIncludeSS_;
-            std::stringstream mHeaderPreStructSS;
-            std::stringstream mHeaderStructPrivateSS;
-            std::stringstream mHeaderStructObserverSS;
-            std::stringstream mHeaderStructObserverFinalSS;
-            std::stringstream mHeaderStructPublicSS;
+            std::stringstream headerStructPrivateSS_;
+            std::stringstream headerStructEventHandlersSS_;
+            std::stringstream headerStructObserverSS_;
+            std::stringstream headerStructObserverFinalSS_;
+            std::stringstream headerStructPublicSS_;
             std::stringstream cppIncludeSS_;
             std::stringstream cppBodySS_;
             String headerIndentStr_;
@@ -111,6 +115,137 @@ namespace zsLib
             ~StructFile();
 
             void includeCpp(const String &headerFile);
+            bool isStructNeedingInterface(StructPtr structObj) const;
+          };
+
+          struct GenerationOptions
+          {
+            struct BaseOption;
+            struct Optional;
+            struct Interface;
+            struct ReturnResult;
+            struct Implementation;
+
+            friend struct BaseOption;
+            friend struct Optional;
+            friend struct Interface;
+            friend struct ReturnResult;
+            friend struct Implementation;
+
+            struct BaseOption
+            {
+              virtual void apply(GenerationOptions *options) const = 0;
+            };
+
+            struct Optional : public BaseOption {
+              Optional(bool value) : value_(value) {}
+              operator bool() const { return value_; }
+              bool value_{};
+              virtual void apply(GenerationOptions *options) const override { options->optional_ = value_; }
+            };
+            struct Interface : public BaseOption {
+              Interface(bool value) : value_(value) {}
+              operator bool() const { return value_; }
+              bool value_{};
+              virtual void apply(GenerationOptions *options) const override { options->interface_ = value_; }
+            };
+            struct ReturnResult : public BaseOption {
+              ReturnResult(bool value) : value_(value) {}
+              operator bool() const { return value_; }
+              bool value_{};
+              virtual void apply(GenerationOptions *options) const override { options->returnResult_ = value_; }
+            };
+            struct Reference : public BaseOption {
+              Reference(bool value) : value_(value) {}
+              operator bool() const { return value_; }
+              bool value_{};
+              virtual void apply(GenerationOptions *options) const override { options->reference_ = value_; }
+            };
+            struct Implementation : public BaseOption {
+              Implementation(bool value) : value_(value) {}
+              operator bool() const { return value_; }
+              bool value_{};
+              virtual void apply(GenerationOptions *options) const override { options->implementation_ = value_; }
+            };
+            struct ComPtr : public BaseOption {
+              ComPtr(bool value) : value_(value) {}
+              operator bool() const { return value_; }
+              bool value_{};
+              virtual void apply(GenerationOptions *options) const override { options->comPtr_ = value_; }
+            };
+
+            GenerationOptions() {}
+            GenerationOptions(const BaseOption &value) { value.apply(this); }
+            GenerationOptions(
+                              const BaseOption &value1,
+                              const BaseOption &value2
+                              ) { value1.apply(this); value2.apply(this); }
+            GenerationOptions(
+                              const BaseOption &value1,
+                              const BaseOption &value2,
+                              const BaseOption &value3
+                              ) { value1.apply(this); value2.apply(this); value3.apply(this); }
+            GenerationOptions(
+                              const BaseOption &value1,
+                              const BaseOption &value2,
+                              const BaseOption &value3,
+                              const BaseOption &value4
+                              ) { value1.apply(this); value2.apply(this); value3.apply(this); value4.apply(this); }
+            GenerationOptions(
+                              const BaseOption &value1,
+                              const BaseOption &value2,
+                              const BaseOption &value3,
+                              const BaseOption &value4,
+                              const BaseOption &value5
+                              ) { value1.apply(this); value2.apply(this); value3.apply(this); value4.apply(this); value5.apply(this); }
+            GenerationOptions(
+                              const BaseOption &value1,
+                              const BaseOption &value2,
+                              const BaseOption &value3,
+                              const BaseOption &value4,
+                              const BaseOption &value5,
+                              const BaseOption &value6
+                              ) { value1.apply(this); value2.apply(this); value3.apply(this); value4.apply(this); value5.apply(this); value6.apply(this); }
+
+            GenerationOptions(const GenerationOptions &source) = default;
+            GenerationOptions &operator=(const GenerationOptions &source) = default;
+
+            bool isOptional() const { return optional_; }
+            bool isInterface() const { return interface_; }
+            bool isReturnResult() const { return returnResult_; }
+            bool isReference() const { return reference_; }
+            bool isImplementation() const { return implementation_; }
+            bool isComPtr() const { return comPtr_; }
+
+            Optional getOptional() const { return Optional(optional_); }
+            Interface getInterface() const { return Interface(interface_); }
+            ReturnResult getReturnResult() const { return ReturnResult(returnResult_); }
+            Reference getReference() const { return Reference(reference_); }
+            Implementation getImplementation() const { return Implementation(implementation_); }
+            ComPtr getComPtr() const { return ComPtr(comPtr_); }
+
+            GenerationOptions getAmmended(const BaseOption &value) const { GenerationOptions result(*this); value.apply(&result); return result; }
+
+            static Optional MakeOptional() { return Optional(true); }
+            static Optional MakeNotOptional() { return Optional(false); }
+            static Interface MakeInterface() { return Interface(true); }
+            static Interface MakeNotInterface() { return Interface(false); }
+            static ReturnResult MakeReturnResult() { return ReturnResult(true); }
+            static ReturnResult MakeNotReturnResult() { return ReturnResult(false); }
+            static Reference MakeReference() { return Reference(true); }
+            static Reference MakeNotReference() { return Reference(false); }
+            static Implementation MakeImplementation() { return Implementation(true); }
+            static Implementation MakeNotImplementation() { return Implementation(false); }
+            static ComPtr MakeComPtr() { return ComPtr(true); }
+            static ComPtr MakeNotComPtr() { return ComPtr(false); }
+
+          protected:
+            bool optional_{};
+            bool interface_{};
+            bool returnResult_{};
+            bool reference_{};
+            bool implementation_{};
+            bool comPtr_{};
           };
 
           GenerateStructCppWinrt();
@@ -119,6 +254,7 @@ namespace zsLib
 
           static String fixName(const String &originalName);
           static String fixNamePath(ContextPtr context);
+          static String fixNamePathNoPrefix(ContextPtr context);
           static String fixStructName(StructPtr structObj);
           static String fixMethodDeclaration(ContextPtr context);
           static String fixMethodDeclaration(
@@ -126,6 +262,7 @@ namespace zsLib
                                              ContextPtr context
                                              );
           static String fixStructFileName(StructPtr structObj);
+          static String fixStructFileNameAsPath(StructPtr structObj);
           static String getStructInitName(StructPtr structObj);
           static String getCppWinrtStructInitName(StructPtr structObj);
           static String fixEnumName(EnumTypePtr enumObj);
@@ -149,21 +286,6 @@ namespace zsLib
                                        );
 
           static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure);
-
-          static void calculateRelations(
-                                         NamespacePtr namespaceObj,
-                                         NamePathStructSetMap &ioDerivesInfo
-                                         );
-          static void calculateRelations(
-                                         StructPtr structObj,
-                                         NamePathStructSetMap &ioDerivesInfo
-                                         );
-
-          static void insertInto(
-                                 StructPtr structObj,
-                                 const NamePath &namePath,
-                                 NamePathStructSetMap &ioDerivesInfo
-                                 );
 
           static void generateSpecialHelpers(HelperFile &helperFile);
           static void generateBasicTypesHelper(HelperFile &helperFile);
@@ -232,30 +354,45 @@ namespace zsLib
                                      );
 
           static String getBasicCppWinrtTypeString(
-                                             bool isOptional,
-                                             BasicTypePtr type,
-                                             bool isReturnType = false
-                                             );
+                                                   BasicTypePtr type,
+                                                   const GenerationOptions &options
+                                                   );
           static String makeCppWinrtOptional(
-                                       bool isOptional,
-                                       const String &value
-                                       );
+                                             const String &value,
+                                             const GenerationOptions &options
+                                             );
+          static String makeCppWinrtReference(
+                                              const String &value,
+                                              const GenerationOptions &options
+                                              );
+          static String makeCppWinrtReferenceAndOptionalIfOptional(
+                                                                  const String &value,
+                                                                  const GenerationOptions &options
+                                                                  );
           static String getCppType(
-                                   bool isOptional,
-                                   TypePtr type
+                                   TypePtr type,
+                                   const GenerationOptions &options
                                    );
           static String getCppWinrtType(
-                                  bool isOptional,
-                                  TypePtr type,
-                                  bool isReturnType = false
-                                  );
+                                        TypePtr type,
+                                        const GenerationOptions &options
+                                        );
           static String getCppWinrtAttributes(const StringList &attributes);
           static String getCppWinrtAttributesLine(
-                                            const String &linePrefix,
-                                            const StringList &attributes
-                                            );
-          static String getToFromCppWinrtName(TypePtr type);
-          static String getToCppWinrtName(TypePtr type);
+                                                  const String &linePrefix,
+                                                  const StringList &attributes
+                                                  );
+          static String getToFromCppWinrtName(
+                                              TypePtr type,
+                                              const GenerationOptions &options,
+                                              const String &prefixName,
+                                              const String &prefixNameIfImpl,
+                                              const String &prefixIfInterface
+                                              );
+          static String getToCppWinrtName(
+                                          TypePtr type,
+                                          const GenerationOptions &options
+                                          );
           static String getFromCppWinrtName(TypePtr type);
           static void includeCppForType(
                                         StructFile &structFile,

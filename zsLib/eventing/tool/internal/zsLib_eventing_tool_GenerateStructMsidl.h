@@ -60,6 +60,8 @@ namespace zsLib
           typedef String NamePath;
           typedef std::set<StructPtr> StructSet;
           ZS_DECLARE_PTR(StructSet);
+          typedef std::map<NamePath, StructSet> NamePathStructSetMap;
+          ZS_DECLARE_PTR(NamePathStructSetMap);
 
           typedef std::list<NamespacePtr> NamespaceList;
 
@@ -81,6 +83,7 @@ namespace zsLib
             StringSet alreadyImported_;
 
             StructSetPtr structsNeedingInterface_;
+            NamePathStructSetMapPtr derives_;
 
             void import(const String &file);
             bool isStructNeedingInterface(StructPtr structObj) const;
@@ -192,6 +195,26 @@ namespace zsLib
                                                               StructSet &needingInterfaceSet,
                                                               StructPtr structObj
                                                               );
+          
+          static void calculateRelations(
+                                         NamespacePtr namespaceObj,
+                                         NamePathStructSetMap &ioDerivesInfo
+                                         );
+          static void calculateRelations(
+                                         StructPtr structObj,
+                                         NamePathStructSetMap &ioDerivesInfo
+                                         );
+          
+          static void insertInto(
+                                 StructPtr structObj,
+                                 const NamePath &namePath,
+                                 NamePathStructSetMap &ioDerivesInfo
+                                 );
+
+          static bool hasAnotherCtorWithSameNumberOfArguments(
+                                                              StructPtr structObj,
+                                                              MethodPtr currentCtor
+                                                              );
 
           void processNamespace(
                                 IDLFile &forwardIdl,
@@ -229,177 +252,6 @@ namespace zsLib
                            IDLFile &outputIdl,
                            EnumTypePtr enumObj
                            );
-
-#if 0
-          static String fixStructName(StructPtr structObj);
-          static String fixMethodDeclaration(ContextPtr context);
-          static String fixMethodDeclaration(
-                                             StructPtr derivedStruct,
-                                             ContextPtr context
-                                             );
-          static String fixStructFileName(StructPtr structObj);
-          static String getStructInitName(StructPtr structObj);
-          static String getCxStructInitName(StructPtr structObj);
-          static String fixEnumName(EnumTypePtr enumObj);
-          static String fixArgumentName(const String &originalName);
-
-          static void processTypesNamespace(
-                                            std::stringstream &ss,
-                                            const String &inIndentStr,
-                                            NamespacePtr namespaceObj
-                                            );
-          static void processTypesStruct(
-                                         std::stringstream &ss,
-                                         const String &inIndentStr,
-                                         StructPtr structObj,
-                                         bool &firstFound
-                                         );
-          static bool processTypesEnum(
-                                       std::stringstream &ss,
-                                       const String &inIndentStr,
-                                       ContextPtr context
-                                       );
-
-          static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure);
-
-          static void calculateRelations(
-                                         NamespacePtr namespaceObj,
-                                         NamePathStructSetMap &ioDerivesInfo
-                                         );
-          static void calculateRelations(
-                                         StructPtr structObj,
-                                         NamePathStructSetMap &ioDerivesInfo
-                                         );
-
-          static void insertInto(
-                                 StructPtr structObj,
-                                 const NamePath &namePath,
-                                 NamePathStructSetMap &ioDerivesInfo
-                                 );
-
-          static void generateSpecialHelpers(HelperFile &helperFile);
-          static void generateBasicTypesHelper(HelperFile &helperFile);
-          static void generateExceptionHelper(HelperFile &helperFile);
-          static void generateStringHelper(HelperFile &helperFile);
-          static void generateBinaryHelper(HelperFile &helperFile);
-          static void generateDurationHelper(
-                                             HelperFile &helperFile,
-                                             const String &durationType
-                                             );
-          static void generateTimeHelper(HelperFile &helperFile);
-          static void generatePromiseHelper(HelperFile &helperFile);
-          static void generatePromiseWithHelper(HelperFile &helperFile);
-          static void generateDefaultPromiseRejections(
-                                                       HelperFile &helperFile,
-                                                       const String &indentStr
-                                                       );
-          static void generatePromiseRejection(
-                                               HelperFile &helperFile,
-                                               const String &indentStr,
-                                               TypePtr rejectionType
-                                               );
-
-          static void generateForNamespace(
-                                           HelperFile &helperFile,
-                                           NamespacePtr namespaceObj,
-                                           const String &inIndentStr
-                                           );
-
-          static void generateForStruct(
-                                        HelperFile &helperFile,
-                                        StructPtr structObj,
-                                        const String &inIndentStr
-                                        );
-          static void generateForEnum(
-                                      HelperFile &helperFile,
-                                      EnumTypePtr enumObj
-                                      );
-          static void generateForStandardStruct(
-                                                HelperFile &helperFile,
-                                                StructPtr structObj
-                                                );
-          static void generateStructFile(
-                                         HelperFile &helperFile,
-                                         StructPtr structObj
-                                         );
-          static void generateStructMethods(
-                                            HelperFile &helperFile, 
-                                            StructFile &structFile,
-                                            StructPtr derivedStructObj,
-                                            StructPtr structObj,
-                                            bool createConstructors,
-                                            bool hasEvents
-                                            );
-          static void generateForList(
-                                      HelperFile &helperFile,
-                                      StructPtr structObj
-                                      );
-          static void generateForMap(
-                                     HelperFile &helperFile,
-                                     StructPtr structObj
-                                     );
-          static void generateForSet(
-                                     HelperFile &helperFile,
-                                     StructPtr structObj
-                                     );
-
-          static String getBasicCxTypeString(
-                                             bool isOptional,
-                                             BasicTypePtr type,
-                                             bool isReturnType = false
-                                             );
-          static String makeCxOptional(
-                                       bool isOptional,
-                                       const String &value
-                                       );
-          static String getCppType(
-                                   bool isOptional,
-                                   TypePtr type
-                                   );
-          static String getCxType(
-                                  bool isOptional,
-                                  TypePtr type,
-                                  bool isReturnType = false
-                                  );
-          static String getCxAttributes(const StringList &attributes);
-          static String getCxAttributesLine(
-                                            const String &linePrefix,
-                                            const StringList &attributes
-                                            );
-          static String getToFromCxName(TypePtr type);
-          static String getToCxName(TypePtr type);
-          static String getFromCxName(TypePtr type);
-          static void includeCppForType(
-                                        StructFile &structFile,
-                                        TypePtr type
-                                        );
-
-          struct IncludeProcessedInfo
-          {
-            StringSet processedTypes_;
-            StringSet structProcessedTypes_;
-            StringSet templatedProcessedTypes_;
-
-            IncludeProcessedInfo();
-            ~IncludeProcessedInfo();
-          };
-
-          static void includeCppForType(
-                                        IncludeProcessedInfo &processed,
-                                        StructFile &structFile,
-                                        TypePtr type
-                                        );
-          static void includeTemplatedStructForType(
-                                                    IncludeProcessedInfo &processed,
-                                                    StructFile &structFile,
-                                                    StructPtr structObj
-                                                    );
-          static void includeTemplatedStructForType(
-                                                    IncludeProcessedInfo &processed,
-                                                    StructFile &structFile,
-                                                    TemplatedStructTypePtr templatedStructObj
-                                                    );
-#endif //0
 
           //-------------------------------------------------------------------
           #pragma mark

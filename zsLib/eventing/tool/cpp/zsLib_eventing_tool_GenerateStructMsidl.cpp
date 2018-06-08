@@ -30,13 +30,8 @@ either expressed or implied, of the FreeBSD Project.
 */
 
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructMsidl.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructCx.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateHelper.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h>
-#if 0
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateTypesHeader.h>
-#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructHeader.h>
-#endif //0
 
 #include <zsLib/eventing/tool/OutputStream.h>
 #include <zsLib/Numeric.h>
@@ -70,7 +65,8 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         GenerateStructMsidl::IDLFile::IDLFile() :
-          structsNeedingInterface_(make_shared<StructSet>())
+          structsNeedingInterface_(make_shared<StructSet>()),
+          derives_(make_shared<NamePathStructSetMap>())
         {
         }
 
@@ -86,6 +82,11 @@ namespace zsLib
 
           if (alreadyImported_.end() != alreadyImported_.find(fileName)) return;
           alreadyImported_.insert(fileName);
+
+          if (0 == (fileName.compareNoCase("windows.foundation.idl"))) {
+            ss << "//import \"" << fileName << "\";\n";
+            return;
+          }
 
           ss << "import \"" << fileName << "\";\n";
         }
@@ -130,7 +131,11 @@ namespace zsLib
         //---------------------------------------------------------------------
         String GenerateStructMsidl::fixName(const String &originalName)
         {
-          return GenerateStructCx::fixName(originalName);
+          if (originalName.isEmpty()) return String();
+          String firstLetter = originalName.substr(0, 1);
+          String remaining = originalName.substr(1);
+          firstLetter.toUpper();
+          return firstLetter + remaining;
         }
 
         //---------------------------------------------------------------------
@@ -349,7 +354,7 @@ namespace zsLib
                 if ("::zs::Any" == specialName) return toIdlSimpleType(idl, options, "Object");
                 if ("::zs::Promise" == specialName) {
                   idl.import("windows.foundation.idl");
-                  return "Windows.Foundation.IAsyncAction";
+                  return "Windows.Foundation.IAsyncOperation< Object >";  // should be IAsyncAction but need a way to return promise rejection reasons
                 }
                 if ("::zs::exceptions::Exception" == specialName) return "Object";
                 if ("::zs::exceptions::InvalidArgument" == specialName) return "Object";
@@ -395,6 +400,7 @@ namespace zsLib
                   idl.import("windows.foundation.idl");
                   name = "Windows.Foundation.IAsyncOperation";
                   maxParams = 1;
+                  return name + "< Object >"; // should use actual reason but cannot return exception directly
                 }
                 if ("::zs::PromiseRejectionReason" == specialName) return "Object";
 
@@ -533,6 +539,108 @@ namespace zsLib
 
             markAllRelatedStructsAsNeedingInterface(needingInterfaceSet, relatedStructObj);
           }
+        }
+
+        
+        //---------------------------------------------------------------------
+        void GenerateStructMsidl::calculateRelations(
+                                                     NamespacePtr namespaceObj,
+                                                     NamePathStructSetMap &ioDerivesInfo
+                                                     )
+        {
+          if (!namespaceObj) return;
+          for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter) {
+            auto subNamespaceObj = (*iter).second;
+            calculateRelations(subNamespaceObj, ioDerivesInfo);
+          }
+          for (auto iter = namespaceObj->mStructs.begin(); iter != namespaceObj->mStructs.end(); ++iter) {
+            auto structObj = (*iter).second;
+            calculateRelations(structObj, ioDerivesInfo);
+          }
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructMsidl::calculateRelations(
+                                                     StructPtr structObj,
+                                                     NamePathStructSetMap &ioDerivesInfo
+                                                     )
+        {
+          if (!structObj) return;
+
+          String currentNamePath = structObj->getPathName();
+
+          StructSet allParents;
+          allParents.insert(structObj);
+
+          while (allParents.size() > 0)
+          {
+            auto top = allParents.begin();
+            StructPtr parentStructObj = (*top);
+            allParents.erase(top);
+
+            if (structObj != parentStructObj) {
+              insertInto(parentStructObj, currentNamePath, ioDerivesInfo);
+            }
+            insertInto(structObj, parentStructObj->getPathName(), ioDerivesInfo);
+
+            for (auto iter = parentStructObj->mIsARelationships.begin(); iter != parentStructObj->mIsARelationships.end(); ++iter)
+            {
+              auto foundObj = (*iter).second;
+              if (!foundObj) continue;
+              auto foundStructObj = foundObj->toStruct();
+              if (!foundStructObj) continue;
+              allParents.insert(foundStructObj);
+            }
+          }
+
+          for (auto iter = structObj->mStructs.begin(); iter != structObj->mStructs.end(); ++iter)
+          {
+            auto foundStruct = (*iter).second;
+            calculateRelations(foundStruct, ioDerivesInfo);
+          }
+        }
+        
+        //---------------------------------------------------------------------
+        void GenerateStructMsidl::insertInto(
+                                             StructPtr structObj,
+                                             const NamePath &namePath,
+                                             NamePathStructSetMap &ioDerivesInfo
+                                             )
+        {
+          if (!structObj) return;
+
+          auto found = ioDerivesInfo.find(namePath);
+          if (found == ioDerivesInfo.end()) {
+            StructSet newSet;
+            newSet.insert(structObj);
+            ioDerivesInfo[namePath] = newSet;
+            return;
+          }
+
+          auto &existingSet = (*found).second;
+          existingSet.insert(structObj);
+        }
+
+        //---------------------------------------------------------------------
+        bool GenerateStructMsidl::hasAnotherCtorWithSameNumberOfArguments(
+                                                                          StructPtr structObj,
+                                                                          MethodPtr currentCtor
+                                                                          )
+        {
+          if (!structObj) return false;
+          if (!currentCtor) return false;
+
+          // scan for other methods with the same number of arguments
+          for (auto iterCheck = structObj->mMethods.begin(); iterCheck != structObj->mMethods.end(); ++iterCheck) {
+            auto &methodCheck = (*iterCheck);
+            if (methodCheck == currentCtor) continue;
+            if (!methodCheck->hasModifier(Modifier_Method_Ctor)) continue;
+            if (methodCheck->hasModifier(Modifier_Method_Delete)) continue;
+
+            if (currentCtor->mArguments.size() != methodCheck->mArguments.size()) continue;
+            return true;
+          }
+          return false;
         }
 
         //---------------------------------------------------------------------
@@ -727,6 +835,7 @@ namespace zsLib
           IDLFile templateIDL;
           templateIDL.global_ = outputIdl.global_;
           templateIDL.structsNeedingInterface_ = outputIdl.structsNeedingInterface_;  // reference same base class set
+          templateIDL.derives_ = outputIdl.derives_;  // reference same base class set
           templateIDL.indent_ = outputIdl.indent_;
           templateIDL.fileName_ = UseHelper::fixRelativeFilePath(outputIdl.fileName_, fixNamePath(structObj, GenerationOptions{}) + ".idl.template");
 
@@ -967,7 +1076,6 @@ namespace zsLib
           }
         }
 
-
         //---------------------------------------------------------------------
         void GenerateStructMsidl::processMethods(
                                                  IDLFile &idl,
@@ -990,6 +1098,55 @@ namespace zsLib
           bool foundEvent {false};
           bool firstCtor {false};
           bool firstMethod {true};
+
+          if (requiredInterface) {
+            firstMethod = false;
+
+            staticMethodsSS << "\n";
+            staticMethodsSS << indentStr << "/// <summary>\n";
+            staticMethodsSS << indentStr << "/// Cast from " << toIdlType(idl, GenerationOptions{ GenerationOptions::Interface(requiredInterface) }, structObj) << " to " << toIdlType(idl, GenerationOptions{}, structObj) << "\n";
+            staticMethodsSS << indentStr << "/// </summary>\n";
+            staticMethodsSS << indentStr << "static " << toIdlType(idl, GenerationOptions{}, structObj)
+              << " CastFromI" << fixName(structObj) << "("
+              << toIdlType(idl, GenerationOptions{ GenerationOptions::Interface(requiredInterface) }, structObj) << " source);\n";
+          }
+
+          {
+            bool foundCast = false;
+            auto found = idl.derives_->find(structObj->getPathName());
+            if (found != idl.derives_->end()) {
+              auto &structSet = (*found).second;
+              for (auto iterSet = structSet.begin(); iterSet != structSet.end(); ++iterSet)
+              {
+                auto foundStruct = (*iterSet);
+                if (foundStruct != structObj) {
+
+                  staticMethodsSS << "\n";
+                  firstMethod = false;
+
+                  bool foundNeedsInterface = idl.isStructNeedingInterface(foundStruct);
+
+                  if (foundNeedsInterface) {
+                    staticMethodsSS << indentStr << "/// <summary>\n";
+                    staticMethodsSS << indentStr << "/// Cast from " << toIdlType(idl, GenerationOptions{ GenerationOptions::Interface(requiredInterface) }, foundStruct) << " to " << toIdlType(idl, GenerationOptions{ GenerationOptions::Interface(requiredInterface) }, structObj) << "\n";
+                    staticMethodsSS << indentStr << "/// </summary>\n";
+                    staticMethodsSS << indentStr << "static " << toIdlType(idl, GenerationOptions{}, structObj)
+                      << " CastFromI" << fixName(foundStruct) << "("
+                      << toIdlType(idl, GenerationOptions{ GenerationOptions::Interface(foundNeedsInterface) }, foundStruct) << " source);\n\n";
+                  }
+
+                  staticMethodsSS << indentStr << "/// <summary>\n";
+                  staticMethodsSS << indentStr << "/// Cast from " << toIdlType(idl, GenerationOptions{ GenerationOptions::Interface(requiredInterface) }, foundStruct) << " to " << toIdlType(idl, GenerationOptions{ GenerationOptions::Interface(requiredInterface) }, structObj) << "\n";
+                  staticMethodsSS << indentStr << "/// </summary>\n";
+                  staticMethodsSS << indentStr << "static " << toIdlType(idl, GenerationOptions{ }, structObj)
+                    << " CastFrom" << fixName(foundStruct) << "("
+                    << toIdlType(idl, GenerationOptions{}, foundStruct) << " source);\n";
+                }
+              }
+            }
+            if (foundCast) staticMethodsSS << "\n";
+          }
+
           for (auto iter = structObj->mMethods.begin(); iter != structObj->mMethods.end(); ++iter)
           {
             auto &method = (*iter);
@@ -1039,16 +1196,7 @@ namespace zsLib
             }
             if (isCtor) {
               if (!isDefault) {
-                // scan for other methods with the same number of arguments
-                for (auto iterCheck = structObj->mMethods.begin(); iterCheck != structObj->mMethods.end(); ++iterCheck) {
-                  auto &methodCheck = (*iterCheck);
-                  if (methodCheck == method) continue;
-                  if (!methodCheck->hasModifier(Modifier_Method_Ctor)) continue;
-
-                  if (method->mArguments.size() != methodCheck->mArguments.size()) continue;
-                  foundAnotherCtorWithSameNumberOfArguments = true;
-                  break;
-                }
+                foundAnotherCtorWithSameNumberOfArguments = hasAnotherCtorWithSameNumberOfArguments(structObj, method);
               }
             }
             if (foundAnotherCtorWithSameNumberOfArguments) {
@@ -1056,8 +1204,7 @@ namespace zsLib
 
               useSS << "static " << toIdlType(idl, GenerationOptions{ GenerationOptions::Optional(isOptional), GenerationOptions::Interface(requiredInterface) }, structObj) << " ";
               useSS << (altMethodName.hasData() ? fixName(altMethodName) : fixName(method->mName));
-            }
-            else {
+            } else {
               if (isEvent) {
                 handlerSS << indentStr << "event " << fixName(structObj) << "_" << fixName(method->mName) << "Delegate " << fixName(method->mName) << ";\n";
                 useSS << fixName(structObj) << "_";
@@ -1200,11 +1347,13 @@ namespace zsLib
           outputIdlFile.fileName_ = UseHelper::fixRelativeFilePath(pathStr, String("output.idl"));
 
           scanNamespaceForStructsNeedingToBeInterfaces(*(outputIdlFile.structsNeedingInterface_), outputIdlFile.global_);
+          calculateRelations(project->mGlobal, *outputIdlFile.derives_);
 
           IDLFile forwardIdlFile;
           forwardIdlFile.global_ = project->mGlobal;
           forwardIdlFile.fileName_ = UseHelper::fixRelativeFilePath(pathStr, String("forwards.idl"));
           forwardIdlFile.structsNeedingInterface_ = outputIdlFile.structsNeedingInterface_;   // reference previously scanned base class set
+          forwardIdlFile.derives_ = outputIdlFile.derives_;   // reference previously scanned base class set
 
           forwardIdlFile.importSS_ << "// " ZS_EVENTING_GENERATED_BY "\n\n";
           outputIdlFile.importSS_ << "// " ZS_EVENTING_GENERATED_BY "\n\n";
