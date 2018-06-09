@@ -261,6 +261,10 @@ namespace zsLib
                                              StructPtr derivedStruct,
                                              ContextPtr context
                                              );
+          static String fixMethodDeclaration(
+                                             StructPtr derivedStruct,
+                                             const String &name
+                                             );
           static String fixStructFileName(StructPtr structObj);
           static String fixStructFileNameAsPath(StructPtr structObj);
           static String getStructInitName(StructPtr structObj);
@@ -269,21 +273,11 @@ namespace zsLib
           static String fixArgumentName(const String &originalName);
 
           static void processTypesNamespace(
+                                            std::stringstream &iss,
                                             std::stringstream &ss,
                                             const String &inIndentStr,
                                             NamespacePtr namespaceObj
                                             );
-          static void processTypesStruct(
-                                         std::stringstream &ss,
-                                         const String &inIndentStr,
-                                         StructPtr structObj,
-                                         bool &firstFound
-                                         );
-          static bool processTypesEnum(
-                                       std::stringstream &ss,
-                                       const String &inIndentStr,
-                                       ContextPtr context
-                                       );
 
           static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure);
 
