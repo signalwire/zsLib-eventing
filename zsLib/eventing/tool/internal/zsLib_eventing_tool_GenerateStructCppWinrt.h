@@ -365,6 +365,10 @@ namespace zsLib
                                               const String &value,
                                               const GenerationOptions &options
                                               );
+          static String makeCppWinrtReferenceAndOptional(
+                                                         const String &value,
+                                                         const GenerationOptions &options
+                                                         );
           static String makeCppWinrtReferenceAndOptionalIfOptional(
                                                                   const String &value,
                                                                   const GenerationOptions &options
@@ -374,9 +378,16 @@ namespace zsLib
                                    const GenerationOptions &options
                                    );
           static String getCppWinrtType(
+                                        const HelperFile &helperFile,
                                         TypePtr type,
                                         const GenerationOptions &options
                                         );
+          static String getCppWinrtType(
+                                        TypePtr type,
+                                        const StructSet &structsNeedingInterface,
+                                        const GenerationOptions &options
+                                        );
+          static String getCppWinrtResultTypeInitializer(TypePtr type);
           static String getCppWinrtAttributes(const StringList &attributes);
           static String getCppWinrtAttributesLine(
                                                   const String &linePrefix,
@@ -384,12 +395,19 @@ namespace zsLib
                                                   );
           static String getToFromCppWinrtName(
                                               TypePtr type,
+                                              const StructSet &structsNeedingInterface,
                                               const GenerationOptions &options,
                                               const String &prefixName,
                                               const String &prefixNameIfImpl,
                                               const String &prefixIfInterface
                                               );
           static String getToCppWinrtName(
+                                          TypePtr type,
+                                          const StructSet &structsNeedingInterface,
+                                          const GenerationOptions &options
+                                          );
+          static String getToCppWinrtName(
+                                          const HelperFile &helperFile,
                                           TypePtr type,
                                           const GenerationOptions &options
                                           );
