@@ -638,12 +638,12 @@ namespace zsLib
             cppSS << "  Optional<" << cppType << "> result;\n";
             cppSS << "  if (!value) return result;\n";
             if (safeIntType) {
-              cppSS << "  auto safeInt = SafeInt<" << cppType << ">(*(value.as<" << cppwinrtType << ">()));\n";
+              cppSS << "  auto safeInt = SafeInt<" << cppType << ">(value.Value());\n";
               cppSS << "  result = safeInt.Ref();\n";
             } else if (isFloat) {
-              cppSS << "  result = (" << cppType << ")(*(value.as<" << cppwinrtType << ">()));\n";
+              cppSS << "  result = (" << cppType << ")(value.Value());\n";
             } else {
-              cppSS << "  result = (*(value.as<" << cppwinrtType << ">()));\n";
+              cppSS << "  result = value.Value();\n";
             }
             cppSS << "  return result;\n";
             cppSS << "}\n";
@@ -829,7 +829,7 @@ namespace zsLib
           cppSS << "{\n";
           cppSS << "  Optional<::zsLib::" << durationType << "> result;\n";
           cppSS << "  if (!value) return result;\n";
-          cppSS << "  result = FromCppWinrt_" << durationType << "(*(value.as<Windows::Foundation::TimeSpan>()));\n";
+          cppSS << "  result = FromCppWinrt_" << durationType << "(value.Value());\n";
           cppSS << "  return result;\n";
           cppSS << "}\n";
           cppSS << "\n";
@@ -876,7 +876,7 @@ namespace zsLib
           cppSS << "Optional<::zsLib::Time> Internal::Helper::FromCppWinrt(Windows::Foundation::IReference<Windows::Foundation::DateTime> const & value)\n";
           cppSS << "{\n";
           cppSS << "  if (!value) return Optional<::zsLib::Time>();\n";
-          cppSS << "  return Optional<::zsLib::Time>(FromCppWinrt(*(value.as<Windows::Foundation::DateTime>())));\n";
+          cppSS << "  return Optional<::zsLib::Time>(FromCppWinrt(value.Value()));\n";
           cppSS << "}\n";
           cppSS << "\n";
         }
@@ -920,6 +920,7 @@ namespace zsLib
           cppSS << "  handle = NULL;\n";
           cppSS << "\n";
           cppSS << "  if (promise->isRejected()) {\n";
+          cppSS << "    PromisePtr promiseBase = promise;\n";
 
           generateDefaultPromiseRejections(helperFile, "    ");
 
@@ -997,14 +998,15 @@ namespace zsLib
                 cppSS << "  handle = NULL;\n";
                 cppSS << "\n";
                 cppSS << "  if (promise->isResolved()) {\n";
-                cppSS << "    auto reasonHolder = promise->value< ::zsLib::AnyHolder< " << getCppType(resolveType, GO{}) << " > >();\n";
-                cppSS << "    if (reasonHolder) {\n";
-                cppSS << "      auto result = (::Internal::Helper::" << getToCppWinrtName(helperFile, resolveType, GO{}) << "(reasonHolder->value_));\n";
-                cppSS << "      co_result result.as<Windows::Foundation::IInspectable>();\n";
+                cppSS << "    auto value = promise->value();\n";
+                cppSS << "    if (value) {\n";
+                cppSS << "      auto result = (::Internal::Helper::" << getToCppWinrtName(helperFile, resolveType, GO{}) << "(value));\n";
+                cppSS << "      co_return result.as<Windows::Foundation::IInspectable>();\n";
                 cppSS << "    }\n";
                 cppSS << "  }\n";
 
                 cppSS << "  if (promise->isRejected()) {\n";
+                cppSS << "    PromisePtr promiseBase = promise;\n";
 
                 if (rejectType) {
                   auto rejectTypeStr = rejectType->getPathName();
@@ -1064,7 +1066,7 @@ namespace zsLib
 
           auto &cppSS = helperFile.cppBodySS_;
           cppSS << indentStr << "{\n";
-          cppSS << indentStr << "  auto reasonHolder = promise->reason< ::zsLib::AnyHolder< " << getCppType(rejectionType, GO{}) << " > >();\n";
+          cppSS << indentStr << "  auto reasonHolder = promiseBase->reason< ::zsLib::AnyHolder< " << getCppType(rejectionType, GO{}) << " > >();\n";
           cppSS << indentStr << "  if (reasonHolder) {\n";
           cppSS << indentStr << "    auto comResult = (::Internal::Helper::" << getToCppWinrtName(helperFile, rejectionType, GO{}) << "(reasonHolder->value_));\n";
           cppSS << indentStr << "    co_return comResult.as<Windows::Foundation::IInspectable>();\n";
@@ -1194,7 +1196,7 @@ namespace zsLib
           cppSS << dashedStr;
           cppSS << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " Internal::Helper::" << getToCppWinrtName(helperFile, structObj, GO{}) << "(" << getCppType(structObj, GO{}) << " value)\n";
           cppSS << "{\n";
-          cppSS << "  return " << fixNamePath(structObj) << "::ToCppWinrt(value);\n";
+          cppSS << "  return " << getCppWinrtType(helperFile, structObj, GO::MakeImplementation()) << "::ToCppWinrt(value);\n";
           cppSS << "}\n";
           cppSS << "\n";
 
@@ -1208,7 +1210,7 @@ namespace zsLib
           cppSS << dashedStr;
           cppSS << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " Internal::Helper::" << getToCppWinrtName(helperFile, structObj, GO{}) << "(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation(), GO::MakeReference(), GO::MakeComPtr() }) << " value)\n";
           cppSS << "{\n";
-          cppSS << "  return " << fixNamePath(structObj) << "::ToCppWinrt(value);\n";
+          cppSS << "  return " << getCppWinrtType(helperFile, structObj, GO::MakeImplementation()) << "::ToCppWinrt(value);\n";
           cppSS << "}\n";
           cppSS << "\n";
 
@@ -1216,7 +1218,7 @@ namespace zsLib
             cppSS << dashedStr;
             cppSS << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " Internal::Helper::" << getToCppWinrtName(helperFile, structObj, GO{}) << "(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeInterface(), GO::MakeReference() }) << " value)\n";
             cppSS << "{\n";
-            cppSS << "  return " << fixNamePath(structObj) << "::ToCppWinrt(value);\n";
+            cppSS << "  return " << getCppWinrtType(helperFile, structObj, GO::MakeImplementation()) << "::ToCppWinrt(value);\n";
             cppSS << "}\n";
             cppSS << "\n";
           }
@@ -1225,14 +1227,14 @@ namespace zsLib
           cppSS << dashedStr;
           cppSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeImplementation(), GO::MakeComPtr() }) << " Internal::Helper::" << getToCppWinrtName(helperFile, structObj, GO{ GO::MakeImplementation() }) << "(" << getCppType(structObj, GO{}) << " value)\n";
           cppSS << "{\n";
-          cppSS << "  return " << fixNamePath(structObj) << "::ToCppWinrtImpl(value);\n";
+          cppSS << "  return " << getCppWinrtType(helperFile, structObj, GO::MakeImplementation()) << "::ToCppWinrtImpl(value);\n";
           cppSS << "}\n";
           cppSS << "\n";
 
           cppSS << dashedStr;
           cppSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeImplementation(), GO::MakeComPtr() }) << " Internal::Helper::" << getToCppWinrtName(helperFile, structObj, GO{ GO::MakeImplementation() }) << "(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReference() }) << " value)\n";
           cppSS << "{\n";
-          cppSS << "  return " << fixNamePath(structObj) << "::ToCppWinrtImpl(value);\n";
+          cppSS << "  return " << getCppWinrtType(helperFile, structObj, GO::MakeImplementation()) << "::ToCppWinrtImpl(value);\n";
           cppSS << "}\n";
           cppSS << "\n";
 
@@ -1247,7 +1249,7 @@ namespace zsLib
             cppSS << dashedStr;
             cppSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeImplementation(), GO::MakeComPtr() }) << " Internal::Helper::" << getToCppWinrtName(helperFile, structObj, GO{ GO::MakeImplementation() }) << "(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeInterface(), GO::MakeReference() }) << " value)\n";
             cppSS << "{\n";
-            cppSS << "  return " << fixNamePath(structObj) << "::ToCppWinrtImpl(value);\n";
+            cppSS << "  return " << getCppWinrtType(helperFile, structObj, GO::MakeImplementation()) << "::ToCppWinrtImpl(value);\n";
             cppSS << "}\n";
             cppSS << "\n";
           }
@@ -1257,21 +1259,21 @@ namespace zsLib
             cppSS << dashedStr;
             cppSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeInterface() }) << " Internal::Helper::" << getToCppWinrtName(helperFile, structObj, GO{ GO::MakeInterface() }) << "(" << getCppType(structObj, GO{}) << " value)\n";
             cppSS << "{\n";
-            cppSS << "  return " << fixNamePath(structObj) << "::ToCppWinrtInterface(value);\n";
+            cppSS << "  return " << getCppWinrtType(helperFile, structObj, GO::MakeImplementation()) << "::ToCppWinrtInterface(value);\n";
             cppSS << "}\n";
             cppSS << "\n";
 
             cppSS << dashedStr;
             cppSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeInterface() }) << " Internal::Helper::" << getToCppWinrtName(helperFile, structObj, GO{ GO::MakeInterface() }) << "(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReference() }) << " value)\n";
             cppSS << "{\n";
-            cppSS << "  return " << fixNamePath(structObj) << "::ToCppWinrtInterface(value);\n";
+            cppSS << "  return " << getCppWinrtType(helperFile, structObj, GO::MakeImplementation()) << "::ToCppWinrtInterface(value);\n";
             cppSS << "}\n";
             cppSS << "\n";
 
             cppSS << dashedStr;
             cppSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeInterface() }) << " Internal::Helper::" << getToCppWinrtName(helperFile, structObj, GO{ GO::MakeInterface() }) << "(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation(), GO::MakeReference(), GO::MakeComPtr() }) << " value)\n";
             cppSS << "{\n";
-            cppSS << "  return " << fixNamePath(structObj) << "::ToCppWinrtInterface(value);\n";
+            cppSS << "  return " << getCppWinrtType(helperFile, structObj, GO::MakeImplementation()) << "::ToCppWinrtInterface(value);\n";
             cppSS << "}\n";
             cppSS << "\n";
 
@@ -1293,14 +1295,14 @@ namespace zsLib
           cppSS << dashedStr;
           cppSS << getCppType(structObj, GO{}) << " Internal::Helper::" << getFromCppWinrtName(structObj) << "(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReference() }) << " value)\n";
           cppSS << "{\n";
-          cppSS << "  return " << fixNamePath(structObj) << "::FromCppWinrt(value);\n";
+          cppSS << "  return " << getCppWinrtType(helperFile, structObj, GO::MakeImplementation()) << "::FromCppWinrt(value);\n";
           cppSS << "}\n";
           cppSS << "\n";
 
           cppSS << dashedStr;
           cppSS << getCppType(structObj, GO{}) << " Internal::Helper::" << getFromCppWinrtName(structObj) << "(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation(), GO::MakeComPtr(), GO::MakeReference() }) << " value)\n";
           cppSS << "{\n";
-          cppSS << "  return " << fixNamePath(structObj) << "::FromCppWinrt(value);\n";
+          cppSS << "  return " << getCppWinrtType(helperFile, structObj, GO::MakeImplementation()) << "::FromCppWinrt(value);\n";
           cppSS << "}\n";
           cppSS << "\n";
 
@@ -1308,7 +1310,7 @@ namespace zsLib
             cppSS << dashedStr;
             cppSS << getCppType(structObj, GO{}) << " Internal::Helper::" << getFromCppWinrtName(structObj) << "(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeInterface(), GO::MakeReference() }) << " value)\n";
             cppSS << "{\n";
-            cppSS << "  return " << fixNamePath(structObj) << "::FromCppWinrt(value);\n";
+            cppSS << "  return " << getCppWinrtType(helperFile, structObj, GO::MakeImplementation()) << "::FromCppWinrt(value);\n";
             cppSS << "}\n";
             cppSS << "\n";
           }
@@ -2157,7 +2159,7 @@ namespace zsLib
           cppSS << getCppWinrtType(helperFile, enumObj, GO{ GO::MakeOptional(), GO::MakeReturnResult() }) << " Internal::Helper::" << getToCppWinrtName(helperFile, enumObj, GO{}) << "(" << getCppType(enumObj, GO::MakeOptional()) << "  &value)\n";
           cppSS << "{\n";
           cppSS << "  if (!value.hasValue()) return nullptr;\n";
-          cppSS << "  return Windows::Foundatino::IReference< " << getCppWinrtType(helperFile, enumObj, GO{}) << " >(" << getToCppWinrtName(helperFile, enumObj, GO{}) << "(value.value()));\n";
+          cppSS << "  return Windows::Foundation::IReference< " << getCppWinrtType(helperFile, enumObj, GO{}) << " >(" << getToCppWinrtName(helperFile, enumObj, GO{}) << "(value.value()));\n";
           cppSS << "}\n";
           cppSS << "\n";
 
@@ -2166,8 +2168,8 @@ namespace zsLib
           cppSS << "{\n";
           cppSS << "  " << getCppType(enumObj, GO::MakeOptional()) << " result;\n";
           cppSS << "  if (!value) return result;\n";
-          cppSS << "  result = " << getFromCppWinrtName(enumObj) << "(value->Value);\n";
-          cppSS << "  return result\n;";
+          cppSS << "  result = " << getFromCppWinrtName(enumObj) << "(value.Value());\n";
+          cppSS << "  return result;\n";
           cppSS << "}\n";
           cppSS << "\n";
         }
@@ -2203,12 +2205,12 @@ namespace zsLib
             cppSS << "Windows::Foundation::Collections::IVectorView< " << getCppWinrtType(helperFile, foundType, GO{ GO::MakeReturnResult(), GO::MakeInterface() }) << " > Internal::Helper::" << getToCppWinrtName(helperFile, templatedStruct, GO{}) << "(shared_ptr< std::list< " << getCppType(foundType, GO{}) << " > > values)\n";
             cppSS << "{\n";
             cppSS << "  if (!values) return nullptr;\n";
-            cppSS << "  Windows::Foundation::Collections::IVector< " << getCppWinrtType(helperFile, foundType, GO{}) << " > result;\n";
+            cppSS << "  Windows::Foundation::Collections::IVector< " << getCppWinrtType(helperFile, foundType, GO::MakeInterface()) << " > result;\n";
             cppSS << "  for (auto iter = values->begin(); iter != values->end(); ++iter)\n";
             cppSS << "  {\n";
             cppSS << "    result.Append(" << getToCppWinrtName(helperFile, foundType, GO{ GO::MakeInterface() }) << "(*iter));\n";
             cppSS << "  }\n";
-            cppSS << "  return result->GetView();\n";
+            cppSS << "  return result.GetView();\n";
             cppSS << "}\n";
             cppSS << "\n";
 
@@ -2217,7 +2219,7 @@ namespace zsLib
             cppSS << "{\n";
             cppSS << "  if (!values) return shared_ptr< std::list< " << getCppType(foundType, GO{}) << " > >();\n";
             cppSS << "  auto result = make_shared< std::list< " << getCppType(foundType, GO{}) << " > >();\n";
-            cppSS << "  for (" << getCppWinrtType(helperFile, foundType, GO{ GO::MakeReference() }) << " value : values)\n";
+            cppSS << "  for (" << getCppWinrtType(helperFile, foundType, GO{ GO::MakeReference(), GO::MakeInterface() }) << " value : values)\n";
             cppSS << "  {\n";
             cppSS << "    result->push_back(" << getFromCppWinrtName(foundType) << "(value));\n";
             cppSS << "  }\n";
@@ -2281,7 +2283,7 @@ namespace zsLib
             cppSS << "  auto result = make_shared< std::map<" << getCppType(keyType, GO{}) << ", " << getCppType(valueType, GO{}) << "> >();\n";
             cppSS << "  for (Windows::Foundation::Collections::IKeyValuePair< " << getCppWinrtType(helperFile, keyType, GO{}) << ", " << getCppWinrtType(helperFile, valueType, GO{}) << " > const & pair : values)\n";
             cppSS << "  {\n";
-            cppSS << "    result[" << getFromCppWinrtName(keyType) << "(pair->Key)] = " << getFromCppWinrtName(valueType) << "[pair->Value];\n";
+            cppSS << "    result[" << getFromCppWinrtName(keyType) << "(pair.Key())] = " << getFromCppWinrtName(valueType) << "(pair.Value());\n";
             cppSS << "  }\n";
             cppSS << "  return result;\n";
             cppSS << "}\n";
@@ -2324,9 +2326,9 @@ namespace zsLib
             cppSS << "  Windows::Foundation::Collections::IMap< " << getCppWinrtType(helperFile, keyType, GO{}) << ", Windows::Foundation::IInspectable > result;\n";
             cppSS << "  for (auto iter = values->begin(); iter != values->end(); ++iter)\n";
             cppSS << "  {\n";
-            cppSS << "    result->Insert(" << getToCppWinrtName(helperFile, keyType, GO{ GO::MakeInterface() }) << "(*iter), Windows::Foundation::IInspectable {nullptr});\n";
+            cppSS << "    result.Insert(" << getToCppWinrtName(helperFile, keyType, GO{ GO::MakeInterface() }) << "(*iter), Windows::Foundation::IInspectable {nullptr});\n";
             cppSS << "  }\n";
-            cppSS << "  return result->GetView();\n";
+            cppSS << "  return result.GetView();\n";
             cppSS << "}\n";
             cppSS << "\n";
 
@@ -2335,11 +2337,10 @@ namespace zsLib
             cppSS << "{\n";
             cppSS << "  if (!values) return shared_ptr< std::set< " << getCppType(keyType, GO{}) << " > >();\n";
             cppSS << "  auto result = make_shared< std::set<" << getCppType(keyType, GO{}) << "> >();\n";
-            cppSS << "  std::for_each(Windows::Foundation::Collections::begin(values), Windows::Foundation::Collections::end(values), [result](Windows::Foundation::Collections::IKeyValuePair< " << getCppWinrtType(helperFile, keyType, GO{}) << ", Windows::Foundation::IInspectable > pair)\n";
-            cppSS << "  for (Windows::Foundation::Collections::IKeyValuePair< " << getCppWinrtType(helperFile, keyType, GO{}) << ", Windows::Foundation::IInspectable > const & pair : values)\n";
+            cppSS << "  for (Windows::Foundation::Collections::IKeyValuePair< " << getCppWinrtType(helperFile, keyType, GO{ GO::MakeInterface() }) << ", Windows::Foundation::IInspectable > const & pair : values)\n";
             cppSS << "  {\n";
-            cppSS << "    result->insert(" << getFromCppWinrtName(keyType) << "(pair->Key));\n";
-            cppSS << "  });\n";
+            cppSS << "    result->insert(" << getFromCppWinrtName(keyType) << "(pair.Key()));\n";
+            cppSS << "  }\n";
             cppSS << "  return result;\n";
             cppSS << "}\n";
             cppSS << "\n";
@@ -3071,7 +3072,6 @@ namespace zsLib
           {
             auto &ss = helperFile.cppBodySS_;
             GenerateStructHeader::generateUsingTypes(ss, "");
-            ss << "using namespace date;\n";
             ss << "using namespace winrt;\n";
             ss << "\n";
           }
