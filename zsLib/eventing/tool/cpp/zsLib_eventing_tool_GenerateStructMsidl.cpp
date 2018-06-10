@@ -425,9 +425,9 @@ namespace zsLib
                 decltype(maxParams) loop = 0;
                 for (auto iter = templatedStruct->mTemplateArguments.begin(); iter != templatedStruct->mTemplateArguments.end() && loop < maxParams; ++iter, ++loop)
                 {
-                  auto &templateType = (*iter);
+                  auto &templateArg = (*iter);
                   if (!first) result += ", ";
-                  result += toIdlType(idl, GenerationOptions{ GenerationOptions::Optional(true), GenerationOptions::Interface(true) }, templateType);
+                  result += toIdlType(idl, GenerationOptions{ GenerationOptions::Optional(templateArg->hasModifier(Modifier_Optional)), GenerationOptions::Interface(true) }, templateArg);
                   first = false;
                 }
                 if (specialSet) {

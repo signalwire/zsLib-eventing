@@ -125,12 +125,14 @@ namespace zsLib
             struct Interface;
             struct ReturnResult;
             struct Implementation;
+            struct CppBaseType;
 
             friend struct BaseOption;
             friend struct Optional;
             friend struct Interface;
             friend struct ReturnResult;
             friend struct Implementation;
+            friend struct CppBaseType;
 
             struct BaseOption
             {
@@ -173,6 +175,12 @@ namespace zsLib
               bool value_{};
               virtual void apply(GenerationOptions *options) const override { options->comPtr_ = value_; }
             };
+            struct CppBaseType : public BaseOption {
+              CppBaseType(bool value) : value_(value) {}
+              operator bool() const { return value_; }
+              bool value_{};
+              virtual void apply(GenerationOptions *options) const override { options->cppBaseType_ = value_; }
+            };
 
             GenerationOptions() {}
             GenerationOptions(const BaseOption &value) { value.apply(this); }
@@ -207,6 +215,16 @@ namespace zsLib
                               const BaseOption &value6
                               ) { value1.apply(this); value2.apply(this); value3.apply(this); value4.apply(this); value5.apply(this); value6.apply(this); }
 
+            GenerationOptions(
+                              const BaseOption &value1,
+                              const BaseOption &value2,
+                              const BaseOption &value3,
+                              const BaseOption &value4,
+                              const BaseOption &value5,
+                              const BaseOption &value6,
+                              const BaseOption &value7
+                              ) { value1.apply(this); value2.apply(this); value3.apply(this); value4.apply(this); value5.apply(this); value6.apply(this); value7.apply(this); }
+
             GenerationOptions(const GenerationOptions &source) = default;
             GenerationOptions &operator=(const GenerationOptions &source) = default;
 
@@ -216,6 +234,7 @@ namespace zsLib
             bool isReference() const { return reference_; }
             bool isImplementation() const { return implementation_; }
             bool isComPtr() const { return comPtr_; }
+            bool isCppBaseType() const { return cppBaseType_; }
 
             Optional getOptional() const { return Optional(optional_); }
             Interface getInterface() const { return Interface(interface_); }
@@ -223,6 +242,7 @@ namespace zsLib
             Reference getReference() const { return Reference(reference_); }
             Implementation getImplementation() const { return Implementation(implementation_); }
             ComPtr getComPtr() const { return ComPtr(comPtr_); }
+            CppBaseType getCppBaseType() const { return CppBaseType(cppBaseType_); }
 
             GenerationOptions getAmmended(const BaseOption &value) const { GenerationOptions result(*this); value.apply(&result); return result; }
 
@@ -238,6 +258,8 @@ namespace zsLib
             static Implementation MakeNotImplementation() { return Implementation(false); }
             static ComPtr MakeComPtr() { return ComPtr(true); }
             static ComPtr MakeNotComPtr() { return ComPtr(false); }
+            static CppBaseType MakeCppBaseType() { return CppBaseType(true); }
+            static CppBaseType MakeNotCppBaseType() { return CppBaseType(false); }
 
           protected:
             bool optional_{};
@@ -246,6 +268,7 @@ namespace zsLib
             bool reference_{};
             bool implementation_{};
             bool comPtr_{};
+            bool cppBaseType_{};
           };
 
           GenerateStructCppWinrt();
@@ -278,6 +301,12 @@ namespace zsLib
                                             const String &inIndentStr,
                                             NamespacePtr namespaceObj
                                             );
+          static void processTypesStruct(
+                                         std::stringstream &ss,
+                                         const String &indentStr,
+                                         StructPtr structObj,
+                                         bool &firstFound
+                                         );
 
           static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure);
 
@@ -346,6 +375,11 @@ namespace zsLib
                                      HelperFile &helperFile,
                                      StructPtr structObj
                                      );
+          static bool requiresSpecialConversion(IEventingTypes::PredefinedTypedefs basicType);
+          static String getBasicCppWinrtTypeString(
+                                                   IEventingTypes::PredefinedTypedefs type,
+                                                   const GenerationOptions &options
+                                                   );
 
           static String getBasicCppWinrtTypeString(
                                                    BasicTypePtr type,

@@ -2144,7 +2144,7 @@ namespace zsLib
             case IEventingTypes::PredefinedTypedef_ulong:     return makeCxOptional(isOptional, "Internal::Helper::HelperULong");
             case IEventingTypes::PredefinedTypedef_long:
             case IEventingTypes::PredefinedTypedef_slong:     return makeCxOptional(isOptional, "Internal::Helper::HelperLong");
-            case IEventingTypes::PredefinedTypedef_ulonglong: return makeCxOptional(isOptional, "int64");
+            case IEventingTypes::PredefinedTypedef_ulonglong: return makeCxOptional(isOptional, "uint64");
             case IEventingTypes::PredefinedTypedef_longlong:
             case IEventingTypes::PredefinedTypedef_slonglong: return makeCxOptional(isOptional, "int64");
             case IEventingTypes::PredefinedTypedef_uint8:     return makeCxOptional(isOptional, "uint8");
