@@ -61,15 +61,15 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark (helpers)
-        #pragma mark
+        //
+        // (helpers)
+        //
         //---------------------------------------------------------------------
         static void doInclude(
                               const String &headerFile,
                               std::stringstream &ss,
                               GenerateStructC::StringSet &alreadyIncluded
-                              )
+                              ) noexcept
         {
           if (alreadyIncluded.end() != alreadyIncluded.find(headerFile)) return;
           alreadyIncluded.insert(headerFile);
@@ -80,46 +80,46 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructC::HelperFile
-        #pragma mark
+        //
+        // GenerateStructC::HelperFile
+        //
 
         //---------------------------------------------------------------------
-        GenerateStructC::HelperFile::HelperFile()
+        GenerateStructC::HelperFile::HelperFile() noexcept
         {
         }
         
         //---------------------------------------------------------------------
-        GenerateStructC::HelperFile::~HelperFile()
+        GenerateStructC::HelperFile::~HelperFile() noexcept
         {
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::HelperFile::headerIncludeC(const String &headerFile)
+        void GenerateStructC::HelperFile::headerIncludeC(const String &headerFile) noexcept
         {
           doInclude(headerFile, headerCIncludeSS_, headerCAlreadyIncluded_);
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::HelperFile::headerIncludeCpp(const String &headerFile)
+        void GenerateStructC::HelperFile::headerIncludeCpp(const String &headerFile) noexcept
         {
           doInclude(headerFile, headerCppIncludeSS_, headerCppAlreadyIncluded_);
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::HelperFile::includeC(const String &headerFile)
+        void GenerateStructC::HelperFile::includeC(const String &headerFile) noexcept
         {
           doInclude(headerFile, cIncludeSS_, cAlreadyIncluded_);
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::HelperFile::includeCpp(const String &headerFile)
+        void GenerateStructC::HelperFile::includeCpp(const String &headerFile) noexcept
         {
           doInclude(headerFile, cppIncludeSS_, cppAlreadyIncluded_);
         }
 
         //---------------------------------------------------------------------
-        bool GenerateStructC::HelperFile::hasBoxing(const String &namePathStr)
+        bool GenerateStructC::HelperFile::hasBoxing(const String &namePathStr) noexcept
         {
           auto found = boxings_.find(namePathStr);
           return found != boxings_.end();
@@ -129,40 +129,40 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructC::StructFile
-        #pragma mark
+        //
+        // GenerateStructC::StructFile
+        //
 
         //---------------------------------------------------------------------
-        GenerateStructC::StructFile::StructFile()
+        GenerateStructC::StructFile::StructFile() noexcept
         {
         }
         
         //---------------------------------------------------------------------
-        GenerateStructC::StructFile::~StructFile()
+        GenerateStructC::StructFile::~StructFile() noexcept
         {
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::StructFile::headerIncludeC(const String &headerFile)
+        void GenerateStructC::StructFile::headerIncludeC(const String &headerFile) noexcept
         {
           doInclude(headerFile, headerCIncludeSS_, headerCAlreadyIncluded_);
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::StructFile::headerIncludeCpp(const String &headerFile)
+        void GenerateStructC::StructFile::headerIncludeCpp(const String &headerFile) noexcept
         {
           doInclude(headerFile, headerCppIncludeSS_, headerCppAlreadyIncluded_);
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::StructFile::includeC(const String &headerFile)
+        void GenerateStructC::StructFile::includeC(const String &headerFile) noexcept
         {
           doInclude(headerFile, cIncludeSS_, cAlreadyIncluded_);
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::StructFile::includeCpp(const String &headerFile)
+        void GenerateStructC::StructFile::includeCpp(const String &headerFile) noexcept
         {
           doInclude(headerFile, cppIncludeSS_, cppAlreadyIncluded_);
         }
@@ -171,24 +171,24 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructC
-        #pragma mark
+        //
+        // GenerateStructC
+        //
 
 
         //-------------------------------------------------------------------
-        GenerateStructC::GenerateStructC() : IDLCompiler(Noop{})
+        GenerateStructC::GenerateStructC() noexcept : IDLCompiler(Noop{})
         {
         }
 
         //-------------------------------------------------------------------
-        GenerateStructCPtr GenerateStructC::create()
+        GenerateStructCPtr GenerateStructC::create() noexcept
         {
           return make_shared<GenerateStructC>();
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructC::fixBasicType(IEventingTypes::PredefinedTypedefs type)
+        String GenerateStructC::fixBasicType(IEventingTypes::PredefinedTypedefs type) noexcept
         {
           switch (type) {
             case PredefinedTypedef_void:        
@@ -247,7 +247,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructC::fixCType(IEventingTypes::PredefinedTypedefs type)
+        String GenerateStructC::fixCType(IEventingTypes::PredefinedTypedefs type) noexcept
         {
           switch (type)
           {
@@ -307,7 +307,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructC::fixCType(TypePtr type)
+        String GenerateStructC::fixCType(TypePtr type) noexcept
         {
           if (!type) return String();
 
@@ -326,7 +326,7 @@ namespace zsLib
         String GenerateStructC::fixCType(
                                          bool isOptional,
                                          TypePtr type
-                                         )
+                                         ) noexcept
         {
           if (!isOptional) return fixCType(type);
           if (!type) return String();
@@ -347,7 +347,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructC::fixType(TypePtr type)
+        String GenerateStructC::fixType(TypePtr type) noexcept
         {
           if (!type) return String();
 
@@ -385,7 +385,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructC::getApiImplementationDefine(ContextPtr context)
+        String GenerateStructC::getApiImplementationDefine(ContextPtr context) noexcept
         {
           String result = "WRAPPER_C_GENERATED_IMPLEMENTATION";
           if (!context) return result;
@@ -400,7 +400,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructC::getApiCastRequiredDefine(ContextPtr context)
+        String GenerateStructC::getApiCastRequiredDefine(ContextPtr context) noexcept
         {
           String result = "WRAPPER_C_GENERATED_REQUIRES_CAST";
           if (!context) return result;
@@ -415,7 +415,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructC::getApiExportDefine(ContextPtr context)
+        String GenerateStructC::getApiExportDefine(ContextPtr context) noexcept
         {
           String result = "WRAPPER_C_EXPORT_API";
           if (!context) return result;
@@ -431,7 +431,7 @@ namespace zsLib
 
 
         //---------------------------------------------------------------------
-        String GenerateStructC::getApiExportCastedDefine(ContextPtr context)
+        String GenerateStructC::getApiExportCastedDefine(ContextPtr context) noexcept
         {
           String result = "WRAPPER_C_CASTED_EXPORT_API";
           if (!context) return result;
@@ -446,7 +446,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructC::getApiCallingDefine(ContextPtr context)
+        String GenerateStructC::getApiCallingDefine(ContextPtr context) noexcept
         {
           String result = "WRAPPER_C_CALLING_CONVENTION";
           if (!context) return result;
@@ -464,7 +464,7 @@ namespace zsLib
         String GenerateStructC::getApiGuardDefine(
                                                   ContextPtr context,
                                                   bool endGuard
-                                                  )
+                                                  ) noexcept
         {
           String result = (!endGuard ? "WRAPPER_C_PLUS_PLUS_BEGIN_GUARD" : "WRAPPER_C_PLUS_PLUS_END_GUARD");
           if (!context) return result;
@@ -482,7 +482,7 @@ namespace zsLib
         String GenerateStructC::getToHandleMethod(
                                                   bool isOptional,
                                                   TypePtr type
-                                                  )
+                                                  ) noexcept
         {
           if (!type) return String();
 
@@ -558,7 +558,7 @@ namespace zsLib
         String GenerateStructC::getFromHandleMethod(
                                                     bool isOptional,
                                                     TypePtr type
-                                                    )
+                                                    ) noexcept
         {
           {
             auto enumType = type->toEnumType();
@@ -577,7 +577,7 @@ namespace zsLib
         void GenerateStructC::includeType(
                                           HelperFile &helperFile,
                                           TypePtr type
-                                          )
+                                          ) noexcept
         {
           if (!type) return;
           if (type->toBasicType()) return;
@@ -608,7 +608,7 @@ namespace zsLib
         void GenerateStructC::includeType(
                                           StructFile &structFile,
                                           TypePtr type
-                                          )
+                                          ) noexcept
         {
           if (!type) return;
           if (type->toBasicType()) return;
@@ -637,9 +637,9 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         void GenerateStructC::calculateRelations(
-                                                  NamespacePtr namespaceObj,
-                                                  NamePathStructSetMap &ioDerivesInfo
-                                                  )
+                                                 NamespacePtr namespaceObj,
+                                                 NamePathStructSetMap &ioDerivesInfo
+                                                 ) noexcept
         {
           if (!namespaceObj) return;
           for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter) {
@@ -656,7 +656,7 @@ namespace zsLib
         void GenerateStructC::calculateRelations(
                                                  StructPtr structObj,
                                                  NamePathStructSetMap &ioDerivesInfo
-                                                 )
+                                                 ) noexcept
         {
           if (!structObj) return;
 
@@ -697,7 +697,7 @@ namespace zsLib
         void GenerateStructC::calculateBoxings(
                                                NamespacePtr namespaceObj,
                                                StringSet &ioBoxings
-                                               )
+                                               ) noexcept
         {
           if (!namespaceObj) return;
 
@@ -717,7 +717,7 @@ namespace zsLib
         void GenerateStructC::calculateBoxings(
                                                StructPtr structObj,
                                                StringSet &ioBoxings
-                                               )
+                                               ) noexcept
         {
           if (!structObj) return;
 
@@ -751,9 +751,10 @@ namespace zsLib
         //---------------------------------------------------------------------
         void GenerateStructC::calculateBoxings(
                                                TemplatedStructTypePtr templatedStructObj,
-                                               StringSet &ioBoxings
-                                               )
+                                               ZS_MAYBE_USED() StringSet &ioBoxings
+                                               ) noexcept
         {
+          ZS_MAYBE_USED(ioBoxings);
           if (!templatedStructObj) return;
         }
 
@@ -762,7 +763,7 @@ namespace zsLib
                                                MethodPtr method,
                                                StringSet &ioBoxings,
                                                TemplatedStructTypePtr templatedStruct
-                                               )
+                                               ) noexcept
         {
           if (!method) return;
 
@@ -780,7 +781,7 @@ namespace zsLib
                                                PropertyPtr property,
                                                StringSet &ioBoxings,
                                                TemplatedStructTypePtr templatedStruct
-                                               )
+                                               ) noexcept
         {
           if (!property) return;
           calculateBoxingType(property->hasModifier(Modifier_Optional), property->mType, ioBoxings, templatedStruct);
@@ -792,7 +793,7 @@ namespace zsLib
                                                   TypePtr type,
                                                   StringSet &ioBoxings,
                                                   TemplatedStructTypePtr templatedStruct
-                                                  )
+                                                  ) noexcept
         {
           if (!isOptional) return;
           if (!type) return;
@@ -848,7 +849,7 @@ namespace zsLib
                                           StructPtr structObj,
                                           const NamePath &namePath,
                                           NamePathStructSetMap &ioDerivesInfo
-                                          )
+                                          ) noexcept
         {
           if (!structObj) return;
 
@@ -869,7 +870,7 @@ namespace zsLib
                                            std::stringstream &output,
                                            std::stringstream &source,
                                            bool appendEol
-                                           )
+                                           ) noexcept
         {
           String str = source.str();
           if (str.isEmpty()) return;
@@ -881,7 +882,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::prepareHelperFile(HelperFile &helperFile)
+        void GenerateStructC::prepareHelperFile(HelperFile &helperFile) noexcept
         {
           {
             auto &ss = helperFile.headerCIncludeSS_;
@@ -980,7 +981,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::prepareHelperCallback(HelperFile &helperFile)
+        void GenerateStructC::prepareHelperCallback(HelperFile &helperFile) noexcept
         {
           auto dash = GenerateHelper::getDashedComment(String());
           auto dash2 = GenerateHelper::getDashedComment(String("  "));
@@ -1130,7 +1131,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::prepareHelperExceptions(HelperFile &helperFile)
+        void GenerateStructC::prepareHelperExceptions(HelperFile &helperFile) noexcept
         {
           auto dash = GenerateHelper::getDashedComment(String());
           auto dash2 = GenerateHelper::getDashedComment(String("  "));
@@ -1242,7 +1243,7 @@ namespace zsLib
         void GenerateStructC::prepareHelperExceptions(
                                                       HelperFile &helperFile,
                                                       const String &exceptionName
-                                                      )
+                                                      ) noexcept
         {
           auto context = helperFile.global_->toContext()->findType("::zs::exceptions::" + exceptionName);
           if (!context) return;
@@ -1291,7 +1292,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::prepareHelperBoxing(HelperFile &helperFile)
+        void GenerateStructC::prepareHelperBoxing(HelperFile &helperFile) noexcept
         {
 
           prepareHelperBoxing(helperFile, IEventingTypes::PredefinedTypedef_bool);
@@ -1338,7 +1339,7 @@ namespace zsLib
         void GenerateStructC::prepareHelperBoxing(
                                                   HelperFile &helperFile,
                                                   const IEventingTypes::PredefinedTypedefs basicType
-                                                  )
+                                                  ) noexcept
         {
           bool isBinary = IEventingTypes::PredefinedTypedef_binary == basicType;
           bool isString = IEventingTypes::PredefinedTypedef_string == basicType;
@@ -1528,7 +1529,7 @@ namespace zsLib
         void GenerateStructC::prepareHelperNamespace(
                                                      HelperFile &helperFile,
                                                      NamespacePtr namespaceObj
-                                                     )
+                                                     ) noexcept
         {
           if (!namespaceObj) return;
 
@@ -1550,7 +1551,7 @@ namespace zsLib
         void GenerateStructC::prepareHelperStruct(
                                                   HelperFile &helperFile,
                                                   StructPtr structObj
-                                                  )
+                                                  ) noexcept
         {
           if (!structObj) return;
 
@@ -1568,7 +1569,7 @@ namespace zsLib
         void GenerateStructC::prepareHelperEnum(
                                                 HelperFile &helperFile,
                                                 EnumTypePtr enumObj
-                                                )
+                                                ) noexcept
         {
           if (!enumObj) return;
           prepareHelperEnumBoxing(helperFile, enumObj);
@@ -1578,7 +1579,7 @@ namespace zsLib
         void GenerateStructC::prepareHelperEnumBoxing(
                                                       HelperFile &helperFile,
                                                       EnumTypePtr enumObj
-                                                      )
+                                                      ) noexcept
         {
           if (!enumObj) return;
           if (!helperFile.hasBoxing(enumObj->getPathName())) return;
@@ -1722,7 +1723,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::prepareHelperString(HelperFile &helperFile)
+        void GenerateStructC::prepareHelperString(HelperFile &helperFile) noexcept
         {
           auto dash = GenerateHelper::getDashedComment(String());
           auto dash2 = GenerateHelper::getDashedComment(String("  "));
@@ -1815,7 +1816,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::prepareHelperBinary(HelperFile &helperFile)
+        void GenerateStructC::prepareHelperBinary(HelperFile &helperFile) noexcept
         {
           auto dash = GenerateHelper::getDashedComment(String());
           auto dash2 = GenerateHelper::getDashedComment(String("  "));
@@ -1926,7 +1927,7 @@ namespace zsLib
         void GenerateStructC::prepareHelperDuration(
                                                     HelperFile &helperFile,
                                                     const String &durationType
-                                                    )
+                                                    ) noexcept
         {
           bool isTime = "Time" == durationType;
 
@@ -2070,7 +2071,7 @@ namespace zsLib
         void GenerateStructC::prepareHelperList(
                                                 HelperFile &helperFile,
                                                 const String &listOrSetStr
-                                                )
+                                                ) noexcept
         {
           bool isMap = ("map" == listOrSetStr);
           bool isList = ("list" == listOrSetStr);
@@ -2318,7 +2319,7 @@ namespace zsLib
         void GenerateStructC::prepareHelperSpecial(
                                                    HelperFile &helperFile,
                                                    const String &specialName
-                                                   )
+                                                   ) noexcept
         {
           bool isPromise = "Promise" == specialName;
 
@@ -2545,7 +2546,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::preparePromiseWithValue(HelperFile &helperFile)
+        void GenerateStructC::preparePromiseWithValue(HelperFile &helperFile) noexcept
         {
           auto context = helperFile.global_->toContext()->findType("::zs::PromiseWith");
           if (!context) return;
@@ -2599,7 +2600,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::preparePromiseWithRejectionReason(HelperFile &helperFile)
+        void GenerateStructC::preparePromiseWithRejectionReason(HelperFile &helperFile) noexcept
         {
           auto context = helperFile.global_->toContext()->findType("::zs::PromiseRejectionReason");
           if (!context) return;
@@ -2653,7 +2654,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructC::finalizeHelperFile(HelperFile &helperFile)
+        void GenerateStructC::finalizeHelperFile(HelperFile &helperFile) noexcept
         {
           {
             std::stringstream ss;
@@ -2681,7 +2682,7 @@ namespace zsLib
         void GenerateStructC::processNamespace(
                                                HelperFile &helperFile,
                                                NamespacePtr namespaceObj
-                                               )
+                                               ) noexcept
         {
           if (!namespaceObj) return;
 
@@ -2700,7 +2701,7 @@ namespace zsLib
         void GenerateStructC::processStruct(
                                             HelperFile &helperFile,
                                             StructPtr structObj
-                                            )
+                                            ) noexcept
         {
           if (!structObj) return;
           if (GenerateHelper::isBuiltInType(structObj)) return;
@@ -2808,7 +2809,7 @@ namespace zsLib
                                             StructFile &structFile,
                                             StructPtr rootStructObj,
                                             StructPtr structObj
-                                            )
+                                            ) noexcept
         {
           if (!structObj) return;
 
@@ -2845,7 +2846,7 @@ namespace zsLib
                                              StructFile &structFile,
                                              StructPtr rootStructObj,
                                              StructPtr structObj
-                                             )
+                                             ) noexcept
         {
           auto dash = GenerateHelper::getDashedComment(String());
           auto dash2 = GenerateHelper::getDashedComment(String("  "));
@@ -3149,7 +3150,7 @@ namespace zsLib
                                                 StructFile &structFile,
                                                 StructPtr rootStructObj,
                                                 StructPtr structObj
-                                                )
+                                                ) noexcept
         {
           bool onlyStatic = GenerateHelper::hasOnlyStaticMethods(structObj) || structObj->hasModifier(Modifier_Static);
 
@@ -3236,7 +3237,7 @@ namespace zsLib
                                                    HelperFile &helperFile,
                                                    StructFile &structFile,
                                                    StructPtr structObj
-                                                   )
+                                                   ) noexcept
         {
           if (!structObj) return;
 
@@ -3351,11 +3352,12 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         void GenerateStructC::processEventHandlersStart(
-                                                        HelperFile &helperFile,
+                                                        ZS_MAYBE_USED() HelperFile &helperFile,
                                                         StructFile &structFile,
                                                         StructPtr structObj
-                                                        )
+                                                        ) noexcept
         {
+          ZS_MAYBE_USED(helperFile);
           structFile.headerIncludeCpp("\"../" + fixType(structObj) + ".h\"");
 
           auto dash = GenerateHelper::getDashedComment(String());
@@ -3462,11 +3464,12 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         void GenerateStructC::processEventHandlersEnd(
-                                                      HelperFile &helperFile,
+                                                      ZS_MAYBE_USED() HelperFile &helperFile,
                                                       StructFile &structFile,
                                                       StructPtr structObj
-                                                      )
+                                                      ) noexcept
         {
+          ZS_MAYBE_USED(helperFile);
           {
             auto &ss = structFile.headerCppFunctionsSS_;
             ss << "\n";
@@ -3482,7 +3485,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        SecureByteBlockPtr GenerateStructC::generateTypesHeader(ProjectPtr project) throw (Failure)
+        SecureByteBlockPtr GenerateStructC::generateTypesHeader(ProjectPtr project) noexcept(false)
         {
           if (!project) return SecureByteBlockPtr();
           if (!project->mGlobal) return SecureByteBlockPtr();
@@ -3655,7 +3658,7 @@ namespace zsLib
         void GenerateStructC::processTypesNamespace(
                                                     std::stringstream &ss,
                                                     NamespacePtr namespaceObj
-                                                    )
+                                                    ) noexcept
         {
           if (!namespaceObj) return;
           if (namespaceObj->hasModifier(Modifier_Special)) return;
@@ -3679,7 +3682,7 @@ namespace zsLib
         void GenerateStructC::processTypesStruct(
                                                   std::stringstream &ss,
                                                   StructPtr structObj
-                                                  )
+                                                  ) noexcept
         {
           if (!structObj) return;
           if (GenerateHelper::isBuiltInType(structObj)) return;
@@ -3699,7 +3702,7 @@ namespace zsLib
         void GenerateStructC::processTypesEnum(
                                                std::stringstream &ss,
                                                ContextPtr context
-                                               )
+                                               ) noexcept
         {
           auto namespaceObj = context->toNamespace();
           auto structObj = context->toStruct();
@@ -3718,7 +3721,7 @@ namespace zsLib
         void GenerateStructC::processTypesTemplatesAndSpecials(
                                                                std::stringstream &ss,
                                                                ProjectPtr project
-                                                               )
+                                                               ) noexcept
         {
           if (!project) return;
 
@@ -3756,7 +3759,7 @@ namespace zsLib
         void GenerateStructC::processTypesTemplate(
                                                    std::stringstream &ss,
                                                    ContextPtr structContextObj
-                                                   )
+                                                   ) noexcept
         {
           if (!structContextObj) return;
 
@@ -3775,7 +3778,7 @@ namespace zsLib
         void GenerateStructC::processTypesSpecialStruct(
                                                         std::stringstream &ss,
                                                         ContextPtr structContextObj
-                                                        )
+                                                        ) noexcept
         {
           if (!structContextObj) return;
 
@@ -3791,30 +3794,29 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructHeader::IIDLCompilerTarget
-        #pragma mark
+        //
+        // GenerateStructHeader::IIDLCompilerTarget
+        //
 
         //---------------------------------------------------------------------
-        String GenerateStructC::targetKeyword()
+        String GenerateStructC::targetKeyword() noexcept
         {
           return String("c");
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructC::targetKeywordHelp()
+        String GenerateStructC::targetKeywordHelp() noexcept
         {
           return String("Generate C wrapper");
         }
 
         //---------------------------------------------------------------------
         void GenerateStructC::targetOutput(
-                                            const String &inPathStr,
-                                            const ICompilerTypes::Config &config
-                                            ) throw (Failure)
+                                           const String &inPathStr,
+                                           const ICompilerTypes::Config &config
+                                           ) noexcept(false)
         {
           typedef std::stack<NamespacePtr> NamespaceStack;
-          typedef std::stack<String> StringList;
 
           String pathStr(UseHelper::fixRelativeFilePath(inPathStr, String("wrapper")));
 

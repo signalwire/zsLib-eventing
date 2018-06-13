@@ -52,9 +52,9 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IIDLTypes
-    #pragma mark
+    //
+    // IIDLTypes
+    //
 
     interaction IIDLTypes : public IEventingTypes
     {
@@ -105,16 +105,16 @@ namespace zsLib
         Modifier_Last = Modifier_Obsolete,
       };
 
-      static const char *toString(Modifiers value);
-      static int getTotalParams(Modifiers value);
-      static Modifiers toModifier(const char *value) throw (InvalidArgument);
+      static const char *toString(Modifiers value) noexcept;
+      static int getTotalParams(Modifiers value) noexcept;
+      static Modifiers toModifier(const char *value) noexcept(false); // throws InvalidArgument
 
-      static bool isValidForAll(Modifiers value);
-      static bool isValidForNamespace(Modifiers value);
-      static bool isValidForStruct(Modifiers value);
-      static bool isValidForMethod(Modifiers value);
-      static bool isValidForMethodArgument(Modifiers value);
-      static bool isValidForProperty(Modifiers value);
+      static bool isValidForAll(Modifiers value) noexcept;
+      static bool isValidForNamespace(Modifiers value) noexcept;
+      static bool isValidForStruct(Modifiers value) noexcept;
+      static bool isValidForMethod(Modifiers value) noexcept;
+      static bool isValidForMethodArgument(Modifiers value) noexcept;
+      static bool isValidForProperty(Modifiers value) noexcept;
 
       typedef String Name;
       typedef String Value;
@@ -145,9 +145,9 @@ namespace zsLib
       typedef std::map<Name, StringList> StringListMap;
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IIDLTypes::Context
-      #pragma mark
+      //
+      // IIDLTypes::Context
+      //
 
       struct Context
       {
@@ -173,88 +173,88 @@ namespace zsLib
       public:
         virtual ~Context();
 
-        virtual ContextPtr toContext() const;
-        virtual ProjectPtr toProject() const;
-        virtual NamespacePtr toNamespace() const;
-        virtual TypePtr toType() const;
-        virtual BasicTypePtr toBasicType() const;
-        virtual EnumTypePtr toEnumType() const;
-        virtual EnumTypeValuePtr toEnumTypeValue() const;
-        virtual TypedefTypePtr toTypedefType() const;
-        virtual GenericTypePtr toGenericType() const;
-        virtual TemplatedStructTypePtr toTemplatedStructType() const;
-        virtual StructPtr toStruct() const;
-        virtual PropertyPtr toProperty() const;
-        virtual MethodPtr toMethod() const;
+        virtual ContextPtr toContext() const noexcept;
+        virtual ProjectPtr toProject() const noexcept;
+        virtual NamespacePtr toNamespace() const noexcept;
+        virtual TypePtr toType() const noexcept;
+        virtual BasicTypePtr toBasicType() const noexcept;
+        virtual EnumTypePtr toEnumType() const noexcept;
+        virtual EnumTypeValuePtr toEnumTypeValue() const noexcept;
+        virtual TypedefTypePtr toTypedefType() const noexcept;
+        virtual GenericTypePtr toGenericType() const noexcept;
+        virtual TemplatedStructTypePtr toTemplatedStructType() const noexcept;
+        virtual StructPtr toStruct() const noexcept;
+        virtual PropertyPtr toProperty() const noexcept;
+        virtual MethodPtr toMethod() const noexcept;
 
-        virtual ElementPtr createElement(const char *objectName = NULL) const = 0;
-        virtual String hash() const;
+        virtual ElementPtr createElement(const char *objectName = NULL) const noexcept = 0;
+        virtual String hash() const noexcept;
 
-        virtual String getMappingName() const;
+        virtual String getMappingName() const noexcept;
 
-        ContextPtr getParent() const;
-        ContextPtr getRoot() const;
-        ProjectPtr getProject() const;
-        String getPath() const;
-        String getPathName() const;
+        ContextPtr getParent() const noexcept;
+        ContextPtr getRoot() const noexcept;
+        ProjectPtr getProject() const noexcept;
+        String getPath() const noexcept;
+        String getPathName() const noexcept;
 
         virtual TypePtr findType(
                                  const String &typeNameWithPath,
                                  const FindTypeOptions *options = NULL
-                                 ) const;
+                                 ) const noexcept;
         virtual TypePtr findType(
                                  const String &pathStr,
                                  const String &typeName,
                                  const FindTypeOptions &options
-                                 ) const;
-
-        virtual bool hasModifier(Modifiers modifier) const;
+                                 ) const noexcept;
+        
+        virtual bool hasModifier(Modifiers modifier) const noexcept;
         virtual String getModifierValue(
                                         Modifiers modifier,
                                         size_t index = 0
-                                        ) const;
+                                        ) const noexcept;
         virtual void getModifierValues(
                                        Modifiers modifier,
                                        StringList &outValues
-                                       ) const;
+                                       ) const noexcept;
 
-        virtual void clearModifier(Modifiers modifier);
-        virtual void setModifier(Modifiers modifier);
+        virtual void clearModifier(Modifiers modifier) noexcept;
+        virtual void setModifier(Modifiers modifier) noexcept;
         virtual void setModifier(
                                  Modifiers modifier,
                                  const String &value
-                                 );
+                                 ) noexcept;
         virtual void setModifier(
                                  Modifiers modifier,
                                  const StringList &values
-                                 );
+                                 ) noexcept;
 
-        virtual void resolveTypedefs() throw (InvalidContent);
-        virtual bool fixTemplateHashMapping();
+        virtual void resolveTypedefs() noexcept(false); // throws InvalidContent
+        virtual bool fixTemplateHashMapping() noexcept;
 
-        virtual String aliasLookup(const String &value);
+        virtual String aliasLookup(const String &value) noexcept;
 
       protected:
         Context(
                 const make_private &,
                 ContextPtr context
-                );
+                ) noexcept;
 
-        void init();
-        void init(const ElementPtr &rootEl) throw (InvalidContent);
+        void init() noexcept;
+        void init(const ElementPtr &rootEl) noexcept(false);
 
-        virtual void write(ElementPtr &rootEl) const;
-        virtual void parse(const ElementPtr &rootEl) throw (InvalidContent);
-        virtual void copyContentsFrom(ContextPtr originalContext);
+        virtual void write(ElementPtr &rootEl) const noexcept;
+        virtual void parse(const ElementPtr &rootEl) noexcept(false); // throw InvalidContent
+        virtual void copyContentsFrom(ContextPtr originalContext) noexcept;
 
       protected:
         ContextWeakPtr mThisWeak;
       };
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IIDLTypes::Project
-      #pragma mark
+      //
+      // IIDLTypes::Project
+      //
 
       struct Project : public Context
       {
@@ -265,42 +265,45 @@ namespace zsLib
 
         ValueSet mDefinedExclusives;
 
-        Project(const make_private &v);
-        ~Project() override;
+        Project(const make_private &v) noexcept;
+        ~Project() noexcept override;
 
       protected:
-        void init();
-        void init(const ElementPtr &rootEl) throw (InvalidContent);
+        void init() noexcept;
+        void init(const ElementPtr &rootEl) noexcept(false); // throws InvalidContent
 
       public:
-        static ProjectPtr create();
-        static ProjectPtr create(const ElementPtr &el) throw (InvalidContent);
+        static ProjectPtr create() noexcept;
+        static ProjectPtr create(const ElementPtr &el) noexcept(false); // throws InvalidContent
 
-        ElementPtr createElement(const char *objectName = NULL) const override;
-        void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
-        String hash() const override;
-
+        ElementPtr createElement(const char *objectName = NULL) const noexcept override;
+        void parse(const ElementPtr &rootEl) noexcept(false) override; // throws InvalidContent
+        String hash() const noexcept override;
+        TypePtr findType(
+                          const String &typeNameWithPath,
+                          const FindTypeOptions *options = NULL
+                          ) const noexcept override {return Context::findType(typeNameWithPath, options);  }
         TypePtr findType(
                          const String &pathStr,
                          const String &typeName,
                          const FindTypeOptions &options
-                         ) const override;
-        void resolveTypedefs() throw (InvalidContent) override;
-        bool fixTemplateHashMapping() override;
-        String aliasLookup(const String &value) override;
+                         ) const noexcept override;
+        void resolveTypedefs() noexcept(false) override; // throws InvalidContent
+        bool fixTemplateHashMapping() noexcept override;
+        String aliasLookup(const String &value) noexcept override;
 
-        BasicTypePtr findBasicType(IEventingTypes::PredefinedTypedefs basicType) const;
+        BasicTypePtr findBasicType(IEventingTypes::PredefinedTypedefs basicType) const noexcept;
 
-        ProjectPtr toProject() const override;
+        ProjectPtr toProject() const noexcept override;
 
       protected:
-        void createBaseTypes();
+        void createBaseTypes() noexcept;
       };
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IIDLTypes::Namespace
-      #pragma mark
+      //
+      // IIDLTypes::Namespace
+      //
 
       struct Namespace : public Context
       {
@@ -312,83 +315,87 @@ namespace zsLib
         Namespace(
                   const make_private &v,
                   ContextPtr context
-                  );
-        ~Namespace() override;
+                  ) noexcept;
+        ~Namespace() noexcept override;
 
       protected:
-        void init();
-        void init(const ElementPtr &rootEl) throw (InvalidContent);
+        void init() noexcept;
+        void init(const ElementPtr &rootEl) noexcept(false); // throws InvalidContent
 
       public:
-        static NamespacePtr create(ContextPtr context);
+        static NamespacePtr create(ContextPtr context) noexcept;
         static NamespacePtr createForwards(
                                            ContextPtr context,
                                            const ElementPtr &el
-                                           ) throw (InvalidContent);
+                                           ) noexcept(false); //throw InvalidContent
 
-        NamespacePtr toNamespace() const override;
+        NamespacePtr toNamespace() const noexcept override;
 
-        ElementPtr createElement(const char *objectName = NULL) const override;
-        void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
-        String hash() const override;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept override;
+        void parse(const ElementPtr &rootEl) noexcept(false) override; //  throws InvalidContent
+        String hash() const noexcept override;
         TypePtr findType(
-                                 const String &pathStr,
-                                 const String &typeName,
-                                 const FindTypeOptions &options
-                                 ) const override;
-        void resolveTypedefs() throw (InvalidContent) override;
-        bool fixTemplateHashMapping() override;
+                         const String &typeNameWithPath,
+                         const FindTypeOptions *options = NULL
+                         ) const noexcept override {return Context::findType(typeNameWithPath, options);  }
+        TypePtr findType(
+                         const String &pathStr,
+                         const String &typeName,
+                         const FindTypeOptions &options
+                         ) const noexcept override;
+        void resolveTypedefs() noexcept(false) override; // throws InvalidContent
+        bool fixTemplateHashMapping() noexcept override;
 
-        virtual NamespacePtr findNamespace(const String &nameWithPath) const;
+        virtual NamespacePtr findNamespace(const String &nameWithPath) const noexcept;
         virtual NamespacePtr findNamespace(
                                            const String &pathStr,
                                            const String &name
-                                           ) const;
+                                           ) const noexcept;
 
-        bool isGlobal() const;
+        bool isGlobal() const noexcept;
       };
 
       static void createNamespaceForwards(
                                           ContextPtr context,
                                           ElementPtr namespacesEl,
                                           NamespaceMap &outNamespaces
-                                          ) throw (InvalidContent);
+                                          ) noexcept(false); // throws InvalidContent
 
       static void parseNamespaces(
                                   ContextPtr context,
                                   ElementPtr namespacesEl,
                                   NamespaceMap &ioNamespaces
-                                  ) throw (InvalidContent);
+                                  ) noexcept(false); // throws InvalidContent
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IIDLTypes::Type
-      #pragma mark
+      //
+      // IIDLTypes::Type
+      //
 
       struct Type : public Context
       {
         Type(
              const make_private &v,
              ContextPtr context
-             );
-        ~Type() override;
+             ) noexcept;
+        ~Type() noexcept override;
 
-        TypePtr toType() const override;
+        TypePtr toType() const noexcept override;
 
         static TypePtr createReferencedType(
                                             ContextPtr context,
                                             ElementPtr parentEl
-                                            ) throw (InvalidContent);
+                                            ) noexcept(false); // throws InvalidContent
 
-        virtual TypePtr getOriginalType() const;
+        virtual TypePtr getOriginalType() const noexcept;
 
-        ElementPtr createReferenceTypeElement() const;
+        ElementPtr createReferenceTypeElement() const noexcept;
       };
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IIDLTypes::BasicType
-      #pragma mark
+      //
+      // IIDLTypes::BasicType
+      //
 
       struct BasicType : public Type
       {
@@ -397,26 +404,26 @@ namespace zsLib
         BasicType(
                   const make_private &v,
                   ContextPtr context
-                  );
-        ~BasicType() override;
+                  ) noexcept;
+        ~BasicType() noexcept override;
 
       protected:
-        void init();
-        void init(const ElementPtr &rootEl) throw (InvalidContent);
+        void init() noexcept;
+        void init(const ElementPtr &rootEl) noexcept(false); // throws InvalidContent
 
       public:
-        static BasicTypePtr create(ContextPtr context);
+        static BasicTypePtr create(ContextPtr context) noexcept;
 
-        BasicTypePtr toBasicType() const override;
+        BasicTypePtr toBasicType() const noexcept override;
 
-        ElementPtr createElement(const char *objectName = NULL) const override;
-        String hash() const override;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept override;
+        String hash() const noexcept override;
       };
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IIDLTypes::EnumType
-      #pragma mark
+      //
+      // IIDLTypes::EnumType
+      //
 
       struct EnumType : public Type
       {
@@ -427,44 +434,44 @@ namespace zsLib
         EnumType(
                  const make_private &v,
                  ContextPtr context
-                 );
-        ~EnumType() override;
+                 ) noexcept;
+        ~EnumType() noexcept override;
 
       protected:
-        void init();
-        void init(const ElementPtr &rootEl) throw (InvalidContent);
+        void init() noexcept;
+        void init(const ElementPtr &rootEl) noexcept(false); // throws InvalidContent
 
       public:
-        static EnumTypePtr create(ContextPtr context);
+        static EnumTypePtr create(ContextPtr context) noexcept;
         static EnumTypePtr createForwards(
                                           ContextPtr context,
                                           const ElementPtr &el
-                                          ) throw (InvalidContent);
+                                          ) noexcept(false); // throws InvalidContent
 
-        EnumTypePtr toEnumType() const override;
+        EnumTypePtr toEnumType() const noexcept override;
 
-        ElementPtr createElement(const char *objectName = NULL) const override;
-        void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
-        String hash() const override;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept override;
+        void parse(const ElementPtr &rootEl) noexcept(false) override; // throws InvalidContent
+        String hash() const noexcept override;
       };
 
       static void createEnumForwards(
                                      ContextPtr context,
                                      ElementPtr enumsEl,
                                      EnumMap &outEnums
-                                     ) throw (InvalidContent);
+                                     ) noexcept(false); // throws InvalidContent
 
       static void parseEnums(
                              ContextPtr context,
                              ElementPtr enumsEl,
                              EnumMap &ioEnums
-                             ) throw (InvalidContent);
+                             ) noexcept(false); // throws InvalidContent
 
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IIDLTypes::EnumTypeValue
-      #pragma mark
+      //
+      // IIDLTypes::EnumTypeValue
+      //
 
       struct EnumTypeValue : public Context
       {
@@ -473,34 +480,34 @@ namespace zsLib
         EnumTypeValue(
                       const make_private &v,
                       ContextPtr context
-                      );
-        ~EnumTypeValue() override;
+                      ) noexcept;
+        ~EnumTypeValue() noexcept override;
 
       protected:
-        void init();
-        void init(const ElementPtr &rootEl) throw (InvalidContent);
+        void init() noexcept;
+        void init(const ElementPtr &rootEl) noexcept(false); // throws InvalidContent
 
       public:
-        static EnumTypeValuePtr create(ContextPtr context);
-        static EnumTypeValuePtr create(ContextPtr context, const ElementPtr &el) throw (InvalidContent);
+        static EnumTypeValuePtr create(ContextPtr context) noexcept;
+        static EnumTypeValuePtr create(ContextPtr context, const ElementPtr &el) noexcept(false); // throws InvalidContent
 
-        EnumTypeValuePtr toEnumTypeValue() const override;
+        EnumTypeValuePtr toEnumTypeValue() const noexcept override;
 
-        ElementPtr createElement(const char *objectName = NULL) const override;
-        void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
-        String hash() const override;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept override;
+        void parse(const ElementPtr &rootEl) noexcept(false) override; //  throws InvalidContent
+        String hash() const noexcept override;
       };
 
       static void createEnumValues(
                                    ContextPtr context,
                                    ElementPtr enumsEl,
                                    EnumTypeValueList &outEnumValues
-                                   ) throw (InvalidContent);
+                                   ) noexcept(false); // throws InvalidContent
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IIDLTypes::TypedefType
-      #pragma mark
+      //
+      // IIDLTypes::TypedefType
+      //
 
       struct TypedefType : public Type
       {
@@ -509,47 +516,47 @@ namespace zsLib
         TypedefType(
                     const make_private &v,
                     ContextPtr context
-                    );
-        ~TypedefType() override;
+                    ) noexcept;
+        ~TypedefType() noexcept override;
 
       protected:
-        void init();
-        void init(const ElementPtr &rootEl) throw (InvalidContent);
+        void init() noexcept;
+        void init(const ElementPtr &rootEl) noexcept(false); // throws InvalidContent
 
       public:
-        static TypedefTypePtr create(ContextPtr context);
+        static TypedefTypePtr create(ContextPtr context) noexcept;
         static TypedefTypePtr createForwards(
                                              ContextPtr context,
                                              const ElementPtr &el
-                                             ) throw (InvalidContent);
+                                             ) noexcept(false); // throw (InvalidContent);
 
-        TypedefTypePtr toTypedefType() const override;
+        TypedefTypePtr toTypedefType() const noexcept override;
 
-        ElementPtr createElement(const char *objectName = NULL) const override;
-        void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
-        String hash() const override;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept override;
+        void parse(const ElementPtr &rootEl) noexcept(false) override; // throws InvalidContent
+        String hash() const noexcept override;
 
-        void resolveTypedefs() throw (InvalidContent) override;
+        void resolveTypedefs() noexcept(false) override; // throws InvalidContent
 
-        TypePtr getOriginalType() const override;
+        TypePtr getOriginalType() const noexcept override;
       };
 
       static void createTypedefForwards(
                                         ContextPtr context,
                                         ElementPtr typedefsEl,
                                         TypedefTypeMap &outTypedefs
-                                        ) throw (InvalidContent);
+                                        ) noexcept(false); // throws InvalidContent
 
       static void parseTypedefs(
                                 ContextPtr context,
                                 ElementPtr typedefsEl,
                                 TypedefTypeMap &ioTypedefs
-                                ) throw (InvalidContent);
+                                ) noexcept(false); // throws InvalidContent
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IIDLTypes::Struct
-      #pragma mark
+      //
+      // IIDLTypes::Struct
+      //
 
       struct Struct : public Type
       {
@@ -570,55 +577,59 @@ namespace zsLib
         Struct(
                const make_private &v,
                ContextPtr context
-               );
-        ~Struct() override;
+               ) noexcept;
+        ~Struct() noexcept override;
 
       protected:
-        void init();
-        void init(const ElementPtr &rootEl) throw (InvalidContent);
+        void init() noexcept;
+        void init(const ElementPtr &rootEl) noexcept(false); // throws InvalidContent
 
       public:
-        static StructPtr create(ContextPtr context);
+        static StructPtr create(ContextPtr context) noexcept;
         static StructPtr createForwards(
                                         ContextPtr context,
                                         const ElementPtr &el
-                                        ) throw (InvalidContent);
+                                        ) noexcept(false); // throws InvalidContent
 
-        ElementPtr createElement(const char *objectName = NULL) const override;
-        void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
-        String hash() const override;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept override;
+        void parse(const ElementPtr &rootEl) noexcept(false) override; // throws InvalidContent
+        String hash() const noexcept override;
 
+        TypePtr findType(
+                          const String &typeNameWithPath,
+                          const FindTypeOptions *options = NULL
+                          ) const noexcept override {return Context::findType(typeNameWithPath, options);  }
         TypePtr findType(
                          const String &pathStr,
                          const String &typeName,
                          const FindTypeOptions &options
-                         ) const override;
-        void resolveTypedefs() throw (InvalidContent) override;
-        bool fixTemplateHashMapping() override;
+                         ) const noexcept override;
+        void resolveTypedefs() noexcept(false) override; // throws InvalidContent
+        bool fixTemplateHashMapping() noexcept override;
 
-        StructPtr toStruct() const override;
+        StructPtr toStruct() const noexcept override;
 
-        bool hasExistingNonForwardedData() const;
+        bool hasExistingNonForwardedData() const noexcept;
 
-        StructPtr getRootStruct() const;
+        StructPtr getRootStruct() const noexcept;
       };
 
       static void createStructForwards(
                                        ContextPtr context,
                                        ElementPtr structsEl,
                                        StructMap &outStructs
-                                       ) throw (InvalidContent);
+                                       ) noexcept(false); // throws InvalidContent
 
       static void parseStructs(
                                ContextPtr context,
                                ElementPtr structsEl,
                                StructMap &ioStructs
-                               ) throw (InvalidContent);
+                               ) noexcept(false); // throws InvalidContent
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IIDLTypes::TypedefType
-      #pragma mark
+      //
+      // IIDLTypes::TypedefType
+      //
 
       struct GenericType : public Type
       {
@@ -626,43 +637,43 @@ namespace zsLib
         GenericType(
                     const make_private &v,
                     ContextPtr context
-                    );
-        ~GenericType() override;
+                    ) noexcept;
+        ~GenericType() noexcept override;
 
       protected:
-        void init();
-        void init(const ElementPtr &rootEl) throw (InvalidContent);
+        void init() noexcept;
+        void init(const ElementPtr &rootEl) noexcept(false); // throws InvalidContent
 
       public:
-        static GenericTypePtr create(ContextPtr context);
+        static GenericTypePtr create(ContextPtr context) noexcept;
         static GenericTypePtr createForward(
                                             ContextPtr context,
                                             const ElementPtr &el
-                                            ) throw (InvalidContent);
+                                            ) noexcept(false); // throws InvalidContent
 
-        GenericTypePtr toGenericType() const override;
+        GenericTypePtr toGenericType() const noexcept override;
 
-        ElementPtr createElement(const char *objectName = NULL) const override;
-        void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
-        String hash() const override;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept override;
+        void parse(const ElementPtr &rootEl) noexcept(false) override; //  throws InvalidContent
+        String hash() const noexcept override;
       };
 
       static void createGenericForwards(
                                         ContextPtr context,
                                         ElementPtr genericsEl,
                                         GenericTypeList &outGenerics
-                                        ) throw (InvalidContent);
+                                        ) noexcept(false); // throws InvalidContent
 
       static void parseGenerics(
                                 ContextPtr context,
                                 ElementPtr structsEl,
                                 GenericTypeList &ioGenerics
-                                ) throw (InvalidContent);
+                                ) noexcept(false); // throws InvalidContent
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IIDLTypes::TypedefType
-      #pragma mark
+      //
+      // IIDLTypes::TypedefType
+      //
 
       struct TemplatedStructType : public Type
       {
@@ -672,48 +683,48 @@ namespace zsLib
         TemplatedStructType(
                             const make_private &v,
                             ContextPtr context
-                            );
-        ~TemplatedStructType() override;
+                            ) noexcept;
+        ~TemplatedStructType() noexcept override;
 
       protected:
-        void init();
-        void init(const ElementPtr &rootEl) throw (InvalidContent);
+        void init() noexcept;
+        void init(const ElementPtr &rootEl) noexcept(false); // throws InvalidContent
 
       public:
-        static TemplatedStructTypePtr create(ContextPtr context);
+        static TemplatedStructTypePtr create(ContextPtr context) noexcept;
         static TemplatedStructTypePtr createForwards(
                                                      ContextPtr context,
                                                      const ElementPtr &el
-                                                     ) throw (InvalidContent);
+                                                     ) noexcept(false); // throws InvalidContent
 
-        TemplatedStructTypePtr toTemplatedStructType() const override;
+        TemplatedStructTypePtr toTemplatedStructType() const noexcept override;
 
-        ElementPtr createElement(const char *objectName = NULL) const override;
-        void parse(const ElementPtr &rootEl) throw (InvalidContent) override;
-        String hash() const override;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept override;
+        void parse(const ElementPtr &rootEl) noexcept(false) override; // throws InvalidContent
+        String hash() const noexcept override;
 
-        void resolveTypedefs() throw (InvalidContent) override;
+        void resolveTypedefs() noexcept(false) override; //  throws InvalidContent
 
-        String calculateTemplateID() const;
-        StructPtr getParentStruct() const;
+        String calculateTemplateID() const noexcept;
+        StructPtr getParentStruct() const noexcept;
       };
 
       static void createTemplatedStructTypeForwards(
                                                     ContextPtr context,
                                                     ElementPtr templatedStructsEl,
                                                     TemplatedStructTypeMap &outTemplatedStruct
-                                                    ) throw (InvalidContent);
+                                                    ) noexcept(false); // throw (InvalidContent);
 
       static void parseTemplatedStructTypes(
                                             ContextPtr context,
                                             ElementPtr templatedStructsEl,
                                             TemplatedStructTypeMap &ioTemplatedStruct
-                                            ) throw (InvalidContent);
+                                            ) noexcept(false); // throws InvalidContent
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IIDLTypes::Property
-      #pragma mark
+      //
+      // IIDLTypes::Property
+      //
 
       struct Property : public Context
       {
@@ -723,38 +734,38 @@ namespace zsLib
         Property(
                  const make_private &v,
                  ContextPtr context
-                 );
-        ~Property() override;
+                 ) noexcept;
+        ~Property() noexcept override;
 
       protected:
-        void init();
-        void init(const ElementPtr &rootEl) throw (InvalidContent);
+        void init() noexcept;
+        void init(const ElementPtr &rootEl) noexcept(false); // throws InvalidContent
 
       public:
-        static PropertyPtr create(ContextPtr context);
+        static PropertyPtr create(ContextPtr context) noexcept;
         static PropertyPtr create(
                                   ContextPtr context,
                                   const ElementPtr &el
-                                  ) throw (InvalidContent);
+                                  ) noexcept(false); // throws InvalidContent
 
-        PropertyPtr toProperty() const override;
+        PropertyPtr toProperty() const noexcept override;
 
-        ElementPtr createElement(const char *objectName = NULL) const override;
-        String hash() const override;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept override;
+        String hash() const noexcept override;
 
-        void resolveTypedefs() throw (InvalidContent) override;
+        void resolveTypedefs() noexcept(false) override; // throws InvalidContent
       };
 
       static void createProperties(
                                    ContextPtr context,
                                    ElementPtr propertiesEl,
                                    PropertyList &outProperties
-                                   ) throw (InvalidContent);
+                                   ) noexcept(false); // throws InvalidContent
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IIDLTypes::Method
-      #pragma mark
+      //
+      // IIDLTypes::Method
+      //
 
       struct Method : public Context
       {
@@ -766,33 +777,33 @@ namespace zsLib
         Method(
                const make_private &v,
                ContextPtr context
-               );
-        ~Method() override;
+               ) noexcept;
+        ~Method() noexcept override;
 
       protected:
-        void init();
-        void init(const ElementPtr &rootEl) throw (InvalidContent);
+        void init() noexcept;
+        void init(const ElementPtr &rootEl) noexcept(false); // throws InvalidContent
 
       public:
-        static MethodPtr create(ContextPtr context);
+        static MethodPtr create(ContextPtr context) noexcept;
         static MethodPtr create(
                                 ContextPtr context,
                                 const ElementPtr &el
-                                ) throw (InvalidContent);
+                                ) noexcept(false); // throws InvalidContent
 
-        MethodPtr toMethod() const override;
+        MethodPtr toMethod() const noexcept override;
 
-        ElementPtr createElement(const char *objectName = NULL) const override;
-        String hash() const override;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept override;
+        String hash() const noexcept override;
 
-        void resolveTypedefs() throw (InvalidContent) override;
+        void resolveTypedefs() noexcept(false) override; //  throws InvalidContent
       };
 
       static void createMethods(
                                 ContextPtr context,
                                 ElementPtr methodsEl,
                                 MethodList &outMethods
-                                ) throw (InvalidContent);
+                                ) noexcept(false); // throws InvalidContent
     };
 
   } // namespace eventing

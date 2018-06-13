@@ -63,25 +63,25 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark (helpers)
-        #pragma mark
+        //
+        // (helpers)
+        //
 
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructDotNet::BaseFile
-        #pragma mark
+        //
+        // GenerateStructDotNet::BaseFile
+        //
 
         //---------------------------------------------------------------------
-        GenerateStructDotNet::BaseFile::BaseFile()
+        GenerateStructDotNet::BaseFile::BaseFile() noexcept
         {
         }
 
         //---------------------------------------------------------------------
-        GenerateStructDotNet::BaseFile::~BaseFile()
+        GenerateStructDotNet::BaseFile::~BaseFile() noexcept
         {
         }
 
@@ -89,7 +89,7 @@ namespace zsLib
         void GenerateStructDotNet::BaseFile::usingTypedef(
                                                           const String &usingType,
                                                           const String &originalType
-                                                          )
+                                                          ) noexcept
         {
           if (alreadyUsing_.end() != alreadyUsing_.find(usingType)) return;
           alreadyUsing_.insert(usingType);
@@ -103,7 +103,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::BaseFile::usingTypedef(IEventingTypes::PredefinedTypedefs type)
+        void GenerateStructDotNet::BaseFile::usingTypedef(IEventingTypes::PredefinedTypedefs type) noexcept
         {
           switch (type) {
             case PredefinedTypedef_void: return;
@@ -127,7 +127,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::BaseFile::usingTypedef(TypePtr type)
+        void GenerateStructDotNet::BaseFile::usingTypedef(TypePtr type) noexcept
         {
           if (!type) return;
 
@@ -186,14 +186,14 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool GenerateStructDotNet::BaseFile::hasBoxing(const String &namePathStr)
+        bool GenerateStructDotNet::BaseFile::hasBoxing(const String &namePathStr) noexcept
         {
           auto found = boxings_.find(namePathStr);
           return found != boxings_.end();
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::BaseFile::startRegion(const String &region)
+        void GenerateStructDotNet::BaseFile::startRegion(const String &region) noexcept
         {
           auto dash = GenerateHelper::getDashedComment(indent_);
 
@@ -210,7 +210,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::BaseFile::endRegion(const String &region)
+        void GenerateStructDotNet::BaseFile::endRegion(const String &region) noexcept
         {
           auto &ss = structSS_;
           ss << "\n";
@@ -223,7 +223,7 @@ namespace zsLib
         void GenerateStructDotNet::BaseFile::startOtherRegion(
                                                               const String &region,
                                                               bool preStruct
-                                                              )
+                                                              ) noexcept
         {
           auto dash = GenerateHelper::getDashedComment(indent_);
 
@@ -243,7 +243,7 @@ namespace zsLib
         void GenerateStructDotNet::BaseFile::endOtherRegion(
                                                             const String &region,
                                                             bool preStruct
-                                                            )
+                                                            ) noexcept
         {
           auto &ss = preStruct ? preStructSS_ : postStructSS_;
           ss << "\n";
@@ -255,19 +255,19 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructDotNet::ApiFile
-        #pragma mark
+        //
+        // GenerateStructDotNet::ApiFile
+        //
 
         //---------------------------------------------------------------------
-        GenerateStructDotNet::ApiFile::ApiFile() :
+        GenerateStructDotNet::ApiFile::ApiFile() noexcept :
           helpersSS_(postStructSS_),
           helpersEndSS_(postStructEndSS_) 
         {
         }
 
         //---------------------------------------------------------------------
-        GenerateStructDotNet::ApiFile::~ApiFile()
+        GenerateStructDotNet::ApiFile::~ApiFile() noexcept
         {
         }
 
@@ -275,15 +275,15 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructDotNet::StructFile
-        #pragma mark
+        //
+        // GenerateStructDotNet::StructFile
+        //
 
         //---------------------------------------------------------------------
         GenerateStructDotNet::StructFile::StructFile(
                                                      BaseFile &baseFile,
                                                      StructPtr structObj
-                                                     ) :
+                                                     ) noexcept :
           interfaceSS_(preStructSS_),
           interfaceEndSS_(preStructEndSS_),
           delegateSS_(structDeclationsSS_),
@@ -306,7 +306,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        GenerateStructDotNet::StructFile::~StructFile()
+        GenerateStructDotNet::StructFile::~StructFile() noexcept
         {
         }
 
@@ -314,24 +314,24 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructDotNet
-        #pragma mark
+        //
+        // GenerateStructDotNet
+        //
 
 
         //-------------------------------------------------------------------
-        GenerateStructDotNet::GenerateStructDotNet() : IDLCompiler(Noop{})
+        GenerateStructDotNet::GenerateStructDotNet() noexcept : IDLCompiler(Noop{})
         {
         }
 
         //-------------------------------------------------------------------
-        GenerateStructDotNetPtr GenerateStructDotNet::create()
+        GenerateStructDotNetPtr GenerateStructDotNet::create() noexcept
         {
           return make_shared<GenerateStructDotNet>();
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructDotNet::getMarshalAsType(IEventingTypes::PredefinedTypedefs type)
+        String GenerateStructDotNet::getMarshalAsType(IEventingTypes::PredefinedTypedefs type) noexcept
         {
           switch (type) {
             case PredefinedTypedef_void:        break;
@@ -388,7 +388,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructDotNet::fixArgumentName(const String &value)
+        String GenerateStructDotNet::fixArgumentName(const String &value) noexcept
         {
           if ("params" == value) return "@params";
           if ("event" == value) return "@event";
@@ -396,7 +396,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructDotNet::fixCCsType(IEventingTypes::PredefinedTypedefs type)
+        String GenerateStructDotNet::fixCCsType(IEventingTypes::PredefinedTypedefs type) noexcept
         {
           switch (type) {
             case PredefinedTypedef_void:        return "void";
@@ -453,7 +453,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructDotNet::fixCCsType(TypePtr type)
+        String GenerateStructDotNet::fixCCsType(TypePtr type) noexcept
         {
           {
             auto basicType = type->toBasicType();
@@ -466,7 +466,7 @@ namespace zsLib
         String GenerateStructDotNet::fixCsType(
                                                TypePtr type,
                                                bool isInterface
-                                               )
+                                               ) noexcept
         {
           if (!type) return String();
 
@@ -574,7 +574,7 @@ namespace zsLib
         String GenerateStructDotNet::fixCsPathType(
                                                    TypePtr type,
                                                    bool isInterface
-                                                   )
+                                                   ) noexcept
         {
           if (!type) return String();
 
@@ -626,7 +626,7 @@ namespace zsLib
                                                bool isOptional,
                                                TypePtr type,
                                                bool isInterface
-                                               )
+                                               ) noexcept
         {
           auto result = fixCsType(type, isInterface);
           if (!isOptional) return result;
@@ -659,7 +659,7 @@ namespace zsLib
                                                    bool isOptional,
                                                    TypePtr type,
                                                    bool isInterface
-                                                   )
+                                                   ) noexcept
         {
           if (!isOptional) return fixCsPathType(type, isInterface);
           if (type->toStruct()) return fixCsPathType(type, isInterface);
@@ -667,7 +667,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructDotNet::fixCsSystemType(IEventingTypes::PredefinedTypedefs type)
+        String GenerateStructDotNet::fixCsSystemType(IEventingTypes::PredefinedTypedefs type) noexcept
         {
           switch (type) {
             case PredefinedTypedef_void:        return String();
@@ -728,7 +728,7 @@ namespace zsLib
                                                const String &combinePreStr,
                                                const String &combinePostStr,
                                                const String &ifHasValue
-                                               )
+                                               ) noexcept
         {
           if (ifHasValue.isEmpty()) return String();
           return combinePreStr + ifHasValue + combinePostStr;
@@ -738,13 +738,13 @@ namespace zsLib
         String GenerateStructDotNet::getReturnMarshal(
                                                       IEventingTypes::PredefinedTypedefs type,
                                                       const String &indentStr
-                                                      )
+                                                      ) noexcept
         {
           return combineIf(indentStr + "[return: MarshalAs(UnmanagedType.", ")]\n", getMarshalAsType(type));
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructDotNet::getParamMarshal(IEventingTypes::PredefinedTypedefs type)
+        String GenerateStructDotNet::getParamMarshal(IEventingTypes::PredefinedTypedefs type) noexcept
         {
           return combineIf("[MarshalAs(UnmanagedType.", ")] ", getMarshalAsType(type));
         }
@@ -753,7 +753,7 @@ namespace zsLib
         String GenerateStructDotNet::getReturnMarshal(
                                                       TypePtr type,
                                                       const String &indentStr
-                                                      )
+                                                      ) noexcept
         {
           if (!type) return String();
           {
@@ -764,7 +764,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructDotNet::getParamMarshal(TypePtr type)
+        String GenerateStructDotNet::getParamMarshal(TypePtr type) noexcept
         {
           {
             auto basicType = type->toBasicType();
@@ -780,7 +780,7 @@ namespace zsLib
                                                       const String &methodName,
                                                       bool isOptional,
                                                       TypePtr type
-                                                      )
+                                                      ) noexcept
         {
           if (!type) return String();
 
@@ -836,7 +836,7 @@ namespace zsLib
                                                   BaseFile &baseFile,
                                                   bool isOptional,
                                                   TypePtr type
-                                                  )
+                                                  ) noexcept
         {
           return getHelpersMethod(baseFile, false, "_ToC", isOptional, type);
         }
@@ -846,7 +846,7 @@ namespace zsLib
                                                     BaseFile &baseFile,
                                                     bool isOptional, 
                                                     TypePtr type
-                                                    )
+                                                    ) noexcept
         {
           return getHelpersMethod(baseFile, false, "_FromC", isOptional, type);
         }
@@ -856,7 +856,7 @@ namespace zsLib
                                                          BaseFile &baseFile,
                                                          bool isOptional, 
                                                          TypePtr type
-                                                         )
+                                                         ) noexcept
         {
           return getHelpersMethod(baseFile, false, "_AdoptFromC", isOptional, type);
         }
@@ -866,7 +866,7 @@ namespace zsLib
                                                        BaseFile &baseFile,
                                                        bool isOptional,
                                                        TypePtr type
-                                                       )
+                                                       ) noexcept
         {
           if (!type) return String();
           if (!isOptional) {
@@ -876,7 +876,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool GenerateStructDotNet::hasInterface(StructPtr structObj)
+        bool GenerateStructDotNet::hasInterface(StructPtr structObj) noexcept
         {
           if (!structObj) return false;
           if (structObj->hasModifier(Modifier_Struct_Dictionary)) return false;
@@ -890,7 +890,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructDotNet::getApiCastRequiredDefine(BaseFile &baseFile)
+        String GenerateStructDotNet::getApiCastRequiredDefine(BaseFile &baseFile) noexcept
         {
           String result = "WRAPPER_C_GENERATED_REQUIRES_CAST";
           if (!baseFile.project_) return result;
@@ -902,13 +902,13 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructDotNet::getApiPath(BaseFile &baseFile)
+        String GenerateStructDotNet::getApiPath(BaseFile &baseFile) noexcept
         {
           return "Wrapper." + GenerateStructCx::fixName(baseFile.project_->getMappingName()) + ".Api";
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructDotNet::getHelperPath(BaseFile &baseFile)
+        String GenerateStructDotNet::getHelperPath(BaseFile &baseFile) noexcept
         {
           return "Wrapper." + GenerateStructCx::fixName(baseFile.project_->getMappingName()) + ".Helpers";
         }
@@ -917,7 +917,7 @@ namespace zsLib
         bool GenerateStructDotNet::shouldDeriveFromException(
                                                              BaseFile &baseFile,
                                                              StructPtr structObj
-                                                             )
+                                                             ) noexcept
         {
           if (!structObj) return false;
           if (structObj->mIsARelationships.size() > 0) return false;
@@ -948,7 +948,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::finalizeBaseFile(BaseFile &baseFile)
+        void GenerateStructDotNet::finalizeBaseFile(BaseFile &baseFile) noexcept
         {
           std::stringstream ss;
 
@@ -968,7 +968,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::prepareApiFile(ApiFile &apiFile)
+        void GenerateStructDotNet::prepareApiFile(ApiFile &apiFile) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -1066,7 +1066,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::finalizeApiFile(ApiFile &apiFile)
+        void GenerateStructDotNet::finalizeApiFile(ApiFile &apiFile) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -1100,7 +1100,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::prepareApiCallback(ApiFile &apiFile)
+        void GenerateStructDotNet::prepareApiCallback(ApiFile &apiFile) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -1433,7 +1433,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::prepareApiExceptions(ApiFile &apiFile)
+        void GenerateStructDotNet::prepareApiExceptions(ApiFile &apiFile) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -1514,7 +1514,7 @@ namespace zsLib
         void GenerateStructDotNet::prepareApiExceptions(
                                                         ApiFile &apiFile,
                                                         const String &exceptionName
-                                                        )
+                                                        ) noexcept
         {
           auto &indentStr = apiFile.indent_;
          
@@ -1542,7 +1542,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::prepareApiBoxing(ApiFile &apiFile)
+        void GenerateStructDotNet::prepareApiBoxing(ApiFile &apiFile) noexcept
         {
           apiFile.startRegion("Boxing API helpers");
           apiFile.startHelpersRegion("Boxing helpers");
@@ -1594,7 +1594,7 @@ namespace zsLib
         void GenerateStructDotNet::prepareApiBoxing(
                                                     ApiFile &apiFile,
                                                     const IEventingTypes::PredefinedTypedefs basicType
-                                                    )
+                                                    ) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -1713,7 +1713,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::prepareApiString(ApiFile &apiFile)
+        void GenerateStructDotNet::prepareApiString(ApiFile &apiFile) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -1780,7 +1780,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::prepareApiBinary(ApiFile &apiFile)
+        void GenerateStructDotNet::prepareApiBinary(ApiFile &apiFile) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -1848,7 +1848,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::prepareApiDuration(ApiFile &apiFile)
+        void GenerateStructDotNet::prepareApiDuration(ApiFile &apiFile) noexcept
         {
           apiFile.startRegion("Time API helpers");
           apiFile.startHelpersRegion("Time helpers");
@@ -1871,7 +1871,7 @@ namespace zsLib
         void GenerateStructDotNet::prepareApiDuration(
                                                       ApiFile &apiFile,
                                                       const String &durationType
-                                                      )
+                                                      ) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -1953,7 +1953,7 @@ namespace zsLib
         void GenerateStructDotNet::prepareApiList(
                                                   ApiFile &apiFile,
                                                   const String &listOrSetStr
-                                                  )
+                                                  ) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -2132,7 +2132,7 @@ namespace zsLib
         void GenerateStructDotNet::prepareApiSpecial(
                                                      ApiFile &apiFile,
                                                      const String &specialName
-                                                     )
+                                                     ) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -2259,7 +2259,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::preparePromiseWithValue(ApiFile &apiFile)
+        void GenerateStructDotNet::preparePromiseWithValue(ApiFile &apiFile) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -2350,7 +2350,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::preparePromiseWithRejectionReason(ApiFile &apiFile)
+        void GenerateStructDotNet::preparePromiseWithRejectionReason(ApiFile &apiFile) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -2411,7 +2411,7 @@ namespace zsLib
         void GenerateStructDotNet::prepareApiNamespace(
                                                        ApiFile &apiFile,
                                                        NamespacePtr namespaceObj
-                                                       )
+                                                       ) noexcept
         {
           if (!namespaceObj) return;
 
@@ -2443,7 +2443,7 @@ namespace zsLib
         void GenerateStructDotNet::prepareApiStruct(
                                                     ApiFile &apiFile,
                                                     StructPtr structObj
-                                                    )
+                                                    ) noexcept
         {
           if (!structObj) return;
 
@@ -2461,7 +2461,7 @@ namespace zsLib
         void GenerateStructDotNet::prepareApiEnum(
                                                   ApiFile &apiFile,
                                                   EnumTypePtr enumObj
-                                                  )
+                                                  ) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -2551,7 +2551,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructDotNet::prepareEnumFile(EnumFile &enumFile)
+        void GenerateStructDotNet::prepareEnumFile(EnumFile &enumFile) noexcept
         {
           {
             auto &ss = enumFile.usingNamespaceSS_;
@@ -2566,7 +2566,7 @@ namespace zsLib
         void GenerateStructDotNet::prepareEnumNamespace(
                                                         EnumFile &enumFile,
                                                         NamespacePtr namespaceObj
-                                                        )
+                                                        ) noexcept
         {
           auto &indentStr = enumFile.indent_;
           auto &ss = enumFile.namespaceSS_;
@@ -2635,7 +2635,7 @@ namespace zsLib
         void GenerateStructDotNet::processNamespace(
                                                     ApiFile &apiFile,
                                                     NamespacePtr namespaceObj
-                                                    )
+                                                    ) noexcept
         {
           if (!namespaceObj) return;
 
@@ -2654,7 +2654,7 @@ namespace zsLib
         void GenerateStructDotNet::processStruct(
                                                  ApiFile &apiFile,
                                                  StructPtr structObj
-                                                 )
+                                                 ) noexcept
         {
           typedef std::list<NamespacePtr> NamespaceList;
 
@@ -2924,7 +2924,7 @@ namespace zsLib
                                                       StructFile &structFile,
                                                       StructPtr structObj,
                                                       const String &indentStr
-                                                      )
+                                                      ) noexcept
         {
           if (!structObj) return;
 
@@ -2947,7 +2947,7 @@ namespace zsLib
                                                  StructFile &structFile,
                                                  StructPtr rootStructObj,
                                                  StructPtr structObj
-                                                 )
+                                                 ) noexcept
         {
           if (!structObj) return;
 
@@ -2981,12 +2981,13 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         void GenerateStructDotNet::processEnum(
-                                               ApiFile &apiFile,
+                                               ZS_MAYBE_USED() ApiFile &apiFile,
                                                StructFile &structFile,
                                                StructPtr structObj,
                                                EnumTypePtr enumObj
-                                               )
+                                               ) noexcept
         {
+          ZS_MAYBE_USED(apiFile);
           if (!enumObj) return;
 
           auto &indentStr = structFile.indent_;
@@ -3020,13 +3021,15 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         String GenerateStructDotNet::getSpecialMethodPrefix(
-                                                            ApiFile &apiFile,
-                                                            StructFile &structFile,
+                                                            ZS_MAYBE_USED() ApiFile &apiFile,
+                                                            ZS_MAYBE_USED() StructFile &structFile,
                                                             StructPtr rootStructObj,
                                                             StructPtr structObj,
                                                             MethodPtr method
-                                                            )
+                                                            ) noexcept
         {
+          ZS_MAYBE_USED(apiFile);
+          ZS_MAYBE_USED(structFile);
           if (!method) return String();
           if (!structObj) return String();
 
@@ -3042,7 +3045,7 @@ namespace zsLib
                                                   StructFile &structFile,
                                                   StructPtr rootStructObj,
                                                   StructPtr structObj
-                                                  )
+                                                  ) noexcept
         {
           auto &indentStr = structFile.indent_;
 
@@ -3323,7 +3326,7 @@ namespace zsLib
                                                               StructPtr rootStructObj,
                                                               StructPtr structObj,
                                                               PropertyPtr propertyObj
-                                                              )
+                                                              ) noexcept
         {
           if (!propertyObj) return String();
           if (!structObj) return String();
@@ -3347,7 +3350,7 @@ namespace zsLib
                                                      StructFile &structFile,
                                                      StructPtr rootStructObj,
                                                      StructPtr structObj
-                                                     )
+                                                     ) noexcept
         {
           auto &indentStr = structFile.indent_;
           if (structFile.isStaticOnly_) {
@@ -3487,7 +3490,7 @@ namespace zsLib
                                                         ApiFile &apiFile,
                                                         StructFile &structFile,
                                                         StructPtr structObj
-                                                        )
+                                                        ) noexcept
         {
           auto &indentStr = structFile.indent_;
 
@@ -3535,7 +3538,7 @@ namespace zsLib
                                                              ApiFile &apiFile,
                                                              StructFile &structFile,
                                                              StructPtr structObj
-                                                             )
+                                                             ) noexcept
         {
           auto &indentStr = structFile.indent_;
 
@@ -3601,11 +3604,12 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         void GenerateStructDotNet::processEventHandlersEnd(
-                                                           ApiFile &apiFile,
+                                                           ZS_MAYBE_USED() ApiFile &apiFile,
                                                            StructFile &structFile,
                                                            StructPtr structObj
-                                                           )
+                                                           ) noexcept
         {
+          ZS_MAYBE_USED(apiFile);
           structFile.endRegion("Events");
         }
 
@@ -3613,18 +3617,18 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructHeader::IIDLCompilerTarget
-        #pragma mark
+        //
+        // GenerateStructHeader::IIDLCompilerTarget
+        //
 
         //---------------------------------------------------------------------
-        String GenerateStructDotNet::targetKeyword()
+        String GenerateStructDotNet::targetKeyword() noexcept
         {
           return String("dotnet");
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructDotNet::targetKeywordHelp()
+        String GenerateStructDotNet::targetKeywordHelp() noexcept
         {
           return String("Generate C# DotNet wrapper using C API");
         }
@@ -3633,10 +3637,9 @@ namespace zsLib
         void GenerateStructDotNet::targetOutput(
                                                 const String &inPathStr,
                                                 const ICompilerTypes::Config &config
-                                                ) throw (Failure)
+                                                ) noexcept(false)
         {
           typedef std::stack<NamespacePtr> NamespaceStack;
-          typedef std::stack<String> StringList;
 
           String pathStr(UseHelper::fixRelativeFilePath(inPathStr, String("wrapper")));
 

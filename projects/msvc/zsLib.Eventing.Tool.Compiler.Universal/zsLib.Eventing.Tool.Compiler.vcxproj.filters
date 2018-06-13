@@ -289,6 +289,12 @@
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructCppWinrt.cpp">
       <Filter>zsLib\eventing\tool\cpp</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueAssociator.cpp">
+      <Filter>zsLib\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructPython.cpp">
+      <Filter>zsLib\eventing\tool\cpp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -598,6 +604,9 @@
       <Filter>zsLib\eventing\tool\internal</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructMsidl.h">
+      <Filter>zsLib\eventing\tool\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructPython.h">
       <Filter>zsLib\eventing\tool\internal</Filter>
     </ClInclude>
   </ItemGroup>

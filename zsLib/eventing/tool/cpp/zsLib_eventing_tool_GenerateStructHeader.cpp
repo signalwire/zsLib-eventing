@@ -68,23 +68,23 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructHeader
-        #pragma mark
+        //
+        // GenerateStructHeader
+        //
 
         //-------------------------------------------------------------------
-        GenerateStructHeader::GenerateStructHeader() : IDLCompiler(Noop{})
+        GenerateStructHeader::GenerateStructHeader() noexcept : IDLCompiler(Noop{})
         {
         }
 
         //-------------------------------------------------------------------
-        GenerateStructHeaderPtr GenerateStructHeader::create()
+        GenerateStructHeaderPtr GenerateStructHeader::create() noexcept
         {
           return make_shared<GenerateStructHeader>();
         }
 
         //---------------------------------------------------------------------
-        SecureByteBlockPtr GenerateStructHeader::generateTypesHeader(ProjectPtr project) throw (Failure)
+        SecureByteBlockPtr GenerateStructHeader::generateTypesHeader(ProjectPtr project) noexcept(false)
         {
           std::stringstream ss;
 
@@ -117,7 +117,7 @@ namespace zsLib
         void GenerateStructHeader::generateUsingTypes(
                                                       std::stringstream &ss,
                                                       const String &indentStr
-                                                      )
+                                                      ) noexcept
         {
           ss << indentStr << "using ::zsLib::String;\n";
           ss << indentStr << "using ::zsLib::Optional;\n";
@@ -139,7 +139,7 @@ namespace zsLib
         }
 
         //-------------------------------------------------------------------
-        String GenerateStructHeader::getStructFileName(StructPtr structObj)
+        String GenerateStructHeader::getStructFileName(StructPtr structObj) noexcept
         {
           String filename = getStructInitName(structObj);
           filename += ".h";
@@ -147,7 +147,7 @@ namespace zsLib
         }
 
         //-------------------------------------------------------------------
-        String GenerateStructHeader::getStructInitName(StructPtr structObj)
+        String GenerateStructHeader::getStructInitName(StructPtr structObj) noexcept
         {
           String namePathStr = structObj->getPathName();
           namePathStr.replaceAll("::", "_");
@@ -157,14 +157,14 @@ namespace zsLib
 
 
         //---------------------------------------------------------------------
-        String GenerateStructHeader::makeOptional(bool isOptional, const String &value)
+        String GenerateStructHeader::makeOptional(bool isOptional, const String &value) noexcept
         {
           if (!isOptional) return value;
           return "Optional< " + value + " >";
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructHeader::getWrapperTypeString(bool isOptional, TypePtr type)
+        String GenerateStructHeader::getWrapperTypeString(bool isOptional, TypePtr type) noexcept
         {
           if (!type) return String();
 
@@ -173,7 +173,7 @@ namespace zsLib
           {
             auto typedefType = type->toTypedefType();
             if (typedefType) {
-              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Typedef failed to resolve to original type: " + typedefType->getPathName());
+              ZS_ASSERT_FAIL("typedef failed to resolve to original type");
             }
           }
 
@@ -282,7 +282,7 @@ namespace zsLib
                                                   StringSet &includedHeaders,
                                                   std::stringstream &includeSS,
                                                   std::stringstream &ss
-                                                  )
+                                                  ) noexcept
         {
           if (!structObj) return;
           if (GenerateHelper::isBuiltInType(structObj)) return;
@@ -617,18 +617,18 @@ namespace zsLib
         //-------------------------------------------------------------------
         //-------------------------------------------------------------------
         //-------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructHeader::IIDLCompilerTarget
-        #pragma mark
+        //
+        // GenerateStructHeader::IIDLCompilerTarget
+        //
 
         //-------------------------------------------------------------------
-        String GenerateStructHeader::targetKeyword()
+        String GenerateStructHeader::targetKeyword() noexcept
         {
           return String("wrapper");
         }
 
         //-------------------------------------------------------------------
-        String GenerateStructHeader::targetKeywordHelp()
+        String GenerateStructHeader::targetKeywordHelp() noexcept
         {
           return String("C++ wrapper API");
         }
@@ -637,10 +637,10 @@ namespace zsLib
         void GenerateStructHeader::targetOutput(
                                                 const String &inPathStr,
                                                 const ICompilerTypes::Config &config
-                                                ) throw (Failure)
+                                                ) noexcept(false)
         {
           typedef std::stack<NamespacePtr> NamespaceStack;
-          typedef std::stack<String> StringList;
+          typedef std::stack<String> StringStack;
 
           String pathStr(UseHelper::fixRelativeFilePath(inPathStr, String("wrapper")));
 
@@ -694,7 +694,7 @@ namespace zsLib
               std::stringstream ss;
               std::stringstream includeSS;
               std::stringstream structSS;
-              StringList endStrings;
+              StringStack endStrings;
 
               ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
               ss << "#pragma once\n\n";

@@ -63,25 +63,25 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark (helpers)
-        #pragma mark
+        //
+        // (helpers)
+        //
 
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructPython::BaseFile
-        #pragma mark
+        //
+        // GenerateStructPython::BaseFile
+        //
 
         //---------------------------------------------------------------------
-        GenerateStructPython::BaseFile::BaseFile()
+        GenerateStructPython::BaseFile::BaseFile() noexcept
         {
         }
 
         //---------------------------------------------------------------------
-        GenerateStructPython::BaseFile::~BaseFile()
+        GenerateStructPython::BaseFile::~BaseFile() noexcept
         {
         }
 
@@ -90,7 +90,7 @@ namespace zsLib
                                                           const String &usingType,
                                                           const String &originalType,
                                                           const String &asType
-                                                          )
+                                                          ) noexcept
         {
           if (alreadyUsing_.end() != alreadyUsing_.find(usingType)) return;
           alreadyUsing_.insert(usingType);
@@ -112,7 +112,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::BaseFile::usingTypedef(IEventingTypes::PredefinedTypedefs type)
+        void GenerateStructPython::BaseFile::usingTypedef(IEventingTypes::PredefinedTypedefs type) noexcept
         {
           switch (type) {
             case PredefinedTypedef_void: return;
@@ -136,7 +136,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::BaseFile::usingTypedef(TypePtr type)
+        void GenerateStructPython::BaseFile::usingTypedef(TypePtr type) noexcept
         {
           if (!type) return;
 
@@ -195,14 +195,14 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool GenerateStructPython::BaseFile::hasBoxing(const String &namePathStr)
+        bool GenerateStructPython::BaseFile::hasBoxing(const String &namePathStr) noexcept
         {
           auto found = boxings_.find(namePathStr);
           return found != boxings_.end();
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::BaseFile::startRegion(const String &region)
+        void GenerateStructPython::BaseFile::startRegion(const String &region) noexcept
         {
           auto dash = GenerateHelper::getDashedComment(indent_);
           dash.replaceAll("//","# ");
@@ -220,7 +220,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::BaseFile::endRegion(const String &region)
+        void GenerateStructPython::BaseFile::endRegion(const String &region) noexcept
         {
           auto &ss = structSS_;
           ss << indent_ << "\n";
@@ -233,7 +233,7 @@ namespace zsLib
         void GenerateStructPython::BaseFile::startOtherRegion(
                                                               const String &region,
                                                               bool preStruct
-                                                              )
+                                                              ) noexcept
         {
           auto dash = GenerateHelper::getDashedComment(indent_);
           dash.replaceAll("//","# ");
@@ -254,7 +254,7 @@ namespace zsLib
         void GenerateStructPython::BaseFile::endOtherRegion(
                                                             const String &region,
                                                             bool preStruct
-                                                            )
+                                                            ) noexcept
         {
           auto &ss = preStruct ? preStructSS_ : postStructSS_;
           ss << indent_ << "\n";
@@ -266,15 +266,15 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructPython::StructFile
-        #pragma mark
+        //
+        // GenerateStructPython::StructFile
+        //
 
         //---------------------------------------------------------------------
         GenerateStructPython::StructFile::StructFile(
                                                      BaseFile &baseFile,
                                                      StructPtr structObj
-                                                     ) :
+                                                     ) noexcept :
           interfaceSS_(preStructSS_),
           interfaceEndSS_(preStructEndSS_),
           delegateSS_(structDeclationsSS_),
@@ -297,7 +297,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        GenerateStructPython::StructFile::~StructFile()
+        GenerateStructPython::StructFile::~StructFile() noexcept
         {
         }
         
@@ -305,19 +305,19 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructPython::ApiFile
-        #pragma mark
+        //
+        // GenerateStructPython::ApiFile
+        //
 
         //---------------------------------------------------------------------
-        GenerateStructPython::ApiFile::ApiFile() :
+        GenerateStructPython::ApiFile::ApiFile() noexcept :
           helpersSS_(postStructSS_),
           helpersEndSS_(postStructEndSS_)
         {
         }
 
         //---------------------------------------------------------------------
-        GenerateStructPython::ApiFile::~ApiFile()
+        GenerateStructPython::ApiFile::~ApiFile() noexcept
         {
         }
 
@@ -325,24 +325,24 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructPython
-        #pragma mark
+        //
+        // GenerateStructPython
+        //
 
 
         //-------------------------------------------------------------------
-        GenerateStructPython::GenerateStructPython() : IDLCompiler(Noop{})
+        GenerateStructPython::GenerateStructPython() noexcept : IDLCompiler(Noop{})
         {
         }
 
         //-------------------------------------------------------------------
-        GenerateStructPythonPtr GenerateStructPython::create()
+        GenerateStructPythonPtr GenerateStructPython::create() noexcept
         {
           return make_shared<GenerateStructPython>();
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructPython::fixName(const String &originalName)
+        String GenerateStructPython::fixName(const String &originalName) noexcept
         {
           if (originalName.isEmpty()) return String();
           String firstLetter = originalName.substr(0, 1);
@@ -354,7 +354,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructPython::fixNamespace(NamespacePtr namespaceObj)
+        String GenerateStructPython::fixNamespace(NamespacePtr namespaceObj) noexcept
         {          
           if (!namespaceObj) return String();
 
@@ -367,7 +367,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructPython::fixNamePath(ContextPtr context)
+        String GenerateStructPython::fixNamePath(ContextPtr context) noexcept
         {
           ContextList parents;
           while (context) {
@@ -400,7 +400,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructPython::flattenPath(const String &originalName)
+        String GenerateStructPython::flattenPath(const String &originalName) noexcept
         {
           String result(originalName);
           result.replaceAll(".","_");
@@ -408,7 +408,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructPython::getPythonConvertedCType(IEventingTypes::PredefinedTypedefs type)
+        String GenerateStructPython::getPythonConvertedCType(IEventingTypes::PredefinedTypedefs type) noexcept
         {
           switch (type) {
             case PredefinedTypedef_void:        break;
@@ -465,7 +465,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructPython::getPythonConvertedCType(TypePtr type)
+        String GenerateStructPython::getPythonConvertedCType(TypePtr type) noexcept
         {
           {
             auto basicType = type->toBasicType();
@@ -475,7 +475,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructPython::getPythonCType(IEventingTypes::PredefinedTypedefs type)
+        String GenerateStructPython::getPythonCType(IEventingTypes::PredefinedTypedefs type) noexcept
         {
           switch (type) {
             case PredefinedTypedef_void:        break;
@@ -535,7 +535,7 @@ namespace zsLib
         String GenerateStructPython::getPythonToCType(
                                                       const String &input,
                                                       IEventingTypes::PredefinedTypedefs type
-                                                      )
+                                                      ) noexcept
         {
           switch (type) {
             case PredefinedTypedef_void:        break;
@@ -595,7 +595,7 @@ namespace zsLib
         String GenerateStructPython::getCToPythonType(
                                                       const String &input,
                                                       IEventingTypes::PredefinedTypedefs type
-                                                      )
+                                                      ) noexcept
         {
           switch (type) {
             case PredefinedTypedef_void:        break;
@@ -652,7 +652,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructPython::fixArgumentName(const String &value)
+        String GenerateStructPython::fixArgumentName(const String &value) noexcept
         {
           //if ("params" == value) return "@params";
           //if ("event" == value) return "@event";
@@ -660,13 +660,13 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructPython::fixCPythonType(IEventingTypes::PredefinedTypedefs type)
+        String GenerateStructPython::fixCPythonType(IEventingTypes::PredefinedTypedefs type) noexcept
         {
           return getPythonCType(type);
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructPython::fixCPythonType(TypePtr type)
+        String GenerateStructPython::fixCPythonType(TypePtr type) noexcept
         {
           {
             auto basicType = type->toBasicType();
@@ -679,7 +679,7 @@ namespace zsLib
         String GenerateStructPython::fixPythonType(
                                                    TypePtr type,
                                                    bool isInterface
-                                                   )
+                                                   ) noexcept
         {
           if (!type) return String();
 
@@ -787,7 +787,7 @@ namespace zsLib
         String GenerateStructPython::fixPythonPathType(
                                                        TypePtr type,
                                                        bool isInterface
-                                                       )
+                                                       ) noexcept
         {
           if (!type) return String();
 
@@ -839,7 +839,7 @@ namespace zsLib
                                                    bool isOptional,
                                                    TypePtr type,
                                                    bool isInterface
-                                                   )
+                                                   ) noexcept
         {
           auto result = fixPythonType(type, isInterface);
           if (!isOptional) return result;
@@ -872,7 +872,7 @@ namespace zsLib
                                                        bool isOptional,
                                                        TypePtr type,
                                                        bool isInterface
-                                                       )
+                                                       ) noexcept
         {
           if (!isOptional) return fixPythonPathType(type, isInterface);
           if (type->toStruct()) return fixPythonPathType(type, isInterface);
@@ -880,7 +880,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructPython::fixCsSystemType(IEventingTypes::PredefinedTypedefs type)
+        String GenerateStructPython::fixCsSystemType(IEventingTypes::PredefinedTypedefs type) noexcept
         {
           switch (type) {
             case PredefinedTypedef_void:        return String();
@@ -941,7 +941,7 @@ namespace zsLib
                                                const String &combinePreStr,
                                                const String &combinePostStr,
                                                const String &ifHasValue
-                                               )
+                                               ) noexcept
         {
           if (ifHasValue.isEmpty()) return String();
           return combinePreStr + ifHasValue + combinePostStr;
@@ -949,13 +949,14 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         String GenerateStructPython::getHelpersMethod(
-                                                      BaseFile &baseFile,
+                                                      ZS_MAYBE_USED() BaseFile &baseFile,
                                                       bool useApiHelper,
                                                       const String &methodName,
                                                       bool isOptional,
                                                       TypePtr type
-                                                      )
+                                                      ) noexcept
         {
+          ZS_MAYBE_USED(baseFile);
           if (!type) return String();
 
           {
@@ -1010,7 +1011,7 @@ namespace zsLib
                                                   BaseFile &baseFile,
                                                   bool isOptional,
                                                   TypePtr type
-                                                  )
+                                                  ) noexcept
         {
           return getHelpersMethod(baseFile, false, "_ToC", isOptional, type);
         }
@@ -1020,7 +1021,7 @@ namespace zsLib
                                                     BaseFile &baseFile,
                                                     bool isOptional, 
                                                     TypePtr type
-                                                    )
+                                                    ) noexcept
         {
           return getHelpersMethod(baseFile, false, "_FromC", isOptional, type);
         }
@@ -1030,7 +1031,7 @@ namespace zsLib
                                                          BaseFile &baseFile,
                                                          bool isOptional, 
                                                          TypePtr type
-                                                         )
+                                                         ) noexcept
         {
           return getHelpersMethod(baseFile, false, "_AdoptFromC", isOptional, type);
         }
@@ -1040,7 +1041,7 @@ namespace zsLib
                                                        BaseFile &baseFile,
                                                        bool isOptional,
                                                        TypePtr type
-                                                       )
+                                                       ) noexcept
         {
           if (!type) return String();
           if (!isOptional) {
@@ -1050,7 +1051,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool GenerateStructPython::hasInterface(StructPtr structObj)
+        bool GenerateStructPython::hasInterface(StructPtr structObj) noexcept
         {
           if (!structObj) return false;
           if (structObj->hasModifier(Modifier_Struct_Dictionary)) return false;
@@ -1064,7 +1065,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructPython::getApiCastRequiredDefine(BaseFile &baseFile)
+        String GenerateStructPython::getApiCastRequiredDefine(BaseFile &baseFile) noexcept
         {
           String result = "WRAPPER_C_GENERATED_REQUIRES_CAST";
           if (!baseFile.project_) return result;
@@ -1076,13 +1077,13 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructPython::getApiPath()
+        String GenerateStructPython::getApiPath() noexcept
         {
           return "wrapper.Api";
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructPython::getHelperPath()
+        String GenerateStructPython::getHelperPath() noexcept
         {
           return "wrapper.Helpers";
         }
@@ -1091,7 +1092,7 @@ namespace zsLib
         bool GenerateStructPython::shouldDeriveFromException(
                                                              BaseFile &baseFile,
                                                              StructPtr structObj
-                                                             )
+                                                             ) noexcept
         {
           if (!structObj) return false;
           if (structObj->mIsARelationships.size() > 0) return false;
@@ -1122,7 +1123,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::finalizeBaseFile(BaseFile &baseFile)
+        void GenerateStructPython::finalizeBaseFile(BaseFile &baseFile) noexcept
         {
           std::stringstream ss;
 
@@ -1142,7 +1143,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::prepareSetupFile(SetupFile &setupFile)
+        void GenerateStructPython::prepareSetupFile(SetupFile &setupFile) noexcept
         {
 
           {
@@ -1178,14 +1179,14 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::finalizeSetupFile(SetupFile &setupFile)
+        void GenerateStructPython::finalizeSetupFile(SetupFile &setupFile) noexcept
         {
           finalizeBaseFile(setupFile);
         }
 
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::prepareApiInitFile(InitFile &apiInitFile)
+        void GenerateStructPython::prepareApiInitFile(InitFile &apiInitFile) noexcept
         {
           {
             auto &ss = apiInitFile.importSS_;
@@ -1196,13 +1197,13 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::finalizeApiInitFile(InitFile &apiInitFile)
+        void GenerateStructPython::finalizeApiInitFile(InitFile &apiInitFile) noexcept
         {
           finalizeBaseFile(apiInitFile);
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::prepareApiFile(ApiFile &apiFile)
+        void GenerateStructPython::prepareApiFile(ApiFile &apiFile) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -1321,7 +1322,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::finalizeApiFile(ApiFile &apiFile)
+        void GenerateStructPython::finalizeApiFile(ApiFile &apiFile) noexcept
         {
           //auto &indentStr = apiFile.indent_;
 
@@ -1349,7 +1350,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::prepareApiCallback(ApiFile &apiFile)
+        void GenerateStructPython::prepareApiCallback(ApiFile &apiFile) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -1692,7 +1693,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::prepareApiExceptions(ApiFile &apiFile)
+        void GenerateStructPython::prepareApiExceptions(ApiFile &apiFile) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -1796,7 +1797,7 @@ namespace zsLib
         void GenerateStructPython::prepareApiExceptions(
                                                         ApiFile &apiFile,
                                                         const String &exceptionName
-                                                        )
+                                                        ) noexcept
         {
           auto &indentStr = apiFile.indent_;
          
@@ -1828,7 +1829,7 @@ namespace zsLib
 
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::prepareApiBasicTypes(ApiFile &apiFile)
+        void GenerateStructPython::prepareApiBasicTypes(ApiFile &apiFile) noexcept
         {
           apiFile.startRegion("Basic Types API helpers");
           apiFile.startHelpersRegion("Basic Types helpers");
@@ -1881,7 +1882,7 @@ namespace zsLib
         void GenerateStructPython::prepareApiBasicTypes(
                                                         ApiFile &apiFile,
                                                         const IEventingTypes::PredefinedTypedefs basicType
-                                                        )
+                                                        ) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -1926,7 +1927,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::prepareApiBoxing(ApiFile &apiFile)
+        void GenerateStructPython::prepareApiBoxing(ApiFile &apiFile) noexcept
         {
           apiFile.startRegion("Boxing API helpers");
           apiFile.startHelpersRegion("Boxing helpers");
@@ -1978,7 +1979,7 @@ namespace zsLib
         void GenerateStructPython::prepareApiBoxing(
                                                     ApiFile &apiFile,
                                                     const IEventingTypes::PredefinedTypedefs basicType
-                                                    )
+                                                    ) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -2133,7 +2134,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::prepareApiString(ApiFile &apiFile)
+        void GenerateStructPython::prepareApiString(ApiFile &apiFile) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -2231,7 +2232,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::prepareApiBinary(ApiFile &apiFile)
+        void GenerateStructPython::prepareApiBinary(ApiFile &apiFile) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -2334,7 +2335,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::prepareApiDuration(ApiFile &apiFile)
+        void GenerateStructPython::prepareApiDuration(ApiFile &apiFile) noexcept
         {
           apiFile.startRegion("Time API helpers");
           apiFile.startHelpersRegion("Time helpers");
@@ -2357,7 +2358,7 @@ namespace zsLib
         void GenerateStructPython::prepareApiDuration(
                                                       ApiFile &apiFile,
                                                       const String &durationType
-                                                      )
+                                                      ) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -2490,7 +2491,7 @@ namespace zsLib
         void GenerateStructPython::prepareApiList(
                                                   ApiFile &apiFile,
                                                   const String &listOrSetStr
-                                                  )
+                                                  ) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -2727,7 +2728,7 @@ namespace zsLib
         void GenerateStructPython::prepareApiSpecial(
                                                      ApiFile &apiFile,
                                                      const String &specialName
-                                                     )
+                                                     ) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -2871,7 +2872,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::preparePromiseWithValue(ApiFile &apiFile)
+        void GenerateStructPython::preparePromiseWithValue(ApiFile &apiFile) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -2957,7 +2958,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructPython::preparePromiseWithRejectionReason(ApiFile &apiFile)
+        void GenerateStructPython::preparePromiseWithRejectionReason(ApiFile &apiFile) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -3026,7 +3027,7 @@ namespace zsLib
         void GenerateStructPython::prepareApiNamespace(
                                                        ApiFile &apiFile,
                                                        NamespacePtr namespaceObj
-                                                       )
+                                                       ) noexcept
         {
           if (!namespaceObj) return;
 
@@ -3058,7 +3059,7 @@ namespace zsLib
         void GenerateStructPython::prepareApiStruct(
                                                     ApiFile &apiFile,
                                                     StructPtr structObj
-                                                    )
+                                                    ) noexcept
         {
           if (!structObj) return;
 
@@ -3076,7 +3077,7 @@ namespace zsLib
         void GenerateStructPython::prepareApiEnum(
                                                   ApiFile &apiFile,
                                                   EnumTypePtr enumObj
-                                                  )
+                                                  ) noexcept
         {
           auto &indentStr = apiFile.indent_;
 
@@ -3226,7 +3227,7 @@ namespace zsLib
         void GenerateStructPython::prepareInitFile(
                                                    InitFile &initFile,
                                                    NamespacePtr namespaceObj
-                                                   )
+                                                   ) noexcept
         {
           {
             auto &ss = initFile.importSS_;
@@ -3251,7 +3252,7 @@ namespace zsLib
         void GenerateStructPython::prepareEnumFile(
                                                    EnumFile &enumFile,
                                                    NamespacePtr namespaceObj
-                                                   )
+                                                   ) noexcept
         {
           {
             auto &ss = enumFile.importSS_;
@@ -3268,7 +3269,7 @@ namespace zsLib
         void GenerateStructPython::prepareEnumNamespace(
                                                         EnumFile &enumFile,
                                                         NamespacePtr namespaceObj
-                                                        )
+                                                        ) noexcept
         {
           auto &indentStr = enumFile.indent_;
           auto &ss = enumFile.namespaceSS_;
@@ -3315,7 +3316,7 @@ namespace zsLib
                                                     SetupFile &setupFile,
                                                     ApiFile &apiFile,
                                                     NamespacePtr namespaceObj
-                                                    )
+                                                    ) noexcept(false)
         {
           if (!namespaceObj) return;
 
@@ -3390,7 +3391,7 @@ namespace zsLib
                                                  ApiFile &apiFile,
                                                  InitFile &initFile,
                                                  StructPtr structObj
-                                                 )
+                                                 ) noexcept
         {
           typedef std::list<NamespacePtr> NamespaceList;
 
@@ -3678,7 +3679,7 @@ namespace zsLib
                                                       StructPtr rootStructObj,
                                                       StructPtr structObj,
                                                       bool &first
-                                                      )
+                                                      ) noexcept
         {
           if (!structObj) return;
 
@@ -3721,7 +3722,7 @@ namespace zsLib
                                                  StructFile &interfaceFile,
                                                  StructPtr rootStructObj,
                                                  StructPtr structObj
-                                                 )
+                                                 ) noexcept
         {
           if (!structObj) return;
 
@@ -3755,12 +3756,13 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         void GenerateStructPython::processEnum(
-                                               ApiFile &apiFile,
+                                               ZS_MAYBE_USED() ApiFile &apiFile,
                                                StructFile &structFile,
                                                StructPtr structObj,
                                                EnumTypePtr enumObj
-                                               )
+                                               ) noexcept
         {
+          ZS_MAYBE_USED(apiFile);
           if (!enumObj) return;
 
           auto &indentStr = structFile.indent_;
@@ -3802,7 +3804,7 @@ namespace zsLib
                                                   StructFile &interfaceFile,
                                                   StructPtr rootStructObj,
                                                   StructPtr structObj
-                                                  )
+                                                  ) noexcept
         {
           auto &indentStr = structFile.indent_;
           String structName = GenerateStructCx::fixStructName(structObj);
@@ -4004,13 +4006,13 @@ namespace zsLib
               auto &iSS = interfaceFile.interfaceSS_;
               auto &sSS = structFile.structSS_;
 
-              String altNameStr = method->getModifierValue(Modifier_AltName);
-              if (altNameStr.isEmpty()) {
-                altNameStr = method->getMappingName();
+              String altNameLoopStr = method->getModifierValue(Modifier_AltName);
+              if (altNameLoopStr.isEmpty()) {
+                altNameLoopStr = method->getMappingName();
               }
 
               if (isConstructor) {
-                altNameStr.replaceAll(structName, "create");
+                altNameLoopStr.replaceAll(structName, "create");
               }
 
               if (generateInterface) {
@@ -4018,7 +4020,7 @@ namespace zsLib
                   iSS << indentStr << "\n";
                   iSS << GenerateHelper::getDocumentation(indentStr + "# ", method, 80);
                 }
-                iSS << indentStr << (0 == loop ? "# ": "") << "def " << altNameStr << "(";
+                iSS << indentStr << (0 == loop ? "# ": "") << "def " << altNameLoopStr << "(";
               }
 
               if (0 == loop) {
@@ -4028,7 +4030,7 @@ namespace zsLib
                   sSS << indentStr << "@staticmethod\n";
                 }
               }
-              sSS << indentStr  << (0 == loop ? "# ": "") << "def " << (isConstructor ? altNameStr : altNameStr) << "(";
+              sSS << indentStr  << (0 == loop ? "# ": "") << "def " << (isConstructor ? altNameLoopStr : altNameLoopStr) << "(";
 
               bool first {true};
 
@@ -4224,7 +4226,7 @@ namespace zsLib
                                                      StructFile &interfaceFile,
                                                      StructPtr rootStructObj,
                                                      StructPtr structObj
-                                                     )
+                                                     ) noexcept
         {
           auto &indentStr = structFile.indent_;
           if (structFile.isStaticOnly_) {
@@ -4453,7 +4455,7 @@ namespace zsLib
                                                         StructFile &structFile,
                                                         StructFile &interfaceFile,
                                                         StructPtr structObj
-                                                        )
+                                                        ) noexcept
         {
           auto &indentStr = structFile.indent_;
 
@@ -4511,10 +4513,11 @@ namespace zsLib
         void GenerateStructPython::processEventHandlersStart(
                                                              ApiFile &apiFile,
                                                              StructFile &structFile,
-                                                             StructFile &interfaceFile,
+                                                             ZS_MAYBE_USED() StructFile &interfaceFile,
                                                              StructPtr structObj
-                                                             )
+                                                             ) noexcept
         {
+          ZS_MAYBE_USED(interfaceFile);
           auto &indentStr = structFile.indent_;
 
           structFile.startRegion("Events");
@@ -4574,12 +4577,14 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         void GenerateStructPython::processEventHandlersEnd(
-                                                           ApiFile &apiFile,
+                                                           ZS_MAYBE_USED() ApiFile &apiFile,
                                                            StructFile &structFile,
-                                                           StructFile &interfaceFile,
+                                                           ZS_MAYBE_USED() StructFile &interfaceFile,
                                                            StructPtr structObj
-                                                           )
+                                                           ) noexcept
         {
+          ZS_MAYBE_USED(apiFile);
+          ZS_MAYBE_USED(interfaceFile);
           structFile.endRegion("Events");
         }
 
@@ -4587,18 +4592,18 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructHeader::IIDLCompilerTarget
-        #pragma mark
+        //
+        // GenerateStructHeader::IIDLCompilerTarget
+        //
 
         //---------------------------------------------------------------------
-        String GenerateStructPython::targetKeyword()
+        String GenerateStructPython::targetKeyword() noexcept
         {
           return String("python");
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructPython::targetKeywordHelp()
+        String GenerateStructPython::targetKeywordHelp() noexcept
         {
           return String("Generate Python wrapper using C API");
         }
@@ -4607,10 +4612,9 @@ namespace zsLib
         void GenerateStructPython::targetOutput(
                                                 const String &inPathStr,
                                                 const ICompilerTypes::Config &config
-                                                ) throw (Failure)
+                                                ) noexcept(false)
         {
           typedef std::stack<NamespacePtr> NamespaceStack;
-          typedef std::stack<String> StringList;
 
           String pathStr(UseHelper::fixRelativeFilePath(inPathStr, String("wrapper")));
 

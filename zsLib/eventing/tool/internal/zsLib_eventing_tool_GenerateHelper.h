@@ -47,9 +47,9 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateHelper
-        #pragma mark
+        //
+        // GenerateHelper
+        //
 
         struct GenerateHelper : public IDLCompiler
         {

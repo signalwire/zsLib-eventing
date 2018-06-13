@@ -69,28 +69,28 @@ namespace zsLib
       //-------------------------------------------------------------------------
       //-------------------------------------------------------------------------
       //-------------------------------------------------------------------------
-      #pragma mark
-      #pragma mark RemoteEventingSettingsDefaults
-      #pragma mark
+      //
+      // RemoteEventingSettingsDefaults
+      //
       
       class RemoteEventingSettingsDefaults : public ISettingsApplyDefaultsDelegate
       {
       public:
         //-----------------------------------------------------------------------
-        ~RemoteEventingSettingsDefaults()
+        ~RemoteEventingSettingsDefaults() noexcept
         {
           ISettings::removeDefaults(*this);
         }
         
         //-----------------------------------------------------------------------
-        static RemoteEventingSettingsDefaultsPtr singleton()
+        static RemoteEventingSettingsDefaultsPtr singleton() noexcept
         {
           static SingletonLazySharedPtr<RemoteEventingSettingsDefaults> singleton(create());
           return singleton.singleton();
         }
         
         //-----------------------------------------------------------------------
-        static RemoteEventingSettingsDefaultsPtr create()
+        static RemoteEventingSettingsDefaultsPtr create() noexcept
         {
           auto pThis(make_shared<RemoteEventingSettingsDefaults>());
           ISettings::installDefaults(pThis);
@@ -98,7 +98,7 @@ namespace zsLib
         }
         
         //-----------------------------------------------------------------------
-        void notifySettingsApplyDefaults() override
+        void notifySettingsApplyDefaults() noexcept override
         {
           ISettings::setUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_DATA_SIZE, (2*1024));
           ISettings::setUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_PACKED_SIZE, (128*1024));
@@ -111,7 +111,7 @@ namespace zsLib
       };
 
       //-------------------------------------------------------------------------
-      void installRemoteEventingSettingsDefaults()
+      void installRemoteEventingSettingsDefaults() noexcept
       {
         RemoteEventingSettingsDefaults::singleton();
       }
@@ -120,17 +120,17 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IRemoteEventingInternalTypes
-      #pragma mark
+      //
+      // IRemoteEventingInternalTypes
+      //
 
       //-----------------------------------------------------------------------
-      IRemoteEventingInternalTypes::ProviderInfo::ProviderInfo()
+      IRemoteEventingInternalTypes::ProviderInfo::ProviderInfo() noexcept
       {
       }
 
       //-----------------------------------------------------------------------
-      IRemoteEventingInternalTypes::ProviderInfo::~ProviderInfo()
+      IRemoteEventingInternalTypes::ProviderInfo::~ProviderInfo() noexcept
       {
       }
 
@@ -138,12 +138,12 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark RemoteEventing (types)
-      #pragma mark
+      //
+      // RemoteEventing (types)
+      //
 
       //-----------------------------------------------------------------------
-      const char *RemoteEventing::toString(MessageTypes messageType)
+      const char *RemoteEventing::toString(MessageTypes messageType) noexcept
       {
         switch (messageType)
         {
@@ -162,7 +162,7 @@ namespace zsLib
       }
       
       //-----------------------------------------------------------------------
-      RemoteEventing::MessageTypes RemoteEventing::toMessageType(const char *messageType) throw (InvalidArgument)
+      RemoteEventing::MessageTypes RemoteEventing::toMessageType(const char *messageType) noexcept(false)
       {
         String str(messageType);
         for (RemoteEventing::MessageTypes index = RemoteEventing::MessageType_First; index <= RemoteEventing::MessageType_Last; index = static_cast<RemoteEventing::MessageTypes>(static_cast<std::underlying_type<RemoteEventing::MessageTypes>::type>(index) + 1)) {
@@ -177,9 +177,9 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark RemoteEventing
-      #pragma mark
+      //
+      // RemoteEventing
+      //
 
       //-----------------------------------------------------------------------
       RemoteEventing::RemoteEventing(
@@ -190,7 +190,7 @@ namespace zsLib
                                      const IPAddress &serverIP,
                                      WORD listenPort,
                                      Seconds maxWaitToBindTime
-                                     ) :
+                                     ) noexcept :
         MessageQueueAssociator(queue),
         mDelegate(IRemoteEventingDelegateProxy::createWeak(connectionDelegate)),
         mMaxDataSize(static_cast<decltype(mMaxDataSize)>(ISettings::getUInt(ZSLIB_EVENTING_SETTING_REMOTE_EVENTING_MAX_DATA_SIZE))),
@@ -208,7 +208,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      RemoteEventing::~RemoteEventing()
+      RemoteEventing::~RemoteEventing() noexcept
       {
         mThisWeak.reset();
         ZS_LOG_DETAIL(log("Destroyed"));
@@ -229,7 +229,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::init()
+      void RemoteEventing::init() noexcept
       {
         mEventingAtomIndex = zsLib::Log::registerEventingAtom("org.zsLib.eventing.RemoteEventing");
         IWakeDelegateProxy::create(mThisWeak.lock())->onWake();
@@ -239,16 +239,16 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark RemoteEventing => IRemoteEventing
-      #pragma mark
+      //
+      // RemoteEventing => IRemoteEventing
+      //
 
       //-----------------------------------------------------------------------
       RemoteEventingPtr RemoteEventing::connectToRemote(
                                                         IRemoteEventingDelegatePtr connectionDelegate,
                                                         const IPAddress &serverIP,
                                                         const char *connectionSharedSecret
-                                                        )
+                                                        ) noexcept
       {
         auto queue = IMessageQueueManager::getMessageQueue("org.zsLib.eventing.RemoteEventing");
         auto pThis = make_shared<RemoteEventing>(make_private{}, queue, connectionDelegate, connectionSharedSecret, serverIP, static_cast<WORD>(0), Seconds());
@@ -263,7 +263,7 @@ namespace zsLib
                                                         WORD localPort,
                                                         const char *connectionSharedSecret,
                                                         Seconds maxWaitToBindTimeInSeconds
-                                                        )
+                                                        ) noexcept
       {
         auto queue = IMessageQueueManager::getMessageQueue("org.zsLib.eventing.RemoteEventing");
         auto pThis = make_shared<RemoteEventing>(make_private{}, queue, connectionDelegate, connectionSharedSecret, IPAddress(), localPort, maxWaitToBindTimeInSeconds);
@@ -273,13 +273,13 @@ namespace zsLib
       }
       
       //-----------------------------------------------------------------------
-      PUID RemoteEventing::getID() const
+      PUID RemoteEventing::getID() const noexcept
       {
         return mID;
       }
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::shutdown()
+      void RemoteEventing::shutdown() noexcept
       {
         ZS_LOG_DEBUG(log("shutdown called"));
 
@@ -288,7 +288,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      IRemoteEventing::States RemoteEventing::getState() const
+      IRemoteEventing::States RemoteEventing::getState() const noexcept
       {
         AutoRecursiveLock lock(mLock);
         return mState;
@@ -299,7 +299,7 @@ namespace zsLib
                                           const char *remoteSubsystemName,
                                           Level level,
                                           bool setOnlyDefaultLevel
-                                          )
+                                          ) noexcept
       {
         AutoRecursiveLock lock(mLock);
         
@@ -323,9 +323,9 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark RemoteEventing => IWakeDelegate
-      #pragma mark
+      //
+      // RemoteEventing => IWakeDelegate
+      //
 
       //-----------------------------------------------------------------------
       void RemoteEventing::onWake()
@@ -340,9 +340,9 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark RemoteEventing => ITimerDelegate
-      #pragma mark
+      //
+      // RemoteEventing => ITimerDelegate
+      //
 
       //-----------------------------------------------------------------------
       void RemoteEventing::onTimer(ITimerPtr timer)
@@ -369,9 +369,9 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark RemoteEventing => ISocketDelegate
-      #pragma mark
+      //
+      // RemoteEventing => ISocketDelegate
+      //
 
       //-----------------------------------------------------------------------
       void RemoteEventing::onReadReady(SocketPtr socket)
@@ -486,12 +486,12 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark RemoteEventing => ILogEventingProviderDelegate
-      #pragma mark
+      //
+      // RemoteEventing => ILogEventingProviderDelegate
+      //
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::notifyNewSubsystem(zsLib::Subsystem &inSubsystem)
+      void RemoteEventing::notifyNewSubsystem(zsLib::Subsystem &inSubsystem) noexcept
       {
         AutoRecursiveLock lock(mAsyncSelfLock);
         if (!mAsyncSelf) return;
@@ -502,7 +502,7 @@ namespace zsLib
       void RemoteEventing::notifyEventingProviderRegistered(
                                                             ProviderHandle handle,
                                                             EventingAtomDataArray eventingAtomDataArray
-                                                            )
+                                                            ) noexcept
       {
         ProviderInfo *info = reinterpret_cast<ProviderInfo *>(eventingAtomDataArray[mEventingAtomIndex]);
         
@@ -565,10 +565,11 @@ namespace zsLib
       
       //-----------------------------------------------------------------------
       void RemoteEventing::notifyEventingProviderUnregistered(
-                                                              ProviderHandle handle,
+                                                              ZS_MAYBE_USED() ProviderHandle handle,
                                                               EventingAtomDataArray eventingAtomDataArray
-                                                              )
+                                                              ) noexcept
       {
+        ZS_MAYBE_USED(handle);
         ProviderInfo *info = reinterpret_cast<ProviderInfo *>(eventingAtomDataArray[mEventingAtomIndex]);
         if (!info) return;
 
@@ -593,11 +594,12 @@ namespace zsLib
 
       //-----------------------------------------------------------------------
       void RemoteEventing::notifyEventingProviderLoggingStateChanged(
-                                                                     ProviderHandle handle,
+                                                                     ZS_MAYBE_USED() ProviderHandle handle,
                                                                      EventingAtomDataArray eventingAtomDataArray,
                                                                      KeywordBitmaskType keywords
-                                                                     )
+                                                                     ) noexcept
       {
+        ZS_MAYBE_USED(handle);
         ProviderInfo *info = reinterpret_cast<ProviderInfo *>(eventingAtomDataArray[mEventingAtomIndex]);
         if (!info) return;
         
@@ -618,9 +620,9 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark RemoteEventing => ILogEventingDelegate
-      #pragma mark
+      //
+      // RemoteEventing => ILogEventingDelegate
+      //
 
       //-----------------------------------------------------------------------
       void RemoteEventing::notifyWriteEvent(
@@ -632,7 +634,7 @@ namespace zsLib
                                             EVENT_PARAMETER_DESCRIPTOR_HANDLE parameterDescriptor,
                                             EVENT_DATA_DESCRIPTOR_HANDLE dataDescriptor,
                                             size_t dataDescriptorCount
-                                            )
+                                            ) noexcept
       {
         ProviderInfo *info = reinterpret_cast<ProviderInfo *>(eventingAtomDataArray[mEventingAtomIndex]);
         if (!info) return;
@@ -718,9 +720,9 @@ namespace zsLib
           auto &data = dataDescriptor[index];
           
           uint32_t dataSize = static_cast<uint32_t>(data.Size);
-          uint32_t putSize = dataSize;
+          uint32_t loopPutSize = dataSize;
           if (dataSize > mMaxDataSize) {
-            putSize = dataSize = static_cast<decltype(dataSize)>(mMaxDataSize);
+            loopPutSize = dataSize = static_cast<decltype(dataSize)>(mMaxDataSize);
           }
           
           if (data.Ptr) {
@@ -765,11 +767,11 @@ namespace zsLib
                 }
                 default: {
                   // just put in raw format
-                  usePacked.Put((const BYTE *)(data.Ptr), putSize);
+                  usePacked.Put((const BYTE *)(data.Ptr), loopPutSize);
                 }
               }
             } else {
-              usePacked.Put((const BYTE *)(data.Ptr), putSize);
+              usePacked.Put((const BYTE *)(data.Ptr), loopPutSize);
             }
           } else {
             usePacked.PutWord32(static_cast<CryptoPP::word32>(0));
@@ -803,9 +805,9 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark RemoteEventing => IRemoteEventingAsyncDelegate
-      #pragma mark
+      //
+      // RemoteEventing => IRemoteEventingAsyncDelegate
+      //
 
       //-----------------------------------------------------------------------
       void RemoteEventing::onRemoteEventingSubscribeLogger()
@@ -961,18 +963,18 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark RemoteEventing => (internal)
-      #pragma mark
+      //
+      // RemoteEventing => (internal)
+      //
 
       //-----------------------------------------------------------------------
-      Log::Params RemoteEventing::slog(const char *message)
+      Log::Params RemoteEventing::slog(const char *message) noexcept
       {
         return Log::Params(message, "eventing::RemoteEventing");
       }
 
       //-----------------------------------------------------------------------
-      Log::Params RemoteEventing::log(const char *message)
+      Log::Params RemoteEventing::log(const char *message) noexcept
       {
         ElementPtr objectEl = Element::create("eventing::RemoteEventing");
         objectEl->adoptAsLastChild(UseEventingHelper::createElementWithNumber("id", string(mID)));
@@ -980,7 +982,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::disconnect()
+      void RemoteEventing::disconnect() noexcept
       {
         auto pThis = mThisWeak.lock();
         if (!pThis) {
@@ -1022,7 +1024,7 @@ namespace zsLib
       }
       
       //-----------------------------------------------------------------------
-      void RemoteEventing::cancel()
+      void RemoteEventing::cancel() noexcept
       {
         ZS_LOG_TRACE(log("cancel called"));
         
@@ -1095,7 +1097,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::step()
+      void RemoteEventing::step() noexcept
       {
         ZS_LOG_DEBUG(log("step"));
         
@@ -1122,7 +1124,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      bool RemoteEventing::stepSocketBind()
+      bool RemoteEventing::stepSocketBind() noexcept
       {
         if (mBindSocket) {
           ZS_LOG_TRACE(log("step - already bound"));
@@ -1174,7 +1176,7 @@ namespace zsLib
       }
       
       //-----------------------------------------------------------------------
-      bool RemoteEventing::stepWaitForAccept()
+      bool RemoteEventing::stepWaitForAccept() noexcept
       {
         if (!mAcceptedSocket) {
           ZS_LOG_TRACE(log("step - waiting for socket to accept"));
@@ -1186,7 +1188,7 @@ namespace zsLib
       }
       
       //-----------------------------------------------------------------------
-      bool RemoteEventing::stepSocketConnect()
+      bool RemoteEventing::stepSocketConnect() noexcept
       {
         if (mConnectSocket) {
           ZS_LOG_TRACE(log("step - already have a socket connecting"));
@@ -1213,7 +1215,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      bool RemoteEventing::stepWaitConnected()
+      bool RemoteEventing::stepWaitConnected() noexcept
       {
         if (!mConnected) {
           ZS_LOG_TRACE(log("step waiting to connect"));
@@ -1225,7 +1227,7 @@ namespace zsLib
       }
       
       //-----------------------------------------------------------------------
-      bool RemoteEventing::stepHello()
+      bool RemoteEventing::stepHello() noexcept
       {
         if (MessageType_Hello != mHandshakeState) {
           ZS_LOG_TRACE(log("step - skipping hello"));
@@ -1248,7 +1250,7 @@ namespace zsLib
       }
       
       //-----------------------------------------------------------------------
-      bool RemoteEventing::stepNotifyTimer()
+      bool RemoteEventing::stepNotifyTimer() noexcept
       {
         if (mNotifyTimer) {
           ZS_LOG_TRACE(log("step - already have notify timer"));
@@ -1265,7 +1267,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      bool RemoteEventing::stepAuthorized()
+      bool RemoteEventing::stepAuthorized() noexcept 
       {
         if (!isAuthorized()) {
           ZS_LOG_TRACE(log("step - not authorized"));
@@ -1277,7 +1279,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::setState(States state)
+      void RemoteEventing::setState(States state) noexcept
       {
         if (state == mState) return;
         
@@ -1299,7 +1301,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::resetConnection()
+      void RemoteEventing::resetConnection() noexcept
       {
         if (mNotifyTimer) {
           mNotifyTimer->cancel();
@@ -1339,7 +1341,7 @@ namespace zsLib
       }
       
       //-----------------------------------------------------------------------
-      void RemoteEventing::prepareNewConnection()
+      void RemoteEventing::prepareNewConnection() noexcept
       {
         resetConnection();
         mHandshakeState = MessageType_First;
@@ -1347,7 +1349,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::readIncomingMessage()
+      void RemoteEventing::readIncomingMessage() noexcept
       {
         while ((mIncomingQueue.AnyRetrievable()) &&
                (MessageType_Goodbye != mHandshakeState))
@@ -1391,7 +1393,7 @@ namespace zsLib
       }
       
       //-----------------------------------------------------------------------
-      void RemoteEventing::sendOutgoingData()
+      void RemoteEventing::sendOutgoingData() noexcept
       {
         if (!mWriteReady) {
           ZS_LOG_INSANE(log("waiting for write ready to be able to send"));
@@ -1415,9 +1417,9 @@ namespace zsLib
 
             size_t availeable = mEventDataInOutgoingQueue;
             if (availeable < 1) break;
-#ifdef _DEBUG
-            ZS_THROW_BAD_STATE_IF(availeable != mOutgoingQueue.CurrentSize())
-#endif //_DEBUG
+
+            ZS_ASSERT(availeable == mOutgoingQueue.CurrentSize());
+
             if (availeable > sizeof(buffer)) {
               availeable = sizeof(buffer);
             }
@@ -1445,7 +1447,7 @@ namespace zsLib
       void RemoteEventing::sendData(
                                     MessageTypes messageType,
                                     const SecureByteBlock &buffer
-                                    )
+                                    ) noexcept
       {
         CryptoPP::word32 type = static_cast<CryptoPP::word32>(messageType);
         CryptoPP::word32 size = static_cast<CryptoPP::word32>(sizeof(type) + buffer.SizeInBytes());
@@ -1465,7 +1467,7 @@ namespace zsLib
       void RemoteEventing::sendData(
                                     MessageTypes messageType,
                                     const ElementPtr &rootEl
-                                    )
+                                    ) noexcept
       {
         auto message = IHelper::toString(rootEl);
         sendData(messageType, message);
@@ -1475,7 +1477,7 @@ namespace zsLib
       void RemoteEventing::sendData(
                                     MessageTypes messageType,
                                     const std::string &message
-                                    )
+                                    ) noexcept
       {
         CryptoPP::word32 type = static_cast<CryptoPP::word32>(messageType);
         CryptoPP::word32 size = static_cast<CryptoPP::word32>(sizeof(type) + message.length());
@@ -1496,7 +1498,7 @@ namespace zsLib
                                    const String &requestID,
                                    int errorNumber,
                                    const char *reason
-                                   )
+                                   ) noexcept
       {
         auto rootEl = Element::create("ack");
         
@@ -1516,7 +1518,7 @@ namespace zsLib
       void RemoteEventing::handleHandshakeMessage(
                                                   MessageTypes messageType,
                                                   SecureByteBlock &buffer
-                                                  )
+                                                  ) noexcept
       {
         if (MessageType_Goodbye == messageType) {
           ZS_LOG_DEBUG(log("received goodbye during handshake"));
@@ -1555,7 +1557,7 @@ namespace zsLib
       void RemoteEventing::handleAuthorizedMessage(
                                                    MessageTypes messageType,
                                                    SecureByteBlock &buffer
-                                                   )
+                                                   ) noexcept
       {
         switch (messageType) {
           case MessageType_TraceEvent: {
@@ -1599,7 +1601,7 @@ namespace zsLib
       }
       
       //-----------------------------------------------------------------------
-      void RemoteEventing::handleHello(const ElementPtr &rootEl)
+      void RemoteEventing::handleHello(const ElementPtr &rootEl) noexcept
       {
         if ((MessageType_Hello != mHandshakeState) ||
             (isConnectingMode())) {
@@ -1640,7 +1642,7 @@ namespace zsLib
       }
       
       //-----------------------------------------------------------------------
-      void RemoteEventing::handleChallenge(const ElementPtr &rootEl)
+      void RemoteEventing::handleChallenge(const ElementPtr &rootEl) noexcept
       {
         if ((MessageType_Challenge != mHandshakeState) ||
             (mChallengeSalt.hasData())) {
@@ -1668,7 +1670,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::handleChallengeReply(const ElementPtr &rootEl)
+      void RemoteEventing::handleChallengeReply(const ElementPtr &rootEl) noexcept
       {
         if ((MessageType_Challenge != mHandshakeState) ||
             (!mChallengeSalt.hasData())) {
@@ -1689,7 +1691,7 @@ namespace zsLib
       }
       
       //-----------------------------------------------------------------------
-      void RemoteEventing::handleWelcome(const ElementPtr &rootEl)
+      void RemoteEventing::handleWelcome(const ElementPtr &rootEl) noexcept
       {
         if (MessageType_ChallengeReply != mHandshakeState) {
           ZS_LOG_WARNING(Detail, log("received welcome but not waiting for welcome"));
@@ -1750,7 +1752,7 @@ namespace zsLib
       
       
       //-----------------------------------------------------------------------
-      void RemoteEventing::handleNotify(const ElementPtr &rootEl)
+      void RemoteEventing::handleNotify(const ElementPtr &rootEl) noexcept
       {
         String typeStr = IHelper::getElementText(rootEl->findFirstChildElement("type"));
         if (ZSLIB_EVENTING_REMOTE_EVENTING_NOTIFY_GENERAL_INFO == typeStr) {
@@ -1773,7 +1775,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::handleNotifyGeneralInfo(const ElementPtr &rootEl)
+      void RemoteEventing::handleNotifyGeneralInfo(const ElementPtr &rootEl) noexcept
       {
         String subsystemStr = IHelper::getElementText(rootEl->findFirstChildElement("subsystem"));
         String droppedStr = IHelper::getElementText(rootEl->findFirstChildElement("dropped"));
@@ -1800,7 +1802,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::handleNotifyRemoteSubsystem(const ElementPtr &rootEl)
+      void RemoteEventing::handleNotifyRemoteSubsystem(const ElementPtr &rootEl) noexcept
       {
         String subsystemStr = IHelper::getElementText(rootEl->findFirstChildElement("name"));
         
@@ -1825,7 +1827,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::handleNotifyRemoteProvider(const ElementPtr &rootEl)
+      void RemoteEventing::handleNotifyRemoteProvider(const ElementPtr &rootEl) noexcept
       {
         String remoteHandleStr = IHelper::getElementText(rootEl->findLastChildElement("handle"));
         String goneStr = IHelper::getElementText(rootEl->findLastChildElement("gone"));
@@ -1965,7 +1967,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::handleNotifyRemoteProviderKeywordLogging(const ElementPtr &rootEl)
+      void RemoteEventing::handleNotifyRemoteProviderKeywordLogging(const ElementPtr &rootEl) noexcept
       {
         String remoteHandleStr = IHelper::getElementText(rootEl->findLastChildElement("handle"));
         String bitmaskStr = IHelper::getElementText(rootEl->findLastChildElement("bitmask"));
@@ -2000,7 +2002,7 @@ namespace zsLib
       }
       
       //-----------------------------------------------------------------------
-      void RemoteEventing::handleRequest(const ElementPtr &rootEl)
+      void RemoteEventing::handleRequest(const ElementPtr &rootEl) noexcept
       {
         int error = 0;
         String reason;
@@ -2067,13 +2069,14 @@ namespace zsLib
       }
       
       //-----------------------------------------------------------------------
-      void RemoteEventing::handleRequestAck(const ElementPtr &rootEl)
+      void RemoteEventing::handleRequestAck(ZS_MAYBE_USED() const ElementPtr &rootEl) noexcept
       {
+        ZS_MAYBE_USED(rootEl);
         // ignored for now...
       }
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::handleEvent(SecureByteBlock &buffer)
+      void RemoteEventing::handleEvent(SecureByteBlock &buffer) noexcept
       {
         size_t expectingBasicSize = (sizeof(CryptoPP::word16)*5) +
                                     (sizeof(uint8_t)*4) +
@@ -2232,7 +2235,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::sendWelcome()
+      void RemoteEventing::sendWelcome() noexcept
       {
         ElementPtr welcomeEl = Element::create("welcome");
         
@@ -2272,7 +2275,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void RemoteEventing::sendNotify()
+      void RemoteEventing::sendNotify() noexcept
       {
         if (!isAuthorized()) {
           ZS_LOG_TRACE(log("skipping notify as not authorized yet"));
@@ -2301,7 +2304,7 @@ namespace zsLib
       void RemoteEventing::requestSetRemoteSubsystemLevel(
                                                           SubsystemInfoPtr info,
                                                           bool setOnlyDefaultLevel
-                                                          )
+                                                          ) noexcept
       {
         ElementPtr rootEl = Element::create("request");
         
@@ -2317,7 +2320,7 @@ namespace zsLib
       void RemoteEventing::requestSetRemoteEventProviderLogging(
                                                                 const String &providerName,
                                                                 KeywordBitmaskType bitmask
-                                                                )
+                                                                ) noexcept
       {
         ElementPtr rootEl = Element::create("request");
         
@@ -2332,7 +2335,7 @@ namespace zsLib
       void RemoteEventing::announceProviderToRemote(
                                                     ProviderInfo *provider,
                                                     bool announceNew
-                                                    )
+                                                    ) noexcept
       {
         ElementPtr rootEl = Element::create("notify");
         
@@ -2363,7 +2366,7 @@ namespace zsLib
       void RemoteEventing::announceProviderLoggingStateChangedToRemote(
                                                                        ProviderInfo *provider,
                                                                        KeywordBitmaskType bitmask
-                                                                       )
+                                                                       ) noexcept
       {
         ElementPtr rootEl = Element::create("notify");
         
@@ -2376,7 +2379,7 @@ namespace zsLib
       }
       
       //-----------------------------------------------------------------------
-      void RemoteEventing::announceSubsystemToRemote(SubsystemInfoPtr info)
+      void RemoteEventing::announceSubsystemToRemote(SubsystemInfoPtr info) noexcept
       {
         ElementPtr rootEl = Element::create("notify");
         
@@ -2392,12 +2395,12 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IRemoteEventingTypes
-    #pragma mark
+    //
+    // IRemoteEventingTypes
+    //
 
     //-------------------------------------------------------------------------
-    const char *IRemoteEventingTypes::toString(States state)
+    const char *IRemoteEventingTypes::toString(States state) noexcept
     {
       switch (state)
       {
@@ -2408,12 +2411,12 @@ namespace zsLib
         case State_ShuttingDown:          return "Shutting down";
         case State_Shutdown:              return "Shutdown";
       }
-
+      ZS_ASSERT_FAIL("unknown eventing type state");
       return "unknown";
     }
     
     //-------------------------------------------------------------------------
-    IRemoteEventingTypes::States IRemoteEventingTypes::toState(const char *state) throw (InvalidArgument)
+    IRemoteEventingTypes::States IRemoteEventingTypes::toState(const char *state) noexcept(false)
     {
       String str(state);
       for (IRemoteEventingTypes::States index = IRemoteEventingTypes::State_First; index <= IRemoteEventingTypes::State_Last; index = static_cast<IRemoteEventingTypes::States>(static_cast<std::underlying_type<IRemoteEventingTypes::States>::type>(index) + 1)) {
@@ -2428,18 +2431,18 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IRemoteEventing
-    #pragma mark
+    //
+    // IRemoteEventing
+    //
 
     //-------------------------------------------------------------------------
     IRemoteEventingPtr IRemoteEventing::connectToRemote(
                                                         IRemoteEventingDelegatePtr connectionDelegate,
                                                         const IPAddress &serverIP,
                                                         const char *connectionSharedSecret
-                                                        )
+                                                        ) noexcept
     {
-      ZS_THROW_INVALID_ARGUMENT_IF(serverIP.isEmpty());
+      ZS_ASSERT(!serverIP.isEmpty());
       return internal::RemoteEventing::connectToRemote(connectionDelegate, serverIP, connectionSharedSecret);
     }
 
@@ -2449,7 +2452,7 @@ namespace zsLib
                                                         WORD localPort,
                                                         const char *connectionSharedSecret,
                                                         Seconds maxWaitToBindTimeInSeconds
-                                                        )
+                                                        ) noexcept
     {
       return internal::RemoteEventing::listenForRemote(connectionDelegate, localPort, connectionSharedSecret, maxWaitToBindTimeInSeconds);
     }

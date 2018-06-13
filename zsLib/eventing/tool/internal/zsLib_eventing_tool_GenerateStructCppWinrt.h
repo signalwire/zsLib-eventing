@@ -48,9 +48,9 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructCppWinrt
-        #pragma mark
+        //
+        // GenerateStructCppWinrt
+        //
 
         struct GenerateStructCppWinrt : public IIDLCompilerTarget,
                                         public IDLCompiler
@@ -84,13 +84,13 @@ namespace zsLib
 
             StructSetPtr structsNeedingInterface_;
 
-            HelperFile();
-            ~HelperFile();
+            HelperFile() noexcept;
+            ~HelperFile() noexcept;
 
-            void includeHeader(const String &headerFile);
-            void includeCpp(const String &headerFile);
+            void includeHeader(const String &headerFile) noexcept;
+            void includeCpp(const String &headerFile) noexcept;
 
-            bool isStructNeedingInterface(StructPtr structObj) const;
+            bool isStructNeedingInterface(StructPtr structObj) const noexcept;
           };
 
           struct StructFile
@@ -111,11 +111,11 @@ namespace zsLib
 
             StructSetPtr structsNeedingInterface_;
 
-            StructFile();
-            ~StructFile();
+            StructFile() noexcept;
+            ~StructFile() noexcept;
 
-            void includeCpp(const String &headerFile);
-            bool isStructNeedingInterface(StructPtr structObj) const;
+            void includeCpp(const String &headerFile) noexcept;
+            bool isStructNeedingInterface(StructPtr structObj) const noexcept;
           };
 
           struct GenerationOptions
@@ -136,76 +136,76 @@ namespace zsLib
 
             struct BaseOption
             {
-              virtual void apply(GenerationOptions *options) const = 0;
+              virtual void apply(GenerationOptions *options) const noexcept = 0;
             };
 
             struct Optional : public BaseOption {
-              Optional(bool value) : value_(value) {}
-              operator bool() const { return value_; }
+              Optional(bool value) noexcept : value_(value) {}
+              operator bool() const noexcept { return value_; }
+              virtual void apply(GenerationOptions *options) const noexcept override { options->optional_ = value_; }
               bool value_{};
-              virtual void apply(GenerationOptions *options) const override { options->optional_ = value_; }
             };
             struct Interface : public BaseOption {
-              Interface(bool value) : value_(value) {}
-              operator bool() const { return value_; }
+              Interface(bool value) noexcept : value_(value) {}
+              operator bool() const noexcept { return value_; }
+              virtual void apply(GenerationOptions *options) const noexcept override { options->interface_ = value_; }
               bool value_{};
-              virtual void apply(GenerationOptions *options) const override { options->interface_ = value_; }
             };
             struct ReturnResult : public BaseOption {
-              ReturnResult(bool value) : value_(value) {}
-              operator bool() const { return value_; }
+              ReturnResult(bool value) noexcept : value_(value) {}
+              operator bool() const noexcept { return value_; }
+              virtual void apply(GenerationOptions *options) const noexcept override { options->returnResult_ = value_; }
               bool value_{};
-              virtual void apply(GenerationOptions *options) const override { options->returnResult_ = value_; }
             };
             struct Reference : public BaseOption {
-              Reference(bool value) : value_(value) {}
-              operator bool() const { return value_; }
+              Reference(bool value) noexcept : value_(value) {}
+              operator bool() const noexcept { return value_; }
+              virtual void apply(GenerationOptions *options) const noexcept override { options->reference_ = value_; }
               bool value_{};
-              virtual void apply(GenerationOptions *options) const override { options->reference_ = value_; }
             };
             struct Implementation : public BaseOption {
-              Implementation(bool value) : value_(value) {}
-              operator bool() const { return value_; }
+              Implementation(bool value) noexcept : value_(value) {}
+              operator bool() const noexcept { return value_; }
+              virtual void apply(GenerationOptions *options) const noexcept override { options->implementation_ = value_; }
               bool value_{};
-              virtual void apply(GenerationOptions *options) const override { options->implementation_ = value_; }
             };
             struct ComPtr : public BaseOption {
-              ComPtr(bool value) : value_(value) {}
-              operator bool() const { return value_; }
+              ComPtr(bool value) noexcept : value_(value) {}
+              operator bool() const noexcept { return value_; }
+              virtual void apply(GenerationOptions *options) const noexcept override { options->comPtr_ = value_; }
               bool value_{};
-              virtual void apply(GenerationOptions *options) const override { options->comPtr_ = value_; }
             };
             struct CppBaseType : public BaseOption {
-              CppBaseType(bool value) : value_(value) {}
-              operator bool() const { return value_; }
+              CppBaseType(bool value) noexcept : value_(value) {}
+              operator bool() const noexcept { return value_; }
+              virtual void apply(GenerationOptions *options) const noexcept override { options->cppBaseType_ = value_; }
               bool value_{};
-              virtual void apply(GenerationOptions *options) const override { options->cppBaseType_ = value_; }
             };
 
-            GenerationOptions() {}
-            GenerationOptions(const BaseOption &value) { value.apply(this); }
+            GenerationOptions() noexcept {}
+            GenerationOptions(const BaseOption &value) noexcept { value.apply(this); }
             GenerationOptions(
                               const BaseOption &value1,
                               const BaseOption &value2
-                              ) { value1.apply(this); value2.apply(this); }
+                              ) noexcept { value1.apply(this); value2.apply(this); }
             GenerationOptions(
                               const BaseOption &value1,
                               const BaseOption &value2,
                               const BaseOption &value3
-                              ) { value1.apply(this); value2.apply(this); value3.apply(this); }
+                              ) noexcept { value1.apply(this); value2.apply(this); value3.apply(this); }
             GenerationOptions(
                               const BaseOption &value1,
                               const BaseOption &value2,
                               const BaseOption &value3,
                               const BaseOption &value4
-                              ) { value1.apply(this); value2.apply(this); value3.apply(this); value4.apply(this); }
+                              ) noexcept { value1.apply(this); value2.apply(this); value3.apply(this); value4.apply(this); }
             GenerationOptions(
                               const BaseOption &value1,
                               const BaseOption &value2,
                               const BaseOption &value3,
                               const BaseOption &value4,
                               const BaseOption &value5
-                              ) { value1.apply(this); value2.apply(this); value3.apply(this); value4.apply(this); value5.apply(this); }
+                              ) noexcept { value1.apply(this); value2.apply(this); value3.apply(this); value4.apply(this); value5.apply(this); }
             GenerationOptions(
                               const BaseOption &value1,
                               const BaseOption &value2,
@@ -213,7 +213,7 @@ namespace zsLib
                               const BaseOption &value4,
                               const BaseOption &value5,
                               const BaseOption &value6
-                              ) { value1.apply(this); value2.apply(this); value3.apply(this); value4.apply(this); value5.apply(this); value6.apply(this); }
+                              ) noexcept { value1.apply(this); value2.apply(this); value3.apply(this); value4.apply(this); value5.apply(this); value6.apply(this); }
 
             GenerationOptions(
                               const BaseOption &value1,
@@ -223,43 +223,43 @@ namespace zsLib
                               const BaseOption &value5,
                               const BaseOption &value6,
                               const BaseOption &value7
-                              ) { value1.apply(this); value2.apply(this); value3.apply(this); value4.apply(this); value5.apply(this); value6.apply(this); value7.apply(this); }
+                              ) noexcept { value1.apply(this); value2.apply(this); value3.apply(this); value4.apply(this); value5.apply(this); value6.apply(this); value7.apply(this); }
 
-            GenerationOptions(const GenerationOptions &source) = default;
-            GenerationOptions &operator=(const GenerationOptions &source) = default;
+            GenerationOptions(const GenerationOptions &source) noexcept = default;
+            GenerationOptions &operator=(const GenerationOptions &source) noexcept = default;
 
-            bool isOptional() const { return optional_; }
-            bool isInterface() const { return interface_; }
-            bool isReturnResult() const { return returnResult_; }
-            bool isReference() const { return reference_; }
-            bool isImplementation() const { return implementation_; }
-            bool isComPtr() const { return comPtr_; }
-            bool isCppBaseType() const { return cppBaseType_; }
+            bool isOptional() const noexcept { return optional_; }
+            bool isInterface() const noexcept { return interface_; }
+            bool isReturnResult() const noexcept { return returnResult_; }
+            bool isReference() const noexcept { return reference_; }
+            bool isImplementation() const noexcept { return implementation_; }
+            bool isComPtr() const noexcept { return comPtr_; }
+            bool isCppBaseType() const noexcept { return cppBaseType_; }
 
-            Optional getOptional() const { return Optional(optional_); }
-            Interface getInterface() const { return Interface(interface_); }
-            ReturnResult getReturnResult() const { return ReturnResult(returnResult_); }
-            Reference getReference() const { return Reference(reference_); }
-            Implementation getImplementation() const { return Implementation(implementation_); }
-            ComPtr getComPtr() const { return ComPtr(comPtr_); }
-            CppBaseType getCppBaseType() const { return CppBaseType(cppBaseType_); }
+            Optional getOptional() const noexcept { return Optional(optional_); }
+            Interface getInterface() const noexcept { return Interface(interface_); }
+            ReturnResult getReturnResult() const noexcept { return ReturnResult(returnResult_); }
+            Reference getReference() const noexcept { return Reference(reference_); }
+            Implementation getImplementation() const noexcept { return Implementation(implementation_); }
+            ComPtr getComPtr() const noexcept { return ComPtr(comPtr_); }
+            CppBaseType getCppBaseType() const noexcept { return CppBaseType(cppBaseType_); }
 
-            GenerationOptions getAmmended(const BaseOption &value) const { GenerationOptions result(*this); value.apply(&result); return result; }
+            GenerationOptions getAmmended(const BaseOption &value) const noexcept { GenerationOptions result(*this); value.apply(&result); return result; }
 
-            static Optional MakeOptional() { return Optional(true); }
-            static Optional MakeNotOptional() { return Optional(false); }
-            static Interface MakeInterface() { return Interface(true); }
-            static Interface MakeNotInterface() { return Interface(false); }
-            static ReturnResult MakeReturnResult() { return ReturnResult(true); }
-            static ReturnResult MakeNotReturnResult() { return ReturnResult(false); }
-            static Reference MakeReference() { return Reference(true); }
-            static Reference MakeNotReference() { return Reference(false); }
-            static Implementation MakeImplementation() { return Implementation(true); }
-            static Implementation MakeNotImplementation() { return Implementation(false); }
-            static ComPtr MakeComPtr() { return ComPtr(true); }
-            static ComPtr MakeNotComPtr() { return ComPtr(false); }
-            static CppBaseType MakeCppBaseType() { return CppBaseType(true); }
-            static CppBaseType MakeNotCppBaseType() { return CppBaseType(false); }
+            static Optional MakeOptional() noexcept { return Optional(true); }
+            static Optional MakeNotOptional() noexcept { return Optional(false); }
+            static Interface MakeInterface() noexcept { return Interface(true); }
+            static Interface MakeNotInterface() noexcept { return Interface(false); }
+            static ReturnResult MakeReturnResult() noexcept { return ReturnResult(true); }
+            static ReturnResult MakeNotReturnResult() noexcept { return ReturnResult(false); }
+            static Reference MakeReference() noexcept { return Reference(true); }
+            static Reference MakeNotReference() noexcept { return Reference(false); }
+            static Implementation MakeImplementation() noexcept { return Implementation(true); }
+            static Implementation MakeNotImplementation() noexcept { return Implementation(false); }
+            static ComPtr MakeComPtr() noexcept { return ComPtr(true); }
+            static ComPtr MakeNotComPtr() noexcept { return ComPtr(false); }
+            static CppBaseType MakeCppBaseType() noexcept { return CppBaseType(true); }
+            static CppBaseType MakeNotCppBaseType() noexcept { return CppBaseType(false); }
 
           protected:
             bool optional_{};
@@ -271,90 +271,90 @@ namespace zsLib
             bool cppBaseType_{};
           };
 
-          GenerateStructCppWinrt();
+          GenerateStructCppWinrt() noexcept;
 
-          static GenerateStructCppWinrtPtr create();
+          static GenerateStructCppWinrtPtr create() noexcept;
 
-          static String fixName(const String &originalName);
-          static String fixNamePath(ContextPtr context);
-          static String fixNamePathNoPrefix(ContextPtr context);
-          static String fixStructName(StructPtr structObj);
-          static String fixMethodDeclaration(ContextPtr context);
+          static String fixName(const String &originalName) noexcept;
+          static String fixNamePath(ContextPtr context) noexcept;
+          static String fixNamePathNoPrefix(ContextPtr context) noexcept;
+          static String fixStructName(StructPtr structObj) noexcept;
+          static String fixMethodDeclaration(ContextPtr context) noexcept;
           static String fixMethodDeclaration(
                                              StructPtr derivedStruct,
                                              ContextPtr context
-                                             );
+                                             ) noexcept;
           static String fixMethodDeclaration(
                                              StructPtr derivedStruct,
                                              const String &name
-                                             );
-          static String fixStructFileName(StructPtr structObj);
-          static String fixStructFileNameAsPath(StructPtr structObj);
-          static String getStructInitName(StructPtr structObj);
-          static String getCppWinrtStructInitName(StructPtr structObj);
-          static String fixEnumName(EnumTypePtr enumObj);
-          static String fixArgumentName(const String &originalName);
+                                             ) noexcept;
+          static String fixStructFileName(StructPtr structObj) noexcept;
+          static String fixStructFileNameAsPath(StructPtr structObj) noexcept;
+          static String getStructInitName(StructPtr structObj) noexcept;
+          static String getCppWinrtStructInitName(StructPtr structObj) noexcept;
+          static String fixEnumName(EnumTypePtr enumObj) noexcept;
+          static String fixArgumentName(const String &originalName) noexcept;
 
           static void processTypesNamespace(
                                             std::stringstream &iss,
                                             std::stringstream &ss,
                                             const String &inIndentStr,
                                             NamespacePtr namespaceObj
-                                            );
+                                            ) noexcept;
           static void processTypesStruct(
                                          std::stringstream &ss,
                                          const String &indentStr,
                                          StructPtr structObj,
                                          bool &firstFound
-                                         );
+                                         ) noexcept;
 
-          static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure);
+          static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) noexcept(false); // throws Failure
 
-          static void generateSpecialHelpers(HelperFile &helperFile);
-          static void generateBasicTypesHelper(HelperFile &helperFile);
-          static void generateExceptionHelper(HelperFile &helperFile);
-          static void generateStringHelper(HelperFile &helperFile);
-          static void generateBinaryHelper(HelperFile &helperFile);
+          static void generateSpecialHelpers(HelperFile &helperFile) noexcept;
+          static void generateBasicTypesHelper(HelperFile &helperFile) noexcept;
+          static void generateExceptionHelper(HelperFile &helperFile) noexcept;
+          static void generateStringHelper(HelperFile &helperFile) noexcept;
+          static void generateBinaryHelper(HelperFile &helperFile) noexcept;
           static void generateDurationHelper(
                                              HelperFile &helperFile,
                                              const String &durationType
-                                             );
-          static void generateTimeHelper(HelperFile &helperFile);
-          static void generatePromiseHelper(HelperFile &helperFile);
-          static void generatePromiseWithHelper(HelperFile &helperFile);
+                                             ) noexcept;
+          static void generateTimeHelper(HelperFile &helperFile) noexcept;
+          static void generatePromiseHelper(HelperFile &helperFile) noexcept;
+          static void generatePromiseWithHelper(HelperFile &helperFile) noexcept;
           static void generateDefaultPromiseRejections(
                                                        HelperFile &helperFile,
                                                        const String &indentStr
-                                                       );
+                                                       ) noexcept;
           static void generatePromiseRejection(
                                                HelperFile &helperFile,
                                                const String &indentStr,
                                                TypePtr rejectionType
-                                               );
+                                               ) noexcept;
 
           static void generateForNamespace(
                                            HelperFile &helperFile,
                                            NamespacePtr namespaceObj,
                                            const String &inIndentStr
-                                           );
+                                           ) noexcept;
 
           static void generateForStruct(
                                         HelperFile &helperFile,
                                         StructPtr structObj,
                                         const String &inIndentStr
-                                        );
+                                        ) noexcept;
           static void generateForEnum(
                                       HelperFile &helperFile,
                                       EnumTypePtr enumObj
-                                      );
+                                      ) noexcept;
           static void generateForStandardStruct(
                                                 HelperFile &helperFile,
                                                 StructPtr structObj
-                                                );
+                                                ) noexcept;
           static void generateStructFile(
                                          HelperFile &helperFile,
                                          StructPtr structObj
-                                         );
+                                         ) noexcept;
           static void generateStructMethods(
                                             HelperFile &helperFile, 
                                             StructFile &structFile,
@@ -362,65 +362,65 @@ namespace zsLib
                                             StructPtr structObj,
                                             bool createConstructors,
                                             bool hasEvents
-                                            );
+                                            ) noexcept;
           static void generateForList(
                                       HelperFile &helperFile,
                                       StructPtr structObj
-                                      );
+                                      ) noexcept;
           static void generateForMap(
                                      HelperFile &helperFile,
                                      StructPtr structObj
-                                     );
+                                     ) noexcept;
           static void generateForSet(
                                      HelperFile &helperFile,
                                      StructPtr structObj
-                                     );
-          static bool requiresSpecialConversion(IEventingTypes::PredefinedTypedefs basicType);
+                                     ) noexcept;
+          static bool requiresSpecialConversion(IEventingTypes::PredefinedTypedefs basicType) noexcept;
           static String getBasicCppWinrtTypeString(
                                                    IEventingTypes::PredefinedTypedefs type,
                                                    const GenerationOptions &options
-                                                   );
+                                                   ) noexcept;
 
           static String getBasicCppWinrtTypeString(
                                                    BasicTypePtr type,
                                                    const GenerationOptions &options
-                                                   );
+                                                   ) noexcept;
           static String makeCppWinrtOptional(
                                              const String &value,
                                              const GenerationOptions &options
-                                             );
+                                             ) noexcept;
           static String makeCppWinrtReference(
                                               const String &value,
                                               const GenerationOptions &options
-                                              );
+                                              ) noexcept;
           static String makeCppWinrtReferenceAndOptional(
                                                          const String &value,
                                                          const GenerationOptions &options
-                                                         );
+                                                         ) noexcept;
           static String makeCppWinrtReferenceAndOptionalIfOptional(
                                                                   const String &value,
                                                                   const GenerationOptions &options
-                                                                  );
+                                                                  ) noexcept;
           static String getCppType(
                                    TypePtr type,
                                    const GenerationOptions &options
-                                   );
+                                   ) noexcept;
           static String getCppWinrtType(
                                         const HelperFile &helperFile,
                                         TypePtr type,
                                         const GenerationOptions &options
-                                        );
+                                        ) noexcept;
           static String getCppWinrtType(
                                         TypePtr type,
                                         const StructSet &structsNeedingInterface,
                                         const GenerationOptions &options
-                                        );
-          static String getCppWinrtResultTypeInitializer(TypePtr type);
-          static String getCppWinrtAttributes(const StringList &attributes);
+                                        ) noexcept;
+          static String getCppWinrtResultTypeInitializer(TypePtr type) noexcept;
+          static String getCppWinrtAttributes(const StringList &attributes) noexcept;
           static String getCppWinrtAttributesLine(
                                                   const String &linePrefix,
                                                   const StringList &attributes
-                                                  );
+                                                  ) noexcept;
           static String getToFromCppWinrtName(
                                               TypePtr type,
                                               const StructSet &structsNeedingInterface,
@@ -428,22 +428,22 @@ namespace zsLib
                                               const String &prefixName,
                                               const String &prefixNameIfImpl,
                                               const String &prefixIfInterface
-                                              );
+                                              ) noexcept;
           static String getToCppWinrtName(
                                           TypePtr type,
                                           const StructSet &structsNeedingInterface,
                                           const GenerationOptions &options
-                                          );
+                                          ) noexcept;
           static String getToCppWinrtName(
                                           const HelperFile &helperFile,
                                           TypePtr type,
                                           const GenerationOptions &options
-                                          );
-          static String getFromCppWinrtName(TypePtr type);
+                                          ) noexcept;
+          static String getFromCppWinrtName(TypePtr type) noexcept;
           static void includeCppForType(
                                         StructFile &structFile,
                                         TypePtr type
-                                        );
+                                        ) noexcept;
 
           struct IncludeProcessedInfo
           {
@@ -451,38 +451,38 @@ namespace zsLib
             StringSet structProcessedTypes_;
             StringSet templatedProcessedTypes_;
 
-            IncludeProcessedInfo();
-            ~IncludeProcessedInfo();
+            IncludeProcessedInfo() noexcept;
+            ~IncludeProcessedInfo() noexcept;
           };
 
           static void includeCppForType(
                                         IncludeProcessedInfo &processed,
                                         StructFile &structFile,
                                         TypePtr type
-                                        );
+                                        ) noexcept;
           static void includeTemplatedStructForType(
                                                     IncludeProcessedInfo &processed,
                                                     StructFile &structFile,
                                                     StructPtr structObj
-                                                    );
+                                                    ) noexcept;
           static void includeTemplatedStructForType(
                                                     IncludeProcessedInfo &processed,
                                                     StructFile &structFile,
                                                     TemplatedStructTypePtr templatedStructObj
-                                                    );
+                                                    ) noexcept;
 
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark GenerateStructCppWinrt::IIDLCompilerTarget
-          #pragma mark
+          //
+          // GenerateStructCppWinrt::IIDLCompilerTarget
+          //
 
           //-------------------------------------------------------------------
-          String targetKeyword() override;
-          String targetKeywordHelp() override;
+          String targetKeyword() noexcept override;
+          String targetKeywordHelp() noexcept override;
           void targetOutput(
                             const String &inPathStr,
                             const ICompilerTypes::Config &config
-                            ) throw (Failure) override;
+                            ) noexcept(false); // throws Failure
         };
          
       } // namespace internal

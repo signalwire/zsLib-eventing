@@ -50,9 +50,9 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark IDLCompiler
-        #pragma mark
+        //
+        // IDLCompiler
+        //
 
         class IDLCompiler : public ICompiler,
                             public IIDLTypes
@@ -112,12 +112,12 @@ namespace zsLib
             String mToken;
             ULONG mLineCount {1};
 
-            bool isBrace() const;
-            bool isOpenBrace() const;
-            bool isCloseBrace() const;
-            bool isOpenBrace(TokenTypes type) const;
-            bool isCloseBrace(TokenTypes type) const;
-            bool isIdentifier(const char *identifier) const;
+            bool isBrace() const noexcept;
+            bool isOpenBrace() const noexcept;
+            bool isCloseBrace() const noexcept;
+            bool isOpenBrace(TokenTypes type) const noexcept;
+            bool isCloseBrace(TokenTypes type) const noexcept;
+            bool isIdentifier(const char *identifier) const noexcept;
           };
 
         public:
@@ -125,95 +125,95 @@ namespace zsLib
           IDLCompiler(
                       const make_private &,
                       const Config &config
-                      );
-          ~IDLCompiler();
+                      ) noexcept;
+          ~IDLCompiler() noexcept;
 
-          IDLCompiler(const Noop &);
+          IDLCompiler(const Noop &) noexcept;
 
-          static void installDefaultTargets();
+          static void installDefaultTargets() noexcept;
 
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark IDLCompiler => ICompiler
-          #pragma mark
+          //
+          // IDLCompiler => ICompiler
+          //
 
-          static IDLCompilerPtr create(const Config &config);
+          static IDLCompilerPtr create(const Config &config) noexcept;
 
-          void process() throw (Failure, FailureWithLine) override;
+          void process() noexcept(false) override; // throws Failure, FailureWithLine
 
         protected:
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark IDLCompiler => (internal)
-          #pragma mark
+          //
+          // IDLCompiler => (internal)
+          //
 
-          void outputSkeleton();
-          void read() throw (Failure, FailureWithLine);
-          void validate() throw (Failure);
+          void outputSkeleton() noexcept;
+          void read() noexcept(false); // throws Failure, FailureWithLine
+          void validate() noexcept(false); // throws Failure
 
-          bool parseNamespace(NamespacePtr parent) throw (FailureWithLine);
-          void parseNamespaceContents(NamespacePtr namespaceObj) throw (FailureWithLine);
+          bool parseNamespace(NamespacePtr parent) noexcept(false); // throws FailureWithLine
+          void parseNamespaceContents(NamespacePtr namespaceObj) noexcept(false); // throws FailureWithLine
 
-          bool parseUsing(NamespacePtr namespaceObj) throw (FailureWithLine);
-          bool parseTypedef(ContextPtr context) throw (FailureWithLine);
-          bool parseStruct(ContextPtr context) throw (FailureWithLine);
-          bool parseEnum(ContextPtr context) throw (FailureWithLine);
-          bool parseProperty(StructPtr context) throw (FailureWithLine);
-          bool parseMethod(StructPtr context) throw (FailureWithLine);
+          bool parseUsing(NamespacePtr namespaceObj) noexcept(false); // throws FailureWithLine
+          bool parseTypedef(ContextPtr context) noexcept(false); // throws FailureWithLine
+          bool parseStruct(ContextPtr context) noexcept(false); // throws FailureWithLine
+          bool parseEnum(ContextPtr context) noexcept(false); // throws FailureWithLine
+          bool parseProperty(StructPtr context) noexcept(false); // throws FailureWithLine
+          bool parseMethod(StructPtr context) noexcept(false); // throws FailureWithLine
 
-          bool parseDocumentation();
-          bool parseSemiColon();
-          bool parseComma();
-          bool parseModifiers() throw (FailureWithLine);
-          bool parseDirective() throw (FailureWithLine);
-          bool pushDirectiveTokens(TokenPtr token) throw (FailureWithLine);
-          bool parseDirectiveExclusive(bool &outIgnoreMode) throw (FailureWithLine);
+          bool parseDocumentation() noexcept;
+          bool parseSemiColon() noexcept;
+          bool parseComma() noexcept;
+          bool parseModifiers() noexcept(false); // throws FailureWithLine
+          bool parseDirective() noexcept(false); // throws FailureWithLine
+          bool pushDirectiveTokens(TokenPtr token) noexcept(false); // throws FailureWithLine
+          bool parseDirectiveExclusive(bool &outIgnoreMode) noexcept(false); // throws FailureWithLine
 
-          ElementPtr getDocumentation();
-          ElementPtr getDirectives();
-          void mergeDocumentation(ElementPtr &existingDocumentation);
-          void mergeDirectives(ElementPtr &existingDocumentation);
-          void mergeModifiers(ContextPtr context) throw (FailureWithLine);
-          void fillContext(ContextPtr context);
+          ElementPtr getDocumentation() noexcept;
+          ElementPtr getDirectives() noexcept;
+          void mergeDocumentation(ElementPtr &existingDocumentation) noexcept;
+          void mergeDirectives(ElementPtr &existingDocumentation) noexcept;
+          void mergeModifiers(ContextPtr context) noexcept(false); // throws FailureWithLine
+          void fillContext(ContextPtr context) noexcept;
 
-          static String makeTypenameFromTokens(const TokenList &tokens) throw (InvalidContent);
+          static String makeTypenameFromTokens(const TokenList &tokens) noexcept(false); // throws InvalidContent
 
-          void pushTokens(const TokenList &tokens);
-          void pushTokens(TokenListPtr tokens);
-          TokenListPtr getTokens() const;
-          TokenListPtr popTokens();
+          void pushTokens(const TokenList &tokens) noexcept;
+          void pushTokens(TokenListPtr tokens) noexcept;
+          TokenListPtr getTokens() const noexcept;
+          TokenListPtr popTokens() noexcept;
 
-          bool hasMoreTokens() const;
-          TokenPtr peekNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine);
-          TokenPtr extractNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine);
-          void putBackToken(TokenPtr token);
-          void putBackTokens(const TokenList &tokens);
-          ULONG getLastLineNumber() const;
+          bool hasMoreTokens() const noexcept;
+          TokenPtr peekNextToken(const char *whatExpectingMoreTokens) noexcept(false); // throws FailureWithLine
+          TokenPtr extractNextToken(const char *whatExpectingMoreTokens) noexcept(false); // throws FailureWithLine
+          void putBackToken(TokenPtr token) noexcept;
+          void putBackTokens(const TokenList &tokens) noexcept;
+          ULONG getLastLineNumber() const noexcept;
           
           static void insertBefore(
                                    TokenList &tokens,
                                    const TokenList &insertTheseTokens
-                                   );
+                                   ) noexcept;
           static void insertAfter(
                                   TokenList &tokens,
                                   const TokenList &insertTheseTokens
-                                  );
+                                  ) noexcept;
 
           bool extractToClosingBraceToken(
                                           const char *whatExpectingClosingToken,
                                           TokenList &outTokens,
                                           bool includeOuterBrace = false
-                                          ) throw (FailureWithLine);
+                                          ) noexcept(false); // throw FailureWithLine
 
           bool extractToComma(
                               const char *whatExpectingComma,
                               TokenList &outTokens
-                              ) throw (FailureWithLine);
+                              ) noexcept(false); // throw FailureWithLine
           
           bool extractToEquals(
                                const char *whatExpectingComma,
                                TokenList &outTokens
-                               ) throw (FailureWithLine);
+                               ) noexcept(false); // throw FailureWithLine
           
           bool extractToTokenType(
                                   const char *whatExpectingComma,
@@ -221,48 +221,48 @@ namespace zsLib
                                   TokenList &outTokens,
                                   bool includeFoundToken = false,
                                   bool processBrackets = true
-                                  ) throw (FailureWithLine);
+                                  ) noexcept(false); // throw FailureWithLine
 
-          TokenPtr peekAheadToFirstTokenOfType(const TokenTypeSet &tokenTypes);
+          TokenPtr peekAheadToFirstTokenOfType(const TokenTypeSet &tokenTypes) noexcept;
 
           void processUsingNamespace(
                                      NamespacePtr currentNamespace,
                                      NamespacePtr usingNamespace
-                                     );
+                                     ) noexcept;
           void processUsingType(
                                 NamespacePtr currentNamespace,
                                 TypePtr usingType
-                                );
+                                ) noexcept;
           void processTypedef(
                               ContextPtr context,
                               const TokenList &typeTokens,
                               const String &typeName
-                              ) throw (FailureWithLine);
+                              ) noexcept(false); /// throws FailureWithLine
           StructPtr processStructForward(
                                          ContextPtr context,
                                          const String &typeName,
                                          bool *wasCreated = NULL
-                                         ) throw (FailureWithLine);
+                                         ) noexcept(false); // throws FailureWithLine
           void processRelated(
                               StructPtr structObj,
                               const TokenList &typeTokens
-                              ) throw (FailureWithLine);
+                              ) noexcept(false); // throws FailureWithLine
 
           TypePtr findTypeOrCreateTypedef(
                                           ContextPtr context,
                                           const TokenList &tokens,
                                           TypedefTypePtr &outCreatedTypedef
-                                          ) throw (FailureWithLine);
+                                          ) noexcept(false); // throws FailureWithLine
 
-          static void writeXML(const String &outputName, const DocumentPtr &doc) throw (Failure);
-          static void writeJSON(const String &outputName, const DocumentPtr &doc) throw (Failure);
-          static void writeBinary(const String &outputName, const SecureByteBlockPtr &buffer) throw (Failure);
+          static void writeXML(const String &outputName, const DocumentPtr &doc) noexcept(false); // throws Failure
+          static void writeJSON(const String &outputName, const DocumentPtr &doc) noexcept(false); // throws Failure
+          static void writeBinary(const String &outputName, const SecureByteBlockPtr &buffer) noexcept(false); // throws Failure
 
         private:
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark IDLCompiler => (data)
-          #pragma mark
+          //
+          // IDLCompiler => (data)
+          //
 
           IDLCompilerWeakPtr mThisWeak;
 

@@ -44,7 +44,7 @@ namespace zsLib
       class Helper : public IHelper
       {
       public:
-        static Log::Params slog(const char *message);
+        static Log::Params slog(const char *message) noexcept;
       };
     }
   }

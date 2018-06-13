@@ -51,9 +51,9 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark ICommandLineTypes
-      #pragma mark
+      //
+      // ICommandLineTypes
+      //
 
       interaction ICommandLineTypes
       {
@@ -89,8 +89,8 @@ namespace zsLib
           Flag_Last = Flag_MonitorLogLevel,
         };
 
-        static Flags toFlag(const char *str);
-        static const char *toString(Flags flag);
+        static Flags toFlag(const char *str) noexcept;
+        static const char *toString(Flags flag) noexcept;
         
         struct MonitorInfo
         {
@@ -108,11 +108,11 @@ namespace zsLib
           StringList mSubscribeProviders;
           StringLevelPairList mLogLevels;
 
-          MonitorInfo();
-          MonitorInfo(const MonitorInfo &source);
-          ~MonitorInfo();
+          MonitorInfo() noexcept;
+          MonitorInfo(const MonitorInfo &source) noexcept;
+          ~MonitorInfo() noexcept;
 
-          MonitorInfo &operator=(const MonitorInfo &source);
+          MonitorInfo &operator=(const MonitorInfo &source) noexcept;
         };
       };
 
@@ -120,44 +120,44 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark ICommandLine
-      #pragma mark
+      //
+      // ICommandLine
+      //
 
       interaction ICommandLine : public ICommandLineTypes
       {
-        static void outputHeader();
-        static void outputHelp();
+        static void outputHeader() noexcept;
+        static void outputHelp() noexcept;
 
         static StringList toList(
                                  int inArgc,
                                  const char * const inArgv[]
-                                 );
+                                 ) noexcept;
         static StringList toList(
                                  int inArgc,
                                  const wchar_t * const inArgv[]
-                                 );
+                                 ) noexcept;
 
-        static int performDefaultHandling(const StringList &arguments);
+        static int performDefaultHandling(const StringList &arguments) noexcept;
 
         static void prepare(
                             StringList arguments,
                             MonitorInfo &outMonitor,
                             ICompilerTypes::Config &outConfig,
                             bool &outDidOutputHelp
-                            ) throw (InvalidArgument);
+                            ) noexcept(false); // throws InvalidArgument
 
         static void validate(
                              MonitorInfo &monitor,
                              ICompilerTypes::Config &config,
                              bool didOutputHelp
-                             ) throw (InvalidArgument, NoopException);
+                             ) noexcept(false); // throws InvalidArgument, NoopException
         static void process(
                             MonitorInfo &monitor,
                             ICompilerTypes::Config &config
-                            ) throw (Failure);
+                            ) noexcept(false); // throws Failure
         
-        static void interrupt();
+        static void interrupt() noexcept;
       };
 
     } // namespace tool

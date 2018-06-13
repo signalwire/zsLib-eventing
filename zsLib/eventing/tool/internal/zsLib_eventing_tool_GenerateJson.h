@@ -46,32 +46,32 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateJson
-        #pragma mark
+        //
+        // GenerateJson
+        //
 
         struct GenerateJson : public IIDLCompilerTarget,
                               public IDLCompiler
         {
           typedef std::set<String> StringSet;
 
-          GenerateJson();
+          GenerateJson() noexcept;
 
-          static GenerateJsonPtr create();
-          static SecureByteBlockPtr generateJson(ProjectPtr project) throw (Failure);
-
-          //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark GenerateJson::IIDLCompilerTarget
-          #pragma mark
+          static GenerateJsonPtr create() noexcept;
+          static SecureByteBlockPtr generateJson(ProjectPtr project) noexcept(false); // throws Failure
 
           //-------------------------------------------------------------------
-          String targetKeyword() override;
-          String targetKeywordHelp() override;
+          //
+          // GenerateJson::IIDLCompilerTarget
+          //
+
+          //-------------------------------------------------------------------
+          String targetKeyword() noexcept override;
+          String targetKeywordHelp() noexcept override;
           void targetOutput(
                             const String &inPathStr,
                             const ICompilerTypes::Config &config
-                            ) throw (Failure) override;
+                            ) noexcept(false) override; // throws Failure
 
         };
          

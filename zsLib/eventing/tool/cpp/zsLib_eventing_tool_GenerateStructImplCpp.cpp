@@ -72,17 +72,17 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructImplCpp
-        #pragma mark
+        //
+        // GenerateStructImplCpp
+        //
 
         //-------------------------------------------------------------------
-        GenerateStructImplCpp::GenerateStructImplCpp() : IDLCompiler(Noop{})
+        GenerateStructImplCpp::GenerateStructImplCpp() noexcept : IDLCompiler(Noop{})
         {
         }
 
         //-------------------------------------------------------------------
-        GenerateStructImplCppPtr GenerateStructImplCpp::create()
+        GenerateStructImplCppPtr GenerateStructImplCpp::create() noexcept
         {
           return make_shared<GenerateStructImplCpp>();
         }
@@ -91,13 +91,13 @@ namespace zsLib
         void GenerateStructImplCpp::generateUsingTypes(
                                                        std::stringstream &ss,
                                                        const String &indentStr
-                                                       )
+                                                       ) noexcept
         {
           return GenerateStructHeader::generateUsingTypes(ss, indentStr);
         }
 
         //-------------------------------------------------------------------
-        String GenerateStructImplCpp::getStructFileName(StructPtr structObj)
+        String GenerateStructImplCpp::getStructFileName(StructPtr structObj) noexcept
         {
           String result = String("impl_") + GenerateStructHeader::getStructFileName(structObj);
           result = result.substr(0, result.length() - 2);
@@ -106,19 +106,19 @@ namespace zsLib
         }
 
         //-------------------------------------------------------------------
-        String GenerateStructImplCpp::getStructInitName(StructPtr structObj)
+        String GenerateStructImplCpp::getStructInitName(StructPtr structObj) noexcept
         {
           return GenerateStructHeader::getStructInitName(structObj);
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructImplCpp::makeOptional(bool isOptional, const String &value)
+        String GenerateStructImplCpp::makeOptional(bool isOptional, const String &value) noexcept
         {
           return GenerateStructHeader::makeOptional(isOptional, value);
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructImplCpp::getWrapperTypeString(bool isOptional, TypePtr type)
+        String GenerateStructImplCpp::getWrapperTypeString(bool isOptional, TypePtr type) noexcept
         {
           return GenerateStructHeader::getWrapperTypeString(isOptional, type);
         }
@@ -129,7 +129,7 @@ namespace zsLib
                                                   StructPtr structObj,
                                                   std::stringstream &ss,
                                                   bool &foundEventHandler
-                                                  )
+                                                  ) noexcept
         {
           if (!structObj) return;
 
@@ -241,7 +241,7 @@ namespace zsLib
                                                           StructPtr structObj,
                                                           StringSet &includedHeaders,
                                                           std::stringstream &ss
-                                                          )
+                                                          ) noexcept
         {
           if (!structObj) return;
           if (GenerateHelper::isBuiltInType(structObj)) return;
@@ -302,18 +302,18 @@ namespace zsLib
         //-------------------------------------------------------------------
         //-------------------------------------------------------------------
         //-------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructImplCpp::IIDLCompilerTarget
-        #pragma mark
+        //
+        // GenerateStructImplCpp::IIDLCompilerTarget
+        //
 
         //-------------------------------------------------------------------
-        String GenerateStructImplCpp::targetKeyword()
+        String GenerateStructImplCpp::targetKeyword() noexcept
         {
           return String("impl");
         }
 
         //-------------------------------------------------------------------
-        String GenerateStructImplCpp::targetKeywordHelp()
+        String GenerateStructImplCpp::targetKeywordHelp() noexcept
         {
           return String("C++ implementation wrapper template");
         }
@@ -322,10 +322,10 @@ namespace zsLib
         void GenerateStructImplCpp::targetOutput(
                                                  const String &inPathStr,
                                                  const ICompilerTypes::Config &config
-                                                 ) throw (Failure)
+                                                 ) noexcept(false)
         {
           typedef std::stack<NamespacePtr> NamespaceStack;
-          typedef std::stack<String> StringList;
+          //typedef std::stack<String> StringStack;
 
           String pathStr(UseHelper::fixRelativeFilePath(inPathStr, String("wrapper")));
 

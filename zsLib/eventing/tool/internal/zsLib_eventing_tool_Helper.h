@@ -47,47 +47,47 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark Helper
-        #pragma mark
+        //
+        // Helper
+        //
 
         class Helper : public eventing::IHelper
         {
         public:
-          static String fileNameAfterPath(const String &filePath);
-          static String fixRelativeFilePath(const String &originalFileName, const String &newFileName);
+          static String fileNameAfterPath(const String &filePath) noexcept;
+          static String fixRelativeFilePath(const String &originalFileName, const String &newFileName) noexcept;
 
-          static bool isLikelyJSON(const char *p);
+          static bool isLikelyJSON(const char *p) noexcept;
 
           static bool skipEOL(
                               const char * &p,
                               ULONG *currentLine
-                              );
-          static void skipToEOL(const char * &p);
-          static bool skipWhitespaceExceptEOL(const char * &p);
+                              ) noexcept;
+          static void skipToEOL(const char * &p) noexcept;
+          static bool skipWhitespaceExceptEOL(const char * &p) noexcept;
           
           static bool skipCComments(
                                     const char * &p,
                                     ULONG *lineCount
-                                    );
+                                    ) noexcept;
           
-          static bool skipCPPComments(const char * &p);
+          static bool skipCPPComments(const char * &p) noexcept;
           
           static bool skipQuote(
                                 const char * &p,
                                 ULONG *currentLine
-                                );
+                                ) noexcept;
           
-          static bool isQuotes(const String &str);
+          static bool isQuotes(const String &str) noexcept;
 
           static String decodeCEscape(
                                       const char * &p,
                                       ULONG lineCount
-                                      ) throw (FailureWithLine);
+                                      ) noexcept(false); // throws FailureWithLine
           static String decodeQuotes(
                                      const String &str,
                                      ULONG lineCount
-                                     ) throw (FailureWithLine);
+                                     ) noexcept(false); // throws FailureWithLine
         };
 
       } // namespace internal

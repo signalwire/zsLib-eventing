@@ -47,9 +47,9 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateTypesHeader
-        #pragma mark
+        //
+        // GenerateTypesHeader
+        //
 
         struct GenerateTypesHeader : public IDLCompiler
         {

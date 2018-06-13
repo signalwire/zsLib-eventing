@@ -59,24 +59,24 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructMsidl::IDLFile
-        #pragma mark
+        //
+        // GenerateStructMsidl::IDLFile
+        //
 
         //---------------------------------------------------------------------
-        GenerateStructMsidl::IDLFile::IDLFile() :
+        GenerateStructMsidl::IDLFile::IDLFile() noexcept :
           structsNeedingInterface_(make_shared<StructSet>()),
           derives_(make_shared<NamePathStructSetMap>())
         {
         }
 
         //---------------------------------------------------------------------
-        GenerateStructMsidl::IDLFile::~IDLFile()
+        GenerateStructMsidl::IDLFile::~IDLFile() noexcept
         {
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructMsidl::IDLFile::import(const String &fileName)
+        void GenerateStructMsidl::IDLFile::import(const String &fileName) noexcept
         {
           auto &ss = importSS_;
 
@@ -92,13 +92,13 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool GenerateStructMsidl::IDLFile::isStructNeedingInterface(StructPtr structObj) const
+        bool GenerateStructMsidl::IDLFile::isStructNeedingInterface(StructPtr structObj) const noexcept
         {
           return (structsNeedingInterface_->end() != structsNeedingInterface_->find(structObj));
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructMsidl::IDLFile::finalize(std::stringstream &ss) const
+        void GenerateStructMsidl::IDLFile::finalize(std::stringstream &ss) const noexcept
         {
           ss << importSS_.str();
           ss << "\n";
@@ -112,24 +112,24 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructMsidl
-        #pragma mark
+        //
+        // GenerateStructMsidl
+        //
 
 
         //---------------------------------------------------------------------
-        GenerateStructMsidl::GenerateStructMsidl() : IDLCompiler(Noop{})
+        GenerateStructMsidl::GenerateStructMsidl() noexcept : IDLCompiler(Noop{})
         {
         }
 
         //---------------------------------------------------------------------
-        GenerateStructMsidlPtr GenerateStructMsidl::create()
+        GenerateStructMsidlPtr GenerateStructMsidl::create() noexcept
         {
           return make_shared<GenerateStructMsidl>();
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructMsidl::fixName(const String &originalName)
+        String GenerateStructMsidl::fixName(const String &originalName) noexcept
         {
           if (originalName.isEmpty()) return String();
           String firstLetter = originalName.substr(0, 1);
@@ -139,7 +139,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructMsidl::fixName(ContextPtr contextPtr)
+        String GenerateStructMsidl::fixName(ContextPtr contextPtr) noexcept
         {
           auto parent = contextPtr->getParent();
           if (!parent) return fixName(contextPtr->mName);
@@ -168,7 +168,7 @@ namespace zsLib
         String GenerateStructMsidl::fixNamePath(
                                                 ContextPtr context,
                                                 const GenerationOptions &options
-                                                )
+                                                ) noexcept
         {
           ContextList parents;
           while (context) {
@@ -218,7 +218,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructMsidl::toIdlType(BasicTypePtr basicType)
+        String GenerateStructMsidl::toIdlType(BasicTypePtr basicType) noexcept
         {
           switch (basicType->mBaseType) {
             case PredefinedTypedef_void:        return "void";
@@ -281,7 +281,7 @@ namespace zsLib
                                               IDLFile &idl,
                                               const GenerationOptions &options,
                                               BasicTypePtr basicType
-                                              )
+                                              ) noexcept
         {
           String result = toIdlType(basicType);
 
@@ -306,7 +306,7 @@ namespace zsLib
                                                     IDLFile &idl,
                                                     const GenerationOptions &options,
                                                     TypePtr type
-                                                    )
+                                                    ) noexcept
         {
           String result = fixNamePath(type, options);
           if (options.optional_) {
@@ -321,7 +321,7 @@ namespace zsLib
                                                     IDLFile &idl,
                                                     const GenerationOptions &options,
                                                     const String &typeName
-                                                    )
+                                                    ) noexcept
         {
           String result = typeName;
           if (options.optional_) {
@@ -336,7 +336,7 @@ namespace zsLib
                                               IDLFile &idl,
                                               const GenerationOptions &options,
                                               TypePtr type
-                                              )
+                                              ) noexcept
         {
           {
             auto basicType = type->toBasicType();
@@ -447,7 +447,7 @@ namespace zsLib
                                                                                StructSet &needingInterfaceSet,
                                                                                NamespacePtr namespaceObj,
                                                                                int scanPass
-                                                                               )
+                                                                               ) noexcept
         {
           if (namespaceObj->hasModifier(Modifier_Special)) return;
 
@@ -473,7 +473,7 @@ namespace zsLib
                                                                             StructSet &needingInterfaceSet,
                                                                             StructPtr structObj,
                                                                             int scanPass
-                                                                            )
+                                                                            ) noexcept
         {
           for (auto iter = structObj->mStructs.begin(); iter != structObj->mStructs.end(); ++iter)
           {
@@ -493,7 +493,8 @@ namespace zsLib
           }
 
           if (1 == scanPass) {
-            if (doesAnyRelationHaveInterface(needingInterfaceSet, structObj, StructSet{})) {
+            StructSet alreadyScanned;
+            if (doesAnyRelationHaveInterface(needingInterfaceSet, structObj, alreadyScanned)) {
               markAllRelatedStructsAsNeedingInterface(needingInterfaceSet, structObj);
             }
           }
@@ -501,10 +502,10 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         bool GenerateStructMsidl::doesAnyRelationHaveInterface(
-                                                               StructSet &needingInterfaceSet,
+                                                               const StructSet &needingInterfaceSet,
                                                                StructPtr structObj,
                                                                StructSet &alreadyScanned
-                                                               )
+                                                               ) noexcept
         {
           if (alreadyScanned.find(structObj) != alreadyScanned.end()) return false;
           alreadyScanned.insert(structObj);
@@ -526,7 +527,7 @@ namespace zsLib
         void GenerateStructMsidl::markAllRelatedStructsAsNeedingInterface(
                                                                           StructSet &needingInterfaceSet,
                                                                           StructPtr structObj
-                                                                          )
+                                                                          ) noexcept
         {
           if (needingInterfaceSet.find(structObj) != needingInterfaceSet.end()) return;
           needingInterfaceSet.insert(structObj);
@@ -546,7 +547,7 @@ namespace zsLib
         void GenerateStructMsidl::calculateRelations(
                                                      NamespacePtr namespaceObj,
                                                      NamePathStructSetMap &ioDerivesInfo
-                                                     )
+                                                     ) noexcept
         {
           if (!namespaceObj) return;
           for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter) {
@@ -563,7 +564,7 @@ namespace zsLib
         void GenerateStructMsidl::calculateRelations(
                                                      StructPtr structObj,
                                                      NamePathStructSetMap &ioDerivesInfo
-                                                     )
+                                                     ) noexcept
         {
           if (!structObj) return;
 
@@ -605,7 +606,7 @@ namespace zsLib
                                              StructPtr structObj,
                                              const NamePath &namePath,
                                              NamePathStructSetMap &ioDerivesInfo
-                                             )
+                                             ) noexcept
         {
           if (!structObj) return;
 
@@ -625,7 +626,7 @@ namespace zsLib
         bool GenerateStructMsidl::hasAnotherCtorWithSameNumberOfArguments(
                                                                           StructPtr structObj,
                                                                           MethodPtr currentCtor
-                                                                          )
+                                                                          ) noexcept
         {
           if (!structObj) return false;
           if (!currentCtor) return false;
@@ -648,7 +649,7 @@ namespace zsLib
                                                    IDLFile &forwardsIdl,
                                                    IDLFile &outputIdl,
                                                    NamespacePtr namespaceObj
-                                                   )
+                                                   ) noexcept
         {
           if (namespaceObj->hasModifier(Modifier_Special)) return;
 
@@ -726,7 +727,7 @@ namespace zsLib
                                                      ContextPtr context,
                                                      const String &indentStr,
                                                      std::stringstream &ss
-                                                     )
+                                                     ) noexcept
         {
           bool foundWebHidden {false};
 
@@ -751,7 +752,7 @@ namespace zsLib
                                                          ContextPtr context,
                                                          const String &indentStr,
                                                          std::stringstream &ss
-                                                         )
+                                                         ) noexcept
         {
           if (!context->hasModifier(Modifier_Obsolete)) return;
 
@@ -766,7 +767,7 @@ namespace zsLib
                                                          ContextPtr context,
                                                          const String &indentStr,
                                                          std::stringstream &ss
-                                                         )
+                                                         ) noexcept
         {
           if (!context->hasModifier(Modifier_AltName)) return;
 
@@ -782,7 +783,7 @@ namespace zsLib
                                                       ContextPtr context,
                                                       const String &indentStr,
                                                       std::stringstream &ss
-                                                      )
+                                                      ) noexcept
         {
           if (!context->hasModifier(Modifier_Method_Default)) return;
 
@@ -795,7 +796,7 @@ namespace zsLib
                                                 IDLFile &forwardsIdl,
                                                 IDLFile &outputIdl,
                                                 StructPtr structObj
-                                                )
+                                                ) noexcept
         {
           if (structObj->mTemplatedStructs.size() > 0) return;
 
@@ -830,7 +831,6 @@ namespace zsLib
           String &indentStr = outputIdl.indent_;
 
           bool requiresInterface = outputIdl.isStructNeedingInterface(structObj);
-          bool isDict = structObj->hasModifier(Modifier_Struct_Dictionary);
 
           IDLFile templateIDL;
           templateIDL.global_ = outputIdl.global_;
@@ -1014,7 +1014,7 @@ namespace zsLib
                                                     std::stringstream &ss,
                                                     std::stringstream &staticsSS,
                                                     bool &outFoundProperty
-                                                    )
+                                                    ) noexcept
         {
           outFoundProperty = false;
 
@@ -1088,7 +1088,7 @@ namespace zsLib
                                                  bool requiredInterface,
                                                  bool &outFoundMethod,
                                                  bool &outFoundCtor
-                                                 )
+                                                 ) noexcept
         {
           outFoundMethod = false;
 
@@ -1222,7 +1222,7 @@ namespace zsLib
 
             for (auto iterParam = method->mArguments.begin(); iterParam != method->mArguments.end(); ++iterParam) {
               auto &paramType = (*iterParam)->mType;
-              auto &paramName = fixName((*iterParam)->mName);
+              auto paramName = fixName((*iterParam)->mName);
 
               if (foundParam) {
                 useSS << ",";
@@ -1253,7 +1253,7 @@ namespace zsLib
                                               IDLFile &forwardsIdl,
                                               IDLFile &outputIdl,
                                               EnumTypePtr enumObj
-                                              )
+                                              ) noexcept
         {
           if (enumObj->hasModifier(Modifier_Special)) return;
 
@@ -1290,18 +1290,18 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructHeader::IIDLCompilerTarget
-        #pragma mark
+        //
+        // GenerateStructHeader::IIDLCompilerTarget
+        //
 
         //---------------------------------------------------------------------
-        String GenerateStructMsidl::targetKeyword()
+        String GenerateStructMsidl::targetKeyword() noexcept
         {
           return String("msidl");
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructMsidl::targetKeywordHelp()
+        String GenerateStructMsidl::targetKeywordHelp() noexcept
         {
           return String("Generate Microsoft IDL");
         }
@@ -1310,7 +1310,7 @@ namespace zsLib
         void GenerateStructMsidl::targetOutput(
                                                const String &inPathStr,
                                                const ICompilerTypes::Config &config
-                                               ) throw (Failure)
+                                               ) noexcept(false)
         {
           String pathStr(UseHelper::fixRelativeFilePath(inPathStr, String("wrapper")));
 

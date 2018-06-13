@@ -46,51 +46,51 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructHeader
-        #pragma mark
+        //
+        // GenerateStructHeader
+        //
 
         struct GenerateStructHeader : public IIDLCompilerTarget,
                                       public IDLCompiler
         {
           typedef std::set<String> StringSet;
 
-          GenerateStructHeader();
+          GenerateStructHeader() noexcept;
 
-          static GenerateStructHeaderPtr create();
+          static GenerateStructHeaderPtr create() noexcept;
 
-          static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure);
+          static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) noexcept(false); // throw Failure
           
           static void generateUsingTypes(
                                          std::stringstream &ss,
                                          const String &indentStr
-                                         );
+                                         ) noexcept;
 
-          static String getStructFileName(StructPtr structObj);
-          static String getStructInitName(StructPtr structObj);
+          static String getStructFileName(StructPtr structObj) noexcept;
+          static String getStructInitName(StructPtr structObj) noexcept;
 
-          static String makeOptional(bool isOptional, const String &value);
+          static String makeOptional(bool isOptional, const String &value) noexcept;
 
-          static String getWrapperTypeString(bool isOptional, TypePtr type);
+          static String getWrapperTypeString(bool isOptional, TypePtr type) noexcept;
           static void generateStruct(
                                      StructPtr structObj,
                                      String indentStr,
                                      StringSet &includedHeaders,
                                      std::stringstream &includeSS,
                                      std::stringstream &ss
-                                     );
+                                     ) noexcept;
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark GenerateStructHeader::IIDLCompilerTarget
-          #pragma mark
+          //
+          // GenerateStructHeader::IIDLCompilerTarget
+          //
 
           //-------------------------------------------------------------------
-          String targetKeyword() override;
-          String targetKeywordHelp() override;
+          String targetKeyword() noexcept override;
+          String targetKeywordHelp() noexcept override;
           void targetOutput(
                             const String &inPathStr,
                             const ICompilerTypes::Config &config
-                            ) throw (Failure) override;
+                            ) noexcept(false) override; // throws Failure
 
         };
          

@@ -60,23 +60,23 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructCppWinrt::HelperFile
-        #pragma mark
+        //
+        // GenerateStructCppWinrt::HelperFile
+        //
 
         //---------------------------------------------------------------------
-        GenerateStructCppWinrt::HelperFile::HelperFile() :
+        GenerateStructCppWinrt::HelperFile::HelperFile() noexcept :
           structsNeedingInterface_(make_shared<StructSet>())
         {
         }
 
         //---------------------------------------------------------------------
-        GenerateStructCppWinrt::HelperFile::~HelperFile()
+        GenerateStructCppWinrt::HelperFile::~HelperFile() noexcept
         {
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructCppWinrt::HelperFile::includeHeader(const String &headerFile)
+        void GenerateStructCppWinrt::HelperFile::includeHeader(const String &headerFile) noexcept
         {
           auto &ss = headerIncludeSS_;
 
@@ -87,7 +87,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructCppWinrt::HelperFile::includeCpp(const String &headerFile)
+        void GenerateStructCppWinrt::HelperFile::includeCpp(const String &headerFile) noexcept
         {
           auto &ss = cppIncludeSS_;
 
@@ -98,7 +98,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool GenerateStructCppWinrt::HelperFile::isStructNeedingInterface(StructPtr structObj) const
+        bool GenerateStructCppWinrt::HelperFile::isStructNeedingInterface(StructPtr structObj) const noexcept
         {
           return (structsNeedingInterface_->end() != structsNeedingInterface_->find(structObj));
         }
@@ -107,23 +107,23 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructCppWinrt::StructFile
-        #pragma mark
+        //
+        // GenerateStructCppWinrt::StructFile
+        //
 
         //---------------------------------------------------------------------
-        GenerateStructCppWinrt::StructFile::StructFile() :
+        GenerateStructCppWinrt::StructFile::StructFile() noexcept :
           structsNeedingInterface_(make_shared<StructSet>())
         {
         }
 
         //---------------------------------------------------------------------
-        GenerateStructCppWinrt::StructFile::~StructFile()
+        GenerateStructCppWinrt::StructFile::~StructFile() noexcept
         {
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructCppWinrt::StructFile::includeCpp(const String &headerFile)
+        void GenerateStructCppWinrt::StructFile::includeCpp(const String &headerFile) noexcept
         {
           auto &ss = cppIncludeSS_;
 
@@ -134,7 +134,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool GenerateStructCppWinrt::StructFile::isStructNeedingInterface(StructPtr structObj) const
+        bool GenerateStructCppWinrt::StructFile::isStructNeedingInterface(StructPtr structObj) const noexcept
         {
           return (structsNeedingInterface_->end() != structsNeedingInterface_->find(structObj));
         }
@@ -144,30 +144,30 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructCppWinrt
-        #pragma mark
+        //
+        // GenerateStructCppWinrt
+        //
 
 
         //-------------------------------------------------------------------
-        GenerateStructCppWinrt::GenerateStructCppWinrt() : IDLCompiler(Noop{})
+        GenerateStructCppWinrt::GenerateStructCppWinrt() noexcept : IDLCompiler(Noop{})
         {
         }
 
         //-------------------------------------------------------------------
-        GenerateStructCppWinrtPtr GenerateStructCppWinrt::create()
+        GenerateStructCppWinrtPtr GenerateStructCppWinrt::create() noexcept
         {
           return make_shared<GenerateStructCppWinrt>();
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::fixName(const String &originalName)
+        String GenerateStructCppWinrt::fixName(const String &originalName) noexcept
         {
           return GenerateStructMsidl::fixName(originalName);
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::fixNamePath(ContextPtr context)
+        String GenerateStructCppWinrt::fixNamePath(ContextPtr context) noexcept
         {
           ContextList parents;
           while (context) {
@@ -200,7 +200,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::fixNamePathNoPrefix(ContextPtr context)
+        String GenerateStructCppWinrt::fixNamePathNoPrefix(ContextPtr context) noexcept
         {
           String result = fixNamePath(context);
           if (0 != result.find("::")) return result;
@@ -208,7 +208,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::fixStructName(StructPtr structObj)
+        String GenerateStructCppWinrt::fixStructName(StructPtr structObj) noexcept
         {
           typedef std::list<StructPtr> StructList;
 
@@ -238,7 +238,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::fixMethodDeclaration(ContextPtr context)
+        String GenerateStructCppWinrt::fixMethodDeclaration(ContextPtr context) noexcept
         {
           String result = fixNamePath(context);
           if ("::" == result.substr(0, 2)) {
@@ -248,13 +248,13 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::fixMethodDeclaration(StructPtr derivedStruct, ContextPtr context)
+        String GenerateStructCppWinrt::fixMethodDeclaration(StructPtr derivedStruct, ContextPtr context) noexcept
         {
           return fixMethodDeclaration(derivedStruct, nullptr != context ? context->mName : String());
         }
         
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::fixMethodDeclaration(StructPtr derivedStruct, const String &name)
+        String GenerateStructCppWinrt::fixMethodDeclaration(StructPtr derivedStruct, const String &name) noexcept
         {
           String result = fixMethodDeclaration(derivedStruct);
           if (name.isEmpty()) return result;
@@ -267,7 +267,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::fixStructFileName(StructPtr structObj)
+        String GenerateStructCppWinrt::fixStructFileName(StructPtr structObj) noexcept
         {
           auto result = fixNamePath(structObj);
           result.replaceAll("::", ".");
@@ -276,7 +276,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::fixStructFileNameAsPath(StructPtr structObj)
+        String GenerateStructCppWinrt::fixStructFileNameAsPath(StructPtr structObj) noexcept
         {
           auto result = fixNamePath(structObj);
           result.replaceAll("::", "/");
@@ -285,13 +285,13 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::getStructInitName(StructPtr structObj)
+        String GenerateStructCppWinrt::getStructInitName(StructPtr structObj) noexcept
         {
           return GenerateStructHeader::getStructInitName(structObj);
         }
 
         //-------------------------------------------------------------------
-        String GenerateStructCppWinrt::getCppWinrtStructInitName(StructPtr structObj)
+        String GenerateStructCppWinrt::getCppWinrtStructInitName(StructPtr structObj) noexcept
         {
           String namePathStr = fixNamePath(structObj);
           namePathStr.replaceAll("::", "_");
@@ -300,7 +300,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::fixEnumName(EnumTypePtr enumObj)
+        String GenerateStructCppWinrt::fixEnumName(EnumTypePtr enumObj) noexcept
         {
           StructPtr structObj;
           auto parent = enumObj->getParent();
@@ -334,7 +334,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::fixArgumentName(const String &originalName)
+        String GenerateStructCppWinrt::fixArgumentName(const String &originalName) noexcept
         {
           if (originalName == "delegate") return "delegateValue";
           if (originalName == "event") return "eventValue";
@@ -347,7 +347,7 @@ namespace zsLib
                                                            std::stringstream &ss,
                                                            const String &inIndentStr,
                                                            NamespacePtr namespaceObj
-                                                           )
+                                                           ) noexcept
         {
           if (!namespaceObj) return;
           if (namespaceObj->hasModifier(Modifier_Special)) return;
@@ -441,7 +441,7 @@ namespace zsLib
                                                         const String &indentStr,
                                                         StructPtr structObj,
                                                         bool &firstFound
-                                                        )
+                                                        ) noexcept
         {
           if (!structObj) return;
           if (GenerateHelper::isBuiltInType(structObj)) return;
@@ -461,7 +461,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        SecureByteBlockPtr GenerateStructCppWinrt::generateTypesHeader(ProjectPtr project) throw (Failure)
+        SecureByteBlockPtr GenerateStructCppWinrt::generateTypesHeader(ProjectPtr project) noexcept(false)
         {
           std::stringstream iss;
           std::stringstream ss;
@@ -485,7 +485,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructCppWinrt::generateSpecialHelpers(HelperFile &helperFile)
+        void GenerateStructCppWinrt::generateSpecialHelpers(HelperFile &helperFile) noexcept
         {
           auto &derives = helperFile.derives_;
 
@@ -536,7 +536,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructCppWinrt::generateExceptionHelper(HelperFile &helperFile)
+        void GenerateStructCppWinrt::generateExceptionHelper(HelperFile &helperFile) noexcept
         {
           auto &ss = helperFile.headerStructSS_;
           auto dashedStr = GenerateHelper::getDashedComment(String());
@@ -564,7 +564,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructCppWinrt::generateBasicTypesHelper(HelperFile &helperFile)
+        void GenerateStructCppWinrt::generateBasicTypesHelper(HelperFile &helperFile) noexcept
         {
           auto &ss = helperFile.headerStructSS_;
           auto &cppSS = helperFile.cppBodySS_;
@@ -652,7 +652,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructCppWinrt::generateBinaryHelper(HelperFile &helperFile)
+        void GenerateStructCppWinrt::generateBinaryHelper(HelperFile &helperFile) noexcept
         {
           auto &ss = helperFile.headerStructSS_;
           auto &cppSS = helperFile.cppBodySS_;
@@ -702,7 +702,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructCppWinrt::generateStringHelper(HelperFile &helperFile)
+        void GenerateStructCppWinrt::generateStringHelper(HelperFile &helperFile) noexcept
         {
           auto &ss = helperFile.headerStructSS_;
           auto &cppSS = helperFile.cppBodySS_;
@@ -787,14 +787,12 @@ namespace zsLib
         void GenerateStructCppWinrt::generateDurationHelper(
                                                             HelperFile &helperFile,
                                                             const String &durationType
-                                                            )
+                                                            ) noexcept
         {
           auto &ss = helperFile.headerStructSS_;
           auto &cppSS = helperFile.cppBodySS_;
           auto &indentStr = helperFile.headerIndentStr_;
           auto dashedStr = GenerateHelper::getDashedComment(String());
-
-          bool isNanoseconds = "Nanoseconds" == durationType;
 
           ss << indentStr << "static Windows::Foundation::TimeSpan ToCppWinrt_" << durationType << "(const ::zsLib::" << durationType << " &value);\n";
           ss << indentStr << "static Windows::Foundation::IReference<Windows::Foundation::TimeSpan> ToCppWinrt_" << durationType << "(const Optional<::zsLib::" << durationType << "> &value);\n";
@@ -836,7 +834,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructCppWinrt::generateTimeHelper(HelperFile &helperFile)
+        void GenerateStructCppWinrt::generateTimeHelper(HelperFile &helperFile) noexcept
         {
           auto &ss = helperFile.headerStructSS_;
           auto &cppSS = helperFile.cppBodySS_;
@@ -882,7 +880,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructCppWinrt::generatePromiseHelper(HelperFile &helperFile)
+        void GenerateStructCppWinrt::generatePromiseHelper(HelperFile &helperFile) noexcept
         {
           //helperFile.includeHeader("<ppltasks.h>");
 
@@ -933,7 +931,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void GenerateStructCppWinrt::generatePromiseWithHelper(HelperFile &helperFile)
+        void GenerateStructCppWinrt::generatePromiseWithHelper(HelperFile &helperFile) noexcept
         {
           //helperFile.includeHeader("<ppltasks.h>");
 
@@ -1031,7 +1029,7 @@ namespace zsLib
         void GenerateStructCppWinrt::generateDefaultPromiseRejections(
                                                                       HelperFile &helperFile,
                                                                       const String &indentStr
-                                                                      )
+                                                                      ) noexcept
         {
           auto foundType = helperFile.global_->toContext()->findType("::zs::PromiseRejectionReason");
           if (foundType) {
@@ -1058,7 +1056,7 @@ namespace zsLib
                                                               HelperFile &helperFile,
                                                               const String &indentStr,
                                                               TypePtr rejectionType
-                                                              )
+                                                              ) noexcept
         {
           if (!rejectionType) return;
 
@@ -1079,7 +1077,7 @@ namespace zsLib
                                                           HelperFile &helperFile,
                                                           NamespacePtr namespaceObj,
                                                           const String &inIndentStr
-                                                          )
+                                                          ) noexcept
         {
           if (!namespaceObj) return;
 
@@ -1110,7 +1108,7 @@ namespace zsLib
                                                        HelperFile &helperFile,
                                                        StructPtr structObj,
                                                        const String &inIndentStr
-                                                       )
+                                                       ) noexcept
         {
           if (!structObj) return;
 
@@ -1146,7 +1144,7 @@ namespace zsLib
         void GenerateStructCppWinrt::generateForStandardStruct(
                                                                HelperFile &helperFile,
                                                                StructPtr structObj
-                                                               )
+                                                               ) noexcept
         {
           auto &ss = helperFile.headerStructSS_;
           auto &cppSS = helperFile.cppBodySS_;
@@ -1322,7 +1320,7 @@ namespace zsLib
         void GenerateStructCppWinrt::generateStructFile(
                                                         HelperFile &helperFile,
                                                         StructPtr structObj
-                                                        )
+                                                        ) noexcept
         {
           if (!structObj) return;
 
@@ -1795,7 +1793,7 @@ namespace zsLib
                                                            StructPtr structObj,
                                                            bool createConstructors,
                                                            bool hasEvents
-                                                           )
+                                                           ) noexcept
         {
           if (!structObj) return;
 
@@ -2141,7 +2139,7 @@ namespace zsLib
         void GenerateStructCppWinrt::generateForEnum(
                                                      HelperFile &helperFile,
                                                      EnumTypePtr enumObj
-                                                     )
+                                                     ) noexcept
         {
           auto &ss = helperFile.headerStructSS_;
           auto &cppSS = helperFile.cppBodySS_;
@@ -2178,7 +2176,7 @@ namespace zsLib
         void GenerateStructCppWinrt::generateForList(
                                                      HelperFile &helperFile,
                                                      StructPtr structObj
-                                                     )
+                                                     ) noexcept
         {
           //helperFile.includeHeader("<collection.h>");
 
@@ -2193,7 +2191,7 @@ namespace zsLib
 
             auto found = templatedStruct->mTemplateArguments.begin();
             if (found == templatedStruct->mTemplateArguments.end()) {
-              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Unexpected template missing type: \"" + templatedStruct->getPathName());
+              ZS_ASSERT_FAIL("unexpected template missing type");
             }
 
             TypePtr foundType = (*found);
@@ -2233,7 +2231,7 @@ namespace zsLib
         void GenerateStructCppWinrt::generateForMap(
                                                     HelperFile &helperFile,
                                                     StructPtr structObj
-                                                    )
+                                                    ) noexcept
         {
           //helperFile.includeHeader("<collection.h>");
 
@@ -2248,14 +2246,14 @@ namespace zsLib
 
             auto found = templatedStruct->mTemplateArguments.begin();
             if (found == templatedStruct->mTemplateArguments.end()) {
-              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Unexpected template missing type: \"" + templatedStruct->getPathName());
+              ZS_ASSERT_FAIL("unexpected template missing type");
             }
 
             TypePtr keyType = (*found);
 
             ++found;
             if (found == templatedStruct->mTemplateArguments.end()) {
-              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Unexpected template missing type: \"" + templatedStruct->getPathName());
+              ZS_ASSERT_FAIL("unexpected template missing type");
             }
             TypePtr valueType = (*found);
 
@@ -2295,7 +2293,7 @@ namespace zsLib
         void GenerateStructCppWinrt::generateForSet(
                                                     HelperFile &helperFile,
                                                     StructPtr structObj
-                                                    )
+                                                    ) noexcept
         {
           //helperFile.includeHeader("<collection.h>");
 
@@ -2310,7 +2308,7 @@ namespace zsLib
 
             auto found = templatedStruct->mTemplateArguments.begin();
             if (found == templatedStruct->mTemplateArguments.end()) {
-              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Unexpected template missing type: \"" + templatedStruct->getPathName());
+              ZS_ASSERT_FAIL("unexpected template missing type");
             }
 
             TypePtr keyType = (*found);
@@ -2348,7 +2346,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool GenerateStructCppWinrt::requiresSpecialConversion(IEventingTypes::PredefinedTypedefs basicType)
+        bool GenerateStructCppWinrt::requiresSpecialConversion(IEventingTypes::PredefinedTypedefs basicType) noexcept
         {
           switch (basicType) {
             case IEventingTypes::PredefinedTypedef_void:      
@@ -2366,7 +2364,7 @@ namespace zsLib
         String GenerateStructCppWinrt::getBasicCppWinrtTypeString(
                                                                   IEventingTypes::PredefinedTypedefs basicType,
                                                                   const GenerationOptions &options
-                                                                  )
+                                                                  ) noexcept
         {
           switch (basicType) {
             case IEventingTypes::PredefinedTypedef_void:      return "void";
@@ -2428,7 +2426,7 @@ namespace zsLib
         String GenerateStructCppWinrt::getBasicCppWinrtTypeString(
                                                                   BasicTypePtr type,
                                                                   const GenerationOptions &options
-                                                                  )
+                                                                  ) noexcept
         {
           if (!type) return String();
 
@@ -2436,27 +2434,27 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::makeCppWinrtOptional(const String &value, const GenerationOptions &options)
+        String GenerateStructCppWinrt::makeCppWinrtOptional(const String &value, const GenerationOptions &options) noexcept
         {
           if (!options.getOptional()) return value;
           return "Windows::Foundation::IReference< " + value + " >";
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::makeCppWinrtReference(const String &value, const GenerationOptions &options)
+        String GenerateStructCppWinrt::makeCppWinrtReference(const String &value, const GenerationOptions &options) noexcept
         {
           if (!options.getReference()) return value;
           return value + " const &";
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::makeCppWinrtReferenceAndOptional(const String &value, const GenerationOptions &options)
+        String GenerateStructCppWinrt::makeCppWinrtReferenceAndOptional(const String &value, const GenerationOptions &options) noexcept
         {
           return makeCppWinrtReference(makeCppWinrtOptional(value, options), options);
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::makeCppWinrtReferenceAndOptionalIfOptional(const String &value, const GenerationOptions &options)
+        String GenerateStructCppWinrt::makeCppWinrtReferenceAndOptionalIfOptional(const String &value, const GenerationOptions &options) noexcept
         {
           if (!options.getOptional()) return value;
           if (!options.getReference()) return makeCppWinrtOptional(value, options);
@@ -2467,7 +2465,7 @@ namespace zsLib
         String GenerateStructCppWinrt::getCppType(
                                                   TypePtr type,
                                                   const GenerationOptions &options
-                                                  )
+                                                  ) noexcept
         {
           return GenerateStructHeader::getWrapperTypeString(options.isOptional(), type);
         }
@@ -2476,7 +2474,7 @@ namespace zsLib
                                                        const HelperFile &helperFile,
                                                        TypePtr type,
                                                        const GenerationOptions &options
-                                                       )
+                                                       ) noexcept
         {
           return getCppWinrtType(type, *helperFile.structsNeedingInterface_, options);
         }
@@ -2486,7 +2484,7 @@ namespace zsLib
                                                        TypePtr type,
                                                        const StructSet &structsNeedingInterface,
                                                        const GenerationOptions &options
-                                                       )
+                                                       ) noexcept
         {
           if (!type) return String();
 
@@ -2495,7 +2493,7 @@ namespace zsLib
           {
             auto typedefType = type->toTypedefType();
             if (typedefType) {
-              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Typedef failed to resolve to original type: " + typedefType->getPathName());
+              ZS_ASSERT_FAIL("typedef failed to resolve to original type");
             }
           }
 
@@ -2606,7 +2604,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::getCppWinrtResultTypeInitializer(TypePtr type)
+        String GenerateStructCppWinrt::getCppWinrtResultTypeInitializer(TypePtr type) noexcept
         {
           if (!type) return String();
 
@@ -2617,7 +2615,7 @@ namespace zsLib
           {
             auto typedefType = type->toTypedefType();
             if (typedefType) {
-              ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_INVALID_CONTENT, "Typedef failed to resolve to original type: " + typedefType->getPathName());
+              ZS_ASSERT_FAIL("typedef failed to resolve to original type");
             }
           }
 
@@ -2667,7 +2665,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::getCppWinrtAttributes(const StringList &attributes)
+        String GenerateStructCppWinrt::getCppWinrtAttributes(const StringList &attributes) noexcept
         {
           if (attributes.size() < 1) return String();
 
@@ -2692,7 +2690,7 @@ namespace zsLib
         String GenerateStructCppWinrt::getCppWinrtAttributesLine(
                                                                  const String &linePrefix,
                                                                  const StringList &attributes
-                                                                 )
+                                                                 ) noexcept
         {
           if (attributes.size() < 1) return String();
           return linePrefix + getCppWinrtAttributes(attributes) + "\n";
@@ -2706,7 +2704,7 @@ namespace zsLib
                                                              const String &prefixName,
                                                              const String &prefixNameIfImpl,
                                                              const String &prefixIfInterface
-                                                             )
+                                                             ) noexcept
         {
           if (!type) return prefixName;
 
@@ -2787,7 +2785,7 @@ namespace zsLib
                                                          TypePtr type,
                                                          const StructSet &structsNeedingInterface,
                                                          const GenerationOptions &options
-                                                         )
+                                                         ) noexcept
         {
           if (!type) return "ToCppWinrt_";
           return getToFromCppWinrtName(type, structsNeedingInterface, options, "ToCppWinrt_", "ToCppWinrtImpl_", "ToCppWinrtInterface_");
@@ -2798,25 +2796,25 @@ namespace zsLib
                                                          const HelperFile &helperFile,
                                                          TypePtr type,
                                                          const GenerationOptions &options
-                                                         )
+                                                         ) noexcept
         {
           return getToCppWinrtName(type, *helperFile.structsNeedingInterface_, options);
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::getFromCppWinrtName(TypePtr type)
+        String GenerateStructCppWinrt::getFromCppWinrtName(TypePtr type) noexcept
         {
           if (!type) return "FromCppWinrt_";
           return getToFromCppWinrtName(type, StructSet{}, GO::MakeCppBaseType(), "FromCppWinrt_", "FromCppWinrt_", "FromCppWinrt_");
         }
 
         //---------------------------------------------------------------------
-        GenerateStructCppWinrt::IncludeProcessedInfo::IncludeProcessedInfo()
+        GenerateStructCppWinrt::IncludeProcessedInfo::IncludeProcessedInfo() noexcept
         {
         }
 
         //---------------------------------------------------------------------
-        GenerateStructCppWinrt::IncludeProcessedInfo::~IncludeProcessedInfo()
+        GenerateStructCppWinrt::IncludeProcessedInfo::~IncludeProcessedInfo() noexcept
         {
         }
 
@@ -2824,7 +2822,7 @@ namespace zsLib
         void GenerateStructCppWinrt::includeCppForType(
                                                        StructFile &structFile,
                                                        TypePtr type
-                                                       )
+                                                       ) noexcept
         {
           IncludeProcessedInfo info;
           includeCppForType(info, structFile, type);
@@ -2835,7 +2833,7 @@ namespace zsLib
                                                        IncludeProcessedInfo &processed,
                                                        StructFile &structFile,
                                                        TypePtr type
-                                                       )
+                                                       ) noexcept
         {
           if (!type) return;
 
@@ -2899,7 +2897,7 @@ namespace zsLib
                                                                    IncludeProcessedInfo &processed,
                                                                    StructFile &structFile,
                                                                    StructPtr structObj
-                                                                   )
+                                                                   ) noexcept
         {
           if (!structObj) return;
 
@@ -2955,7 +2953,7 @@ namespace zsLib
                                                                    IncludeProcessedInfo &processed,
                                                                    StructFile &structFile,
                                                                    TemplatedStructTypePtr templatedStructObj
-                                                                   )
+                                                                   ) noexcept
         {
           if (!templatedStructObj) return;
 
@@ -2987,18 +2985,18 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructHeader::IIDLCompilerTarget
-        #pragma mark
+        //
+        // GenerateStructHeader::IIDLCompilerTarget
+        //
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::targetKeyword()
+        String GenerateStructCppWinrt::targetKeyword() noexcept
         {
           return String("cppwinrt");
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::targetKeywordHelp()
+        String GenerateStructCppWinrt::targetKeywordHelp() noexcept
         {
           return String("Generate CPP/WINRT UWP wrapper");
         }
@@ -3007,10 +3005,9 @@ namespace zsLib
         void GenerateStructCppWinrt::targetOutput(
                                                   const String &inPathStr,
                                                   const ICompilerTypes::Config &config
-                                                  ) throw (Failure)
+                                                  ) noexcept(false)
         {
           typedef std::stack<NamespacePtr> NamespaceStack;
-          typedef std::stack<String> StringList;
 
           String pathStr(UseHelper::fixRelativeFilePath(inPathStr, String("wrapper")));
 

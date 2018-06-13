@@ -67,23 +67,23 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateJson
-        #pragma mark
+        //
+        // GenerateJson
+        //
 
         //-------------------------------------------------------------------
-        GenerateJson::GenerateJson() : IDLCompiler(Noop{})
+        GenerateJson::GenerateJson() noexcept : IDLCompiler(Noop{})
         {
         }
 
         //-------------------------------------------------------------------
-        GenerateJsonPtr GenerateJson::create()
+        GenerateJsonPtr GenerateJson::create() noexcept
         {
           return make_shared<GenerateJson>();
         }
 
         //---------------------------------------------------------------------
-        SecureByteBlockPtr GenerateJson::generateJson(ProjectPtr project) throw (Failure)
+        SecureByteBlockPtr GenerateJson::generateJson(ProjectPtr project) noexcept(false)
         {
           std::stringstream ss;
 
@@ -100,18 +100,18 @@ namespace zsLib
         //-------------------------------------------------------------------
         //-------------------------------------------------------------------
         //-------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateJson::IIDLCompilerTarget
-        #pragma mark
+        //
+        // GenerateJson::IIDLCompilerTarget
+        //
 
         //-------------------------------------------------------------------
-        String GenerateJson::targetKeyword()
+        String GenerateJson::targetKeyword() noexcept
         {
           return String("json");
         }
 
         //-------------------------------------------------------------------
-        String GenerateJson::targetKeywordHelp()
+        String GenerateJson::targetKeywordHelp() noexcept
         {
           return String("Generic JSON output");
         }
@@ -120,10 +120,9 @@ namespace zsLib
         void GenerateJson::targetOutput(
                                         const String &inPathStr,
                                         const ICompilerTypes::Config &config
-                                        ) throw (Failure)
+                                        ) noexcept(false)
         {
           typedef std::stack<NamespacePtr> NamespaceStack;
-          typedef std::stack<String> StringList;
 
           String pathStr(UseHelper::fixRelativeFilePath(inPathStr, String("wrapper")));
 

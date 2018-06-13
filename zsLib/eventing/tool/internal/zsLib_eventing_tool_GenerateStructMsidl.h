@@ -48,9 +48,9 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructMsidl
-        #pragma mark
+        //
+        // GenerateStructMsidl
+        //
 
         struct GenerateStructMsidl : public IIDLCompilerTarget,
                                      public IDLCompiler
@@ -69,8 +69,8 @@ namespace zsLib
           {
             NamespacePtr global_;
 
-            IDLFile();
-            ~IDLFile();
+            IDLFile() noexcept;
+            ~IDLFile() noexcept;
 
             String indent_;
 
@@ -85,155 +85,155 @@ namespace zsLib
             StructSetPtr structsNeedingInterface_;
             NamePathStructSetMapPtr derives_;
 
-            void import(const String &file);
-            bool isStructNeedingInterface(StructPtr structObj) const;
+            void import(const String &file) noexcept;
+            bool isStructNeedingInterface(StructPtr structObj) const noexcept;
 
-            void finalize(std::stringstream &ss) const;
+            void finalize(std::stringstream &ss) const noexcept;
           };
 
           struct GenerationOptions
           {
             struct Optional {
-              Optional(bool value) : value_(value) {}
-              operator bool() const { return value_; }
+              Optional(bool value) noexcept : value_(value) {}
+              operator bool() const noexcept { return value_; }
               bool value_{};
             };
             struct Interface {
-              Interface(bool value) : value_(value) {}
-              operator bool() const { return value_; }
+              Interface(bool value) noexcept : value_(value) {}
+              operator bool() const noexcept { return value_; }
               bool value_{};
             };
 
-            GenerationOptions() {}
-            GenerationOptions(const Optional &value) : optional_(value) {}
-            GenerationOptions(const Interface &value) : interface_(value) {}
+            GenerationOptions() noexcept {}
+            GenerationOptions(const Optional &value) noexcept : optional_(value) {}
+            GenerationOptions(const Interface &value) noexcept : interface_(value) {}
             GenerationOptions(
-              const Optional &value1,
-              const Interface &value2
-            ) : optional_(value1), interface_(value2) {}
+                              const Optional &value1,
+                              const Interface &value2
+                              ) noexcept : optional_(value1), interface_(value2) {}
 
             bool optional_ {false};
             bool interface_ {false};
           };
 
-          GenerateStructMsidl();
+          GenerateStructMsidl() noexcept;
 
-          static GenerateStructMsidlPtr create();
+          static GenerateStructMsidlPtr create() noexcept;
 
-          static String fixName(const String &originalName);
-          static String fixName(ContextPtr structObj);
+          static String fixName(const String &originalName) noexcept;
+          static String fixName(ContextPtr structObj) noexcept;
           static String fixNamePath(
                                     ContextPtr context,
                                     const GenerationOptions &options
-                                    );
-          static String toIdlType(BasicTypePtr basicType);
+                                    ) noexcept;
+          static String toIdlType(BasicTypePtr basicType) noexcept;
           static String toIdlType(
                                   IDLFile &idl,
                                   const GenerationOptions &options,
                                   BasicTypePtr basicType
-                                  );
+                                  ) noexcept;
           static String toIdlSimpleType(
                                         IDLFile &idl,
                                         const GenerationOptions &options,
                                         TypePtr type
-                                        );
+                                        ) noexcept;
           static String toIdlSimpleType(
                                         IDLFile &idl,
                                         const GenerationOptions &options,
                                         const String &typeName
-                                        );
+                                        ) noexcept;
           static String toIdlType(
                                   IDLFile &idl,
                                   const GenerationOptions &options,
                                   TypePtr type
-                                  );
+                                  ) noexcept;
 
           static void fixHiddenAttribute(
                                          IDLFile &idl,
                                          ContextPtr context,
                                          const String &indentStr,
                                          std::stringstream &ss
-                                         );
+                                         ) noexcept;
           static void fixDeprecatedAttribute(
                                              IDLFile &idl,
                                              ContextPtr context,
                                              const String &indentStr,
                                              std::stringstream &ss
-                                             );
+                                             ) noexcept;
           static void fixMethodNameAttribute(
                                              IDLFile &idl,
                                              ContextPtr context,
                                              const String &indentStr,
                                              std::stringstream &ss
-                                             );
+                                             ) noexcept;
           static void fixDefaultAttribute(
                                           IDLFile &idl,
                                           ContextPtr context,
                                           const String &indentStr,
                                           std::stringstream &ss
-                                          );
+                                          ) noexcept;
 
           static void scanNamespaceForStructsNeedingToBeInterfaces(
                                                                    StructSet &needingInterfaceSet,
                                                                    NamespacePtr namespaceObj,
                                                                    int scanPass = 0
-                                                                   );
+                                                                   ) noexcept;
 
           static void scanStructForStructsNeedingToBeInterfaces(
                                                                 StructSet &needingInterfaceSet,
                                                                 StructPtr structObj,
                                                                 int scanPass
-                                                                );
+                                                                ) noexcept;
 
           static bool doesAnyRelationHaveInterface(
-                                                   StructSet &needingInterfaceSet,
+                                                   const StructSet &needingInterfaceSet,
                                                    StructPtr structObj,
                                                    StructSet &alreadyScanned
-                                                   );
+                                                   ) noexcept;
 
           static void markAllRelatedStructsAsNeedingInterface(
                                                               StructSet &needingInterfaceSet,
                                                               StructPtr structObj
-                                                              );
+                                                              ) noexcept;
           
           static void calculateRelations(
                                          NamespacePtr namespaceObj,
                                          NamePathStructSetMap &ioDerivesInfo
-                                         );
+                                         ) noexcept;
           static void calculateRelations(
                                          StructPtr structObj,
                                          NamePathStructSetMap &ioDerivesInfo
-                                         );
+                                         ) noexcept;
           
           static void insertInto(
                                  StructPtr structObj,
                                  const NamePath &namePath,
                                  NamePathStructSetMap &ioDerivesInfo
-                                 );
+                                 ) noexcept;
 
           static bool hasAnotherCtorWithSameNumberOfArguments(
                                                               StructPtr structObj,
                                                               MethodPtr currentCtor
-                                                              );
+                                                              ) noexcept;
 
           void processNamespace(
                                 IDLFile &forwardIdl,
                                 IDLFile &outputIdl,
                                 NamespacePtr namespaceObj
-                                );
+                                ) noexcept;
 
           void processStruct(
                              IDLFile &forwardIdl,
                              IDLFile &outputIdl,
                              StructPtr structObj
-                             );
+                             ) noexcept;
           void processProperties(
                                  IDLFile &idl,
                                  StructPtr structObj,
                                  std::stringstream &ss,
                                  std::stringstream &staticsSS,
                                  bool &outFoundProperty
-                                 );
+                                 ) noexcept;
           void processMethods(
                               IDLFile &idl,
                               StructPtr structObj,
@@ -245,26 +245,26 @@ namespace zsLib
                               bool requiredInterface,
                               bool &outFoundMethod,
                               bool &outFoundCtor
-                              );
+                              ) noexcept;
 
           void processEnum(
                            IDLFile &forwardIdl,
                            IDLFile &outputIdl,
                            EnumTypePtr enumObj
-                           );
+                           ) noexcept;
 
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark GenerateStructMsidl::IIDLCompilerTarget
-          #pragma mark
+          //
+          // GenerateStructMsidl::IIDLCompilerTarget
+          //
 
           //-------------------------------------------------------------------
-          String targetKeyword() override;
-          String targetKeywordHelp() override;
+          String targetKeyword() noexcept override;
+          String targetKeywordHelp() noexcept override;
           void targetOutput(
                             const String &inPathStr,
                             const ICompilerTypes::Config &config
-                            ) throw (Failure) override;
+                            ) noexcept(false) override; // throws Failure
         };
          
       } // namespace internal

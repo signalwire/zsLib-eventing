@@ -45,22 +45,22 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructImplHeader
-        #pragma mark
+        //
+        // GenerateStructImplHeader
+        //
 
         struct GenerateStructImplHeader : public IIDLCompilerTarget,
                                           public IDLCompiler
         {
           typedef std::set<String> StringSet;
 
-          GenerateStructImplHeader();
-          static GenerateStructImplHeaderPtr create();
-          static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure);
-          static String getStructFileName(StructPtr structObj);
-          static String getStructInitName(StructPtr structObj);
-          static String makeOptional(bool isOptional, const String &value);
-          static String getWrapperTypeString(bool isOptional, TypePtr type);
+          GenerateStructImplHeader() noexcept;
+          static GenerateStructImplHeaderPtr create() noexcept;
+          static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) noexcept(false); // throws Failure
+          static String getStructFileName(StructPtr structObj) noexcept;
+          static String getStructInitName(StructPtr structObj) noexcept;
+          static String makeOptional(bool isOptional, const String &value) noexcept;
+          static String getWrapperTypeString(bool isOptional, TypePtr type) noexcept;
           static void outputMethods(
                                     StructPtr derivedStructObj,
                                     StructPtr structObj,
@@ -68,19 +68,19 @@ namespace zsLib
                                     std::stringstream &ss,
                                     bool needsDefaultConstructor,
                                     bool &foundEventHandler
-                                    );
+                                    ) noexcept;
           static void generateStructHeaderImpl(
                                                StructPtr structObj,
                                                String indentStr,
                                                StringSet &includedHeaders,
                                                std::stringstream &ss
-                                               );
-          String targetKeyword() override;
-          String targetKeywordHelp() override;
+                                               ) noexcept;
+          String targetKeyword() noexcept override;
+          String targetKeywordHelp() noexcept override;
           void targetOutput(
                             const String &pathStr,
                             const ICompilerTypes::Config &config
-                            ) throw (Failure) override;
+                            ) noexcept(false) override; // throws Failure
         };
 
       } // namespace internal

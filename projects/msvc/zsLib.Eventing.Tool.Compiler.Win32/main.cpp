@@ -40,8 +40,6 @@ BOOL WINAPI CtrlHandler(DWORD fdwCtrlType)
 
 int main(int argc, char * const argv[])
 {
-  int result = 0;
-
   ICommandLine::StringList arguments;
 
   if (argc > 0) {

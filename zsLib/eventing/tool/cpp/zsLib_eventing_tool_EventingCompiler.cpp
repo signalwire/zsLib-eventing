@@ -119,9 +119,9 @@ namespace zsLib
         //-----------------------------------------------------------------------
         //-----------------------------------------------------------------------
         //-----------------------------------------------------------------------
-        #pragma mark
-        #pragma mark Helpers
-        #pragma mark
+        //
+        // Helpers
+        //
 
         struct ParseState
         {
@@ -132,7 +132,7 @@ namespace zsLib
         };
 
         //-----------------------------------------------------------------------
-        static ICompilerTypes::Config &prepareProvider(ICompilerTypes::Config &config)
+        static ICompilerTypes::Config &prepareProvider(ICompilerTypes::Config &config) noexcept
         {
           if (config.mProvider) return config;
           config.mProvider = Provider::create();
@@ -140,7 +140,7 @@ namespace zsLib
         }
 
         //-----------------------------------------------------------------------
-        static bool isNumber(const char *p)
+        static bool isNumber(const char *p) noexcept
         {
           while ('\0' != *p)
           {
@@ -154,7 +154,7 @@ namespace zsLib
         static bool skipPreprocessorDirective(
                                               const char * &p,
                                               ULONG *currentLine
-                                              )
+                                              ) noexcept
         {
           if ('#' != *p) return false;
 
@@ -170,7 +170,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        static String getEventingLine(ParseState &state) throw (InvalidContentWithLine)
+        static String getEventingLine(ParseState &state) noexcept(false) // throws InvalidContentWithLine
         {
           auto prefixLength = strlen(ZS_EVENTING_PREFIX);
           state.mStartOfLineCount = 0;
@@ -261,7 +261,7 @@ namespace zsLib
                               String &outMethod,
                               ArgumentMap &outArguments,
                               ULONG lineCount
-                              ) throw (InvalidContentWithLine)
+                              ) noexcept(false) // throws InvalidContentWithLine
         {
           ZS_DECLARE_TYPEDEF_PTR(std::stringstream, StringStream);
 
@@ -389,7 +389,7 @@ namespace zsLib
                            IndexSet &indexes,
                            size_t index,
                            bool throwIfFound = true
-                           ) throw (InvalidArgument)
+                           ) noexcept(false) // throws InvalidArgument
         {
           if (0 == index) return false;
 
@@ -410,7 +410,7 @@ namespace zsLib
                              Index64Set &indexes,
                              uint64_t index,
                              bool throwIfFound = true
-                             ) throw (InvalidArgument)
+                             ) noexcept(false) // throws InvalidArgument
         {
           if (0 == index) return false;
 
@@ -427,7 +427,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        static String toSymbol(const String &str)
+        static String toSymbol(const String &str) noexcept
         {
           String temp(str);
           temp.replaceAll("-", "_");
@@ -438,7 +438,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        static ElementPtr createStringEl(const String &id, const char *value)
+        static ElementPtr createStringEl(const String &id, const char *value) noexcept
         {
           ElementPtr stringEl = Element::create("string");
           stringEl->setAttribute("id", id);
@@ -447,7 +447,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        static ElementPtr createDataEl(const String &inType, const char *name)
+        static ElementPtr createDataEl(const String &inType, const char *name) noexcept
         {
           ElementPtr dataEl = Element::create("data");
           dataEl->setAttribute("inType", "win:" + inType);
@@ -456,7 +456,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        static void addEOL(NodePtr parentEl)
+        static void addEOL(NodePtr parentEl) noexcept
         {
           auto text = Text::create();
           text->setValue("\n");
@@ -467,21 +467,21 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark EventingCompiler
-        #pragma mark
+        //
+        // EventingCompiler
+        //
 
         //---------------------------------------------------------------------
         EventingCompiler::EventingCompiler(
                                            const make_private &,
                                            const Config &config
-                                           ) :
+                                           ) noexcept :
           mConfig(config)
         {
         }
 
         //---------------------------------------------------------------------
-        EventingCompiler::~EventingCompiler()
+        EventingCompiler::~EventingCompiler() noexcept
         {
         }
 
@@ -489,12 +489,12 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark EventingCompiler => ICompiler
-        #pragma mark
+        //
+        // EventingCompiler => ICompiler
+        //
 
         //---------------------------------------------------------------------
-        EventingCompilerPtr EventingCompiler::create(const Config &config)
+        EventingCompilerPtr EventingCompiler::create(const Config &config) noexcept
         {
           EventingCompilerPtr pThis(std::make_shared<EventingCompiler>(make_private{}, config));
           pThis->mThisWeak = pThis;
@@ -502,7 +502,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void EventingCompiler::process() throw (Failure, FailureWithLine)
+        void EventingCompiler::process() noexcept(false) // throws Failure, FailureWithLine
         {
           outputMacros();
           read();
@@ -526,12 +526,12 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark EventingCompiler => (internal)
-        #pragma mark
+        //
+        // EventingCompiler => (internal)
+        //
 
         //---------------------------------------------------------------------
-        void EventingCompiler::outputMacros()
+        void EventingCompiler::outputMacros() noexcept
         {
 #if 0
           //#define ZS_EVENTING_1(xSubsystem, xSeverity, xLevel, xSymbol, xChannelID, xTaskID, xOpCode, xType1, xName1, xValue1)
@@ -604,7 +604,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void EventingCompiler::read() throw (Failure, FailureWithLine)
+        void EventingCompiler::read() noexcept(false) // throws Failure, FailureWithLine
         {
           typedef std::set<String> NameSet;
 
@@ -1322,7 +1322,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void EventingCompiler::prepareIndex() throw (Failure)
+        void EventingCompiler::prepareIndex() noexcept(false)
         {
           if (!mConfig.mProvider) return;
 
@@ -1527,7 +1527,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void EventingCompiler::validate() throw (Failure)
+        void EventingCompiler::validate() noexcept(false)
         {
           ProviderPtr &provider = mConfig.mProvider;
           if (!provider) return;
@@ -1538,7 +1538,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        DocumentPtr EventingCompiler::generateManifest(const String &resourcePostFix) const throw (Failure)
+        DocumentPtr EventingCompiler::generateManifest(const String &resourcePostFix) const noexcept(false)
         {
           const ProviderPtr &provider = mConfig.mProvider;
 
@@ -2017,7 +2017,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        DocumentPtr EventingCompiler::generateWprp() const throw (Failure)
+        DocumentPtr EventingCompiler::generateWprp() const noexcept(false)
         {
           const ProviderPtr &provider = mConfig.mProvider;
 
@@ -2275,7 +2275,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        DocumentPtr EventingCompiler::generateJsonMan() const throw (Failure)
+        DocumentPtr EventingCompiler::generateJsonMan() const noexcept(false)
         {
           DocumentPtr doc = Document::create();
           ElementPtr providerEl = mConfig.mProvider->createElement();
@@ -2287,7 +2287,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        static const char *getFunctions()
+        static const char *getFunctions() noexcept
         {
           static const char *functions =
           "\n";
@@ -2297,10 +2297,12 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         SecureByteBlockPtr EventingCompiler::generateXPlatformEventsHeader(
-                                                                           const String &outputNameXPlatform,
-                                                                           const String &outputNameWindows
-                                                                           ) const throw (Failure)
+                                                                           ZS_MAYBE_USED() const String &outputNameXPlatform,
+                                                                           ZS_MAYBE_USED() const String &outputNameWindows
+                                                                           ) const noexcept(false)
         {
+          ZS_MAYBE_USED(outputNameXPlatform);
+          ZS_MAYBE_USED(outputNameWindows);
           std::stringstream ss;
 
           const ProviderPtr &provider = mConfig.mProvider;
@@ -2694,11 +2696,13 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         SecureByteBlockPtr EventingCompiler::generateWindowsEventsHeader(
-                                                                         const String &outputNameXPlatform,
-                                                                         const String &outputNameWindows,
+                                                                         ZS_MAYBE_USED() const String &outputNameXPlatform,
+                                                                         ZS_MAYBE_USED() const String &outputNameWindows,
                                                                          const String &outputNameWindowsETW
-                                                                         ) const throw (Failure)
+                                                                         ) const noexcept(false)
         {
+          ZS_MAYBE_USED(outputNameXPlatform);
+          ZS_MAYBE_USED(outputNameWindows);
           std::stringstream ss;
 
           const ProviderPtr &provider = mConfig.mProvider;
@@ -3017,7 +3021,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void EventingCompiler::writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure)
+        void EventingCompiler::writeXML(const String &outputName, const DocumentPtr &doc) const noexcept(false)
         {
           if (!doc) return;
           try {
@@ -3033,9 +3037,9 @@ namespace zsLib
                                                             std::stringstream &ssPrefix,
                                                             std::stringstream &ssPostFix,
                                                             const SecureByteBlock &buffer
-                                                            )
+                                                            ) noexcept
         {
-          ZS_THROW_INVALID_ASSUMPTION_IF(sizeof(char) != sizeof(BYTE));
+          static_assert(sizeof(char) == sizeof(BYTE), "size of char assumed to be size of byte");
 
           if (buffer.SizeInBytes() < 1) return SecureByteBlockPtr();
 
@@ -3183,7 +3187,7 @@ namespace zsLib
                                          const String &outputName,
                                          const String &outputAsCName,
                                          const DocumentPtr &doc
-                                         ) const throw (Failure)
+                                         ) const noexcept(false)
         {
           if (!doc) return;
 
@@ -3211,7 +3215,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void EventingCompiler::writeBinary(const String &outputName, const SecureByteBlockPtr &buffer) const throw (Failure)
+        void EventingCompiler::writeBinary(const String &outputName, const SecureByteBlockPtr &buffer) const noexcept(false)
         {
           if ((!buffer) ||
               (0 == buffer->SizeInBytes())) {
@@ -3231,12 +3235,12 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark ICompilerTypes
-      #pragma mark
+      //
+      // ICompilerTypes
+      //
 
       //-----------------------------------------------------------------------
-      ICompilerTypes::Modes ICompilerTypes::toMode(const char *value) throw (InvalidArgument)
+      ICompilerTypes::Modes ICompilerTypes::toMode(const char *value) noexcept(false)
       {
         String str(value);
         for (ICompilerTypes::Modes index = ICompilerTypes::Mode_First; index <= ICompilerTypes::Mode_Last; index = static_cast<ICompilerTypes::Modes>(static_cast<std::underlying_type<ICompilerTypes::Modes>::type>(index) + 1)) {
@@ -3248,13 +3252,14 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      const char *ICompilerTypes::toString(Modes value)
+      const char *ICompilerTypes::toString(Modes value) noexcept
       {
         switch (value)
         {
           case Mode_Eventing:         return "eventing";
           case Mode_IDL:              return "idl";
         }
+        ZS_ASSERT_FAIL("unknown compiler type mode");
         return "unknown";
       }
 
@@ -3262,28 +3267,28 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark ICompilerTypes::Config
-      #pragma mark
+      //
+      // ICompilerTypes::Config
+      //
 
       //-----------------------------------------------------------------------
-      ICompilerTypes::Config::Config()
+      ICompilerTypes::Config::Config() noexcept
       {
       }
 
       //-----------------------------------------------------------------------
-      ICompilerTypes::Config::Config(const Config &source)
+      ICompilerTypes::Config::Config(const Config &source) noexcept
       {
         (*this) = source;
       }
 
       //-----------------------------------------------------------------------
-      ICompilerTypes::Config::~Config()
+      ICompilerTypes::Config::~Config() noexcept
       {
       }
 
       //-----------------------------------------------------------------------
-      ICompilerTypes::Config &ICompilerTypes::Config::operator=(const Config &source)
+      ICompilerTypes::Config &ICompilerTypes::Config::operator=(const Config &source) noexcept
       {
         mMode = source.mMode;
         mIDLOutputs = source.mIDLOutputs;
@@ -3302,18 +3307,18 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark ICompiler
-      #pragma mark
+      //
+      // ICompiler
+      //
 
       //-----------------------------------------------------------------------
-      void ICompiler::installTarget(IIDLCompilerTargetPtr target)
+      void ICompiler::installTarget(IIDLCompilerTargetPtr target) noexcept
       {
         tool::internal::installIDLTarget(target);
       }
 
       //-----------------------------------------------------------------------
-      ICompilerPtr ICompiler::create(const Config &config)
+      ICompilerPtr ICompiler::create(const Config &config) noexcept
       {
         switch (config.mMode) {
           case ICompilerTypes::Mode_Eventing:   break;
