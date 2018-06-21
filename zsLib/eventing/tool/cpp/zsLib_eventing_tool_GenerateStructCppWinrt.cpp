@@ -1356,7 +1356,7 @@ namespace zsLib
 
           includeSS << "\n";
           includeSS << "#" << (structObj->hasModifier(Modifier_Special) ? "ifndef" : "ifdef") << " " << ifdefName << "\n";
-          includeSS << "#include <wrapper/cppwinrt/" << filename << ".h>\n";
+          includeSS << "#include <wrapper/override/cppwinrt/" << filename << ".h>\n";
           includeSS << "#else // " << ifdefName << "\n";
 
           cppIncludeSS << "// " ZS_EVENTING_GENERATED_BY "\n\n";
@@ -1772,12 +1772,12 @@ namespace zsLib
             }
           }
 
-          includeSS << "#endif //" << (structObj->hasModifier(Modifier_Special) ? "ifdef" : "ifndef") << " " << ifdefName << "\n";
+          includeSS << "#endif //" << (structObj->hasModifier(Modifier_Special) ? "ifndef" : "") << " " << ifdefName << "\n";
 
           cppIncludeSS << "\n";
           cppIncludeSS << cppSS.str();
           cppIncludeSS << "\n";
-          cppIncludeSS << "#endif //" << (structObj->hasModifier(Modifier_Special) ? "ifdef" : "ifndef") << " " << ifdefName << "\n";
+          cppIncludeSS << "#endif //" << (structObj->hasModifier(Modifier_Special) ? "ifndef" : "") << " " << ifdefName << "\n";
 
           String outputnameHeader = UseHelper::fixRelativeFilePath(helperFile.headerFileName_, filename + ".h");
           String outputnameCpp = UseHelper::fixRelativeFilePath(helperFile.headerFileName_, filename + ".cpp");

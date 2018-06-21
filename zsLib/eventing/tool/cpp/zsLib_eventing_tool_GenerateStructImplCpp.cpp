@@ -153,9 +153,12 @@ namespace zsLib
             auto methodObj = (*iterMethods);
             if (methodObj->hasModifier(Modifier_Method_Delete)) continue;
 
-            bool isCtor = methodObj->hasModifier(Modifier_Method_Ctor);
+            bool isCtor {methodObj->hasModifier(Modifier_Method_Ctor)};
+            bool throws {methodObj->mThrows.size() > 0};
+            bool isStatic {methodObj->hasModifier(Modifier_Static)};
+
             if (derivedStructObj != structObj) {
-              if ((isCtor) || (methodObj->hasModifier(Modifier_Static))) continue;
+              if ((isCtor) || (isStatic)) continue;
             }
 
             if (methodObj->hasModifier(Modifier_Method_EventHandler)) {
@@ -168,7 +171,7 @@ namespace zsLib
             ss << dashedLine;
             if (!isCtor) {
               ss << getWrapperTypeString(methodObj->hasModifier(Modifier_Optional), methodObj->mResult);
-              ss << " wrapper" << (methodObj->hasModifier(Modifier_Static) ? "" : "::impl") << derivedStructObj->getPathName() << "::" << methodObj->mName;
+              ss << " wrapper" << (isStatic ? "" : "::impl") << derivedStructObj->getPathName() << "::" << methodObj->mName;
             } else {
               wrapperResultType = "void";
               ss << "void wrapper::impl" << derivedStructObj->getPathName() << "::wrapper_init_" << getStructInitName(derivedStructObj);
@@ -192,7 +195,7 @@ namespace zsLib
               ss << typeStr << " " << argument->mName;
             }
             if (methodObj->mArguments.size() > 1) ss << "\n" << "  ";
-            ss << ")\n";
+            ss << ") noexcept" << (throws ? "(false)" : "") << "\n";
             ss << "{\n";
             if ("void" != wrapperResultType) {
               ss << "  " << wrapperResultType << " result {};\n";
@@ -221,7 +224,7 @@ namespace zsLib
 
             if (hasGetter) {
               ss << dashedLine;
-              ss << typeStr << " wrapper" << (isStatic ? "" : "::impl") << derivedStructObj->getPathName() << "::get_" << propertyObj->mName << "()\n";
+              ss << typeStr << " wrapper" << (isStatic ? "" : "::impl") << derivedStructObj->getPathName() << "::get_" << propertyObj->mName << "() noexcept\n";
               ss << "{\n";
               ss << "  " << typeStr << " result {};\n";
               ss << "  return result;\n";
@@ -229,7 +232,7 @@ namespace zsLib
             }
             if (hasSetter) {
               ss << dashedLine;
-              ss << "void wrapper" << (isStatic ? "" : "::impl") << derivedStructObj->getPathName() << "::set_" << propertyObj->mName << "(" << typeStr << " value)\n";
+              ss << "void wrapper" << (isStatic ? "" : "::impl") << derivedStructObj->getPathName() << "::set_" << propertyObj->mName << "(" << typeStr << " value) noexcept\n";
               ss << "{\n";
               ss << "}\n\n";
             }
@@ -261,13 +264,13 @@ namespace zsLib
 
           if (!structObj->hasModifier(Modifier_Static)) {
             ss << dashedLine;
-            ss << "wrapper::impl" << structObj->getPathName() << "::" << structObj->mName << "()\n";
+            ss << "wrapper::impl" << structObj->getPathName() << "::" << structObj->mName << "() noexcept\n";
             ss << "{\n";
             ss << "}\n";
             ss << "\n";
 
             ss << dashedLine;
-            ss << "wrapper" << structObj->getPathName() << "Ptr " << "wrapper" << structObj->getPathName() << "::wrapper_create()\n";
+            ss << "wrapper" << structObj->getPathName() << "Ptr " << "wrapper" << structObj->getPathName() << "::wrapper_create() noexcept\n";
             ss << "{\n";
             ss << "  auto pThis = make_shared<wrapper::impl" << structObj->getPathName() << ">();\n";
             ss << "  pThis->thisWeak_ = pThis;\n";
@@ -282,7 +285,7 @@ namespace zsLib
 
           if (needsDefaultConstructor) {
             ss << dashedLine;
-            ss << "void " << "wrapper::impl" << structObj->getPathName() << "::wrapper_init_" << getStructInitName(structObj) << "()\n";
+            ss << "void " << "wrapper::impl" << structObj->getPathName() << "::wrapper_init_" << getStructInitName(structObj) << "() noexcept\n";
             ss << "{\n";
             ss << "}\n\n";
           }
@@ -292,7 +295,7 @@ namespace zsLib
 
           if (foundEventHandler) {
             ss << dashedLine;
-            ss << "void wrapper::impl" << structObj->getPathName() << "::wrapper_onObserverCountChanged(size_t count)\n";
+            ss << "void wrapper::impl" << structObj->getPathName() << "::wrapper_onObserverCountChanged(size_t count) noexcept\n";
             ss << "{\n";
             ss << "}\n\n";
           }
