@@ -1349,8 +1349,6 @@ namespace zsLib
           includeSS << "// " ZS_EVENTING_GENERATED_BY "\n\n";
           includeSS << "#pragma once\n\n";
 
-          includeSS << "#include \"types.h\"\n";
-
           String ifdefName = (structObj->hasModifier(Modifier_Special) ? "CPPWINRT_USE_GENERATED_" : "CPPWINRT_USE_CUSTOM_") + getCppWinrtStructInitName(structObj);
           ifdefName.toUpper();
 
@@ -1359,12 +1357,16 @@ namespace zsLib
           includeSS << "#include <wrapper/override/cppwinrt/" << filename << ".h>\n";
           includeSS << "#else // " << ifdefName << "\n";
 
+          includeSS << "\n";
+          includeSS << "#include \"types.h\"\n";
+          includeSS << "\n";
+
           cppIncludeSS << "// " ZS_EVENTING_GENERATED_BY "\n\n";
 
           cppIncludeSS << "#include \"pch.h\"\n";
           cppIncludeSS << "\n";
           cppIncludeSS << "#" << (structObj->hasModifier(Modifier_Special) ? "ifndef" : "ifdef") << " " << ifdefName << "\n";
-          cppIncludeSS << "#include \"" << filename << ".h\"\n";
+          cppIncludeSS << "#include <wrapper/override/cppwinrt/" << filename << ".cpp>\n";
           cppIncludeSS << "#else // " << ifdefName << "\n";
 
           structFile.includeCpp("\"cppwinrt_Helpers.h\"");
@@ -1729,7 +1731,7 @@ namespace zsLib
           }
           if (foundCast) pubSS << "\n";
 
-          generateStructMethods(helperFile, structFile, structObj, structObj, true, hasEvents);
+          generateStructMethods(helperFile, structFile, structObj, structObj, hasEvents);
 
           includeSS << "\n";
           includeSS << ss.str();
@@ -1791,7 +1793,6 @@ namespace zsLib
                                                            StructFile &structFile,
                                                            StructPtr derivedStructObj,
                                                            StructPtr structObj,
-                                                           bool createConstructors,
                                                            bool hasEvents
                                                            ) noexcept
         {
@@ -1813,7 +1814,7 @@ namespace zsLib
             {
               auto subStructObj = relatedType->toStruct();
               if (subStructObj) {
-                generateStructMethods(helperFile, structFile, derivedStructObj, subStructObj, false, hasEvents);
+                generateStructMethods(helperFile, structFile, derivedStructObj, subStructObj, hasEvents);
               }
             }
           }
@@ -1839,13 +1840,13 @@ namespace zsLib
 
             std::stringstream implSS;
 
-            if (!createConstructors) {
-              if ((isCtor) || (isEvent)) continue;
+            if (derivedStructObj != structObj) {
+              if ((isCtor) || (isEvent) || isStatic) continue;
             }
 
             if (isCtor) {
               if (!isDefault) {
-                foundAnotherCtorWithSameNumberOfArguments = GenerateStructMsidl::hasAnotherCtorWithSameNumberOfArguments(structObj, method);
+                foundAnotherCtorWithSameNumberOfArguments = GenerateStructMsidl::hasAnotherCtorWithSameNumberOfArguments(derivedStructObj, method);
                 if (foundAnotherCtorWithSameNumberOfArguments) {
                   String altName = method->getModifierValue(Modifier_AltName);
                   if (altName.hasData()) methodName = altName;
@@ -1866,8 +1867,8 @@ namespace zsLib
             includeCppForType(structFile, method->mResult);
 
             if (foundAnotherCtorWithSameNumberOfArguments) {
-              implSS << methodImplIndentStr << "auto result = winrt::make_self< " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << " >(WrapperCreate{});\n";
-              implSS << methodImplIndentStr << "result->native_ = wrapper" << structObj->getPathName() << "::wrapper_create()" << ";\n";
+              implSS << methodImplIndentStr << "auto result = winrt::make_self< " << getCppWinrtType(helperFile, derivedStructObj, GO{ GO::MakeImplementation() }) << " >(WrapperCreate{});\n";
+              implSS << methodImplIndentStr << "result->native_ = wrapper" << derivedStructObj->getPathName() << "::wrapper_create()" << ";\n";
               implSS << methodImplIndentStr << "if (!result->native_) {throw hresult_error(E_POINTER);}\n";
               if (hasEvents) {
                 implSS << methodImplIndentStr << "result->observer_ = make_shared<WrapperObserverImpl>(result);\n";
@@ -1890,7 +1891,7 @@ namespace zsLib
               implSS << "owner_->" << methodName << "Event_(";
             } else {
               if (isCtor) {
-                implSS << (foundAnotherCtorWithSameNumberOfArguments ? "result->" : "") << "native_->wrapper_init_" << getStructInitName(structObj) << "(";
+                implSS << (foundAnotherCtorWithSameNumberOfArguments ? "result->" : "") << "native_->wrapper_init_" << getStructInitName(derivedStructObj) << "(";
               } else {
                 if (isStatic) {
                   implSS << "wrapper" << method->getPathName() << "(";
@@ -1913,7 +1914,7 @@ namespace zsLib
 
               String delegateNameStr = fixName(method->getModifierValue(Modifier_Method_EventHandler, 0));
               if (!delegateNameStr.hasData()) {
-                delegateNameStr = getCppWinrtType(helperFile, structObj, GO{}) + "_";
+                delegateNameStr = getCppWinrtType(helperFile, derivedStructObj, GO{}) + "_";
                 if (method->hasModifier(Modifier_AltName)) {
                   delegateNameStr += fixName(methodName);
                 }
@@ -1924,21 +1925,21 @@ namespace zsLib
               }
 
               cppSS << dashedStr;
-              cppSS << "winrt::event_token " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::" << fixName(methodName) << "(" << delegateNameStr << " const &handler)\n";
+              cppSS << "winrt::event_token " << getCppWinrtType(helperFile, derivedStructObj, GO{ GO::MakeImplementation() }) << "::" << fixName(methodName) << "(" << delegateNameStr << " const &handler)\n";
               cppSS << "{\n";
               cppSS << methodImplIndentStr << "return " << methodName << "Event_.add(handler);\n";
               cppSS << "}\n";
               cppSS << "\n";
 
               cppSS << dashedStr;
-              cppSS << "void " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::" << fixName(methodName) << "(winrt::event_token const &token)\n";
+              cppSS << "void " << getCppWinrtType(helperFile, derivedStructObj, GO{ GO::MakeImplementation() }) << "::" << fixName(methodName) << "(winrt::event_token const &token)\n";
               cppSS << "{\n";
               cppSS << methodImplIndentStr << methodName << "Event_.remove(token);\n";
               cppSS << "}\n";
               cppSS << "\n";
 
               cppSS << dashedStr;
-              cppSS << "void " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::WrapperObserverImpl::" << methodName << "(";
+              cppSS << "void " << getCppWinrtType(helperFile, derivedStructObj, GO{ GO::MakeImplementation() }) << "::WrapperObserverImpl::" << methodName << "(";
 
               delegateSS << indentStr << "winrt::event< " << delegateNameStr << " > " << methodName << "Event_;\n";
               if (method->mArguments.size() > 1) {
@@ -1961,10 +1962,10 @@ namespace zsLib
                 headerMethodsSS << getCppWinrtType(helperFile, method->mResult, GO{ GO::Optional(method->hasModifier(Modifier_Optional)), GO::MakeInterface(), GO::MakeReturnResult()}) << " ";
               }
               if (foundAnotherCtorWithSameNumberOfArguments) {
-                cppSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeInterface(), GO::MakeReturnResult() }) << " ";
-                headerMethodsSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeInterface(), GO::MakeReturnResult() }) << " ";
+                cppSS << getCppWinrtType(helperFile, derivedStructObj, GO{ GO::MakeInterface(), GO::MakeReturnResult() }) << " ";
+                headerMethodsSS << getCppWinrtType(helperFile, derivedStructObj, GO{ GO::MakeInterface(), GO::MakeReturnResult() }) << " ";
               }
-              cppSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::" << fixName(methodName) << "(";
+              cppSS << getCppWinrtType(helperFile, derivedStructObj, GO{ GO::MakeImplementation() }) << "::" << fixName(methodName) << "(";
               headerMethodsSS << fixName(methodName) << "(";
               if (method->mArguments.size() > 1) {
                 cppSS << "\n";
@@ -2041,7 +2042,7 @@ namespace zsLib
             }
             cppSS << ")";
             if ((isCtor) && (!foundAnotherCtorWithSameNumberOfArguments)) {
-              cppSS << "\n : native_(" << "wrapper" << structObj->getPathName() << "::wrapper_create()" << ")";
+              cppSS << "\n : native_(" << "wrapper" << derivedStructObj->getPathName() << "::wrapper_create()" << ")";
               if (hasEvents) {
                 cppSS << ",\n";
                 cppSS << "   observer_(make_shared<WrapperObserverImpl>(get_strong()))";
@@ -2073,6 +2074,10 @@ namespace zsLib
             bool hasSetter = property->hasModifier(Modifier_Property_Setter);
             bool isStatic = property->hasModifier(Modifier_Static);
 
+            if (derivedStructObj != structObj) {
+              if (isStatic) continue;
+            }
+
             if ((!structObj->hasModifier(Modifier_Struct_Dictionary)) || (isStatic))
             {
               if ((!hasGetter) && (!hasSetter)) hasGetter = hasSetter = true;
@@ -2097,12 +2102,12 @@ namespace zsLib
 
             if (hasGet) {
               cppSS << dashedStr;
-              cppSS << getCppWinrtType(helperFile, property->mType, GO {GO::Optional(property->hasModifier(Modifier_Optional)), GO::MakeInterface(), GO::MakeReturnResult()}) << " " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::" << fixName(property->mName) << "()\n";
+              cppSS << getCppWinrtType(helperFile, property->mType, GO {GO::Optional(property->hasModifier(Modifier_Optional)), GO::MakeInterface(), GO::MakeReturnResult()}) << " " << getCppWinrtType(helperFile, derivedStructObj, GO{ GO::MakeImplementation() }) << "::" << fixName(property->mName) << "()\n";
               cppSS << "{\n";
               if (!isStatic) {
                 cppSS << "  if (!native_) {throw hresult_error(E_POINTER);}\n";
               }
-              cppSS << "  return ::Internal::Helper::" << getToCppWinrtName(helperFile, property->mType, GO { }) << "(" << (isStatic ? String("wrapper" + structObj->getPathName() + "::") : String("native_->"));
+              cppSS << "  return ::Internal::Helper::" << getToCppWinrtName(helperFile, property->mType, GO { }) << "(" << (isStatic ? String("wrapper" + derivedStructObj->getPathName() + "::") : String("native_->"));
               if (hasGetter) {
                 cppSS << "get_" << property->mName << "()";
               } else {
@@ -2114,13 +2119,13 @@ namespace zsLib
             }
             if (hasSet) {
               cppSS << dashedStr;
-              cppSS << "void " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::" << fixName(property->mName) << "(" << getCppWinrtType(helperFile, property->mType, GO { GO::Optional(property->hasModifier(Modifier_Optional)), GO::MakeInterface(), GO::MakeReference() }) << " value)\n";
+              cppSS << "void " << getCppWinrtType(helperFile, derivedStructObj, GO{ GO::MakeImplementation() }) << "::" << fixName(property->mName) << "(" << getCppWinrtType(helperFile, property->mType, GO { GO::Optional(property->hasModifier(Modifier_Optional)), GO::MakeInterface(), GO::MakeReference() }) << " value)\n";
               cppSS << "{\n";
               if (!isStatic) {
                 cppSS << "  if (!native_) {throw hresult_error(E_POINTER);}\n";
                 cppSS << "  native_->";
               } else {
-                cppSS << "  wrapper" << structObj->getPathName() << "::";
+                cppSS << "  wrapper" << derivedStructObj->getPathName() << "::";
               }
 
               if (hasSetter) {

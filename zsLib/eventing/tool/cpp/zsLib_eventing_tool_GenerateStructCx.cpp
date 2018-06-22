@@ -1331,8 +1331,6 @@ namespace zsLib
           auto &indentStr = structFile.mHeaderStructIndentStr;
 
           includeSS << "// " ZS_EVENTING_GENERATED_BY "\n\n";
-          includeSS << "#pragma once\n\n";
-          includeSS << "#include \"types.h\"\n";
 
           String ifdefName = (structObj->hasModifier(Modifier_Special) ? "CX_USE_GENERATED_" : "CX_USE_CUSTOM_") + getCxStructInitName(structObj);
           ifdefName.toUpper();
@@ -1341,12 +1339,15 @@ namespace zsLib
           includeSS << "#" << (structObj->hasModifier(Modifier_Special) ? "ifndef" : "ifdef") << " " << ifdefName << "\n";
           includeSS << "#include <wrapper/override/cx/" << filename << ".h>\n";
           includeSS << "#else // " << ifdefName << "\n";
+          includeSS << "\n";
+          includeSS << "#pragma once\n\n";
+          includeSS << "#include \"types.h\"\n";
 
           cppIncludeSS << "// " ZS_EVENTING_GENERATED_BY "\n\n";
 
           cppIncludeSS << "\n";
           cppIncludeSS << "#" << (structObj->hasModifier(Modifier_Special) ? "ifndef" : "ifdef") << " " << ifdefName << "\n";
-          cppIncludeSS << "#include \"" << filename << ".h\"\n";
+          cppIncludeSS << "#include <wrapper/override/cx/" << filename << ".cpp>\n";
           cppIncludeSS << "#else // " << ifdefName << "\n";
 
           structFile.includeCpp("\"cx_Helpers.h\"");
@@ -1533,7 +1534,7 @@ namespace zsLib
             if (foundCast) pubSS << "\n";
           }
 
-          generateStructMethods(helperFile, structFile, structObj, structObj, true, hasEvents);
+          generateStructMethods(helperFile, structFile, structObj, structObj, hasEvents);
 
           includeSS << "\n";
           includeSS << prestructDelegateSS.str();
@@ -1573,7 +1574,6 @@ namespace zsLib
                                                      StructFile &structFile,
                                                      StructPtr derivedStructObj,
                                                      StructPtr structObj,
-                                                     bool createConstructors,
                                                      bool hasEvents
                                                      ) noexcept
         {
@@ -1595,7 +1595,7 @@ namespace zsLib
             {
               auto subStructObj = relatedType->toStruct();
               if (subStructObj) {
-                generateStructMethods(helperFile, structFile, derivedStructObj, subStructObj, false, hasEvents);
+                generateStructMethods(helperFile, structFile, derivedStructObj, subStructObj, hasEvents);
               }
             }
           }
@@ -1615,8 +1615,8 @@ namespace zsLib
 
             std::stringstream implSS;
 
-            if (!createConstructors) {
-              if ((isCtor) || (isEvent)) continue;
+            if (derivedStructObj != structObj) {
+              if ((isCtor) || (isEvent) || (isStatic)) continue;
             }
 
             if (firstOutput) {
@@ -1829,6 +1829,9 @@ namespace zsLib
             bool hasSetter = property->hasModifier(Modifier_Property_Setter);
             bool isStatic = property->hasModifier(Modifier_Static);
 
+            if (derivedStructObj != structObj) {
+              if (isStatic) continue;
+            }
             if ((!structObj->hasModifier(Modifier_Struct_Dictionary)) || (isStatic))
             {
               if ((!hasGetter) && (!hasSetter)) hasGetter = hasSetter = true;

@@ -210,7 +210,6 @@ namespace zsLib
                                             StructFile &structFile,
                                             StructPtr derivedStructObj,
                                             StructPtr structObj,
-                                            bool createConstructors,
                                             bool hasEvents
                                             ) noexcept;
           static void generateForList(
