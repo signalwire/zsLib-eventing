@@ -120,12 +120,27 @@ namespace zsLib
     //-------------------------------------------------------------------------
     IEventingTypes::PredefinedOpCodes IEventingTypes::toPredefinedOpCode(const char *code) noexcept(false)
     {
+      static PredefinedOpCodes codes[] = {
+        PredefinedOpCode_Info,
+        PredefinedOpCode_Start,
+        PredefinedOpCode_Stop,
+        PredefinedOpCode_DC_Start,
+        PredefinedOpCode_DC_Stop,
+        PredefinedOpCode_Extension,
+        PredefinedOpCode_Reply,
+        PredefinedOpCode_Resume,
+        PredefinedOpCode_Suspend,
+        PredefinedOpCode_Send,
+        PredefinedOpCode_Receive,
+      };
       String str(code);
-      for (IEventingTypes::PredefinedOpCodes index = IEventingTypes::PredefinedOpCode_First; index <= IEventingTypes::PredefinedOpCode_Last; index = static_cast<IEventingTypes::PredefinedOpCodes>(static_cast<std::underlying_type<IEventingTypes::PredefinedOpCodes>::type>(index) + 1)) {
-        if (0 == str.compareNoCase(IEventingTypes::toString(index))) return index;
+      for (int loop = 0; true; ++loop) {
+        if (0 == str.compareNoCase(IEventingTypes::toString(codes[loop]))) return codes[loop];
+        if (codes[loop] == PredefinedOpCode_Last) {
+          ZS_THROW_INVALID_ARGUMENT(String("Not a predefined op code: ") + str);
+        }
       }
 
-      ZS_THROW_INVALID_ARGUMENT(String("Not a predefined op code: ") + str);
       return PredefinedOpCode_First;
     }
 
