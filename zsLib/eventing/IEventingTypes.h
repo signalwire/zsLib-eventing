@@ -43,9 +43,9 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IEventingTypes
-    #pragma mark
+    //
+    // IEventingTypes
+    //
 
     interaction IEventingTypes
     {
@@ -96,9 +96,9 @@ namespace zsLib
       typedef std::list<FileName> FileNameList;
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IEventingTypes::OperationalTypes
-      #pragma mark
+      //
+      // IEventingTypes::OperationalTypes
+      //
 
       enum OperationalTypes
       {
@@ -112,13 +112,13 @@ namespace zsLib
         OperationalType_Last = OperationalType_Debug,
       };
 
-      static const char *toString(OperationalTypes type);
-      static OperationalTypes toOperationalType(const char *type) throw (InvalidArgument);
+      static const char *toString(OperationalTypes type) noexcept;
+      static OperationalTypes toOperationalType(const char *type) noexcept(false); // throws InvalidArgument
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IEventingTypes::PredefinedOpCodes
-      #pragma mark
+      //
+      // IEventingTypes::PredefinedOpCodes
+      //
 
       enum PredefinedOpCodes
       {
@@ -139,13 +139,13 @@ namespace zsLib
         PredefinedOpCode_Last = PredefinedOpCode_Receive,
       };
 
-      static const char *toString(PredefinedOpCodes code);
-      static PredefinedOpCodes toPredefinedOpCode(const char *code) throw (InvalidArgument);
+      static const char *toString(PredefinedOpCodes code) noexcept;
+      static PredefinedOpCodes toPredefinedOpCode(const char *code) noexcept(false); // throws InvalidArgument
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IEventingTypes::PredefinedLevels
-      #pragma mark
+      //
+      // IEventingTypes::PredefinedLevels
+      //
 
       enum PredefinedLevels
       {
@@ -160,17 +160,17 @@ namespace zsLib
         PredefinedLevel_Last = PredefinedLevel_Verbose,
       };
 
-      static const char *toString(PredefinedLevels level);
-      static PredefinedLevels toPredefinedLevel(const char *level) throw (InvalidArgument);
+      static const char *toString(PredefinedLevels level) noexcept;
+      static PredefinedLevels toPredefinedLevel(const char *level) noexcept(false); // throws InvalidArgument;
       static PredefinedLevels toPredefinedLevel(
                                                 Log::Severity severity,
                                                 Log::Level level
-                                                );
+                                                ) noexcept;
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IEventingTypes::BaseTypes
-      #pragma mark
+      //
+      // IEventingTypes::BaseTypes
+      //
 
       enum BaseTypes
       {
@@ -186,13 +186,13 @@ namespace zsLib
         BaseType_Last = BaseType_String,
       };
 
-      static const char *toString(BaseTypes type);
-      static BaseTypes toBaseType(const char *type) throw (InvalidArgument);
+      static const char *toString(BaseTypes type) noexcept;
+      static BaseTypes toBaseType(const char *type) noexcept(false); // throws InvalidArgument
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IEventingTypes::PredefinedTypedefs
-      #pragma mark
+      //
+      // IEventingTypes::PredefinedTypedefs
+      //
 
       enum PredefinedTypedefs
       {
@@ -253,25 +253,25 @@ namespace zsLib
         PredefinedTypedef_Last = PredefinedTypedef_wstring,
       };
 
-      static const char *toString(PredefinedTypedefs type);
-      static PredefinedTypedefs toPredefinedTypedef(const char *type) throw (InvalidArgument);
-      static PredefinedTypedefs toPreferredPredefinedTypedef(PredefinedTypedefs type);
+      static const char *toString(PredefinedTypedefs type) noexcept;
+      static PredefinedTypedefs toPredefinedTypedef(const char *type) noexcept(false); // throws InvalidArgument
+      static PredefinedTypedefs toPreferredPredefinedTypedef(PredefinedTypedefs type) noexcept;
 
-      static BaseTypes getBaseType(PredefinedTypedefs type);
-      static bool isSigned(PredefinedTypedefs type);
-      static bool isUnsigned(PredefinedTypedefs type);
-      static bool isAString(PredefinedTypedefs type);
-      static bool isWString(PredefinedTypedefs type);
-      static size_t getMinBytes(PredefinedTypedefs type);
-      static size_t getMaxBytes(PredefinedTypedefs type);
+      static BaseTypes getBaseType(PredefinedTypedefs type) noexcept;
+      static bool isSigned(PredefinedTypedefs type) noexcept;
+      static bool isUnsigned(PredefinedTypedefs type) noexcept;
+      static bool isAString(PredefinedTypedefs type) noexcept;
+      static bool isWString(PredefinedTypedefs type) noexcept;
+      static size_t getMinBytes(PredefinedTypedefs type) noexcept;
+      static size_t getMaxBytes(PredefinedTypedefs type) noexcept;
 
-      static String aliasLookup(const AliasMap *aliases, const String &value);
-      static String aliasLookup(const AliasMap &aliases, const String &value);
+      static String aliasLookup(const AliasMap *aliases, const String &value) noexcept;
+      static String aliasLookup(const AliasMap &aliases, const String &value) noexcept;
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IEventingTypes::Provider
-      #pragma mark
+      //
+      // IEventingTypes::Provider
+      //
 
       struct Provider
       {
@@ -292,61 +292,61 @@ namespace zsLib
         DataTemplateMap mDataTemplates;
         SubsystemMap mSubsystems;
 
-        Provider();
-        Provider(const ElementPtr &rootEl) throw (InvalidContent);
-        ~Provider();
+        Provider() noexcept;
+        Provider(const ElementPtr &rootEl) noexcept(false); // throws InvalidContent
+        ~Provider() noexcept;
 
-        static ProviderPtr create()                     { return make_shared<Provider>(); }
-        static ProviderPtr create(const ElementPtr &el) { if (!el) return ProviderPtr(); return make_shared<Provider>(el); }
+        static ProviderPtr create() noexcept                            { return make_shared<Provider>(); }
+        static ProviderPtr create(const ElementPtr &el) noexcept(false) { if (!el) return ProviderPtr(); return make_shared<Provider>(el); }
 
-        ElementPtr createElement(const char *objectName = NULL) const;
-        void parse(const ElementPtr &rootEl) throw (InvalidContent);
+        ElementPtr createElement(const char *objectName = NULL) const noexcept;
+        void parse(const ElementPtr &rootEl) noexcept(false); // throws InvalidContent
 
-        String hash() const;
-        String uniqueEventingHash() const;
+        String hash() const noexcept;
+        String uniqueEventingHash() const noexcept;
 
-        String aliasLookup(const String &value);
+        String aliasLookup(const String &value) noexcept;
       };
 
       static void createAliases(
                                 ElementPtr aliasesEl,
                                 AliasMap &ioAliases
-                                ) throw(InvalidContent);
+                                ) noexcept(false); // throws InvalidContent
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IEventingTypes::Typedef
-      #pragma mark
+      //
+      // IEventingTypes::Typedef
+      //
 
       struct Typedef
       {
         TypedefName        mName;
         PredefinedTypedefs mType {PredefinedTypedef_First};
 
-        Typedef() {}
+        Typedef() noexcept {}
         Typedef(
                 const ElementPtr &rootEl,
                 const AliasMap *aliases = NULL
-                ) throw (InvalidArgument);
+                ) noexcept(false); // throws InvalidArgument
 
-        static TypedefPtr create() { return make_shared<Typedef>(); }
-        static TypedefPtr create(const ElementPtr &el) { if (!el) return TypedefPtr(); return make_shared<Typedef>(el); }
+        static TypedefPtr create() noexcept                             { return make_shared<Typedef>(); }
+        static TypedefPtr create(const ElementPtr &el) noexcept(false)  { if (!el) return TypedefPtr(); return make_shared<Typedef>(el); }
 
-        ElementPtr createElement(const char *objectName = NULL) const;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept;
 
-        String hash() const;
+        String hash() const noexcept;
       };
 
       static void createTypesdefs(
                                   ElementPtr typedefsEl,
                                   TypedefMap &ioTypedefs,
                                   const AliasMap *aliases = NULL
-                                  ) throw(InvalidContent);
+                                  ) noexcept(false); // throws InvalidContent
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IEventingTypes::Channel
-      #pragma mark
+      //
+      // IEventingTypes::Channel
+      //
 
       struct Channel
       {
@@ -356,33 +356,33 @@ namespace zsLib
 
         size_t            mValue {};
 
-        Channel() {}
+        Channel() noexcept {}
         Channel(
                 const ElementPtr &rootEl,
                 const AliasMap *aliases = NULL
-                ) throw (InvalidContent);
+                )  noexcept(false); // throws InvalidContent
 
-        static ChannelPtr create() { return make_shared<Channel>(); }
+        static ChannelPtr create() noexcept { return make_shared<Channel>(); }
         static ChannelPtr create(
                                  const ElementPtr &el,
                                  const AliasMap *aliases = NULL
-                                 ) { if (!el) return ChannelPtr(); return make_shared<Channel>(el, aliases); }
+                                 ) noexcept(false) { if (!el) return ChannelPtr(); return make_shared<Channel>(el, aliases); }
 
-        ElementPtr createElement(const char *objectName = NULL) const;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept;
 
-        String hash() const;
+        String hash() const noexcept;
       };
 
       static void createChannels(
                                  ElementPtr channelsEl,
                                  ChannelMap &outChannels,
                                  const AliasMap *aliases = NULL
-                                 ) throw(InvalidContent);
+                                 ) noexcept(false); // throws InvalidContent
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IEventingTypes::Task
-      #pragma mark
+      //
+      // IEventingTypes::Task
+      //
 
       struct Task
       {
@@ -391,34 +391,34 @@ namespace zsLib
 
         size_t    mValue {};
 
-        Task();
+        Task() noexcept;
         Task(
              const ElementPtr &rootEl,
              const AliasMap *aliases = NULL
-             ) throw (InvalidContent);
-        ~Task();
+             ) noexcept(false); // throws InvalidContent
+        ~Task() noexcept;
 
-        static TaskPtr create() { return make_shared<Task>(); }
+        static TaskPtr create() noexcept { return make_shared<Task>(); }
         static TaskPtr create(
                               const ElementPtr &el,
                               const AliasMap *aliases = NULL
-                              ) { if (!el) return TaskPtr(); return make_shared<Task>(el, aliases); }
+                              ) noexcept(false) { if (!el) return TaskPtr(); return make_shared<Task>(el, aliases); }
 
-        ElementPtr createElement(const char *objectName = NULL) const;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept;
 
-        String hash() const;
+        String hash() const noexcept;
       };
 
       static void createTasks(
                               ElementPtr tasksEl,
                               TaskMap &outTasks,
                               const AliasMap *aliases = NULL
-                              ) throw (InvalidContent);
+                              ) noexcept(false); // throws InvalidContent
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IEventingTypes::Keyword
-      #pragma mark
+      //
+      // IEventingTypes::Keyword
+      //
       
       struct Keyword
       {
@@ -426,33 +426,33 @@ namespace zsLib
 
         uint64_t  mMask {};
 
-        Keyword() {}
+        Keyword() noexcept {}
         Keyword(
                 const ElementPtr &rootEl,
                 const AliasMap *aliases = NULL
-                ) throw (InvalidContent);
+                ) noexcept(false); // throws InvalidContent
 
-        static KeywordPtr create() { return make_shared<Keyword>(); }
+        static KeywordPtr create() noexcept { return make_shared<Keyword>(); }
         static KeywordPtr create(
                                  const ElementPtr &el,
                                  const AliasMap *aliases = NULL
-                                 ) { if (!el) return KeywordPtr(); return make_shared<Keyword>(el, aliases); }
+                                 ) noexcept(false) { if (!el) return KeywordPtr(); return make_shared<Keyword>(el, aliases); }
 
-        ElementPtr createElement(const char *objectName = NULL) const;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept;
 
-        String hash() const;
+        String hash() const noexcept;
       };
 
       static void createKeywords(
                                  ElementPtr tasksEl,
                                  KeywordMap &outKeywords,
                                  const AliasMap *aliases = NULL
-                                 ) throw (InvalidContent);
+                                 ) noexcept(false); // throws InvalidContent
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IEventingTypes::OpCode
-      #pragma mark
+      //
+      // IEventingTypes::OpCode
+      //
 
       struct OpCode
       {
@@ -461,34 +461,34 @@ namespace zsLib
 
         size_t      mValue {};
 
-        OpCode();
+        OpCode() noexcept;
         OpCode(
                const ElementPtr &rootEl,
                const AliasMap *aliases = NULL
-               ) throw (InvalidContent);
-        ~OpCode();
+               ) noexcept(false); // throws InvalidContent
+        ~OpCode() noexcept;
 
-        static OpCodePtr create() { return make_shared<OpCode>(); }
+        static OpCodePtr create() noexcept { return make_shared<OpCode>(); }
         static OpCodePtr create(
                                 const ElementPtr &el,
                                 const AliasMap *aliases = NULL
-                                ) { if (!el) return OpCodePtr(); return make_shared<OpCode>(el, aliases); }
+                                ) noexcept(false) { if (!el) return OpCodePtr(); return make_shared<OpCode>(el, aliases); }
 
-        ElementPtr createElement(const char *objectName = NULL) const;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept;
 
-        String hash(bool calledFromTask = false) const;
+        String hash(bool calledFromTask = false) const noexcept;
       };
 
       static void createOpCodes(
                                 ElementPtr opCodesEl,
                                 OpCodeMap &outOpCodes,
                                 const AliasMap *aliases = NULL
-                                ) throw (InvalidContent);
+                                ) noexcept(false); // throws InvalidContent
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IEventingTypes::Event
-      #pragma mark
+      //
+      // IEventingTypes::Event
+      //
 
       struct Event
       {
@@ -506,22 +506,22 @@ namespace zsLib
 
         size_t          mValue {};
 
-        String hash() const;
+        String hash() const noexcept;
 
-        Event();
+        Event() noexcept;
         Event(
               const ElementPtr &rootEl,
               const AliasMap *aliases = NULL
-              ) throw (InvalidContent);
-        ~Event();
+              ) noexcept(false); // throws InvalidContent
+        ~Event() noexcept;
 
-        static EventPtr create() { return make_shared<Event>(); }
+        static EventPtr create() noexcept { return make_shared<Event>(); }
         static EventPtr create(
                                const ElementPtr &el,
                                const AliasMap *aliases = NULL
-                               ) { if (!el) return EventPtr(); return make_shared<Event>(el, aliases); }
+                               ) noexcept(false) { if (!el) return EventPtr(); return make_shared<Event>(el, aliases); }
 
-        ElementPtr createElement(const char *objectName = NULL) const;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept;
       };
 
       static void createEvents(
@@ -533,35 +533,35 @@ namespace zsLib
                                const KeywordMap &keywords,
                                const DataTemplateMap &dataTemplates,
                                const AliasMap *aliases = NULL
-                               ) throw (InvalidContent);
+                               ) noexcept(false); // throws InvalidContent
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IEventingTypes::DataTemplate
-      #pragma mark
+      //
+      // IEventingTypes::DataTemplate
+      //
 
       struct DataTemplate
       {
         String mID;
         DataTypeList mDataTypes;
 
-        DataTemplate();
+        DataTemplate() noexcept;
         DataTemplate(
                      const ElementPtr &rootEl,
                      const AliasMap *aliases = NULL
-                     ) throw (InvalidContent);
-        ~DataTemplate();
+                     ) noexcept(false); // throw (InvalidContent);
+        ~DataTemplate() noexcept;
 
-        static DataTemplatePtr create() { return make_shared<DataTemplate>(); }
+        static DataTemplatePtr create() noexcept { return make_shared<DataTemplate>(); }
         static DataTemplatePtr create(
                                       const ElementPtr &el,
                                       const AliasMap *aliases = NULL
-                                      ) { if (!el) return DataTemplatePtr(); return make_shared<DataTemplate>(el, aliases); }
+                                      ) noexcept(false) { if (!el) return DataTemplatePtr(); return make_shared<DataTemplate>(el, aliases); }
 
-        ElementPtr createElement(const char *objectName = NULL) const;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept;
 
-        String uniqueID() const;
-        String hash() const;
+        String uniqueID() const noexcept;
+        String hash() const noexcept;
       };
 
       static void createDataTemplates(
@@ -569,36 +569,36 @@ namespace zsLib
                                       DataTemplateMap &outDataTemplates,
                                       const TypedefMap &typedefs,
                                       const AliasMap *aliases = NULL
-                                      ) throw (InvalidContent);
+                                      ) noexcept(false); // throws InvalidContent
 
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IEventingTypes::DataType
-      #pragma mark
+      //
+      // IEventingTypes::DataType
+      //
 
       struct DataType
       {
         PredefinedTypedefs mType {PredefinedTypedef_First};
         String             mValueName;
 
-        DataType();
+        DataType() noexcept;
         DataType(
                  const ElementPtr &rootEl,
                  const TypedefMap *typedefs = NULL,
                  const AliasMap *aliases = NULL
-                 ) throw (InvalidContent);
-        ~DataType();
+                 ) noexcept(false); // throws InvalidContent
+        ~DataType() noexcept;
 
-        static DataTypePtr create() { return make_shared<DataType>(); }
+        static DataTypePtr create() noexcept { return make_shared<DataType>(); }
         static DataTypePtr create(
                                 const ElementPtr &el,
                                 const TypedefMap *typedefs = NULL,
                                 const AliasMap *aliases = NULL
-                                ) { if (!el) return DataTypePtr(); return make_shared<DataType>(el, typedefs, aliases); }
+                                ) noexcept(false) { if (!el) return DataTypePtr(); return make_shared<DataType>(el, typedefs, aliases); }
 
-        ElementPtr createElement(const char *objectName = NULL) const;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept;
 
-        String hash() const;
+        String hash() const noexcept;
       };
 
       static void createDataTypes(
@@ -606,41 +606,41 @@ namespace zsLib
                                   DataTypeList &outDataTypes,
                                   const TypedefMap &typedefs,
                                   const AliasMap *aliases = NULL
-                                  ) throw (InvalidContent);
+                                  ) noexcept(false); // throws InvalidContent
       
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IEventingTypes::DataType
-      #pragma mark
+      //
+      // IEventingTypes::DataType
+      //
       
       struct Subsystem
       {
         SubsystemName mName;
         Log::Level mLevel {Log::Level::Level_First};
 
-        Subsystem();
+        Subsystem() noexcept;
         Subsystem(
                   const ElementPtr &rootEl,
                   const AliasMap *aliases = NULL
-                  ) throw (InvalidContent);
-        ~Subsystem();
+                  ) noexcept(false); // throws InvalidContent
+        ~Subsystem() noexcept;
 
-        static SubsystemPtr create() { return make_shared<Subsystem>(); }
+        static SubsystemPtr create() noexcept { return make_shared<Subsystem>(); }
         static SubsystemPtr create(
                                    const ElementPtr &el,
                                    const AliasMap *aliases = NULL
-                                   ) { if (!el) return SubsystemPtr(); return make_shared<Subsystem>(el, aliases); }
+                                   ) noexcept(false) { if (!el) return SubsystemPtr(); return make_shared<Subsystem>(el, aliases); }
 
-        ElementPtr createElement(const char *objectName = NULL) const;
+        ElementPtr createElement(const char *objectName = NULL) const noexcept;
 
-        String hash() const;
+        String hash() const noexcept;
       };
       
       static void createSubsystems(
                                    ElementPtr dataTypesEl,
                                    SubsystemMap &outSubsystems,
                                    const AliasMap *aliases = NULL
-                                   ) throw (InvalidContent);
+                                   ) noexcept(false); // throws InvalidContent
     };
 
   } // namespace eventing

@@ -54,9 +54,9 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark (helpers)
-      #pragma mark
+      //
+      // (helpers)
+      //
 
       //-----------------------------------------------------------------------
       bool splitToNamePath(
@@ -99,12 +99,12 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IIDLTypes
-    #pragma mark
+    //
+    // IIDLTypes
+    //
 
     //-------------------------------------------------------------------------
-    const char *IIDLTypes::toString(Modifiers value)
+    const char *IIDLTypes::toString(Modifiers value) noexcept
     {
       switch (value)
       {
@@ -135,11 +135,12 @@ namespace zsLib
         case IIDLTypes::Modifier_Obsolete:                  return "obsolete";
       }
 
+      ZS_ASSERT_FAIL("unknown modifier");
       return "unknown";
     }
 
     //-------------------------------------------------------------------------
-    int IIDLTypes::getTotalParams(Modifiers value)
+    int IIDLTypes::getTotalParams(Modifiers value) noexcept
     {
       switch (value)
       {
@@ -174,7 +175,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::Modifiers IIDLTypes::toModifier(const char *value) throw (InvalidArgument)
+    IIDLTypes::Modifiers IIDLTypes::toModifier(const char *value) noexcept(false)
     {
       String str(value);
       for (IIDLTypes::Modifiers index = IIDLTypes::Modifier_First; index <= IIDLTypes::Modifier_Last; index = static_cast<IIDLTypes::Modifiers>(static_cast<std::underlying_type<IIDLTypes::Modifiers>::type>(index) + 1)) {
@@ -185,7 +186,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    bool IIDLTypes::isValidForAll(Modifiers value)
+    bool IIDLTypes::isValidForAll(Modifiers value) noexcept
     {
       switch (value)
       {
@@ -201,7 +202,7 @@ namespace zsLib
 
 
     //-------------------------------------------------------------------------
-    bool IIDLTypes::isValidForNamespace(Modifiers value)
+    bool IIDLTypes::isValidForNamespace(Modifiers value) noexcept
     {
       if (isValidForAll(value)) return true;
 
@@ -219,7 +220,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    bool IIDLTypes::isValidForStruct(Modifiers value)
+    bool IIDLTypes::isValidForStruct(Modifiers value) noexcept
     {
       if (isValidForAll(value)) return true;
 
@@ -240,7 +241,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    bool IIDLTypes::isValidForMethod(Modifiers value)
+    bool IIDLTypes::isValidForMethod(Modifiers value) noexcept
     {
       if (isValidForAll(value)) return true;
 
@@ -264,7 +265,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    bool IIDLTypes::isValidForMethodArgument(Modifiers value)
+    bool IIDLTypes::isValidForMethodArgument(Modifiers value) noexcept
     {
       if (isValidForAll(value)) return true;
 
@@ -286,7 +287,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    bool IIDLTypes::isValidForProperty(Modifiers value)
+    bool IIDLTypes::isValidForProperty(Modifiers value) noexcept
     {
       if (isValidForAll(value)) return true;
 
@@ -315,111 +316,111 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IIDLTypes::Context
-    #pragma mark
+    //
+    // IIDLTypes::Context
+    //
 
     //-------------------------------------------------------------------------
     IIDLTypes::Context::Context(
                                 const make_private &,
                                 ContextPtr context
-                                ) :
+                                ) noexcept :
       mContext(context)
     {
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::Context::~Context()
+    IIDLTypes::Context::~Context() noexcept
     {
       mThisWeak.reset();
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::ContextPtr IIDLTypes::Context::toContext() const
+    IIDLTypes::ContextPtr IIDLTypes::Context::toContext() const noexcept
     {
       return mThisWeak.lock();
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::ProjectPtr IIDLTypes::Context::toProject() const
+    IIDLTypes::ProjectPtr IIDLTypes::Context::toProject() const noexcept
     {
       return ProjectPtr();
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::NamespacePtr IIDLTypes::Context::toNamespace() const
+    IIDLTypes::NamespacePtr IIDLTypes::Context::toNamespace() const noexcept
     {
       return NamespacePtr();
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::TypePtr IIDLTypes::Context::toType() const
+    IIDLTypes::TypePtr IIDLTypes::Context::toType() const noexcept
     {
       return TypePtr();
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::BasicTypePtr IIDLTypes::Context::toBasicType() const
+    IIDLTypes::BasicTypePtr IIDLTypes::Context::toBasicType() const noexcept
     {
       return BasicTypePtr();
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::EnumTypePtr IIDLTypes::Context::toEnumType() const
+    IIDLTypes::EnumTypePtr IIDLTypes::Context::toEnumType() const noexcept
     {
       return EnumTypePtr();
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::EnumTypeValuePtr IIDLTypes::Context::toEnumTypeValue() const
+    IIDLTypes::EnumTypeValuePtr IIDLTypes::Context::toEnumTypeValue() const noexcept
     {
       return EnumTypeValuePtr();
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::TypedefTypePtr IIDLTypes::Context::toTypedefType() const
+    IIDLTypes::TypedefTypePtr IIDLTypes::Context::toTypedefType() const noexcept
     {
       return TypedefTypePtr();
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::GenericTypePtr IIDLTypes::Context::toGenericType() const
+    IIDLTypes::GenericTypePtr IIDLTypes::Context::toGenericType() const noexcept
     {
       return GenericTypePtr();
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::TemplatedStructTypePtr IIDLTypes::Context::toTemplatedStructType() const
+    IIDLTypes::TemplatedStructTypePtr IIDLTypes::Context::toTemplatedStructType() const noexcept
     {
       return TemplatedStructTypePtr();
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::StructPtr IIDLTypes::Context::toStruct() const
+    IIDLTypes::StructPtr IIDLTypes::Context::toStruct() const noexcept
     {
       return StructPtr();
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::PropertyPtr IIDLTypes::Context::toProperty() const
+    IIDLTypes::PropertyPtr IIDLTypes::Context::toProperty() const noexcept
     {
       return PropertyPtr();
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::MethodPtr IIDLTypes::Context::toMethod() const
+    IIDLTypes::MethodPtr IIDLTypes::Context::toMethod() const noexcept
     {
       return MethodPtr();
     }
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::Context::getMappingName() const
+    String IIDLTypes::Context::getMappingName() const noexcept
     {
       return mName;
     }
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::Context::hash() const
+    String IIDLTypes::Context::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -455,13 +456,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::ContextPtr IIDLTypes::Context::getParent() const
+    IIDLTypes::ContextPtr IIDLTypes::Context::getParent() const noexcept
     {
       return mContext.lock();
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::ContextPtr IIDLTypes::Context::getRoot() const
+    IIDLTypes::ContextPtr IIDLTypes::Context::getRoot() const noexcept
     {
       auto parent = toContext();
       while (true)
@@ -475,7 +476,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::ProjectPtr IIDLTypes::Context::getProject() const
+    IIDLTypes::ProjectPtr IIDLTypes::Context::getProject() const noexcept
     {
       auto project = getRoot();
       if (!project) return ProjectPtr();
@@ -483,7 +484,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::Context::getPath() const
+    String IIDLTypes::Context::getPath() const noexcept
     {
       auto parent = getParent();
       if (!parent) return String();
@@ -534,7 +535,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::Context::getPathName() const
+    String IIDLTypes::Context::getPathName() const noexcept
     {
       String path = getPath();
       if ("::" == path) return path + getMappingName();
@@ -545,7 +546,7 @@ namespace zsLib
     IIDLTypes::TypePtr IIDLTypes::Context::findType(
                                                     const String &typeNameWithPath,
                                                     const FindTypeOptions *options
-                                                    ) const
+                                                    ) const noexcept
     {
       FindTypeOptions defaultOptions;
       if (!options) options = &defaultOptions;
@@ -563,7 +564,7 @@ namespace zsLib
                                                     const String &pathStr,
                                                     const String &typeName,
                                                     const FindTypeOptions &options
-                                                    ) const
+                                                    ) const noexcept
     {
       if (options.mSearchParents) {
         auto parent = getParent();
@@ -575,7 +576,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    bool IIDLTypes::Context::hasModifier(Modifiers modifier) const
+    bool IIDLTypes::Context::hasModifier(Modifiers modifier) const noexcept
     {
       auto found = mModifiers.find(toString(modifier));
       if (found == mModifiers.end()) return false;
@@ -586,7 +587,7 @@ namespace zsLib
     String IIDLTypes::Context::getModifierValue(
                                                 Modifiers modifier,
                                                 size_t index
-                                                ) const
+                                                ) const noexcept
     {
       auto found = mModifiers.find(toString(modifier));
       if (found == mModifiers.end()) return String();
@@ -605,7 +606,7 @@ namespace zsLib
     void IIDLTypes::Context::getModifierValues(
                                                Modifiers modifier,
                                                StringList &outValues
-                                               ) const
+                                               ) const noexcept
     {
       auto found = mModifiers.find(toString(modifier));
       if (found == mModifiers.end()) return;
@@ -614,7 +615,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Context::clearModifier(Modifiers modifier)
+    void IIDLTypes::Context::clearModifier(Modifiers modifier) noexcept
     {
       auto found = mModifiers.find(toString(modifier));
       if (found == mModifiers.end()) return;
@@ -623,7 +624,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Context::setModifier(Modifiers modifier)
+    void IIDLTypes::Context::setModifier(Modifiers modifier) noexcept
     {
       StringList values;
       setModifier(modifier, values);
@@ -633,7 +634,7 @@ namespace zsLib
     void IIDLTypes::Context::setModifier(
                                          Modifiers modifier,
                                          const String &value
-                                         )
+                                         ) noexcept
     {
       StringList values;
       values.push_back(value);
@@ -644,7 +645,7 @@ namespace zsLib
     void IIDLTypes::Context::setModifier(
                                          Modifiers modifier,
                                          const StringList &values
-                                         )
+                                         ) noexcept
     {
       clearModifier(modifier);
 
@@ -657,19 +658,19 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Context::resolveTypedefs() throw (InvalidContent)
+    void IIDLTypes::Context::resolveTypedefs() noexcept(false)
     {
     }
 
     //-------------------------------------------------------------------------
-    bool IIDLTypes::Context::fixTemplateHashMapping()
+    bool IIDLTypes::Context::fixTemplateHashMapping() noexcept
     {
       return false;
     }
 
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::Context::aliasLookup(const String &value)
+    String IIDLTypes::Context::aliasLookup(const String &value) noexcept
     {
       auto project = getProject();
       if (!project) return value;
@@ -677,12 +678,12 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Context::init()
+    void IIDLTypes::Context::init() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Context::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Context::init(const ElementPtr &rootEl) noexcept(false)
     {
       if (!rootEl) return;
 
@@ -690,7 +691,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Context::write(ElementPtr &rootEl) const
+    void IIDLTypes::Context::write(ElementPtr &rootEl) const noexcept
     {
       if (mName.hasData()) {
         rootEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("name", mName));
@@ -723,7 +724,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Context::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Context::parse(const ElementPtr &rootEl) noexcept(false)
     {
       if (!rootEl) return;
 
@@ -759,7 +760,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Context::copyContentsFrom(ContextPtr originalContext)
+    void IIDLTypes::Context::copyContentsFrom(ContextPtr originalContext) noexcept
     {
       if (!originalContext) return;
 
@@ -784,31 +785,31 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IIDLTypes::Project
-    #pragma mark
+    //
+    // IIDLTypes::Project
+    //
 
 
     //-------------------------------------------------------------------------
-    IIDLTypes::Project::Project(const make_private &v) :
+    IIDLTypes::Project::Project(const make_private &v) noexcept :
       Context(v, ContextPtr())
     {
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::Project::~Project()
+    IIDLTypes::Project::~Project() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Project::init()
+    void IIDLTypes::Project::init() noexcept
     {
       Context::init();
       createBaseTypes();
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Project::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Project::init(const ElementPtr &rootEl) noexcept(false)
     {
       Context::init(rootEl);
       createBaseTypes();
@@ -816,7 +817,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::ProjectPtr IIDLTypes::Project::create()
+    IIDLTypes::ProjectPtr IIDLTypes::Project::create() noexcept
     {
       auto pThis(make_shared<Project>(make_private{}));
       pThis->mThisWeak = pThis;
@@ -825,7 +826,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::ProjectPtr IIDLTypes::Project::create(const ElementPtr &el) throw (InvalidContent)
+    IIDLTypes::ProjectPtr IIDLTypes::Project::create(const ElementPtr &el) noexcept(false)
     {
       auto pThis(make_shared<Project>(make_private{}));
       pThis->mThisWeak = pThis;
@@ -834,7 +835,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IIDLTypes::Project::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::Project::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "project";
 
@@ -872,7 +873,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Project::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Project::parse(const ElementPtr &rootEl) noexcept(false)
     {
       if (!rootEl) return;
 
@@ -904,7 +905,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::Project::hash() const
+    String IIDLTypes::Project::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -947,7 +948,7 @@ namespace zsLib
                                                     const String &pathStr,
                                                     const String &typeName,
                                                     const FindTypeOptions &options
-                                                    ) const
+                                                    ) const noexcept
     {
       if (mGlobal) {
         return mGlobal->findType(pathStr, typeName, options);
@@ -960,7 +961,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Project::resolveTypedefs() throw (InvalidContent)
+    void IIDLTypes::Project::resolveTypedefs() noexcept(false)
     {
       if (mGlobal) {
         mGlobal->resolveTypedefs();
@@ -973,7 +974,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    bool IIDLTypes::Project::fixTemplateHashMapping()
+    bool IIDLTypes::Project::fixTemplateHashMapping() noexcept
     {
       bool didFix = false;
       if (mGlobal) {
@@ -985,13 +986,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::Project::aliasLookup(const String &value)
+    String IIDLTypes::Project::aliasLookup(const String &value) noexcept
     {
       return IIDLTypes::aliasLookup(mAliases, value);
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::BasicTypePtr IIDLTypes::Project::findBasicType(IEventingTypes::PredefinedTypedefs findType) const
+    IIDLTypes::BasicTypePtr IIDLTypes::Project::findBasicType(IEventingTypes::PredefinedTypedefs findType) const noexcept
     {
       for (auto iter = mBasicTypes.begin(); iter != mBasicTypes.end(); ++iter)
       {
@@ -1002,13 +1003,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::ProjectPtr IIDLTypes::Project::toProject() const
+    IIDLTypes::ProjectPtr IIDLTypes::Project::toProject() const noexcept
     {
       return ZS_DYNAMIC_PTR_CAST(Project, toContext());
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Project::createBaseTypes()
+    void IIDLTypes::Project::createBaseTypes() noexcept
     {
       auto context = toContext();
 
@@ -1024,33 +1025,33 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IIDLTypes::Namespace
-    #pragma mark
+    //
+    // IIDLTypes::Namespace
+    //
 
 
     //-------------------------------------------------------------------------
     IIDLTypes::Namespace::Namespace(
                                     const make_private &v,
                                     ContextPtr context
-                                    ) :
+                                    ) noexcept :
       Context(v, context)
     {
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::Namespace::~Namespace()
+    IIDLTypes::Namespace::~Namespace() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Namespace::init()
+    void IIDLTypes::Namespace::init() noexcept
     {
       Context::init();
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Namespace::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Namespace::init(const ElementPtr &rootEl) noexcept(false)
     {
       Context::init(rootEl);
 
@@ -1066,7 +1067,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::NamespacePtr IIDLTypes::Namespace::create(ContextPtr context)
+    IIDLTypes::NamespacePtr IIDLTypes::Namespace::create(ContextPtr context) noexcept
     {
       auto pThis(make_shared<Namespace>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -1078,7 +1079,7 @@ namespace zsLib
     IIDLTypes::NamespacePtr IIDLTypes::Namespace::createForwards(
                                                                  ContextPtr context,
                                                                  const ElementPtr &el
-                                                                 ) throw (InvalidContent)
+                                                                 ) noexcept(false)
     {
       auto pThis(make_shared<Namespace>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -1087,13 +1088,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::NamespacePtr IIDLTypes::Namespace::toNamespace() const
+    IIDLTypes::NamespacePtr IIDLTypes::Namespace::toNamespace() const noexcept
     {
       return ZS_DYNAMIC_PTR_CAST(Namespace, toContext());
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IIDLTypes::Namespace::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::Namespace::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "namespace";
 
@@ -1149,7 +1150,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Namespace::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Namespace::parse(const ElementPtr &rootEl) noexcept(false)
     {
       if (!rootEl) return;
 
@@ -1165,7 +1166,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::Namespace::hash() const
+    String IIDLTypes::Namespace::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -1214,7 +1215,7 @@ namespace zsLib
                                                       const String &pathStr,
                                                       const String &typeName,
                                                       const FindTypeOptions &options
-                                                      ) const
+                                                      ) const noexcept
     {
       String checkPath = pathStr;
 
@@ -1304,7 +1305,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Namespace::resolveTypedefs() throw (InvalidContent)
+    void IIDLTypes::Namespace::resolveTypedefs() noexcept(false)
     {
       for (auto iter = mTypedefs.begin(); iter != mTypedefs.end(); ++iter) {
         auto obj = (*iter).second;
@@ -1325,7 +1326,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    bool IIDLTypes::Namespace::fixTemplateHashMapping()
+    bool IIDLTypes::Namespace::fixTemplateHashMapping() noexcept
     {
       bool didFix = false;
       for (auto iter_doNotUse = mNamespaces.begin(); iter_doNotUse != mNamespaces.end(); ) {
@@ -1346,7 +1347,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::NamespacePtr IIDLTypes::Namespace::findNamespace(const String &nameWithPath) const
+    IIDLTypes::NamespacePtr IIDLTypes::Namespace::findNamespace(const String &nameWithPath) const noexcept
     {
       String path;
       String name;
@@ -1360,7 +1361,7 @@ namespace zsLib
     IIDLTypes::NamespacePtr IIDLTypes::Namespace::findNamespace(
                                                                 const String &pathStr,
                                                                 const String &name
-                                                                ) const
+                                                                ) const noexcept
     {
       NamespacePtr parentNamespace;
 
@@ -1427,7 +1428,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    bool IIDLTypes::Namespace::isGlobal() const
+    bool IIDLTypes::Namespace::isGlobal() const noexcept
     {
       if (mName.hasData()) return false;
       auto parent = getParent();
@@ -1442,7 +1443,7 @@ namespace zsLib
                                             ContextPtr context,
                                             ElementPtr namespacesEl,
                                             NamespaceMap &outNamespaces
-                                            ) throw (InvalidContent)
+                                            ) noexcept(false)
     {
       if (!namespacesEl) return;
 
@@ -1461,7 +1462,7 @@ namespace zsLib
                                     ContextPtr context,
                                     ElementPtr namespacesEl,
                                     NamespaceMap &ioNamespaces
-                                    ) throw (InvalidContent)
+                                    ) noexcept(false)
     {
       if (!namespacesEl) return;
 
@@ -1489,26 +1490,26 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IIDLTypes::Type
-    #pragma mark
+    //
+    // IIDLTypes::Type
+    //
 
     //-------------------------------------------------------------------------
     IIDLTypes::Type::Type(
                           const make_private &v,
                           ContextPtr context
-                          ) :
+                          ) noexcept :
       Context(v, context)
     {
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::Type::~Type()
+    IIDLTypes::Type::~Type() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::TypePtr IIDLTypes::Type::toType() const
+    IIDLTypes::TypePtr IIDLTypes::Type::toType() const noexcept
     {
       return ZS_DYNAMIC_PTR_CAST(Type, toContext());
     }
@@ -1517,7 +1518,7 @@ namespace zsLib
     IIDLTypes::TypePtr IIDLTypes::Type::createReferencedType(
                                                              ContextPtr context,
                                                              ElementPtr parentEl
-                                                             ) throw (InvalidContent)
+                                                             ) noexcept(false)
     {
       FindTypeOptions options;
 
@@ -1557,17 +1558,16 @@ namespace zsLib
       }
 
       ZS_THROW_CUSTOM(InvalidContent, "Referenced type was not found for context, context=" + context->getMappingName());
-      return TypePtr();
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::TypePtr IIDLTypes::Type::getOriginalType() const
+    IIDLTypes::TypePtr IIDLTypes::Type::getOriginalType() const noexcept
     {
       return toType();
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IIDLTypes::Type::createReferenceTypeElement() const
+    ElementPtr IIDLTypes::Type::createReferenceTypeElement() const noexcept
     {
       {
         auto typedefType = toTypedefType();
@@ -1583,48 +1583,43 @@ namespace zsLib
         }
       }
 
-      {
-        auto typeEl = Element::create("reference");
-        auto pathStr = getPath();
-        typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("path", pathStr));
-        typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("base", getMappingName()));
-        return typeEl;
-      }
-
-      ZS_THROW_INVALID_ASSUMPTION("Unexpected type reference found: " + getMappingName());
-      return ElementPtr();
+      auto typeEl = Element::create("reference");
+      auto pathStr = getPath();
+      typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("path", pathStr));
+      typeEl->adoptAsLastChild(UseHelper::createElementWithTextAndJSONEncode("base", getMappingName()));
+      return typeEl;
     }
 
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IIDLTypes::BasicType
-    #pragma mark
+    //
+    // IIDLTypes::BasicType
+    //
 
     //-------------------------------------------------------------------------
     IIDLTypes::BasicType::BasicType(
                                     const make_private &v,
                                     ContextPtr context
-                                    ) :
+                                    ) noexcept :
       Type(v, context)
     {
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::BasicType::~BasicType()
+    IIDLTypes::BasicType::~BasicType() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::BasicType::init()
+    void IIDLTypes::BasicType::init() noexcept
     {
       Context::init();
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::BasicType::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::BasicType::init(const ElementPtr &rootEl) noexcept(false)
     {
       Context::init(rootEl);
 
@@ -1648,7 +1643,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::BasicTypePtr IIDLTypes::BasicType::create(ContextPtr context)
+    IIDLTypes::BasicTypePtr IIDLTypes::BasicType::create(ContextPtr context) noexcept
     {
       auto pThis(make_shared<BasicType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -1657,13 +1652,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::BasicTypePtr IIDLTypes::BasicType::toBasicType() const
+    IIDLTypes::BasicTypePtr IIDLTypes::BasicType::toBasicType() const noexcept
     {
       return ZS_DYNAMIC_PTR_CAST(BasicType, toContext());
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IIDLTypes::BasicType::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::BasicType::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "basic";
 
@@ -1677,7 +1672,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::BasicType::hash() const
+    String IIDLTypes::BasicType::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -1695,32 +1690,32 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IIDLTypes::EnumType
-    #pragma mark
+    //
+    // IIDLTypes::EnumType
+    //
 
     //-------------------------------------------------------------------------
     IIDLTypes::EnumType::EnumType(
                                   const make_private &v,
                                   ContextPtr context
-                                  ) :
+                                  ) noexcept :
       Type(v, context)
     {
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::EnumType::~EnumType()
+    IIDLTypes::EnumType::~EnumType() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::EnumType::init()
+    void IIDLTypes::EnumType::init() noexcept
     {
       Context::init();
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::EnumType::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::EnumType::init(const ElementPtr &rootEl) noexcept(false)
     {
       Context::init(rootEl);
 
@@ -1728,7 +1723,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::EnumTypePtr IIDLTypes::EnumType::create(ContextPtr context)
+    IIDLTypes::EnumTypePtr IIDLTypes::EnumType::create(ContextPtr context) noexcept
     {
       auto pThis(make_shared<EnumType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -1740,7 +1735,7 @@ namespace zsLib
     IIDLTypes::EnumTypePtr IIDLTypes::EnumType::createForwards(
                                                                ContextPtr context,
                                                                const ElementPtr &el
-                                                               ) throw (InvalidContent)
+                                                               ) noexcept(false)
     {
       auto pThis(make_shared<EnumType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -1749,13 +1744,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::EnumTypePtr IIDLTypes::EnumType::toEnumType() const
+    IIDLTypes::EnumTypePtr IIDLTypes::EnumType::toEnumType() const noexcept
     {
       return ZS_DYNAMIC_PTR_CAST(EnumType, toContext());
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IIDLTypes::EnumType::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::EnumType::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "enum";
 
@@ -1779,7 +1774,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::EnumType::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::EnumType::parse(const ElementPtr &rootEl) noexcept(false)
     {
       if (!rootEl) return;
 
@@ -1799,7 +1794,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::EnumType::hash() const
+    String IIDLTypes::EnumType::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -1824,7 +1819,7 @@ namespace zsLib
                                        ContextPtr context,
                                        ElementPtr enumsEl,
                                        EnumMap &outEnums
-                                       ) throw (InvalidContent)
+                                       ) noexcept(false)
     {
       if (!enumsEl) return;
 
@@ -1841,7 +1836,7 @@ namespace zsLib
                                ContextPtr context,
                                ElementPtr enumsEl,
                                EnumMap &ioEnums
-                               ) throw (InvalidContent)
+                               ) noexcept(false)
     {
       if (!enumsEl) return;
 
@@ -1868,33 +1863,33 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IIDLTypes::EnumTypeValue
-    #pragma mark
+    //
+    // IIDLTypes::EnumTypeValue
+    //
 
     //-------------------------------------------------------------------------
     IIDLTypes::EnumTypeValue::EnumTypeValue(
                                             const make_private &v,
                                             ContextPtr context
-                                            ) :
+                                            ) noexcept :
       Context(v, context)
     {
     }
 
 
     //-------------------------------------------------------------------------
-    IIDLTypes::EnumTypeValue::~EnumTypeValue()
+    IIDLTypes::EnumTypeValue::~EnumTypeValue() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::EnumTypeValue::init()
+    void IIDLTypes::EnumTypeValue::init() noexcept
     {
       Context::init();
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::EnumTypeValue::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::EnumTypeValue::init(const ElementPtr &rootEl) noexcept(false)
     {
       Context::init(rootEl);
 
@@ -1902,7 +1897,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::EnumTypeValuePtr IIDLTypes::EnumTypeValue::create(ContextPtr context)
+    IIDLTypes::EnumTypeValuePtr IIDLTypes::EnumTypeValue::create(ContextPtr context) noexcept
     {
       auto pThis(make_shared<EnumTypeValue>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -1914,7 +1909,7 @@ namespace zsLib
     IIDLTypes::EnumTypeValuePtr IIDLTypes::EnumTypeValue::create(
                                                                  ContextPtr context,
                                                                  const ElementPtr &el
-                                                                 ) throw (InvalidContent)
+                                                                 ) noexcept(false)
     {
       auto pThis(make_shared<EnumTypeValue>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -1923,13 +1918,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::EnumTypeValuePtr IIDLTypes::EnumTypeValue::toEnumTypeValue() const
+    IIDLTypes::EnumTypeValuePtr IIDLTypes::EnumTypeValue::toEnumTypeValue() const noexcept
     {
       return ZS_DYNAMIC_PTR_CAST(EnumTypeValue, toContext());
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IIDLTypes::EnumTypeValue::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::EnumTypeValue::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "value";
 
@@ -1943,7 +1938,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::EnumTypeValue::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::EnumTypeValue::parse(const ElementPtr &rootEl) noexcept(false)
     {
       if (!rootEl) return;
 
@@ -1953,7 +1948,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::EnumTypeValue::hash() const
+    String IIDLTypes::EnumTypeValue::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -1972,7 +1967,7 @@ namespace zsLib
                                      ContextPtr context,
                                      ElementPtr enumValuesEl,
                                      EnumTypeValueList &outEnumValues
-                                     ) throw (InvalidContent)
+                                     ) noexcept(false)
     {
       if (!enumValuesEl) return;
 
@@ -1988,33 +1983,33 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IIDLTypes::TypedefType
-    #pragma mark
+    //
+    // IIDLTypes::TypedefType
+    //
 
     //-------------------------------------------------------------------------
     IIDLTypes::TypedefType::TypedefType(
                                         const make_private &v,
                                         ContextPtr context
-                                        ) :
+                                        ) noexcept :
       Type(v, context)
     {
     }
 
 
     //-------------------------------------------------------------------------
-    IIDLTypes::TypedefType::~TypedefType()
+    IIDLTypes::TypedefType::~TypedefType() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::TypedefType::init()
+    void IIDLTypes::TypedefType::init() noexcept
     {
       Context::init();
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::TypedefType::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::TypedefType::init(const ElementPtr &rootEl) noexcept(false)
     {
       if (!rootEl) return;
 
@@ -2022,7 +2017,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::TypedefTypePtr IIDLTypes::TypedefType::create(ContextPtr context)
+    IIDLTypes::TypedefTypePtr IIDLTypes::TypedefType::create(ContextPtr context) noexcept
     {
       auto pThis(make_shared<TypedefType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2034,7 +2029,7 @@ namespace zsLib
     IIDLTypes::TypedefTypePtr IIDLTypes::TypedefType::createForwards(
                                                                      ContextPtr context,
                                                                      const ElementPtr &el
-                                                                     ) throw (InvalidContent)
+                                                                     ) noexcept(false)
     {
       auto pThis(make_shared<TypedefType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2043,13 +2038,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::TypedefTypePtr IIDLTypes::TypedefType::toTypedefType() const
+    IIDLTypes::TypedefTypePtr IIDLTypes::TypedefType::toTypedefType() const noexcept
     {
       return ZS_DYNAMIC_PTR_CAST(TypedefType, toContext());
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IIDLTypes::TypedefType::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::TypedefType::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "typedef";
 
@@ -2090,7 +2085,7 @@ namespace zsLib
           if (templatedStructType) goto insert_path_and_base;
         }
 
-        ZS_THROW_BAD_STATE("typedef is not resolved to a proper type");
+        ZS_ASSERT_FAIL("typedef is not resolved to a proper type");
 
       insert_path_and_base:
         {
@@ -2105,14 +2100,14 @@ namespace zsLib
         }
       } else {
         // must point to something if not generic template typedef
-        ZS_THROW_BAD_STATE("typedef does not map to an original type");
+        ZS_ASSERT_FAIL("typedef does not map to an original type");
       }
 
       return rootEl;
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::TypedefType::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::TypedefType::parse(const ElementPtr &rootEl) noexcept(false)
     {
       if (!rootEl) return;
 
@@ -2132,7 +2127,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::TypedefType::hash() const
+    String IIDLTypes::TypedefType::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -2154,7 +2149,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::TypedefType::resolveTypedefs() throw (InvalidContent)
+    void IIDLTypes::TypedefType::resolveTypedefs() noexcept(false)
     {
       auto originalType = mOriginalType.lock();
 
@@ -2205,7 +2200,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::TypePtr IIDLTypes::TypedefType::getOriginalType() const
+    IIDLTypes::TypePtr IIDLTypes::TypedefType::getOriginalType() const noexcept
     {
       auto originalType = mOriginalType.lock();
       if (originalType) return originalType;
@@ -2218,7 +2213,7 @@ namespace zsLib
                                           ContextPtr context,
                                           ElementPtr typedefsEl,
                                           TypedefTypeMap &outTypedefs
-                                          ) throw (InvalidContent)
+                                          ) noexcept(false)
     {
       if (!typedefsEl) return;
 
@@ -2235,7 +2230,7 @@ namespace zsLib
                                   ContextPtr context,
                                   ElementPtr typedefsEl,
                                   TypedefTypeMap &ioTypedefs
-                                  ) throw (InvalidContent)
+                                  ) noexcept(false)
     {
       if (!typedefsEl) return;
 
@@ -2264,32 +2259,32 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IIDLTypes::Struct
-    #pragma mark
+    //
+    // IIDLTypes::Struct
+    //
 
     //-------------------------------------------------------------------------
     IIDLTypes::Struct::Struct(
                               const make_private &v,
                               ContextPtr context
-                              ) :
+                              ) noexcept :
       Type(v, context)
     {
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::Struct::~Struct()
+    IIDLTypes::Struct::~Struct() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Struct::init()
+    void IIDLTypes::Struct::init() noexcept
     {
       Context::init();
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Struct::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Struct::init(const ElementPtr &rootEl) noexcept(false)
     {
       Context::init(rootEl);
 
@@ -2305,7 +2300,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::StructPtr IIDLTypes::Struct::create(ContextPtr context)
+    IIDLTypes::StructPtr IIDLTypes::Struct::create(ContextPtr context) noexcept
     {
       auto pThis(make_shared<Struct>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2317,7 +2312,7 @@ namespace zsLib
     IIDLTypes::StructPtr IIDLTypes::Struct::createForwards(
                                                            ContextPtr context,
                                                            const ElementPtr &el
-                                                           ) throw (InvalidContent)
+                                                           ) noexcept(false)
     {
       auto pThis(make_shared<Struct>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2326,7 +2321,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IIDLTypes::Struct::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::Struct::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "struct";
 
@@ -2445,7 +2440,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Struct::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Struct::parse(const ElementPtr &rootEl) noexcept(false)
     {
       if (!rootEl) return;
 
@@ -2513,7 +2508,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::Struct::hash() const
+    String IIDLTypes::Struct::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -2596,7 +2591,7 @@ namespace zsLib
                                                    const String &pathStr,
                                                    const String &typeName,
                                                    const FindTypeOptions &options
-                                                   ) const
+                                                   ) const noexcept
     {
       String checkPath = pathStr;
 
@@ -2707,7 +2702,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Struct::resolveTypedefs() throw (InvalidContent)
+    void IIDLTypes::Struct::resolveTypedefs() noexcept(false)
     {
       for (auto iter = mTypedefs.begin(); iter != mTypedefs.end(); ++iter) {
         auto obj = (*iter).second;
@@ -2758,7 +2753,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    bool IIDLTypes::Struct::fixTemplateHashMapping()
+    bool IIDLTypes::Struct::fixTemplateHashMapping() noexcept
     {
       bool didFix = false;
       for (auto iter_doNotUse = mStructs.begin(); iter_doNotUse != mStructs.end(); ) {
@@ -2794,13 +2789,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::StructPtr IIDLTypes::Struct::toStruct() const
+    IIDLTypes::StructPtr IIDLTypes::Struct::toStruct() const noexcept
     {
       return ZS_DYNAMIC_PTR_CAST(Struct, toContext());
     }
 
     //-------------------------------------------------------------------------
-    bool IIDLTypes::Struct::hasExistingNonForwardedData() const
+    bool IIDLTypes::Struct::hasExistingNonForwardedData() const noexcept
     {
       if (mGenerics.size() > 0) return true;
       if (mGenericDefaultTypes.size() > 0) return true;
@@ -2816,7 +2811,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::StructPtr IIDLTypes::Struct::getRootStruct() const
+    IIDLTypes::StructPtr IIDLTypes::Struct::getRootStruct() const noexcept
     {
       StructPtr structObj = toStruct();
 
@@ -2837,7 +2832,7 @@ namespace zsLib
                                          ContextPtr context,
                                          ElementPtr structsEl,
                                          StructMap &outStructs
-                                         ) throw (InvalidContent)
+                                         ) noexcept(false)
     {
       if (!structsEl) return;
 
@@ -2856,7 +2851,7 @@ namespace zsLib
                                  ContextPtr context,
                                  ElementPtr structsEl,
                                  StructMap &ioStructs
-                                 ) throw (InvalidContent)
+                                 ) noexcept(false)
     {
       if (!structsEl) return;
 
@@ -2884,33 +2879,33 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IIDLTypes::GenericType
-    #pragma mark
+    //
+    // IIDLTypes::GenericType
+    //
 
 
     //-------------------------------------------------------------------------
     IIDLTypes::GenericType::GenericType(
                                         const make_private &v,
                                         ContextPtr context
-                                        ) :
+                                        ) noexcept :
       Type(v, context)
     {
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::GenericType::~GenericType()
+    IIDLTypes::GenericType::~GenericType() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::GenericType::init()
+    void IIDLTypes::GenericType::init() noexcept
     {
       Context::init();
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::GenericType::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::GenericType::init(const ElementPtr &rootEl) noexcept(false)
     {
       Context::init(rootEl);
 
@@ -2918,7 +2913,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::GenericTypePtr IIDLTypes::GenericType::create(ContextPtr context)
+    IIDLTypes::GenericTypePtr IIDLTypes::GenericType::create(ContextPtr context) noexcept
     {
       auto pThis(make_shared<GenericType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2930,7 +2925,7 @@ namespace zsLib
     IIDLTypes::GenericTypePtr IIDLTypes::GenericType::createForward(
                                                                     ContextPtr context,
                                                                     const ElementPtr &el
-                                                                    ) throw (InvalidContent)
+                                                                    ) noexcept(false)
     {
       auto pThis(make_shared<GenericType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -2939,13 +2934,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::GenericTypePtr IIDLTypes::GenericType::toGenericType() const
+    IIDLTypes::GenericTypePtr IIDLTypes::GenericType::toGenericType() const noexcept
     {
       return ZS_DYNAMIC_PTR_CAST(GenericType, toContext());
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IIDLTypes::GenericType::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::GenericType::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "generic";
 
@@ -2957,7 +2952,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::GenericType::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::GenericType::parse(const ElementPtr &rootEl) noexcept(false)
     {
       if (!rootEl) return;
 
@@ -2965,7 +2960,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::GenericType::hash() const
+    String IIDLTypes::GenericType::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -2981,7 +2976,7 @@ namespace zsLib
                                           ContextPtr context,
                                           ElementPtr genericsEl,
                                           GenericTypeList &outGenerics
-                                          ) throw (InvalidContent)
+                                          ) noexcept(false)
     {
       if (!genericsEl) return;
 
@@ -2997,10 +2992,10 @@ namespace zsLib
 
     //-------------------------------------------------------------------------
     void IIDLTypes::parseGenerics(
-                                     ContextPtr context,
-                                     ElementPtr genericsEl,
-                                     GenericTypeList &ioGenerics
-                                     ) throw (InvalidContent)
+                                  ContextPtr context,
+                                  ElementPtr genericsEl,
+                                  GenericTypeList &ioGenerics
+                                  ) noexcept(false)
     {
       if (!genericsEl) return;
 
@@ -3021,33 +3016,33 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IIDLTypes::TemplatedStructType
-    #pragma mark
+    //
+    // IIDLTypes::TemplatedStructType
+    //
 
     //-------------------------------------------------------------------------
     IIDLTypes::TemplatedStructType::TemplatedStructType(
                                                         const make_private &v,
                                                         ContextPtr context
-                                                        ) :
+                                                        ) noexcept :
       Type(v, context)
     {
     }
 
 
     //-------------------------------------------------------------------------
-    IIDLTypes::TemplatedStructType::~TemplatedStructType()
+    IIDLTypes::TemplatedStructType::~TemplatedStructType() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::TemplatedStructType::init()
+    void IIDLTypes::TemplatedStructType::init() noexcept
     {
       Context::init();
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::TemplatedStructType::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::TemplatedStructType::init(const ElementPtr &rootEl) noexcept(false)
     {
       Context::init(rootEl);
 
@@ -3055,7 +3050,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::TemplatedStructTypePtr IIDLTypes::TemplatedStructType::create(ContextPtr context)
+    IIDLTypes::TemplatedStructTypePtr IIDLTypes::TemplatedStructType::create(ContextPtr context) noexcept
     {
       auto pThis(make_shared<TemplatedStructType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -3067,7 +3062,7 @@ namespace zsLib
     IIDLTypes::TemplatedStructTypePtr IIDLTypes::TemplatedStructType::createForwards(
                                                                                      ContextPtr context,
                                                                                      const ElementPtr &el
-                                                                                     ) throw (InvalidContent)
+                                                                                     ) noexcept(false)
     {
       auto pThis(make_shared<TemplatedStructType>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -3076,13 +3071,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::TemplatedStructTypePtr IIDLTypes::TemplatedStructType::toTemplatedStructType() const
+    IIDLTypes::TemplatedStructTypePtr IIDLTypes::TemplatedStructType::toTemplatedStructType() const noexcept
     {
       return ZS_DYNAMIC_PTR_CAST(TemplatedStructType, toContext());
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IIDLTypes::TemplatedStructType::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::TemplatedStructType::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "templatedStruct";
 
@@ -3112,7 +3107,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::TemplatedStructType::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::TemplatedStructType::parse(const ElementPtr &rootEl) noexcept(false)
     {
       if (!rootEl) return;
 
@@ -3143,7 +3138,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::TemplatedStructType::hash() const
+    String IIDLTypes::TemplatedStructType::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -3169,7 +3164,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::TemplatedStructType::resolveTypedefs() throw (InvalidContent)
+    void IIDLTypes::TemplatedStructType::resolveTypedefs() noexcept(false)
     {
       for (auto iter_doNotUse = mTemplateArguments.begin(); iter_doNotUse != mTemplateArguments.end(); ) {
         auto current = iter_doNotUse;
@@ -3187,7 +3182,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::TemplatedStructType::calculateTemplateID() const
+    String IIDLTypes::TemplatedStructType::calculateTemplateID() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -3210,7 +3205,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::StructPtr IIDLTypes::TemplatedStructType::getParentStruct() const
+    IIDLTypes::StructPtr IIDLTypes::TemplatedStructType::getParentStruct() const noexcept
     {
       auto parent = getParent();
       if (!parent) return StructPtr();
@@ -3222,7 +3217,7 @@ namespace zsLib
                                                       ContextPtr context,
                                                       ElementPtr templatedStructsEl,
                                                       TemplatedStructTypeMap &outTemplatedStruct
-                                                      ) throw (InvalidContent)
+                                                      ) noexcept(false)
     {
       if (!templatedStructsEl) return;
 
@@ -3241,7 +3236,7 @@ namespace zsLib
                                               ContextPtr context,
                                               ElementPtr templatedStructsEl,
                                               TemplatedStructTypeMap &ioTemplatedStruct
-                                              ) throw (InvalidContent)
+                                              ) noexcept(false)
     {
       if (!templatedStructsEl) return;
 
@@ -3269,32 +3264,32 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IIDLTypes::Property
-    #pragma mark
+    //
+    // IIDLTypes::Property
+    //
 
     //-------------------------------------------------------------------------
     IIDLTypes::Property::Property(
                                   const make_private &v,
                                   ContextPtr context
-                                  ) :
+                                  ) noexcept :
       Context(v, context)
     {
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::Property::~Property()
+    IIDLTypes::Property::~Property() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Property::init()
+    void IIDLTypes::Property::init() noexcept
     {
       Context::init();
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Property::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Property::init(const ElementPtr &rootEl) noexcept(false)
     {
       Context::init(rootEl);
       Context::parse(rootEl);
@@ -3308,7 +3303,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::PropertyPtr IIDLTypes::Property::create(ContextPtr context)
+    IIDLTypes::PropertyPtr IIDLTypes::Property::create(ContextPtr context) noexcept
     {
       auto pThis(make_shared<Property>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -3320,7 +3315,7 @@ namespace zsLib
     IIDLTypes::PropertyPtr IIDLTypes::Property::create(
                                                        ContextPtr context,
                                                        const ElementPtr &el
-                                                       ) throw (InvalidContent)
+                                                       ) noexcept(false)
     {
       auto pThis(make_shared<Property>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -3329,13 +3324,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::PropertyPtr IIDLTypes::Property::toProperty() const
+    IIDLTypes::PropertyPtr IIDLTypes::Property::toProperty() const noexcept
     {
       return ZS_DYNAMIC_PTR_CAST(Property, toContext());
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IIDLTypes::Property::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::Property::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "property";
 
@@ -3356,7 +3351,7 @@ namespace zsLib
 
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::Property::hash() const
+    String IIDLTypes::Property::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -3378,7 +3373,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Property::resolveTypedefs() throw (InvalidContent)
+    void IIDLTypes::Property::resolveTypedefs() noexcept(false)
     {
       if (mType) {
         mType = mType->getOriginalType();
@@ -3390,7 +3385,7 @@ namespace zsLib
                                      ContextPtr context,
                                      ElementPtr propertiesEl,
                                      PropertyList &outProperties
-                                     ) throw (InvalidContent)
+                                     ) noexcept(false)
     {
       if (!propertiesEl) return;
 
@@ -3408,32 +3403,32 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IIDLTypes::Method
-    #pragma mark
+    //
+    // IIDLTypes::Method
+    //
 
     //-------------------------------------------------------------------------
     IIDLTypes::Method::Method(
                               const make_private &v,
                               ContextPtr context
-                              ) :
+                              ) noexcept :
       Context(v, context)
     {
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::Method::~Method()
+    IIDLTypes::Method::~Method() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Method::init()
+    void IIDLTypes::Method::init() noexcept
     {
       Context::init();
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Method::init(const ElementPtr &rootEl) throw (InvalidContent)
+    void IIDLTypes::Method::init(const ElementPtr &rootEl) noexcept(false)
     {
       Context::init(rootEl);
       Context::parse(rootEl);
@@ -3476,7 +3471,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::MethodPtr IIDLTypes::Method::create(ContextPtr context)
+    IIDLTypes::MethodPtr IIDLTypes::Method::create(ContextPtr context) noexcept
     {
       auto pThis(make_shared<Method>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -3488,7 +3483,7 @@ namespace zsLib
     IIDLTypes::MethodPtr IIDLTypes::Method::create(
                                                    ContextPtr context,
                                                    const ElementPtr &el
-                                                   ) throw (InvalidContent)
+                                                   ) noexcept(false)
     {
       auto pThis(make_shared<Method>(make_private{}, context));
       pThis->mThisWeak = pThis;
@@ -3497,13 +3492,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IIDLTypes::MethodPtr IIDLTypes::Method::toMethod() const
+    IIDLTypes::MethodPtr IIDLTypes::Method::toMethod() const noexcept
     {
       return ZS_DYNAMIC_PTR_CAST(Method, toContext());
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IIDLTypes::Method::createElement(const char *objectName) const
+    ElementPtr IIDLTypes::Method::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "method";
 
@@ -3542,7 +3537,7 @@ namespace zsLib
 
 
     //-------------------------------------------------------------------------
-    String IIDLTypes::Method::hash() const
+    String IIDLTypes::Method::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -3581,7 +3576,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IIDLTypes::Method::resolveTypedefs() throw (InvalidContent)
+    void IIDLTypes::Method::resolveTypedefs() noexcept(false)
     {
       for (auto iter = mArguments.begin(); iter != mArguments.end(); ++iter) {
         auto obj = (*iter);
@@ -3609,7 +3604,7 @@ namespace zsLib
                                   ContextPtr context,
                                   ElementPtr methodsEl,
                                   MethodList &outMethods
-                                  ) throw (InvalidContent)
+                                  ) noexcept(false)
     {
       if (!methodsEl) return;
 

@@ -55,9 +55,9 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IOutputDelegate
-      #pragma mark
+      //
+      // IOutputDelegate
+      //
 
       interaction IOutputDelegate
       {
@@ -69,9 +69,9 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark StdOutputStream
-      #pragma mark
+      //
+      // StdOutputStream
+      //
 
       class StdOutputStream : public IOutputDelegate
       {
@@ -83,9 +83,9 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark DebugOutputStream
-      #pragma mark
+      //
+      // DebugOutputStream
+      //
 
       class DebugOutputStream : public IOutputDelegate
       {
@@ -98,9 +98,9 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark tool_basic_streambuf
-      #pragma mark
+      //
+      // tool_basic_streambuf
+      //
 
       template < typename T, class CharTraits = std::char_traits< T > >
       class tool_basic_streambuf : private std::basic_streambuf< T, CharTraits >
@@ -168,9 +168,9 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark tool_basic_ostream
-      #pragma mark
+      //
+      // tool_basic_ostream
+      //
 
       template < typename T, class CharTraits = std::char_traits< T > >
       class tool_basic_ostream : public std::basic_ostream< T, CharTraits >,
@@ -259,9 +259,9 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark tool_basic_ostream => IOutputDelegate
-        #pragma mark
+        //
+        // tool_basic_ostream => IOutputDelegate
+        //
 
         //---------------------------------------------------------------------
         virtual void output(const char *str) const override

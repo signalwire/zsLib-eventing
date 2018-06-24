@@ -47,9 +47,9 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark EventingCompiler
-        #pragma mark
+        //
+        // EventingCompiler
+        //
 
         class EventingCompiler : public ICompiler
         {
@@ -60,60 +60,60 @@ namespace zsLib
           EventingCompiler(
                            const make_private &,
                            const Config &config
-                           );
-          ~EventingCompiler();
+                           ) noexcept;
+          ~EventingCompiler() noexcept;
 
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark EventingCompiler => ICompiler
-          #pragma mark
+          //
+          // EventingCompiler => ICompiler
+          //
 
-          static EventingCompilerPtr create(const Config &config);
+          static EventingCompilerPtr create(const Config &config) noexcept;
 
-          void process() throw (Failure, FailureWithLine) override;
+          void process() noexcept(false) override; // throws Failure, FailureWithLine
 
         protected:
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark EventingCompiler => (internal)
-          #pragma mark
+          //
+          // EventingCompiler => (internal)
+          //
 
-          void outputMacros();
-          void read() throw (Failure, FailureWithLine);
-          void prepareIndex() throw (Failure);
-          void validate() throw (Failure);
-          DocumentPtr generateManifest(const String &resourcePostFix) const throw (Failure);
-          DocumentPtr generateWprp() const throw (Failure);
-          DocumentPtr generateJsonMan() const throw (Failure);
+          void outputMacros() noexcept;
+          void read() noexcept(false); // throws Failure, FailureWithLine
+          void prepareIndex() noexcept(false); // throws Failure
+          void validate() noexcept(false); // throws Failure
+          DocumentPtr generateManifest(const String &resourcePostFix) const noexcept(false); // throws Failure
+          DocumentPtr generateWprp() const noexcept(false); // throws Failure
+          DocumentPtr generateJsonMan() const noexcept(false); // throws Failure
           SecureByteBlockPtr generateXPlatformEventsHeader(
                                                            const String &outputNameXPlatform,
                                                            const String &outputNameWindows
-                                                           ) const throw (Failure);
+                                                           ) const noexcept(false); // throws Failure
           SecureByteBlockPtr generateWindowsEventsHeader(
                                                          const String &outputNameXPlatform,
                                                          const String &outputNameWindows,
                                                          const String &outputNameWindowsETW
-                                                         ) const throw (Failure);
+                                                         ) const noexcept(false); // throws Failure
 
-          void writeXML(const String &outputName, const DocumentPtr &doc) const throw (Failure);
+          void writeXML(const String &outputName, const DocumentPtr &doc) const noexcept(false); // throws Failure
 
           static SecureByteBlockPtr makeIntoCArray(
                                                    std::stringstream &ssPrefix,
                                                    std::stringstream &ssPostFix,
                                                    const SecureByteBlock &buffer
-                                                   );
+                                                   ) noexcept;
           void writeJSON(
                          const String &outputName,
                          const String &outputAsCName,
                          const DocumentPtr &doc
-                         ) const throw (Failure);
-          void writeBinary(const String &outputName, const SecureByteBlockPtr &buffer) const throw (Failure);
+                         ) const noexcept(false); // throws Failure
+          void writeBinary(const String &outputName, const SecureByteBlockPtr &buffer) const noexcept(false); // throws Failure
 
         private:
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark EventingCompiler => (data)
-          #pragma mark
+          //
+          // EventingCompiler => (data)
+          //
 
           EventingCompilerWeakPtr mThisWeak;
 

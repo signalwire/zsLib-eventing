@@ -56,7 +56,7 @@ namespace zsLib
         {
         public:
           //-------------------------------------------------------------------
-          static void installIDLTarget(IIDLCompilerTargetPtr target)
+          static void installIDLTarget(IIDLCompilerTargetPtr target) noexcept
           {
             auto pThis = singleton();
             if (!pThis) return;
@@ -65,14 +65,14 @@ namespace zsLib
           }
 
           //-------------------------------------------------------------------
-          static IDLTargetsPtr singleton()
+          static IDLTargetsPtr singleton() noexcept
           {
             static SingletonLazySharedPtr<IDLTargets> singleton(make_shared<IDLTargets>());
             return singleton.singleton();
           }
 
           //-------------------------------------------------------------------
-          static void getTargets(ICompilerTypes::IDLCompilerTargetMap &targets)
+          static void getTargets(ICompilerTypes::IDLCompilerTargetMap &targets) noexcept
           {
             auto pThis = singleton();
             if (!pThis) return;
@@ -85,7 +85,7 @@ namespace zsLib
         };
 
         //---------------------------------------------------------------------
-        void installIDLTarget(IIDLCompilerTargetPtr target)
+        void installIDLTarget(IIDLCompilerTargetPtr target) noexcept
         {
           if (!target) return;
           IDLTargets::installIDLTarget(target);
@@ -96,17 +96,17 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark ICommandLineTypes::MonitorInfo
-      #pragma mark
+      //
+      // ICommandLineTypes::MonitorInfo
+      //
 
       //-----------------------------------------------------------------------
-      ICommandLineTypes::MonitorInfo::MonitorInfo()
+      ICommandLineTypes::MonitorInfo::MonitorInfo() noexcept
       {
       }
 
       //-----------------------------------------------------------------------
-      ICommandLineTypes::MonitorInfo::MonitorInfo(const MonitorInfo &source) :
+      ICommandLineTypes::MonitorInfo::MonitorInfo(const MonitorInfo &source) noexcept :
         mMonitor(source.mMonitor),
         mQuietMode(source.mQuietMode),
         mIPAddress(source.mIPAddress),
@@ -121,12 +121,12 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      ICommandLineTypes::MonitorInfo::~MonitorInfo()
+      ICommandLineTypes::MonitorInfo::~MonitorInfo() noexcept
       {
       }
 
       //-----------------------------------------------------------------------
-      ICommandLineTypes::MonitorInfo &ICommandLineTypes::MonitorInfo::operator=(const ICommandLineTypes::MonitorInfo &source)
+      ICommandLineTypes::MonitorInfo &ICommandLineTypes::MonitorInfo::operator=(const ICommandLineTypes::MonitorInfo &source) noexcept
       {
         mMonitor = source.mMonitor;
         mQuietMode = source.mQuietMode;
@@ -147,12 +147,12 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark ICommandLine
-      #pragma mark
+      //
+      // ICommandLine
+      //
 
       //-----------------------------------------------------------------------
-      ICommandLineTypes::Flags ICommandLineTypes::toFlag(const char *value)
+      ICommandLineTypes::Flags ICommandLineTypes::toFlag(const char *value) noexcept
       {
         String str(value);
         for (ICommandLine::Flags index = ICommandLine::Flag_First; index <= ICommandLine::Flag_Last; index = static_cast<ICommandLine::Flags>(static_cast<std::underlying_type<ICommandLine::Flags>::type>(index) + 1)) {
@@ -163,7 +163,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      const char *ICommandLineTypes::toString(Flags flag)
+      const char *ICommandLineTypes::toString(Flags flag) noexcept
       {
         switch (flag)
         {
@@ -188,18 +188,19 @@ namespace zsLib
           case Flag_MonitorSecret:    return "secret";
           case Flag_MonitorLogLevel:  return "level";
         }
+        ZS_ASSERT_FAIL("unknown command line flag");
         return "unknown";
       }
 
       //-----------------------------------------------------------------------
-      void ICommandLine::outputHeader()
+      void ICommandLine::outputHeader() noexcept
       {
         output() << "zsLibEventTool (v0.1)\n";
-        output() << "(c)2016 Robin Raymond. All rights reserved.\n\n";
+        output() << "(c)2016-2018 Robin Raymond. All rights reserved.\n\n";
       }
 
       //-----------------------------------------------------------------------
-      void ICommandLine::outputHelp()
+      void ICommandLine::outputHelp() noexcept
       {
         ICompilerTypes::IDLCompilerTargetMap targets;
         internal::IDLTargets::getTargets(targets);
@@ -252,7 +253,7 @@ namespace zsLib
       StringList ICommandLine::toList(
                                       int inArgc,
                                       const char * const inArgv[]
-                                      )
+                                      ) noexcept
       {
         StringList result;
         for (auto iter = 0; iter < inArgc; ++iter) {
@@ -268,7 +269,7 @@ namespace zsLib
       StringList ICommandLine::toList(
                                       int inArgc,
                                       const wchar_t * const inArgv[]
-                                      )
+                                      ) noexcept
       {
         StringList result;
         for (auto iter = 0; iter < inArgc; ++iter) {
@@ -281,7 +282,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      int ICommandLine::performDefaultHandling(const StringList &arguments)
+      int ICommandLine::performDefaultHandling(const StringList &arguments) noexcept
       {
         zsLib::IHelper::setup();
         zsLib::ISettings::applyDefaults();
@@ -333,7 +334,7 @@ namespace zsLib
                                  MonitorInfo &outMonitor,
                                  ICompilerTypes::Config &outConfig,
                                  bool &outDidOutputHelp
-                                 ) throw (InvalidArgument)
+                                 ) noexcept(false)
       {
         ICompilerTypes::IDLCompilerTargetMap idlTargets;
         internal::IDLTargets::getTargets(idlTargets);
@@ -560,7 +561,7 @@ namespace zsLib
                                   MonitorInfo &monitorInfo,
                                   ICompilerTypes::Config &config,
                                   bool didOutputHelp
-                                  ) throw (InvalidArgument, NoopException)
+                                  ) noexcept(false)
       {
         if (monitorInfo.mMonitor) {
           if (!monitorInfo.mIPAddress.isAddressEmpty()) {
@@ -588,7 +589,7 @@ namespace zsLib
       void ICommandLine::process(
                                  MonitorInfo &monitor,
                                  ICompilerTypes::Config &config
-                                 ) throw (Failure)
+                                 ) noexcept(false)
       {
         if (monitor.mMonitor) {
           internal::Monitor::monitor(monitor);
@@ -602,7 +603,7 @@ namespace zsLib
       }
 
       //-----------------------------------------------------------------------
-      void ICommandLine::interrupt()
+      void ICommandLine::interrupt() noexcept
       {
         internal::Monitor::interrupt();
       }

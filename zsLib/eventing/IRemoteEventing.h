@@ -42,9 +42,9 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IRemoteEventingTypes
-    #pragma mark
+    //
+    // IRemoteEventingTypes
+    //
 
     interaction IRemoteEventingTypes
     {
@@ -69,17 +69,17 @@ namespace zsLib
         Port_Default = 63311
       };
       
-      static const char *toString(States state);
-      States toState(const char *state) throw (InvalidArgument);      
+      static const char *toString(States state) noexcept;
+      States toState(const char *state) noexcept(false); // throws InvalidArgument
     };
 
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IRemoteEventing
-    #pragma mark
+    //
+    // IRemoteEventing
+    //
 
     interaction IRemoteEventing : public IRemoteEventingTypes
     {
@@ -87,34 +87,34 @@ namespace zsLib
                                                 IRemoteEventingDelegatePtr connectionDelegate,
                                                 const IPAddress &serverIP,
                                                 const char *connectionSharedSecret
-                                                );
+                                                ) noexcept;
 
       static IRemoteEventingPtr listenForRemote(
                                                 IRemoteEventingDelegatePtr connectionDelegate,
                                                 WORD localPort,
                                                 const char *connectionSharedSecret,
                                                 Seconds maxWaitToBindTimeInSeconds = Seconds(60)
-                                                );
-      virtual PUID getID() const = 0;
+                                                ) noexcept;
+      virtual PUID getID() const noexcept = 0;
 
-      virtual void shutdown() = 0;
+      virtual void shutdown() noexcept = 0;
 
-      virtual States getState() const = 0;
+      virtual States getState() const noexcept = 0;
 
       virtual void setRemoteLevel(
                                   const char *remoteSubsystemName,
                                   Level level,
                                   bool setOnlyDefaultLevel
-                                  ) = 0;
+                                  ) noexcept = 0;
     };
 
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IRemoteEventingDelegate
-    #pragma mark
+    //
+    // IRemoteEventingDelegate
+    //
 
     interaction IRemoteEventingDelegate
     {
@@ -123,35 +123,35 @@ namespace zsLib
       typedef zsLib::Log::KeywordBitmaskType KeywordBitmaskType;
       
       virtual void onRemoteEventingStateChanged(
-                                                IRemoteEventingPtr connection,
-                                                States state
-                                                ) {};
+                                                ZS_MAYBE_USED() IRemoteEventingPtr connection,
+                                                ZS_MAYBE_USED() States state
+                                                ) { ZS_MAYBE_USED(connection); ZS_MAYBE_USED(state); };
       
       virtual void onRemoteEventingRemoteSubsystem(
-                                                   IRemoteEventingPtr connection,
-                                                   const char *subsystemName
-                                                   ) {};
+                                                   ZS_MAYBE_USED() IRemoteEventingPtr connection,
+                                                   ZS_MAYBE_USED() const char *subsystemName
+                                                   ) { ZS_MAYBE_USED(connection); ZS_MAYBE_USED(subsystemName); };
       
       virtual void onRemoteEventingRemoteProvider(
-                                                  UUID providerID,
-                                                  const char *providerName,
-                                                  const char *providerUniqueHash
-                                                  ) {}
-      virtual void onRemoteEventingRemoteProviderGone(const char *providerName) {}
+                                                  ZS_MAYBE_USED() UUID providerID,
+                                                  ZS_MAYBE_USED() const char *providerName,
+                                                  ZS_MAYBE_USED() const char *providerUniqueHash
+                                                  ) { ZS_MAYBE_USED(providerID); ZS_MAYBE_USED(providerName); ZS_MAYBE_USED(providerUniqueHash); }
+      virtual void onRemoteEventingRemoteProviderGone(ZS_MAYBE_USED() const char *providerName) { ZS_MAYBE_USED(providerName); }
       
       virtual void onRemoteEventingRemoteProviderStateChange(
-                                                             const char *providerName,
-                                                             KeywordBitmaskType keywords
-                                                             ) {}
+                                                             ZS_MAYBE_USED() const char *providerName,
+                                                             ZS_MAYBE_USED() KeywordBitmaskType keywords
+                                                             ) { ZS_MAYBE_USED(providerName); ZS_MAYBE_USED(keywords); }
 
       virtual void onRemoteEventingLocalDroppedEvents(
-                                                      IRemoteEventingPtr connection,
-                                                      size_t totalDropped
-                                                      ) {}
+                                                      ZS_MAYBE_USED() IRemoteEventingPtr connection,
+                                                      ZS_MAYBE_USED() size_t totalDropped
+                                                      ) { ZS_MAYBE_USED(connection); ZS_MAYBE_USED(totalDropped); }
       virtual void onRemoteEventingRemoteDroppedEvents(
-                                                       IRemoteEventingPtr connection,
-                                                       size_t totalDropped
-                                                       ) {}
+                                                       ZS_MAYBE_USED() IRemoteEventingPtr connection,
+                                                       ZS_MAYBE_USED() size_t totalDropped
+                                                       ) { ZS_MAYBE_USED(connection); ZS_MAYBE_USED(totalDropped); }
     };
   }
 }
@@ -161,11 +161,11 @@ ZS_DECLARE_PROXY_TYPEDEF(zsLib::eventing::IRemoteEventingPtr, IRemoteEventingPtr
 ZS_DECLARE_PROXY_TYPEDEF(zsLib::eventing::IRemoteEventingTypes::States, States)
 ZS_DECLARE_PROXY_TYPEDEF(std::size_t, size_t)
 ZS_DECLARE_PROXY_TYPEDEF(zsLib::UUID, UUID)
-ZS_DECLARE_PROXY_METHOD_2(onRemoteEventingStateChanged, IRemoteEventingPtr, States)
-ZS_DECLARE_PROXY_METHOD_2(onRemoteEventingRemoteSubsystem, IRemoteEventingPtr, const char *)
-ZS_DECLARE_PROXY_METHOD_3(onRemoteEventingRemoteProvider, UUID, const char *, const char *)
-ZS_DECLARE_PROXY_METHOD_1(onRemoteEventingRemoteProviderGone, const char *)
-ZS_DECLARE_PROXY_METHOD_2(onRemoteEventingRemoteProviderStateChange, const char *, KeywordBitmaskType)
-ZS_DECLARE_PROXY_METHOD_2(onRemoteEventingLocalDroppedEvents, IRemoteEventingPtr, size_t)
-ZS_DECLARE_PROXY_METHOD_2(onRemoteEventingRemoteDroppedEvents, IRemoteEventingPtr, size_t)
+ZS_DECLARE_PROXY_METHOD(onRemoteEventingStateChanged, IRemoteEventingPtr, States)
+ZS_DECLARE_PROXY_METHOD(onRemoteEventingRemoteSubsystem, IRemoteEventingPtr, const char *)
+ZS_DECLARE_PROXY_METHOD(onRemoteEventingRemoteProvider, UUID, const char *, const char *)
+ZS_DECLARE_PROXY_METHOD(onRemoteEventingRemoteProviderGone, const char *)
+ZS_DECLARE_PROXY_METHOD(onRemoteEventingRemoteProviderStateChange, const char *, KeywordBitmaskType)
+ZS_DECLARE_PROXY_METHOD(onRemoteEventingLocalDroppedEvents, IRemoteEventingPtr, size_t)
+ZS_DECLARE_PROXY_METHOD(onRemoteEventingRemoteDroppedEvents, IRemoteEventingPtr, size_t)
 ZS_DECLARE_PROXY_END()

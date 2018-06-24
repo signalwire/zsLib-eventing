@@ -47,9 +47,9 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateHelper
-        #pragma mark
+        //
+        // GenerateHelper
+        //
 
         struct GenerateHelper : public IDLCompiler
         {
@@ -86,6 +86,15 @@ namespace zsLib
 
           static String getBasicTypeString(IEventingTypes::PredefinedTypedefs type);
           static String getBasicTypeString(BasicTypePtr type);
+
+          static String getConverstionNameString(IEventingTypes::PredefinedTypedefs type);
+          static String getConverstionNameString(BasicTypePtr type);
+
+          static bool isSafeIntType(IEventingTypes::PredefinedTypedefs type);
+          static bool isSafeIntType(BasicTypePtr type);
+
+          static bool isFloat(IEventingTypes::PredefinedTypedefs type);
+          static bool isFloat(BasicTypePtr type);
         };
 
       } // namespace internal

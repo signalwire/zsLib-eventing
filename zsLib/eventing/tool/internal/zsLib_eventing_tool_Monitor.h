@@ -58,9 +58,9 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark Monitor
-        #pragma mark
+        //
+        // Monitor
+        //
         
         class Monitor : public MessageQueueAssociator,
                         public ISingletonManagerDelegate,
@@ -74,10 +74,10 @@ namespace zsLib
           struct make_private {};
           
         protected:
-          void init();
+          void init() noexcept;
           
-          static MonitorPtr create(const ICommandLineTypes::MonitorInfo &monitorInfo);
-          static MonitorPtr singleton(const ICommandLineTypes::MonitorInfo *monitorInfo = NULL);
+          static MonitorPtr create(const ICommandLineTypes::MonitorInfo &monitorInfo) noexcept;
+          static MonitorPtr singleton(const ICommandLineTypes::MonitorInfo *monitorInfo = NULL) noexcept;
           
         public:
           typedef zsLib::Log::Severity Severity;
@@ -104,8 +104,8 @@ namespace zsLib
             String mProviderUniqueHash;
             EventMap mEvents;
 
-            ProviderInfo();
-            ~ProviderInfo();
+            ProviderInfo() noexcept;
+            ~ProviderInfo() noexcept;
           };
 
           typedef std::set<ProviderInfo *> ProviderInfoSet;
@@ -115,43 +115,43 @@ namespace zsLib
                   const make_private &,
                   IMessageQueuePtr queue,
                   const ICommandLineTypes::MonitorInfo &monitorInfo
-                  );
-          ~Monitor();
+                  ) noexcept;
+          ~Monitor() noexcept;
 
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark Monitor => (friends)
-          #pragma mark
+          //
+          // Monitor => (friends)
+          //
           
-          static void monitor(const ICommandLineTypes::MonitorInfo &monitorInfo);
-          static void interrupt();
+          static void monitor(const ICommandLineTypes::MonitorInfo &monitorInfo) noexcept;
+          static void interrupt() noexcept;
 
         protected:
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark Monitor::ISingletonManagerDelegate
-          #pragma mark
+          //
+          // Monitor::ISingletonManagerDelegate
+          //
           
-          void notifySingletonCleanup() override;
+          void notifySingletonCleanup() noexcept override;
 
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark Monitor::ITimerDelegate
-          #pragma mark
+          //
+          // Monitor::ITimerDelegate
+          //
 
           void onTimer(ITimerPtr timer) override;
 
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark Monitor::IWakeDelegate
-          #pragma mark
+          //
+          // Monitor::IWakeDelegate
+          //
 
           void onWake() override;
 
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark Monitor::IRemoteEventingDelegate
-          #pragma mark
+          //
+          // Monitor::IRemoteEventingDelegate
+          //
 
           void onRemoteEventingStateChanged(
                                             IRemoteEventingPtr connection,
@@ -185,23 +185,23 @@ namespace zsLib
                                                    ) override;
 
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark Monitor::ILogEventingProviderDelegate
-          #pragma mark
+          //
+          // Monitor::ILogEventingProviderDelegate
+          //
 
           void notifyEventingProviderRegistered(
                                                 ProviderHandle handle,
                                                 EventingAtomDataArray eventingAtomDataArray
-                                                ) override;
+                                                ) noexcept override;
           void notifyEventingProviderUnregistered(
                                                   ProviderHandle handle,
                                                   EventingAtomDataArray eventingAtomDataArray
-                                                  ) override;
+                                                  ) noexcept override;
 
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark Monitor::ILogEventingDelegate
-          #pragma mark
+          //
+          // Monitor::ILogEventingDelegate
+          //
 
           // (ignored) virtual void notifyNewSubsystem(zsLib::Subsystem &inSubsystem) {}
           
@@ -215,24 +215,24 @@ namespace zsLib
                                 EVENT_PARAMETER_DESCRIPTOR_HANDLE paramDescriptor,
                                 EVENT_DATA_DESCRIPTOR_HANDLE dataDescriptor,
                                 size_t dataDescriptorCount
-                                ) override;
+                                ) noexcept override;
 
         protected:
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark Monitor => (internal)
-          #pragma mark
+          //
+          // Monitor => (internal)
+          //
 
-          void internalInterrupt();
-          void cancel();
-          void step();
-          bool shouldQuit() const { return mShouldQuit; }
+          void internalInterrupt() noexcept;
+          void cancel() noexcept;
+          void step() noexcept(false); // throws Failure
+          bool shouldQuit() const noexcept { return mShouldQuit; }
 
         protected:
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark Monitor => (data)
-          #pragma mark
+          //
+          // Monitor => (data)
+          //
 
           mutable RecursiveLock mLock;
           AutoPUID mID;

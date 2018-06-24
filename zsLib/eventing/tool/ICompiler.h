@@ -46,9 +46,9 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark ICompilerTypes
-      #pragma mark
+      //
+      // ICompilerTypes
+      //
 
       interaction ICompilerTypes
       {
@@ -69,8 +69,8 @@ namespace zsLib
           Mode_Last = Mode_IDL,
         };
 
-        static const char *toString(Modes value);
-        static Modes toMode(const char *value) throw (InvalidArgument);
+        static const char *toString(Modes value) noexcept;
+        static Modes toMode(const char *value) noexcept(false); // throws InvalidArgument
 
         struct Config
         {
@@ -85,11 +85,11 @@ namespace zsLib
           ProviderPtr           mProvider;
           ProjectPtr            mProject;
 
-          Config();
-          Config(const Config &source);
-          ~Config();
+          Config() noexcept;
+          Config(const Config &source) noexcept;
+          ~Config() noexcept;
 
-          Config &operator=(const Config &source);
+          Config &operator=(const Config &source) noexcept;
           
         };
       };
@@ -98,36 +98,36 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark ICompiler
-      #pragma mark
+      //
+      // ICompiler
+      //
 
       interaction ICompiler : public ICompilerTypes
       {
-        static void installTarget(IIDLCompilerTargetPtr target);
+        static void installTarget(IIDLCompilerTargetPtr target) noexcept;
 
-        static ICompilerPtr create(const Config &config);
+        static ICompilerPtr create(const Config &config) noexcept;
 
-        virtual void process() throw (Failure, FailureWithLine) = 0;
+        virtual void process() noexcept(false) = 0; // throws Failure FailureWithLine
       };
 
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark IDLCompilerTarget
-      #pragma mark
+      //
+      // IDLCompilerTarget
+      //
 
       interaction IIDLCompilerTarget
       {
-        virtual String targetKeyword() = 0;
-        virtual String targetKeywordHelp() = 0;
+        virtual String targetKeyword() noexcept = 0;
+        virtual String targetKeywordHelp() noexcept = 0;
 
         virtual void targetOutput(
                                   const String &path,
                                   const ICompilerTypes::Config &config
-                                  ) throw (Failure) = 0;
+                                  ) noexcept(false) = 0; // throws Failure
       };
     }
   }

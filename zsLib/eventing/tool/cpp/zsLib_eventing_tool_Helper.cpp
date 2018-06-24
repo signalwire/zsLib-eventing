@@ -50,12 +50,12 @@ namespace zsLib
         //-----------------------------------------------------------------------
         //-----------------------------------------------------------------------
         //-----------------------------------------------------------------------
-        #pragma mark
-        #pragma mark Helpers
-        #pragma mark
+        //
+        // Helpers
+        //
 
         //---------------------------------------------------------------------
-        String Helper::fileNameAfterPath(const String &filePath)
+        String Helper::fileNameAfterPath(const String &filePath) noexcept
         {
           String result(filePath);
           result.replaceAll("\\", "/");
@@ -64,10 +64,9 @@ namespace zsLib
           
           return result.substr(pos + 1);
         }
-        
 
         //---------------------------------------------------------------------
-        String Helper::fixRelativeFilePath(const String &originalFileName, const String &newFileName)
+        String Helper::fixRelativeFilePath(const String &originalFileName, const String &newFileName) noexcept
         {
           String result(newFileName);
           result.trim();
@@ -86,7 +85,7 @@ namespace zsLib
         }
 
         //-----------------------------------------------------------------------
-        bool Helper::isLikelyJSON(const char *p)
+        bool Helper::isLikelyJSON(const char *p) noexcept
         {
           while ('\0' != *p)
           {
@@ -104,7 +103,7 @@ namespace zsLib
         bool Helper::skipEOL(
                             const char * &p,
                             ULONG *currentLine
-                            )
+                            ) noexcept
         {
           if (('\r' != *p) && ('\n' != *p)) return false;
 
@@ -120,7 +119,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void Helper::skipToEOL(const char * &p)
+        void Helper::skipToEOL(const char * &p) noexcept
         {
           while ('\0' != *p)
           {
@@ -133,7 +132,7 @@ namespace zsLib
         }
 
         //-----------------------------------------------------------------------
-        bool Helper::skipWhitespaceExceptEOL(const char * &p)
+        bool Helper::skipWhitespaceExceptEOL(const char * &p) noexcept
         {
           bool found = false;
           
@@ -150,7 +149,7 @@ namespace zsLib
         bool Helper::skipCComments(
                                    const char * &p,
                                    ULONG *lineCount
-                                   )
+                                   ) noexcept
         {
           if ('/' != *p) return false;
           if ('*' != *(p + 1)) return false;
@@ -179,7 +178,7 @@ namespace zsLib
         }
         
         //---------------------------------------------------------------------
-        bool Helper::skipCPPComments(const char * &p)
+        bool Helper::skipCPPComments(const char * &p) noexcept
         {
           if ('/' != *p) return false;
           if ('/' != *(p + 1)) return false;
@@ -194,7 +193,7 @@ namespace zsLib
         bool Helper::skipQuote(
                               const char * &p,
                               ULONG *currentLine
-                              )
+                              ) noexcept
         {
           const char *start = p;
           
@@ -234,7 +233,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool Helper::isQuotes(const String &str)
+        bool Helper::isQuotes(const String &str) noexcept
         {
           if (str.length() < 2) return false;
 
@@ -255,7 +254,7 @@ namespace zsLib
         String Helper::decodeCEscape(
                                      const char * &p,
                                      ULONG lineCount
-                                     ) throw (FailureWithLine)
+                                     ) noexcept(false)
         {
           std::stringstream ss;
           
@@ -395,7 +394,7 @@ namespace zsLib
         String Helper::decodeQuotes(
                                     const String &str,
                                     ULONG lineCount
-                                    ) throw (FailureWithLine)
+                                    ) noexcept(false)
         {
           if (!isQuotes(str)) {
             ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, lineCount, "Failed to parse quoted string: " + str);

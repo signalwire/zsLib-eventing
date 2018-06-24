@@ -56,12 +56,12 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IEventingTypes::OperationalTypes
-    #pragma mark
+    //
+    // IEventingTypes::OperationalTypes
+    //
 
     //-------------------------------------------------------------------------
-    const char *IEventingTypes::toString(OperationalTypes type)
+    const char *IEventingTypes::toString(OperationalTypes type) noexcept
     {
       switch (type)
       {
@@ -71,11 +71,12 @@ namespace zsLib
         case OperationalType_Debug:       return "Debug";
       }
 
+      ZS_ASSERT_FAIL("unknown operational type");
       return "unknown";
     }
 
     //-------------------------------------------------------------------------
-    IEventingTypes::OperationalTypes IEventingTypes::toOperationalType(const char *type) throw (InvalidArgument)
+    IEventingTypes::OperationalTypes IEventingTypes::toOperationalType(const char *type) noexcept(false)
     {
       String str(type);
       for (IEventingTypes::OperationalTypes index = IEventingTypes::OperationalType_First; index <= IEventingTypes::OperationalType_Last; index = static_cast<IEventingTypes::OperationalTypes>(static_cast<std::underlying_type<IEventingTypes::OperationalTypes>::type>(index) + 1)) {
@@ -90,12 +91,12 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IEventingTypes::PredefinedOpCodes
-    #pragma mark
+    //
+    // IEventingTypes::PredefinedOpCodes
+    //
 
     //-------------------------------------------------------------------------
-    const char *IEventingTypes::toString(PredefinedOpCodes code)
+    const char *IEventingTypes::toString(PredefinedOpCodes code) noexcept
     {
       switch (code)
       {
@@ -112,18 +113,34 @@ namespace zsLib
         case PredefinedOpCode_Receive:    return "Receive";
       }
 
+      ZS_ASSERT_FAIL("unknown predefined op code");
       return "unknown";
     }
 
     //-------------------------------------------------------------------------
-    IEventingTypes::PredefinedOpCodes IEventingTypes::toPredefinedOpCode(const char *code) throw (InvalidArgument)
+    IEventingTypes::PredefinedOpCodes IEventingTypes::toPredefinedOpCode(const char *code) noexcept(false)
     {
+      static PredefinedOpCodes codes[] = {
+        PredefinedOpCode_Info,
+        PredefinedOpCode_Start,
+        PredefinedOpCode_Stop,
+        PredefinedOpCode_DC_Start,
+        PredefinedOpCode_DC_Stop,
+        PredefinedOpCode_Extension,
+        PredefinedOpCode_Reply,
+        PredefinedOpCode_Resume,
+        PredefinedOpCode_Suspend,
+        PredefinedOpCode_Send,
+        PredefinedOpCode_Receive,
+      };
       String str(code);
-      for (IEventingTypes::PredefinedOpCodes index = IEventingTypes::PredefinedOpCode_First; index <= IEventingTypes::PredefinedOpCode_Last; index = static_cast<IEventingTypes::PredefinedOpCodes>(static_cast<std::underlying_type<IEventingTypes::PredefinedOpCodes>::type>(index) + 1)) {
-        if (0 == str.compareNoCase(IEventingTypes::toString(index))) return index;
+      for (int loop = 0; true; ++loop) {
+        if (0 == str.compareNoCase(IEventingTypes::toString(codes[loop]))) return codes[loop];
+        if (codes[loop] == PredefinedOpCode_Last) {
+          ZS_THROW_INVALID_ARGUMENT(String("Not a predefined op code: ") + str);
+        }
       }
 
-      ZS_THROW_INVALID_ARGUMENT(String("Not a predefined op code: ") + str);
       return PredefinedOpCode_First;
     }
 
@@ -131,12 +148,12 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IEventingTypes::PredefinedLevels
-    #pragma mark
+    //
+    // IEventingTypes::PredefinedLevels
+    //
 
     //-------------------------------------------------------------------------
-    const char *IEventingTypes::toString(PredefinedLevels level)
+    const char *IEventingTypes::toString(PredefinedLevels level) noexcept
     {
       switch (level)
       {
@@ -147,11 +164,12 @@ namespace zsLib
         case PredefinedLevel_Verbose:       return "Verbose";
        }
 
+      ZS_ASSERT_FAIL("unknown predefined level");
       return "unknown";
     }
 
     //-------------------------------------------------------------------------
-    IEventingTypes::PredefinedLevels IEventingTypes::toPredefinedLevel(const char *level) throw (InvalidArgument)
+    IEventingTypes::PredefinedLevels IEventingTypes::toPredefinedLevel(const char *level) noexcept(false)
     {
       String str(level);
       for (IEventingTypes::PredefinedLevels index = IEventingTypes::PredefinedLevel_First; index <= IEventingTypes::PredefinedLevel_Last; index = static_cast<IEventingTypes::PredefinedLevels>(static_cast<std::underlying_type<IEventingTypes::PredefinedLevels>::type>(index) + 1)) {
@@ -166,7 +184,7 @@ namespace zsLib
     IEventingTypes::PredefinedLevels IEventingTypes::toPredefinedLevel(
                                                                        Log::Severity severity,
                                                                        Log::Level level
-                                                                       )
+                                                                       ) noexcept
     {
       switch (severity)
       {
@@ -190,12 +208,12 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IEventingTypes::BaseTypes
-    #pragma mark
+    //
+    // IEventingTypes::BaseTypes
+    //
 
     //-------------------------------------------------------------------------
-    const char *IEventingTypes::toString(BaseTypes type)
+    const char *IEventingTypes::toString(BaseTypes type) noexcept
     {
       switch (type)
       {
@@ -207,11 +225,12 @@ namespace zsLib
         case BaseType_String:     return "string";
       }
 
+      ZS_ASSERT_FAIL("unknown base type");
       return "unknown";
     }
 
     //-------------------------------------------------------------------------
-    IEventingTypes::BaseTypes IEventingTypes::toBaseType(const char *type) throw (InvalidArgument)
+    IEventingTypes::BaseTypes IEventingTypes::toBaseType(const char *type) noexcept(false)
     {
       String str(type);
       for (IEventingTypes::BaseTypes index = IEventingTypes::BaseType_First; index <= IEventingTypes::BaseType_Last; index = static_cast<IEventingTypes::BaseTypes>(static_cast<std::underlying_type<IEventingTypes::BaseTypes>::type>(index) + 1)) {
@@ -226,12 +245,12 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IEventingTypes::PredefinedTypedefs
-    #pragma mark
+    //
+    // IEventingTypes::PredefinedTypedefs
+    //
 
     //-------------------------------------------------------------------------
-    const char *IEventingTypes::toString(PredefinedTypedefs type)
+    const char *IEventingTypes::toString(PredefinedTypedefs type) noexcept
     {
       switch (type)
       {
@@ -289,11 +308,12 @@ namespace zsLib
         case PredefinedTypedef_wstring:   return "wstring";
       }
 
+      ZS_ASSERT_FAIL("unknown predefined type");
       return "unknown";
     }
 
     //-------------------------------------------------------------------------
-    IEventingTypes::PredefinedTypedefs IEventingTypes::toPredefinedTypedef(const char *type) throw (InvalidArgument)
+    IEventingTypes::PredefinedTypedefs IEventingTypes::toPredefinedTypedef(const char *type) noexcept(false)
     {
       String str(type);
       for (IEventingTypes::PredefinedTypedefs index = IEventingTypes::PredefinedTypedef_First; index <= IEventingTypes::PredefinedTypedef_Last; index = static_cast<IEventingTypes::PredefinedTypedefs>(static_cast<std::underlying_type<IEventingTypes::PredefinedTypedefs>::type>(index) + 1)) {
@@ -305,7 +325,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IEventingTypes::PredefinedTypedefs IEventingTypes::toPreferredPredefinedTypedef(PredefinedTypedefs type)
+    IEventingTypes::PredefinedTypedefs IEventingTypes::toPreferredPredefinedTypedef(PredefinedTypedefs type) noexcept
     {
       switch (type)
       {
@@ -332,7 +352,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IEventingTypes::BaseTypes IEventingTypes::getBaseType(PredefinedTypedefs type)
+    IEventingTypes::BaseTypes IEventingTypes::getBaseType(PredefinedTypedefs type) noexcept
     {
       switch (type)
       {
@@ -389,11 +409,12 @@ namespace zsLib
         case PredefinedTypedef_wstring:   return BaseType_String;
       }
 
-      ZS_THROW_NOT_IMPLEMENTED(String("Missing base type conversion for predefined type:") + toString(type));
+      ZS_ASSERT_FAIL("missing base type conversion for predefined type");
+      return BaseType_Integer;
     }
 
     //-------------------------------------------------------------------------
-    bool IEventingTypes::isSigned(PredefinedTypedefs type)
+    bool IEventingTypes::isSigned(PredefinedTypedefs type) noexcept
     {
       switch (type)
       {
@@ -420,13 +441,13 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    bool IEventingTypes::isUnsigned(PredefinedTypedefs type)
+    bool IEventingTypes::isUnsigned(PredefinedTypedefs type) noexcept
     {
       return !isSigned(type);
     }
 
     //-------------------------------------------------------------------------
-    bool IEventingTypes::isAString(PredefinedTypedefs type)
+    bool IEventingTypes::isAString(PredefinedTypedefs type) noexcept
     {
       switch (type)
       {
@@ -438,7 +459,7 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    bool IEventingTypes::isWString(PredefinedTypedefs type)
+    bool IEventingTypes::isWString(PredefinedTypedefs type) noexcept
     {
       switch (type)
       {
@@ -449,7 +470,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    size_t IEventingTypes::getMinBytes(PredefinedTypedefs type)
+    size_t IEventingTypes::getMinBytes(PredefinedTypedefs type) noexcept
     {
       switch (type)
       {
@@ -510,7 +531,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    size_t IEventingTypes::getMaxBytes(PredefinedTypedefs type)
+    size_t IEventingTypes::getMaxBytes(PredefinedTypedefs type) noexcept
     {
       switch (type)
       {
@@ -571,14 +592,14 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IEventingTypes::aliasLookup(const AliasMap *aliases, const String &value)
+    String IEventingTypes::aliasLookup(const AliasMap *aliases, const String &value) noexcept
     {
       if (NULL == aliases) return value;
       return aliasLookup(*aliases, value);
     }
 
     //-------------------------------------------------------------------------
-    String IEventingTypes::aliasLookup(const AliasMap &aliases, const String &value)
+    String IEventingTypes::aliasLookup(const AliasMap &aliases, const String &value) noexcept
     {
       if (value.isEmpty()) return value;
 
@@ -592,28 +613,28 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IEventingTypes::Provider
-    #pragma mark
+    //
+    // IEventingTypes::Provider
+    //
 
     //-------------------------------------------------------------------------
-    IEventingTypes::Provider::Provider()
+    IEventingTypes::Provider::Provider() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    IEventingTypes::Provider::Provider(const ElementPtr &rootEl) throw(InvalidContent)
+    IEventingTypes::Provider::Provider(const ElementPtr &rootEl) noexcept(false)
     {
       parse(rootEl);
     }
 
     //-------------------------------------------------------------------------
-    IEventingTypes::Provider::~Provider()
+    IEventingTypes::Provider::~Provider() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IEventingTypes::Provider::createElement(const char *objectName) const
+    ElementPtr IEventingTypes::Provider::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "provider";
 
@@ -706,7 +727,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IEventingTypes::Provider::parse(const ElementPtr &rootEl) throw (InvalidContent)
+    void IEventingTypes::Provider::parse(const ElementPtr &rootEl) noexcept(false)
     {
       createAliases(rootEl->findFirstChildElement("aliases"), mAliases);
 
@@ -792,7 +813,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IEventingTypes::Provider::hash() const
+    String IEventingTypes::Provider::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -881,7 +902,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IEventingTypes::Provider::uniqueEventingHash() const
+    String IEventingTypes::Provider::uniqueEventingHash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -907,7 +928,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IEventingTypes::Provider::aliasLookup(const String &value)
+    String IEventingTypes::Provider::aliasLookup(const String &value) noexcept
     {
       return IEventingTypes::aliasLookup(mAliases, value);
     }
@@ -916,7 +937,7 @@ namespace zsLib
     void IEventingTypes::createAliases(
                                        ElementPtr aliasesEl,
                                        AliasMap &ioAliases
-                                       ) throw(InvalidContent)
+                                       ) noexcept(false)
     {
       if (!aliasesEl) return;
 
@@ -943,15 +964,15 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IEventingTypes::Typedef
-    #pragma mark
+    //
+    // IEventingTypes::Typedef
+    //
 
     //-------------------------------------------------------------------------
     IEventingTypes::Typedef::Typedef(
                                      const ElementPtr &rootEl,
                                      const AliasMap *aliases
-                                     ) throw (InvalidArgument)
+                                     ) noexcept(false)
     {
       if (!rootEl) return;
 
@@ -962,7 +983,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IEventingTypes::Typedef::createElement(const char *objectName) const
+    ElementPtr IEventingTypes::Typedef::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "typedef";
 
@@ -975,7 +996,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IEventingTypes::Typedef::hash() const
+    String IEventingTypes::Typedef::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -992,7 +1013,7 @@ namespace zsLib
                                          ElementPtr typedefsEl,
                                          TypedefMap &ioTypedefs,
                                          const AliasMap *aliases
-                                         ) throw(InvalidContent)
+                                         ) noexcept(false)
     {
       typedef std::map<String, String> StringMap;
 
@@ -1075,15 +1096,15 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IEventingTypes::Channel
-    #pragma mark
+    //
+    // IEventingTypes::Channel
+    //
 
     //-------------------------------------------------------------------------
     IEventingTypes::Channel::Channel(
                                      const ElementPtr &rootEl,
                                      const AliasMap *aliases
-                                     ) throw (InvalidContent)
+                                     ) noexcept(false)
     {
       mID = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findLastChildElement("id")));
       mName = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findLastChildElement("name")));
@@ -1108,7 +1129,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IEventingTypes::Channel::createElement(const char *objectName) const
+    ElementPtr IEventingTypes::Channel::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "channel";
 
@@ -1123,7 +1144,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IEventingTypes::Channel::hash() const
+    String IEventingTypes::Channel::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -1144,7 +1165,7 @@ namespace zsLib
                                         ElementPtr channelsEl,
                                         ChannelMap &outChannels,
                                         const AliasMap *aliases
-                                        ) throw(InvalidContent)
+                                        ) noexcept(false)
     {
       if (NULL == channelsEl) return;
 
@@ -1165,12 +1186,12 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IEventingTypes::Task
-    #pragma mark
+    //
+    // IEventingTypes::Task
+    //
 
     //-------------------------------------------------------------------------
-    IEventingTypes::Task::Task()
+    IEventingTypes::Task::Task() noexcept
     {
     }
 
@@ -1178,7 +1199,7 @@ namespace zsLib
     IEventingTypes::Task::Task(
                                const ElementPtr &rootEl,
                                const AliasMap *aliases
-                               ) throw (InvalidContent)
+                               ) noexcept(false)
     {
       mName = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("name")));
       String value = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("value")));
@@ -1195,12 +1216,12 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IEventingTypes::Task::~Task()
+    IEventingTypes::Task::~Task() noexcept
     {
     }
     
     //-------------------------------------------------------------------------
-    ElementPtr IEventingTypes::Task::createElement(const char *objectName) const
+    ElementPtr IEventingTypes::Task::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "channel";
 
@@ -1223,7 +1244,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IEventingTypes::Task::hash() const
+    String IEventingTypes::Task::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -1249,9 +1270,10 @@ namespace zsLib
     void IEventingTypes::createTasks(
                                      ElementPtr tasksEl,
                                      TaskMap &outTasks,
-                                     const AliasMap *aliases
-                                     ) throw (InvalidContent)
+                                     ZS_MAYBE_USED() const AliasMap *aliases
+                                     ) noexcept(false)
     {
+      ZS_MAYBE_USED(aliases);
       if (NULL == tasksEl) return;
 
       ElementPtr taskEl = tasksEl->findFirstChildElement("task");
@@ -1275,15 +1297,15 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IEventingTypes::Keyword
-    #pragma mark
+    //
+    // IEventingTypes::Keyword
+    //
 
     //-------------------------------------------------------------------------
     IEventingTypes::Keyword::Keyword(
                                      const ElementPtr &rootEl,
                                      const AliasMap *aliases
-                                     ) throw (InvalidContent)
+                                     ) noexcept(false)
     {
       mName = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("name")));
       String mask = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("mask")));
@@ -1298,7 +1320,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IEventingTypes::Keyword::createElement(const char *objectName) const
+    ElementPtr IEventingTypes::Keyword::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "keyword";
 
@@ -1311,7 +1333,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IEventingTypes::Keyword::hash() const
+    String IEventingTypes::Keyword::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -1327,9 +1349,10 @@ namespace zsLib
     void IEventingTypes::createKeywords(
                                         ElementPtr keywordsEl,
                                         KeywordMap &outKeywords,
-                                        const AliasMap *aliases
-                                        ) throw (InvalidContent)
+                                        ZS_MAYBE_USED() const AliasMap *aliases
+                                        ) noexcept(false)
     {
+      ZS_MAYBE_USED(aliases);
       if (NULL == keywordsEl) return;
 
       ElementPtr keywordEl = keywordsEl->findFirstChildElement("keyword");
@@ -1348,12 +1371,12 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IEventingTypes::OpCode
-    #pragma mark
+    //
+    // IEventingTypes::OpCode
+    //
 
     //-------------------------------------------------------------------------
-    IEventingTypes::OpCode::OpCode()
+    IEventingTypes::OpCode::OpCode() noexcept
     {
     }
 
@@ -1361,7 +1384,7 @@ namespace zsLib
     IEventingTypes::OpCode::OpCode(
                                    const ElementPtr &rootEl,
                                    const AliasMap *aliases
-                                   ) throw (InvalidContent)
+                                   ) noexcept(false)
     {
       mName = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("name")));
       String value = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("value")));
@@ -1376,12 +1399,12 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IEventingTypes::OpCode::~OpCode()
+    IEventingTypes::OpCode::~OpCode() noexcept
     {
     }
     
     //-------------------------------------------------------------------------
-    ElementPtr IEventingTypes::OpCode::createElement(const char *objectName) const
+    ElementPtr IEventingTypes::OpCode::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "opcode";
 
@@ -1392,7 +1415,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IEventingTypes::OpCode::hash(bool calledFromTask) const
+    String IEventingTypes::OpCode::hash(bool calledFromTask) const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -1415,9 +1438,10 @@ namespace zsLib
     void IEventingTypes::createOpCodes(
                                        ElementPtr opCodesEl,
                                        OpCodeMap &outOpCodes,
-                                       const AliasMap *aliases
-                                       ) throw (InvalidContent)
+                                       ZS_MAYBE_USED() const AliasMap *aliases
+                                       ) noexcept(false)
     {
+      ZS_MAYBE_USED(aliases);
       if (!opCodesEl) return;
 
       ElementPtr opCodeEl = opCodesEl->findFirstChildElement("opcode");
@@ -1437,12 +1461,12 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IEventingTypes::Event
-    #pragma mark
+    //
+    // IEventingTypes::Event
+    //
 
     //-------------------------------------------------------------------------
-    IEventingTypes::Event::Event()
+    IEventingTypes::Event::Event() noexcept
     {
     }
 
@@ -1450,7 +1474,7 @@ namespace zsLib
     IEventingTypes::Event::Event(
                                  const ElementPtr &rootEl,
                                  const AliasMap *aliases
-                                 ) throw (InvalidContent)
+                                 ) noexcept(false)
     {
       mName = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("name")));
       mSubsystem = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("subsystem")));
@@ -1470,12 +1494,12 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IEventingTypes::Event::~Event()
+    IEventingTypes::Event::~Event() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IEventingTypes::Event::createElement(const char *objectName) const
+    ElementPtr IEventingTypes::Event::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "event";
       ElementPtr eventEl = Element::create(objectName);
@@ -1515,7 +1539,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IEventingTypes::Event::hash() const
+    String IEventingTypes::Event::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -1561,11 +1585,12 @@ namespace zsLib
                                       const ChannelMap &channels,
                                       OpCodeMap &opCodes,
                                       const TaskMap &tasks,
-                                      const KeywordMap &keywords,
+                                      ZS_MAYBE_USED() const KeywordMap &keywords,
                                       const DataTemplateMap &dataTemplates,
                                       const AliasMap *aliases
-                                      ) throw (InvalidContent)
+                                      ) noexcept(false)
     {
+      ZS_MAYBE_USED(keywords);
       if (!eventsEl) return;
 
       ElementPtr eventEl = eventsEl->findFirstChildElement("event");
@@ -1650,31 +1675,32 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IEventingTypes::DataTemplate
-    #pragma mark
+    //
+    // IEventingTypes::DataTemplate
+    //
 
     //-------------------------------------------------------------------------
-    IEventingTypes::DataTemplate::DataTemplate()
+    IEventingTypes::DataTemplate::DataTemplate() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
     IEventingTypes::DataTemplate::DataTemplate(
                                                const ElementPtr &rootEl,
-                                               const AliasMap *aliases
-                                               ) throw (InvalidContent)
+                                               ZS_MAYBE_USED() const AliasMap *aliases
+                                               ) noexcept(false)
     {
+      ZS_MAYBE_USED(aliases);
       mID = UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("id"));
     }
 
     //-------------------------------------------------------------------------
-    IEventingTypes::DataTemplate::~DataTemplate()
+    IEventingTypes::DataTemplate::~DataTemplate() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IEventingTypes::DataTemplate::createElement(const char *objectName) const
+    ElementPtr IEventingTypes::DataTemplate::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "template";
 
@@ -1700,14 +1726,14 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IEventingTypes::DataTemplate::uniqueID() const
+    String IEventingTypes::DataTemplate::uniqueID() const noexcept
     {
       if (mID.hasData()) return mID;
       return hash();
     }
 
     //-------------------------------------------------------------------------
-    String IEventingTypes::DataTemplate::hash() const
+    String IEventingTypes::DataTemplate::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -1730,7 +1756,7 @@ namespace zsLib
                                              DataTemplateMap &outDataTemplates,
                                              const TypedefMap &typedefs,
                                              const AliasMap *aliases
-                                             ) throw (InvalidContent)
+                                             ) noexcept(false)
     {
       if (!templatesEl) return;
 
@@ -1769,12 +1795,12 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IEventingTypes::DataType
-    #pragma mark
+    //
+    // IEventingTypes::DataType
+    //
 
     //-------------------------------------------------------------------------
-    IEventingTypes::DataType::DataType()
+    IEventingTypes::DataType::DataType() noexcept
     {
     }
 
@@ -1783,7 +1809,7 @@ namespace zsLib
                                        const ElementPtr &rootEl,
                                        const TypedefMap *typedefs,
                                        const AliasMap *aliases
-                                       ) throw (InvalidContent)
+                                       ) noexcept(false)
     {
       mValueName = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("name")));
       String type = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("type")));
@@ -1806,12 +1832,12 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    IEventingTypes::DataType::~DataType()
+    IEventingTypes::DataType::~DataType() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IEventingTypes::DataType::createElement(const char *objectName) const
+    ElementPtr IEventingTypes::DataType::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "dataType";
 
@@ -1824,7 +1850,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IEventingTypes::DataType::hash() const
+    String IEventingTypes::DataType::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
 
@@ -1843,7 +1869,7 @@ namespace zsLib
                                          DataTypeList &outDataTypes,
                                          const TypedefMap &typedefs,
                                          const AliasMap *aliases
-                                         ) throw (InvalidContent)
+                                         ) noexcept(false)
     {
       if (!dataTypesEl) return;
 
@@ -1860,12 +1886,12 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IEventingTypes::Subsystem
-    #pragma mark
+    //
+    // IEventingTypes::Subsystem
+    //
     
     //-------------------------------------------------------------------------
-    IEventingTypes::Subsystem::Subsystem()
+    IEventingTypes::Subsystem::Subsystem() noexcept
     {
     }
 
@@ -1873,7 +1899,7 @@ namespace zsLib
     IEventingTypes::Subsystem::Subsystem(
                                          const ElementPtr &rootEl,
                                          const AliasMap *aliases
-                                         ) throw (InvalidContent)
+                                         ) noexcept(false)
     {
       mName = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("name")));
       String levelStr = aliasLookup(aliases, UseEventingHelper::getElementTextAndDecode(rootEl->findFirstChildElement("level")));
@@ -1888,12 +1914,12 @@ namespace zsLib
     }
     
     //-------------------------------------------------------------------------
-    IEventingTypes::Subsystem::~Subsystem()
+    IEventingTypes::Subsystem::~Subsystem() noexcept
     {
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IEventingTypes::Subsystem::createElement(const char *objectName) const
+    ElementPtr IEventingTypes::Subsystem::createElement(const char *objectName) const noexcept
     {
       if (NULL == objectName) objectName = "subsystem";
       
@@ -1906,7 +1932,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IEventingTypes::Subsystem::hash() const
+    String IEventingTypes::Subsystem::hash() const noexcept
     {
       auto hasher = IHasher::sha256();
       
@@ -1924,7 +1950,7 @@ namespace zsLib
                                           ElementPtr subsystemsEl,
                                           SubsystemMap &outSubsystems,
                                           const AliasMap *aliases
-                                          ) throw (InvalidContent)
+                                          ) noexcept(false)
     {
       if (!subsystemsEl) return;
       

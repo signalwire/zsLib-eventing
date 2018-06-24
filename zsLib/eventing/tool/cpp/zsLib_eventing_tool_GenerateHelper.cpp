@@ -66,9 +66,9 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateHelper
-        #pragma mark
+        //
+        // GenerateHelper
+        //
 
 
         //---------------------------------------------------------------------
@@ -411,6 +411,124 @@ namespace zsLib
         {
           if (!type) return String();
           return getBasicTypeString(type->mBaseType);
+        }
+
+        //-------------------------------------------------------------------
+        String GenerateHelper::getConverstionNameString(IEventingTypes::PredefinedTypedefs type)
+        {
+          switch (type)
+          {
+            case PredefinedTypedef_void:        return "void";
+            case PredefinedTypedef_bool:        return "bool";
+            case PredefinedTypedef_uchar:       return "uchar";
+            case PredefinedTypedef_char:        return "char";
+            case PredefinedTypedef_schar:       return "schar";
+            case PredefinedTypedef_ushort:      return "ushort";
+            case PredefinedTypedef_short:       return "short";
+            case PredefinedTypedef_sshort:      return "sshort";
+            case PredefinedTypedef_uint:        return "uint";
+            case PredefinedTypedef_int:         return "int";
+            case PredefinedTypedef_sint:        return "sint";
+            case PredefinedTypedef_ulong:       return "ulong";
+            case PredefinedTypedef_long:        return "long";
+            case PredefinedTypedef_slong:       return "slong";
+            case PredefinedTypedef_ulonglong:   return "ulonglong";
+            case PredefinedTypedef_longlong:    return "longlong";
+            case PredefinedTypedef_slonglong:   return "slonglong";
+            case PredefinedTypedef_uint8:       return "uint8_t";
+            case PredefinedTypedef_int8:        return "int8_t";
+            case PredefinedTypedef_sint8:       return "sint8_t";
+            case PredefinedTypedef_uint16:      return "uint16_t";
+            case PredefinedTypedef_int16:       return "int16_t";
+            case PredefinedTypedef_sint16:      return "sint16_t";
+            case PredefinedTypedef_uint32:      return "uint32_t";
+            case PredefinedTypedef_int32:       return "int32_t";
+            case PredefinedTypedef_sint32:      return "sint32_t";
+            case PredefinedTypedef_uint64:      return "uint64_t";
+            case PredefinedTypedef_int64:       return "int64_t";
+            case PredefinedTypedef_sint64:      return "sint64_t";
+
+            case PredefinedTypedef_byte:        return "byte";
+            case PredefinedTypedef_word:        return "word";
+            case PredefinedTypedef_dword:       return "dword";
+            case PredefinedTypedef_qword:       return "qword";
+
+            case PredefinedTypedef_float:       return "float";
+            case PredefinedTypedef_double:      return "double";
+            case PredefinedTypedef_ldouble:     return "ldouble";
+            case PredefinedTypedef_float32:     return "float32";
+            case PredefinedTypedef_float64:     return "float64";
+
+            case PredefinedTypedef_pointer:     return "pointer";
+
+            case PredefinedTypedef_binary:      return "binary";
+            case PredefinedTypedef_size:        return "size";
+
+            case PredefinedTypedef_string:      return "string";
+            case PredefinedTypedef_astring:     return "astring";
+            case PredefinedTypedef_wstring:     return "wstring";
+          }
+          return String();
+        }
+
+        //-------------------------------------------------------------------
+        String GenerateHelper::getConverstionNameString(BasicTypePtr type)
+        {
+          if (!type) return String();
+          return getConverstionNameString(type->mBaseType);
+        }
+
+        //-------------------------------------------------------------------
+        bool GenerateHelper::isSafeIntType(IEventingTypes::PredefinedTypedefs type)
+        {
+          switch (type)
+          {
+            case PredefinedTypedef_void:        
+            case PredefinedTypedef_bool:        
+
+            case PredefinedTypedef_float:
+            case PredefinedTypedef_double:
+            case PredefinedTypedef_ldouble:
+            case PredefinedTypedef_float32:
+            case PredefinedTypedef_float64:
+
+            case PredefinedTypedef_binary:      
+
+            case PredefinedTypedef_string:      
+            case PredefinedTypedef_astring:     
+            case PredefinedTypedef_wstring:     return false;
+            default:                            break;
+          }
+          return true;
+        }
+
+        //-------------------------------------------------------------------
+        bool GenerateHelper::isSafeIntType(BasicTypePtr type)
+        {
+          if (!type) return String();
+          return isSafeIntType(type->mBaseType);
+        }
+
+        //-------------------------------------------------------------------
+        bool GenerateHelper::isFloat(IEventingTypes::PredefinedTypedefs type)
+        {
+          switch (type)
+          {
+            case PredefinedTypedef_float:       
+            case PredefinedTypedef_double:      
+            case PredefinedTypedef_ldouble:     
+            case PredefinedTypedef_float32:     
+            case PredefinedTypedef_float64:     return true;
+            default:                            break;
+          }
+          return false;
+        }
+
+        //-------------------------------------------------------------------
+        bool GenerateHelper::isFloat(BasicTypePtr type)
+        {
+          if (!type) return String();
+          return isFloat(type->mBaseType);
         }
 
       } // namespace internal

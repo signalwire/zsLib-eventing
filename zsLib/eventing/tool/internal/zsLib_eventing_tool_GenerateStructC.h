@@ -48,9 +48,9 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructC
-        #pragma mark
+        //
+        // GenerateStructC
+        //
 
         struct GenerateStructC : public IIDLCompilerTarget,
                                   public IDLCompiler
@@ -85,14 +85,14 @@ namespace zsLib
             StringSet cAlreadyIncluded_;
             StringSet cppAlreadyIncluded_;
 
-            HelperFile();
-            ~HelperFile();
+            HelperFile() noexcept;
+            ~HelperFile() noexcept;
 
-            void headerIncludeC(const String &headerFile);
-            void headerIncludeCpp(const String &headerFile);
-            void includeC(const String &headerFile);
-            void includeCpp(const String &headerFile);
-            bool hasBoxing(const String &namePathStr);
+            void headerIncludeC(const String &headerFile) noexcept;
+            void headerIncludeCpp(const String &headerFile) noexcept;
+            void includeC(const String &headerFile) noexcept;
+            void includeCpp(const String &headerFile) noexcept;
+            bool hasBoxing(const String &namePathStr) noexcept;
           };
 
           struct StructFile
@@ -117,232 +117,232 @@ namespace zsLib
             StringSet cAlreadyIncluded_;
             StringSet cppAlreadyIncluded_;
 
-            StructFile();
-            ~StructFile();
+            StructFile() noexcept;
+            ~StructFile() noexcept;
 
-            void headerIncludeC(const String &headerFile);
-            void headerIncludeCpp(const String &headerFile);
-            void includeC(const String &headerFile);
-            void includeCpp(const String &headerFile);
+            void headerIncludeC(const String &headerFile) noexcept;
+            void headerIncludeCpp(const String &headerFile) noexcept;
+            void includeC(const String &headerFile) noexcept;
+            void includeCpp(const String &headerFile) noexcept;
           };
 
-          GenerateStructC();
+          GenerateStructC() noexcept;
 
-          static GenerateStructCPtr create();
+          static GenerateStructCPtr create() noexcept;
 
-          static String fixBasicType(IEventingTypes::PredefinedTypedefs type);
-          static String fixCType(IEventingTypes::PredefinedTypedefs type);
-          static String fixCType(TypePtr type);
+          static String fixBasicType(IEventingTypes::PredefinedTypedefs type) noexcept;
+          static String fixCType(IEventingTypes::PredefinedTypedefs type) noexcept;
+          static String fixCType(TypePtr type) noexcept;
           static String fixCType(
                                  bool isOptional,
                                  TypePtr type
-                                 );
-          static String fixType(TypePtr type);
-          static String getApiImplementationDefine(ContextPtr context);
-          static String getApiCastRequiredDefine(ContextPtr context);
-          static String getApiExportDefine(ContextPtr context);
-          static String getApiExportCastedDefine(ContextPtr context);
-          static String getApiCallingDefine(ContextPtr context);
+                                 ) noexcept;
+          static String fixType(TypePtr type) noexcept;
+          static String getApiImplementationDefine(ContextPtr context) noexcept;
+          static String getApiCastRequiredDefine(ContextPtr context) noexcept;
+          static String getApiExportDefine(ContextPtr context) noexcept;
+          static String getApiExportCastedDefine(ContextPtr context) noexcept;
+          static String getApiCallingDefine(ContextPtr context) noexcept;
           static String getApiGuardDefine(
                                           ContextPtr context,
                                           bool endGuard = false
-                                          );
+                                          ) noexcept;
           static String getToHandleMethod(
                                           bool isOptional, 
                                           TypePtr type
-                                          );
+                                          ) noexcept;
           static String getFromHandleMethod(
                                             bool isOptional,
                                             TypePtr type
-                                            );
+                                            ) noexcept;
 
           static void includeType(
                                   HelperFile &helperFile,
                                   TypePtr type
-                                  );
+                                  ) noexcept;
           static void includeType(
                                   StructFile &structFile,
                                   TypePtr type
-                                  );
+                                  ) noexcept;
 
           static void calculateRelations(
                                          NamespacePtr namespaceObj,
                                          NamePathStructSetMap &ioDerivesInfo
-                                         );
+                                         ) noexcept;
           static void calculateRelations(
                                          StructPtr structObj,
                                          NamePathStructSetMap &ioDerivesInfo
-                                         );
+                                         ) noexcept;
 
           static void calculateBoxings(
                                        NamespacePtr namespaceObj,
                                        StringSet &ioBoxings
-                                       );
+                                       ) noexcept;
           static void calculateBoxings(
                                        StructPtr structObj,
                                        StringSet &ioBoxings
-                                       );
+                                       ) noexcept;
           static void calculateBoxings(
                                        TemplatedStructTypePtr templatedStructObj,
                                        StringSet &ioBoxings
-                                       );
+                                       ) noexcept;
           static void calculateBoxings(
                                        MethodPtr method,
                                        StringSet &ioBoxings,
                                        TemplatedStructTypePtr templatedStruct = TemplatedStructTypePtr()
-                                       );
+                                       ) noexcept;
           static void calculateBoxings(
                                        PropertyPtr property,
                                        StringSet &ioBoxings,
                                        TemplatedStructTypePtr templatedStruct = TemplatedStructTypePtr()
-                                       );
+                                       ) noexcept;
           static void calculateBoxingType(
                                           bool isOptional,
                                           TypePtr type,
                                           StringSet &ioBoxings,
                                           TemplatedStructTypePtr templatedStruct = TemplatedStructTypePtr()
-                                          );
+                                          ) noexcept;
 
           static void insertInto(
                                  StructPtr structObj,
                                  const NamePath &namePath,
                                  NamePathStructSetMap &ioDerivesInfo
-                                 );
+                                 ) noexcept;
 
           static void appendStream(
                                    std::stringstream &output,
                                    std::stringstream &source,
                                    bool appendEol = true
-                                   );
+                                   ) noexcept;
 
-          static void prepareHelperFile(HelperFile &helperFile);
-          static void prepareHelperCallback(HelperFile &helperFile);
-          static void prepareHelperExceptions(HelperFile &helperFile);
+          static void prepareHelperFile(HelperFile &helperFile) noexcept;
+          static void prepareHelperCallback(HelperFile &helperFile) noexcept;
+          static void prepareHelperExceptions(HelperFile &helperFile) noexcept;
           static void prepareHelperExceptions(
                                               HelperFile &helperFile,
                                               const String &exceptionName
-                                              );
-          static void prepareHelperBoxing(HelperFile &helperFile);
+                                              ) noexcept;
+          static void prepareHelperBoxing(HelperFile &helperFile) noexcept;
           static void prepareHelperBoxing(
                                           HelperFile &helperFile,
                                           const IEventingTypes::PredefinedTypedefs basicType
-                                          );
+                                          ) noexcept;
           static void prepareHelperNamespace(
                                              HelperFile &helperFile,
                                              NamespacePtr namespaceObj
-                                             );
+                                             ) noexcept;
           static void prepareHelperStruct(
                                           HelperFile &helperFile,
                                           StructPtr structObj
-                                          );
+                                          ) noexcept;
           static void prepareHelperEnum(
                                         HelperFile &helperFile,
                                         EnumTypePtr enumObj
-                                        );
+                                        ) noexcept;
           static void prepareHelperEnumBoxing(
                                               HelperFile &helperFile,
                                               EnumTypePtr enumObj
-                                              );
-          static void prepareHelperString(HelperFile &helperFile);
-          static void prepareHelperBinary(HelperFile &helperFile);
+                                              ) noexcept;
+          static void prepareHelperString(HelperFile &helperFile) noexcept;
+          static void prepareHelperBinary(HelperFile &helperFile) noexcept;
           static void prepareHelperDuration(
                                             HelperFile &helperFile,
                                             const String &durationType
-                                            );
+                                            ) noexcept;
           static void prepareHelperList(
                                         HelperFile &helperFile,
                                         const String &listOrSetStr
-                                        );
+                                        ) noexcept;
           static void prepareHelperSpecial(
                                            HelperFile &helperFile,
                                            const String &specialName
-                                           );
-          static void preparePromiseWithValue(HelperFile &helperFile);
-          static void preparePromiseWithRejectionReason(HelperFile &helperFile);
+                                           ) noexcept;
+          static void preparePromiseWithValue(HelperFile &helperFile) noexcept;
+          static void preparePromiseWithRejectionReason(HelperFile &helperFile) noexcept;
 
-          static void finalizeHelperFile(HelperFile &helperFile);
+          static void finalizeHelperFile(HelperFile &helperFile) noexcept;
 
           static void processNamespace(
                                        HelperFile &helperFile,
                                        NamespacePtr namespaceObj
-                                       );
+                                       ) noexcept;
           static void processStruct(
                                     HelperFile &helperFile,
                                     StructPtr structObj
-                                    );
+                                    ) noexcept;
           static void processStruct(
                                     HelperFile &helperFile,
                                     StructFile &structFile,
                                     StructPtr rootStructObj,
                                     StructPtr structObj
-                                    );
+                                    ) noexcept;
           static void processMethods(
                                      HelperFile &helperFile,
                                      StructFile &structFile,
                                      StructPtr rootStructObj,
                                      StructPtr structObj
-                                     );
+                                     ) noexcept;
           static void processProperties(
                                         HelperFile &helperFile,
                                         StructFile &structFile,
                                         StructPtr rootStructObj,
                                         StructPtr structObj
-                                        );
+                                        ) noexcept;
           static void processEventHandlers(
                                            HelperFile &helperFile,
                                            StructFile &structFile,
                                            StructPtr structObj
-                                           );
+                                           ) noexcept;
           static void processEventHandlersStart(
                                                 HelperFile &helperFile,
                                                 StructFile &structFile,
                                                 StructPtr structObj
-                                                );
+                                                ) noexcept;
           static void processEventHandlersEnd(
                                               HelperFile &helperFile,
                                               StructFile &structFile,
                                               StructPtr structObj
-                                              );
+                                              ) noexcept;
 
-          static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) throw (Failure);
+          static SecureByteBlockPtr generateTypesHeader(ProjectPtr project) noexcept(false); // throws Failure
           
           static void processTypesNamespace(
                                             std::stringstream &ss,
                                             NamespacePtr namespaceObj
-                                            );
+                                            ) noexcept;
           static void processTypesStruct(
                                          std::stringstream &ss,
                                          StructPtr structObj
-                                         );
+                                         ) noexcept;
           static void processTypesEnum(
                                        std::stringstream &ss,
                                        ContextPtr context
-                                       );
+                                       ) noexcept;
           static void processTypesTemplatesAndSpecials(
                                                        std::stringstream &ss,
                                                        ProjectPtr project
-                                                       );
+                                                       ) noexcept;
           static void processTypesTemplate(
                                            std::stringstream &ss,
                                            ContextPtr structContextObj
-                                           );
+                                           ) noexcept;
           static void processTypesSpecialStruct(
                                                 std::stringstream &ss,
                                                 ContextPtr structContextObj
-                                                );
+                                                ) noexcept;
 
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark GenerateStructC::IIDLCompilerTarget
-          #pragma mark
+          //
+          // GenerateStructC::IIDLCompilerTarget
+          //
 
           //-------------------------------------------------------------------
-          String targetKeyword() override;
-          String targetKeywordHelp() override;
+          String targetKeyword() noexcept override;
+          String targetKeywordHelp() noexcept override;
           void targetOutput(
                             const String &inPathStr,
                             const ICompilerTypes::Config &config
-                            ) throw (Failure) override;
+                            ) noexcept(false) override; // throws Failure
         };
          
       } // namespace internal

@@ -36,6 +36,8 @@ either expressed or implied, of the FreeBSD Project.
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructC.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructDotNet.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructPython.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructMsidl.h>
+#include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateStructCppWinrt.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_GenerateJson.h>
 #include <zsLib/eventing/tool/internal/zsLib_eventing_tool_Helper.h>
 
@@ -79,12 +81,12 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark Helpers
-        #pragma mark
+        //
+        // Helpers
+        //
 
         //---------------------------------------------------------------------
-        static String getPathName(const IIDLTypes::ContextPtr &context)
+        static String getPathName(const IIDLTypes::ContextPtr &context) noexcept
         {
           if (!context) return String();
 
@@ -100,7 +102,7 @@ namespace zsLib
         static void skipPreprocessor(
                                      const char * &p,
                                      ULONG &ioLineCount
-                                     )
+                                     ) noexcept
         {
           const char *startPos = p;
 
@@ -135,7 +137,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        static bool isStructDeclaration(const String &str)
+        static bool isStructDeclaration(const String &str) noexcept
         {
           if ("struct" == str) return true;
           if ("interface" == str) return true;
@@ -148,7 +150,7 @@ namespace zsLib
         static TokenPtr getCPPDirectiveToken(
                                              const char * &p,
                                              ULONG &ioLineCount
-                                             )
+                                             ) noexcept
         {
           if ('/' != *p) return TokenPtr();
           if ('/' != *(p+1)) return TokenPtr();
@@ -175,7 +177,7 @@ namespace zsLib
         static TokenPtr getCPPDocToken(
                                        const char * &p,
                                        ULONG &ioLineCount
-                                       )
+                                       ) noexcept
         {
           if ('/' != *p) return TokenPtr();
           if ('/' != *(p+1)) return TokenPtr();
@@ -204,7 +206,7 @@ namespace zsLib
         static TokenPtr getQuoteToken(
                                       const char * &p,
                                       ULONG &ioLineCount
-                                      )
+                                      ) noexcept
         {
           ULONG currentLine = ioLineCount;
 
@@ -222,7 +224,7 @@ namespace zsLib
         static TokenPtr getCharToken(
                                      const char * &p,
                                      ULONG &ioLineCount
-                                     ) throw (FailureWithLine)
+                                     ) noexcept(false) // throw FailureWithLine
         {
           ULONG currentLine = ioLineCount;
 
@@ -249,7 +251,7 @@ namespace zsLib
         static TokenPtr getNumberToken(
                                        const char * &p,
                                        ULONG lineCount
-                                       )
+                                       ) noexcept
         {
           const char *start = p;
 
@@ -467,7 +469,7 @@ namespace zsLib
         static TokenPtr getIdentifierToken(
                                            const char * &p,
                                            ULONG lineCount
-                                           )
+                                           ) noexcept
         {
           if ((!isalpha(*p)) &&
               ('_' != *p)) return TokenPtr();
@@ -490,7 +492,7 @@ namespace zsLib
         static TokenPtr getOperatorToken(
                                          const char * &p,
                                          ULONG lineCount
-                                         )
+                                         ) noexcept
         {
           static const char *operators[] =
           {
@@ -609,7 +611,7 @@ namespace zsLib
         static TokenPtr getUnknownToken(
                                         const char * &p,
                                         ULONG lineCount
-                                        )
+                                        ) noexcept
         {
           if (!p) return TokenPtr();
 
@@ -628,7 +630,7 @@ namespace zsLib
                                      const char * &p,
                                      bool &ioStartOfLine,
                                      ULONG &ioLineCount
-                                     )
+                                     ) noexcept
         {
           if (!p) return TokenPtr();
 
@@ -726,7 +728,7 @@ namespace zsLib
                       const char *p,
                       TokenList &outTokens,
                       ULONG startLineNumber = 1
-                      )
+                      ) noexcept
         {
           bool startOfLine = true;
           ULONG lineCount = startLineNumber;
@@ -744,7 +746,7 @@ namespace zsLib
         void replaceAliases(
                             TokenList &ioTokens,
                             const IEventingTypes::AliasMap &aliases
-                            )
+                            ) noexcept
         {
           for (auto iter_doNotUse = ioTokens.begin(); iter_doNotUse != ioTokens.end(); )
           {
@@ -772,12 +774,12 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark IDLCompiler
-        #pragma mark
+        //
+        // IDLCompiler
+        //
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::Token::isBrace() const
+        bool IDLCompiler::Token::isBrace() const noexcept
         {
           switch (mTokenType) {
             case TokenType_Brace:
@@ -790,7 +792,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::Token::isOpenBrace() const
+        bool IDLCompiler::Token::isOpenBrace() const noexcept
         {
           switch (mTokenType) {
             case TokenType_Brace:         return "(" == mToken;
@@ -803,7 +805,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::Token::isCloseBrace() const
+        bool IDLCompiler::Token::isCloseBrace() const noexcept
         {
           switch (mTokenType) {
             case TokenType_Brace:         return ")" == mToken;
@@ -816,21 +818,21 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::Token::isOpenBrace(TokenTypes type) const
+        bool IDLCompiler::Token::isOpenBrace(TokenTypes type) const noexcept
         {
           if (!isOpenBrace()) return false;
           return type == mTokenType;
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::Token::isCloseBrace(TokenTypes type) const
+        bool IDLCompiler::Token::isCloseBrace(TokenTypes type) const noexcept
         {
           if (!isCloseBrace()) return false;
           return type == mTokenType;
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::Token::isIdentifier(const char *identifier) const
+        bool IDLCompiler::Token::isIdentifier(const char *identifier) const noexcept
         {
           if (TokenType_Identifier != mTokenType) return false;
           return identifier == mToken;
@@ -840,25 +842,25 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark IDLCompiler
-        #pragma mark
+        //
+        // IDLCompiler
+        //
 
         //---------------------------------------------------------------------
         IDLCompiler::IDLCompiler(
                                  const make_private &,
                                  const Config &config
-                                 ) :
+                                 ) noexcept :
           mConfig(config)
         {
         }
 
         //---------------------------------------------------------------------
-        IDLCompiler::~IDLCompiler()
+        IDLCompiler::~IDLCompiler() noexcept
         {
         }
         //---------------------------------------------------------------------
-        IDLCompiler::IDLCompiler(const Noop &)
+        IDLCompiler::IDLCompiler(const Noop &) noexcept
         {
         }
 
@@ -866,12 +868,12 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark IDLCompiler => ICompiler
-        #pragma mark
+        //
+        // IDLCompiler => ICompiler
+        //
 
         //---------------------------------------------------------------------
-        IDLCompilerPtr IDLCompiler::create(const Config &config)
+        IDLCompilerPtr IDLCompiler::create(const Config &config) noexcept
         {
           IDLCompilerPtr pThis(std::make_shared<IDLCompiler>(make_private{}, config));
           pThis->mThisWeak = pThis;
@@ -879,7 +881,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::process() throw (Failure, FailureWithLine)
+        void IDLCompiler::process() noexcept(false)
         {
           outputSkeleton();
           read();
@@ -902,17 +904,17 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark IDLCompiler => (internal)
-        #pragma mark
+        //
+        // IDLCompiler => (internal)
+        //
 
         //---------------------------------------------------------------------
-        void IDLCompiler::outputSkeleton()
+        void IDLCompiler::outputSkeleton() noexcept
         {
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::read() throw (Failure, FailureWithLine)
+        void IDLCompiler::read() noexcept(false)
         {
           HashSet processedHashes;
 
@@ -1036,7 +1038,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::validate() throw (Failure)
+        void IDLCompiler::validate() noexcept(false)
         {
           auto &project = mConfig.mProject;
           if (!project) return;
@@ -1049,7 +1051,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::parseNamespace(NamespacePtr parent) throw (FailureWithLine)
+        bool IDLCompiler::parseNamespace(NamespacePtr parent) noexcept(false)
         {
           const char *what = "namespace";
           auto token = peekNextToken(what);
@@ -1099,7 +1101,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::parseNamespaceContents(NamespacePtr namespaceObj) throw (FailureWithLine)
+        void IDLCompiler::parseNamespaceContents(NamespacePtr namespaceObj) noexcept(false)
         {
           //const char *what = "namespace";
           while (hasMoreTokens()) {
@@ -1118,7 +1120,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::parseUsing(NamespacePtr namespaceObj) throw (FailureWithLine)
+        bool IDLCompiler::parseUsing(NamespacePtr namespaceObj) noexcept(false)
         {
           const char *what = "using";
           auto token = peekNextToken(what);
@@ -1170,7 +1172,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::parseTypedef(ContextPtr context) throw (FailureWithLine)
+        bool IDLCompiler::parseTypedef(ContextPtr context) noexcept(false)
         {
           const char *what = "typedef";
           auto token = peekNextToken(what);
@@ -1205,7 +1207,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::parseStruct(ContextPtr context) throw (FailureWithLine)
+        bool IDLCompiler::parseStruct(ContextPtr context) noexcept(false)
         {
           const char *what = "interface/struct";
 
@@ -1397,7 +1399,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::parseEnum(ContextPtr context) throw (FailureWithLine)
+        bool IDLCompiler::parseEnum(ContextPtr context) noexcept(false)
         {
           const char *what = "enum";
 
@@ -1495,7 +1497,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::parseProperty(StructPtr context) throw (FailureWithLine)
+        bool IDLCompiler::parseProperty(StructPtr context) noexcept(false)
         {
           const char *what = "property";
 
@@ -1565,7 +1567,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::parseMethod(StructPtr context) throw (FailureWithLine)
+        bool IDLCompiler::parseMethod(StructPtr context) noexcept(false)
         {
           const char *what = "method";
           TokenList typeTokens;
@@ -1702,7 +1704,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::parseDocumentation()
+        bool IDLCompiler::parseDocumentation() noexcept
         {
           bool found = false;
 
@@ -1718,7 +1720,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::parseSemiColon()
+        bool IDLCompiler::parseSemiColon() noexcept
         {
           auto token = peekNextToken(";");
 
@@ -1728,7 +1730,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::parseComma()
+        bool IDLCompiler::parseComma() noexcept
         {
           const char *what = ",";
           auto token = peekNextToken(what);
@@ -1739,7 +1741,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::parseModifiers() throw (FailureWithLine)
+        bool IDLCompiler::parseModifiers() noexcept(false)
         {
           const char *what = "modifiers";
 
@@ -1835,7 +1837,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::parseDirective() throw (FailureWithLine)
+        bool IDLCompiler::parseDirective() noexcept(false)
         {
           const char *what = "directive";
           auto token = peekNextToken(what);
@@ -1876,7 +1878,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::pushDirectiveTokens(TokenPtr token) throw (FailureWithLine)
+        bool IDLCompiler::pushDirectiveTokens(TokenPtr token) noexcept(false)
         {
           if (!token) return false;
           if (TokenType_Directive != token->mTokenType) return false;
@@ -1889,7 +1891,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::parseDirectiveExclusive(bool &outIgnoreMode) throw (FailureWithLine)
+        bool IDLCompiler::parseDirectiveExclusive(bool &outIgnoreMode) noexcept(false)
         {
           const char *what = "Directive " ZS_WRAPPER_COMPILER_DIRECTIVE_EXCLUSIZE;
           auto token = peekNextToken(what);
@@ -1918,7 +1920,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        ElementPtr IDLCompiler::getDocumentation()
+        ElementPtr IDLCompiler::getDocumentation() noexcept
         {
           if (mPendingDocumentation.size() < 1) return ElementPtr();
 
@@ -1941,7 +1943,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        ElementPtr IDLCompiler::getDirectives()
+        ElementPtr IDLCompiler::getDirectives() noexcept
         {
           if (mPendingDirectives.size() < 1) return ElementPtr();
 
@@ -1957,7 +1959,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::mergeDocumentation(ElementPtr &existingDocumentation)
+        void IDLCompiler::mergeDocumentation(ElementPtr &existingDocumentation) noexcept
         {
           auto rootEl = getDocumentation();
           if (!rootEl) return;
@@ -1977,7 +1979,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::mergeDirectives(ElementPtr &existingDirectives)
+        void IDLCompiler::mergeDirectives(ElementPtr &existingDirectives) noexcept
         {
           if (mPendingDirectives.size() < 1) return;
 
@@ -1994,7 +1996,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::mergeModifiers(ContextPtr context) throw (FailureWithLine)
+        void IDLCompiler::mergeModifiers(ContextPtr context) noexcept(false)
         {
           const char *what = "merge modifiers";
 
@@ -2015,7 +2017,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::fillContext(ContextPtr context)
+        void IDLCompiler::fillContext(ContextPtr context) noexcept
         {
           if (!context) return;
           mergeDocumentation(context->mDocumentation);
@@ -2023,7 +2025,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String IDLCompiler::makeTypenameFromTokens(const TokenList &tokens) throw (InvalidContent)
+        String IDLCompiler::makeTypenameFromTokens(const TokenList &tokens) noexcept(false)
         {
           String result;
 
@@ -2054,7 +2056,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::pushTokens(const TokenList &tokens)
+        void IDLCompiler::pushTokens(const TokenList &tokens) noexcept
         {
           mTokenListStack.push(make_shared<TokenList>(tokens));
           if (tokens.size() > 0) {
@@ -2065,7 +2067,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::pushTokens(TokenListPtr tokens)
+        void IDLCompiler::pushTokens(TokenListPtr tokens) noexcept
         {
           mTokenListStack.push(tokens);
           if (tokens->size() > 0) {
@@ -2076,14 +2078,14 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        IDLCompiler::TokenListPtr IDLCompiler::getTokens() const
+        IDLCompiler::TokenListPtr IDLCompiler::getTokens() const noexcept
         {
           if (mTokenListStack.size() < 1) return TokenListPtr();
           return mTokenListStack.top();
         }
 
         //---------------------------------------------------------------------
-        IDLCompiler::TokenListPtr IDLCompiler::popTokens()
+        IDLCompiler::TokenListPtr IDLCompiler::popTokens() noexcept
         {
           TokenListPtr result = mTokenListStack.top();
 
@@ -2099,7 +2101,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool IDLCompiler::hasMoreTokens() const
+        bool IDLCompiler::hasMoreTokens() const noexcept
         {
           if (mTokenListStack.size() < 1) return false;
           if (getTokens()->size() < 1) return false;
@@ -2107,7 +2109,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        TokenPtr IDLCompiler::peekNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine)
+        TokenPtr IDLCompiler::peekNextToken(const char *whatExpectingMoreTokens) noexcept(false)
         {
           if (mTokenListStack.size() > 0) {
             if (getTokens()->size() > 0) return getTokens()->front();
@@ -2115,17 +2117,16 @@ namespace zsLib
 
           TokenPtr lastToken;
           if (mLastTokenStack.size() > 0) {
-            mLastTokenStack.top();
+            lastToken = mLastTokenStack.top();
           } else {
             lastToken = mLastToken;
           }
 
           ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_UNEXPECTED_EOF, lastToken ? lastToken->mLineCount : 0, String(whatExpectingMoreTokens) + " unexpectedly reached EOF");
-          return TokenPtr();
         }
 
         //---------------------------------------------------------------------
-        TokenPtr IDLCompiler::extractNextToken(const char *whatExpectingMoreTokens) throw (FailureWithLine)
+        TokenPtr IDLCompiler::extractNextToken(const char *whatExpectingMoreTokens) noexcept(false)
         {
           if (mTokenListStack.size() > 0) {
             if (getTokens()->size() > 0) {
@@ -2139,21 +2140,18 @@ namespace zsLib
 
           TokenPtr lastToken;
           if (mLastTokenStack.size() > 0) {
-            mLastTokenStack.top();
+            lastToken = mLastTokenStack.top();
           } else {
             lastToken = mLastToken;
           }
 
           ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_UNEXPECTED_EOF, lastToken ? lastToken->mLineCount : 0, String(whatExpectingMoreTokens) + " unexpectedly reached EOF");
-          return TokenPtr();
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::putBackToken(TokenPtr token)
+        void IDLCompiler::putBackToken(TokenPtr token) noexcept
         {
-          if (mTokenListStack.size() < 1) {
-            ZS_THROW_INVALID_USAGE("must have active stack of tokens");
-          }
+          ZS_ASSERT(mTokenListStack.size() > 0);
 
           auto tokens = getTokens();
           tokens->push_front(token);
@@ -2164,11 +2162,9 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::putBackTokens(const TokenList &tokens)
+        void IDLCompiler::putBackTokens(const TokenList &tokens) noexcept
         {
-          if (mTokenListStack.size() < 1) {
-            ZS_THROW_INVALID_USAGE("must have active stack of tokens");
-          }
+          ZS_ASSERT(mTokenListStack.size() > 0);
 
           auto existingTokens = getTokens();
 
@@ -2185,7 +2181,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        ULONG IDLCompiler::getLastLineNumber() const
+        ULONG IDLCompiler::getLastLineNumber() const noexcept
         {
           if (!mLastToken) return 1;
           return mLastToken->mLineCount;
@@ -2193,9 +2189,9 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         void IDLCompiler::insertBefore(
-                                           TokenList &tokens,
-                                           const TokenList &insertTheseTokens
-                                           )
+                                       TokenList &tokens,
+                                       const TokenList &insertTheseTokens
+                                       ) noexcept
         {
           if (tokens.size() < 1) {
             tokens = insertTheseTokens;
@@ -2210,9 +2206,9 @@ namespace zsLib
 
         //---------------------------------------------------------------------
         void IDLCompiler::insertAfter(
-                                          TokenList &tokens,
-                                          const TokenList &insertTheseTokens
-                                          )
+                                      TokenList &tokens,
+                                      const TokenList &insertTheseTokens
+                                      ) noexcept
         {
           if (tokens.size() < 1) {
             tokens = insertTheseTokens;
@@ -2230,7 +2226,7 @@ namespace zsLib
                                                      const char *whatExpectingClosingToken,
                                                      TokenList &outTokens,
                                                      bool includeOuterBrace
-                                                     ) throw (FailureWithLine)
+                                                     ) noexcept(false)
         {
           auto token = peekNextToken(whatExpectingClosingToken);
           if (!token->isBrace()) return false;
@@ -2295,7 +2291,7 @@ namespace zsLib
         bool IDLCompiler::extractToComma(
                                          const char *whatExpectingComma,
                                          TokenList &outTokens
-                                         ) throw (FailureWithLine)
+                                         ) noexcept(false)
         {
           return extractToTokenType(whatExpectingComma, TokenType_CommaOperator, outTokens);
         }
@@ -2304,7 +2300,7 @@ namespace zsLib
         bool IDLCompiler::extractToEquals(
                                           const char *whatExpectingComma,
                                           TokenList &outTokens
-                                          ) throw (FailureWithLine)
+                                          ) noexcept(false)
         {
           return extractToTokenType(whatExpectingComma, TokenType_EqualsOperator, outTokens);
         }
@@ -2316,7 +2312,7 @@ namespace zsLib
                                              TokenList &outTokens,
                                              bool includeFoundToken,
                                              bool processBrackets
-                                             ) throw (FailureWithLine)
+                                             ) noexcept(false)
         {
           while (hasMoreTokens()) {
             auto token = extractNextToken(whatExpectingComma);
@@ -2345,7 +2341,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        TokenPtr IDLCompiler::peekAheadToFirstTokenOfType(const TokenTypeSet &tokenTypes)
+        TokenPtr IDLCompiler::peekAheadToFirstTokenOfType(const TokenTypeSet &tokenTypes) noexcept
         {
           auto tokenList = getTokens();
           if (!tokenList) return TokenPtr();
@@ -2365,7 +2361,7 @@ namespace zsLib
         void IDLCompiler::processUsingNamespace(
                                                 NamespacePtr currentNamespace,
                                                 NamespacePtr usingNamespace
-                                                )
+                                                ) noexcept
         {
           if (currentNamespace == usingNamespace) return;
 
@@ -2419,7 +2415,7 @@ namespace zsLib
         void IDLCompiler::processUsingType(
                                            NamespacePtr currentNamespace,
                                            TypePtr usingType
-                                           )
+                                           ) noexcept
         {
           usingType = usingType->getOriginalType();
 
@@ -2442,7 +2438,7 @@ namespace zsLib
                                          ContextPtr context,
                                          const TokenList &typeTokens,
                                          const String &typeName
-                                         ) throw (FailureWithLine)
+                                         ) noexcept(false)
         {
           TypedefTypePtr createdTypedef;
           auto type = findTypeOrCreateTypedef(context, typeTokens, createdTypedef);
@@ -2492,7 +2488,7 @@ namespace zsLib
         void IDLCompiler::processRelated(
                                          StructPtr structObj,
                                          const TokenList &typeTokens
-                                         ) throw (FailureWithLine)
+                                         ) noexcept(false)
         {
           const char *what = "struct/interface inherited";
 
@@ -2511,7 +2507,7 @@ namespace zsLib
                                                                  ContextPtr context,
                                                                  const String &typeName,
                                                                  bool *wasCreated
-                                                                 ) throw (FailureWithLine)
+                                                                 ) noexcept(false)
         {
           if (wasCreated) *wasCreated = false;
 
@@ -2556,16 +2552,15 @@ namespace zsLib
           }
 
           ZS_THROW_CUSTOM_PROPERTIES_2(FailureWithLine, ZS_EVENTING_TOOL_INVALID_CONTENT, getLastLineNumber(), String("struct/class forward not attached to namespace or struct context"));
-          return StructPtr();
         }
 
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark IDLCompilerHelper
-        #pragma mark
+        //
+        // IDLCompilerHelper
+        //
 
         class IDLCompilerHelper : protected IDLCompiler
         {
@@ -2592,13 +2587,13 @@ namespace zsLib
             String mTypeName;
 
             //-----------------------------------------------------------------
-            void throwInvalidModifier() throw (InvalidContent)
+            void throwInvalidModifier() noexcept(false) // throws InvalidContent
             {
               ZS_THROW_CUSTOM(InvalidContent, "has invalid type modifier");
             }
 
             //-----------------------------------------------------------------
-            void insert(const String &modifierStr) throw (InvalidContent)
+            void insert(const String &modifierStr) noexcept(false) // throws InvalidContent
             {
               if ("signed" == modifierStr) {
                 if (mUnsigned || mSigned || mFloat || mDouble) throwInvalidModifier();
@@ -2670,7 +2665,7 @@ namespace zsLib
             }
 
             //-----------------------------------------------------------------
-            void insertScope() throw (InvalidContent)
+            void insertScope() noexcept(false) // throws InvalidContent
             {
               if (mLastWasScope) throwInvalidModifier();
               mLastWasTypename = false;
@@ -2679,7 +2674,7 @@ namespace zsLib
             }
 
             //-----------------------------------------------------------------
-            PredefinedTypedefs mergePredefined(PredefinedTypedefs existingBasicType) throw (InvalidContent)
+            PredefinedTypedefs mergePredefined(PredefinedTypedefs existingBasicType) noexcept(false) // throws InvalidContent
             {
               PredefinedTypedefs &newBasicType = existingBasicType;
 
@@ -2890,7 +2885,7 @@ namespace zsLib
             }
 
             //-----------------------------------------------------------------
-            PredefinedTypedefs getBasicType()
+            PredefinedTypedefs getBasicType() noexcept(false)
             {
               if (mChar) {
                 if (mUnsigned) return PredefinedTypedef_uchar;
@@ -2926,14 +2921,13 @@ namespace zsLib
                 return PredefinedTypedef_int;
               }
               ZS_THROW_CUSTOM(InvalidContent, "is not a basic type");
-              return PredefinedTypedef_int;
             }
 
             //-----------------------------------------------------------------
             TypePtr processType(
                                 ContextPtr context,
                                 TypedefTypePtr &outCreatedTypedef
-                                ) throw (InvalidContent)
+                                ) noexcept(false) // throws InvalidContent
             {
               if ((mShort) && (mInt)) mInt = false; // strip redundant information
 
@@ -3019,7 +3013,7 @@ namespace zsLib
                                                                   ContextPtr context,
                                                                   const TokenList &inTokens,
                                                                   TypedefTypePtr &outCreatedTypedef
-                                                                  ) throw (FailureWithLine)
+                                                                  ) noexcept(false)
         {
           TypePtr result;
 
@@ -3167,7 +3161,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::writeXML(const String &outputName, const DocumentPtr &doc) throw (Failure)
+        void IDLCompiler::writeXML(const String &outputName, const DocumentPtr &doc) noexcept(false)
         {
           if (!doc) return;
           try {
@@ -3179,7 +3173,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::writeJSON(const String &outputName, const DocumentPtr &doc) throw (Failure)
+        void IDLCompiler::writeJSON(const String &outputName, const DocumentPtr &doc) noexcept(false)
         {
           if (!doc) return;
           try {
@@ -3191,7 +3185,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::writeBinary(const String &outputName, const SecureByteBlockPtr &buffer) throw (Failure)
+        void IDLCompiler::writeBinary(const String &outputName, const SecureByteBlockPtr &buffer) noexcept(false)
         {
           if ((!buffer) ||
               (0 == buffer->SizeInBytes())) {
@@ -3205,7 +3199,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::installDefaultTargets()
+        void IDLCompiler::installDefaultTargets() noexcept
         {
           ICompiler::installTarget(internal::GenerateStructHeader::create());
           ICompiler::installTarget(internal::GenerateStructImplCpp::create());
@@ -3213,6 +3207,8 @@ namespace zsLib
           ICompiler::installTarget(internal::GenerateStructC::create());
           ICompiler::installTarget(internal::GenerateStructDotNet::create());
           ICompiler::installTarget(internal::GenerateStructPython::create());
+          ICompiler::installTarget(internal::GenerateStructMsidl::create());
+          ICompiler::installTarget(internal::GenerateStructCppWinrt::create());
           ICompiler::installTarget(internal::GenerateJson::create());
         }
 

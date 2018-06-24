@@ -48,9 +48,9 @@ namespace zsLib
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
-        #pragma mark
-        #pragma mark GenerateStructPython
-        #pragma mark
+        //
+        // GenerateStructPython
+        //
 
         struct GenerateStructPython : public IIDLCompilerTarget,
                                       public IDLCompiler
@@ -86,33 +86,33 @@ namespace zsLib
 
             StringSet alreadyUsing_;
 
-            BaseFile();
-            ~BaseFile();
+            BaseFile() noexcept;
+            ~BaseFile() noexcept;
 
-            void indentMore() { indent_ += "    "; }
-            void indentLess() { indent_ = indent_.substr(0, indent_.length() - 4); }
+            void indentMore() noexcept { indent_ += "    "; }
+            void indentLess() noexcept { indent_ = indent_.substr(0, indent_.length() - 4); }
 
             void usingTypedef(
                               const String &usingType,
                               const String &originalType = String(),
                               const String &asType = String()
-                              );
-            void usingTypedef(IEventingTypes::PredefinedTypedefs type);
-            void usingTypedef(TypePtr type);
+                              ) noexcept;
+            void usingTypedef(IEventingTypes::PredefinedTypedefs type) noexcept;
+            void usingTypedef(TypePtr type) noexcept;
 
-            bool hasBoxing(const String &namePathStr);
+            bool hasBoxing(const String &namePathStr) noexcept;
 
-            void startRegion(const String &region);
-            void endRegion(const String &region);
+            void startRegion(const String &region) noexcept;
+            void endRegion(const String &region) noexcept;
 
             void startOtherRegion(
                                   const String &region,
                                   bool preStruct
-                                  );
+                                  ) noexcept;
             void endOtherRegion(
                                 const String &region,
                                 bool preStruct
-                                );
+                                ) noexcept;
           };
 
           struct SetupFile : public BaseFile
@@ -124,11 +124,11 @@ namespace zsLib
             std::stringstream &helpersSS_;
             std::stringstream &helpersEndSS_;
 
-            ApiFile();
-            ~ApiFile();
+            ApiFile() noexcept;
+            ~ApiFile() noexcept;
 
-            void startHelpersRegion(const String &region) { startOtherRegion(region, false); }
-            void endHelpersRegion(const String &region) { endOtherRegion(region, false); }
+            void startHelpersRegion(const String &region) noexcept { startOtherRegion(region, false); }
+            void endHelpersRegion(const String &region) noexcept { endOtherRegion(region, false); }
           };
 
           struct EnumFile : public BaseFile
@@ -148,8 +148,8 @@ namespace zsLib
             StructFile(
                        BaseFile &baseFile,
                        StructPtr structObj
-                       );
-            ~StructFile();
+                       ) noexcept;
+            ~StructFile() noexcept;
 
             StructPtr struct_;
             bool isStaticOnly_ {};
@@ -159,183 +159,183 @@ namespace zsLib
             bool shouldInheritException_ {};
           };
 
-          GenerateStructPython();
+          GenerateStructPython() noexcept;
 
-          static GenerateStructPythonPtr create();
+          static GenerateStructPythonPtr create() noexcept;
 
-          static String fixName(const String &originalName);
-          static String fixNamespace(NamespacePtr namespaceObj);
-          static String fixNamePath(ContextPtr context);
-          static String flattenPath(const String &originalName);
+          static String fixName(const String &originalName) noexcept;
+          static String fixNamespace(NamespacePtr namespaceObj) noexcept;
+          static String fixNamePath(ContextPtr context) noexcept;
+          static String flattenPath(const String &originalName) noexcept;
 
-          static String getPythonConvertedCType(IEventingTypes::PredefinedTypedefs type);
-          static String getPythonConvertedCType(TypePtr type);
-          static String getPythonCType(IEventingTypes::PredefinedTypedefs type);
+          static String getPythonConvertedCType(IEventingTypes::PredefinedTypedefs type) noexcept;
+          static String getPythonConvertedCType(TypePtr type) noexcept;
+          static String getPythonCType(IEventingTypes::PredefinedTypedefs type) noexcept;
           static String getPythonToCType(
                                          const String &inputValue,
                                          IEventingTypes::PredefinedTypedefs type
-                                         );
+                                         ) noexcept;
           static String getCToPythonType(
                                          const String &inputValue,
                                          IEventingTypes::PredefinedTypedefs type
-                                         );
-          static String fixArgumentName(const String &value);
-          static String fixCPythonType(IEventingTypes::PredefinedTypedefs type);
-          static String fixCPythonType(TypePtr type);
+                                         ) noexcept;
+          static String fixArgumentName(const String &value) noexcept;
+          static String fixCPythonType(IEventingTypes::PredefinedTypedefs type) noexcept;
+          static String fixCPythonType(TypePtr type) noexcept;
           static String fixPythonType(
                                       TypePtr type,
                                       bool isInterface = false
-                                      );
+                                      ) noexcept;
           static String fixPythonPathType(
                                           TypePtr type,
                                           bool isInterface = false
-                                          );
+                                          ) noexcept;
           static String fixPythonType(
                                       bool isOptional,
                                       TypePtr type,
                                       bool isInterface = false
-                                      );
+                                      ) noexcept;
           static String fixPythonPathType(
                                           bool isOptional,
                                           TypePtr type,
                                           bool isInterface = false
-                                          );
-          static String fixCsSystemType(IEventingTypes::PredefinedTypedefs type);
+                                          ) noexcept;
+          static String fixCsSystemType(IEventingTypes::PredefinedTypedefs type) noexcept;
           static String combineIf(
                                   const String &combinePreStr,
                                   const String &combinePostStr,
                                   const String &ifHasValue
-                                  );
+                                  ) noexcept;
           static String getHelpersMethod(
                                          BaseFile &baseFile,
                                          bool useApiHelper,
                                          const String &methodName,
                                          bool isOptional,
                                          TypePtr type
-                                         );
+                                         ) noexcept;
           static String getToCMethod(
                                      BaseFile &baseFile,
                                      bool isOptional,
                                      TypePtr type
-                                     );
+                                     ) noexcept;
           static String getFromCMethod(
                                        BaseFile &baseFile,
                                        bool isOptional,
                                        TypePtr type
-                                       );
+                                       ) noexcept;
           static String getAdoptFromCMethod(
                                             BaseFile &baseFile,
                                             bool isOptional, 
                                             TypePtr type
-                                            );
+                                            ) noexcept;
           static String getDestroyCMethod(
                                           BaseFile &baseFile,
                                           bool isOptional, 
                                           TypePtr type
-                                          );
+                                          ) noexcept;
 
-          static bool hasInterface(StructPtr structObj);
+          static bool hasInterface(StructPtr structObj) noexcept;
 
-          static String getApiCastRequiredDefine(BaseFile &baseFile);
-          static String getApiPath();
-          static String getHelperPath();
+          static String getApiCastRequiredDefine(BaseFile &baseFile) noexcept;
+          static String getApiPath() noexcept;
+          static String getHelperPath() noexcept;
 
           static bool shouldDeriveFromException(
                                                 BaseFile &baseFile,
                                                 StructPtr structObj
-                                                );
+                                                ) noexcept;
 
-          static void finalizeBaseFile(BaseFile &apiFile);
+          static void finalizeBaseFile(BaseFile &apiFile) noexcept;
 
-          static void prepareSetupFile(SetupFile &apiFile);
-          static void finalizeSetupFile(SetupFile &apiFile);
+          static void prepareSetupFile(SetupFile &apiFile) noexcept;
+          static void finalizeSetupFile(SetupFile &apiFile) noexcept;
 
-          static void prepareApiInitFile(InitFile &apiFile);
-          static void finalizeApiInitFile(InitFile &apiFile);
+          static void prepareApiInitFile(InitFile &apiFile) noexcept;
+          static void finalizeApiInitFile(InitFile &apiFile) noexcept;
 
-          static void prepareApiFile(ApiFile &apiFile);
-          static void finalizeApiFile(ApiFile &apiFile);
+          static void prepareApiFile(ApiFile &apiFile) noexcept;
+          static void finalizeApiFile(ApiFile &apiFile) noexcept;
 
-          static void prepareApiCallback(ApiFile &apiFile);
+          static void prepareApiCallback(ApiFile &apiFile) noexcept;
 
-          static void prepareApiExceptions(ApiFile &apiFile);
+          static void prepareApiExceptions(ApiFile &apiFile) noexcept;
           static void prepareApiExceptions(
                                            ApiFile &apiFile,
                                            const String &exceptionName
-                                           );
+                                           ) noexcept;
 
-          static void prepareApiBasicTypes(ApiFile &apiFile);
+          static void prepareApiBasicTypes(ApiFile &apiFile) noexcept;
           static void prepareApiBasicTypes(
                                            ApiFile &apiFile,
                                            const IEventingTypes::PredefinedTypedefs basicType
-                                           );
-          static void prepareApiBoxing(ApiFile &apiFile);
+                                           ) noexcept;
+          static void prepareApiBoxing(ApiFile &apiFile) noexcept;
           static void prepareApiBoxing(
                                        ApiFile &apiFile,
                                        const IEventingTypes::PredefinedTypedefs basicType
-                                       );
+                                       ) noexcept;
 
-          static void prepareApiString(ApiFile &apiFile);
-          static void prepareApiBinary(ApiFile &apiFile);
+          static void prepareApiString(ApiFile &apiFile) noexcept;
+          static void prepareApiBinary(ApiFile &apiFile) noexcept;
 
-          static void prepareApiDuration(ApiFile &apiFile);
+          static void prepareApiDuration(ApiFile &apiFile) noexcept;
           static void prepareApiDuration(
                                          ApiFile &apiFile,
                                          const String &durationType
-                                         );
+                                         ) noexcept;
           static void prepareApiList(
                                      ApiFile &apiFile,
                                      const String &listOrSetStr
-                                     );
+                                     ) noexcept;
           static void prepareApiSpecial(
                                         ApiFile &apiFile,
                                         const String &specialName
-                                        );
-          static void preparePromiseWithValue(ApiFile &apiFile);
-          static void preparePromiseWithRejectionReason(ApiFile &apiFile);
+                                        ) noexcept;
+          static void preparePromiseWithValue(ApiFile &apiFile) noexcept;
+          static void preparePromiseWithRejectionReason(ApiFile &apiFile) noexcept;
 
           static void prepareApiNamespace(
                                           ApiFile &apiFile,
                                           NamespacePtr namespaceObj
-                                          );
+                                          ) noexcept;
           static void prepareApiStruct(
                                        ApiFile &apiFile,
                                        StructPtr structObj
-                                       );
+                                       ) noexcept;
           static void prepareApiEnum(
                                      ApiFile &apiFile,
                                      EnumTypePtr enumObj
-                                     );
+                                     ) noexcept;
 
           static void prepareInitFile(
                                       InitFile &initFile,
                                       NamespacePtr namespaceObj
-                                      );
-          static void finalizeInitFile(InitFile &initFile) { finalizeBaseFile(initFile); }
+                                      ) noexcept;
+          static void finalizeInitFile(InitFile &initFile) noexcept { finalizeBaseFile(initFile); }
 
           static void prepareEnumFile(
                                       EnumFile &enumFile,
                                       NamespacePtr namespaceObj
-                                      );
-          static void finalizeEnumFile(EnumFile &enumFile) { finalizeBaseFile(enumFile); }
+                                      ) noexcept;
+          static void finalizeEnumFile(EnumFile &enumFile) noexcept { finalizeBaseFile(enumFile); }
 
           static void prepareEnumNamespace(
                                            EnumFile &enumFile,
                                            NamespacePtr namespaceObj
-                                           );
+                                           ) noexcept;
 
           static void processNamespace(
                                        const String &pathStr,
                                        SetupFile &setupFile,
                                        ApiFile &apiFile,
                                        NamespacePtr namespaceObj
-                                       );
+                                       ) noexcept (false);
           static void processStruct(
                                     const String &pathStr,
                                     ApiFile &apiFile,
                                     InitFile &initFile,
                                     StructPtr structObj
-                                    );
+                                    ) noexcept;
           static void processInheritance(
                                          ApiFile &apiFile,
                                          StructFile &structFile,
@@ -343,7 +343,7 @@ namespace zsLib
                                          StructPtr rootStructObj,
                                          StructPtr structObj,
                                          bool &first
-                                         );
+                                         ) noexcept;
           static void processStruct(
                                     const String &pathStr,
                                     ApiFile &apiFile,
@@ -352,58 +352,58 @@ namespace zsLib
                                     StructFile &interfaceFile,
                                     StructPtr rootStructObj,
                                     StructPtr structObj
-                                    );
+                                    ) noexcept;
           static void processEnum(
                                   ApiFile &apiFile,
                                   StructFile &structFile,
                                   StructPtr structObj,
                                   EnumTypePtr enumObj
-                                  );
+                                  ) noexcept;
           static void processMethods(
                                      ApiFile &apiFile,
                                      StructFile &structFile,
                                      StructFile &interfaceFile,
                                      StructPtr rootStructObj,
                                      StructPtr structObj
-                                     );
+                                     ) noexcept;
           static void processProperties(
                                         ApiFile &apiFile,
                                         StructFile &structFile,
                                         StructFile &interfaceFile,
                                         StructPtr rootStructObj,
                                         StructPtr structObj
-                                        );
+                                        ) noexcept;
           static void processEventHandlers(
                                            ApiFile &apiFile,
                                            StructFile &structFile,
                                            StructFile &interfaceFile,
                                            StructPtr structObj
-                                           );
+                                           ) noexcept;
           static void processEventHandlersStart(
                                                 ApiFile &apiFile,
                                                 StructFile &structFile,
                                                 StructFile &interfaceFile,
                                                 StructPtr structObj
-                                                );
+                                                ) noexcept;
           static void processEventHandlersEnd(
                                               ApiFile &apiFile,
                                               StructFile &structFile,
                                               StructFile &interfaceFile,
                                               StructPtr structObj
-                                              );
+                                              ) noexcept;
 
           //-------------------------------------------------------------------
-          #pragma mark
-          #pragma mark GenerateStructC::IIDLCompilerTarget
-          #pragma mark
+          //
+          // GenerateStructC::IIDLCompilerTarget
+          //
 
           //-------------------------------------------------------------------
-          String targetKeyword() override;
-          String targetKeywordHelp() override;
+          String targetKeyword() noexcept override;
+          String targetKeywordHelp() noexcept override;
           void targetOutput(
                             const String &inPathStr,
                             const ICompilerTypes::Config &config
-                            ) throw (Failure) override;
+                            ) noexcept(false) override; // throws Failure
         };
          
       } // namespace internal

@@ -7,8 +7,8 @@
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <AppContainerApplication>true</AppContainerApplication>
     <ApplicationType>Windows Store</ApplicationType>
-    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
-    <WindowsTargetPlatformMinVersion>10.0.10586.0</WindowsTargetPlatformMinVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.17134.0</WindowsTargetPlatformMinVersion>
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -41,37 +41,37 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -125,56 +125,74 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
-      <DisableSpecificWarnings>4453;28204;4068;4290</DisableSpecificWarnings>
+      <AdditionalOptions>/bigobj /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ZSLIB_EVENTING_NOOP;_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE=1;%(ClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4505</DisableSpecificWarnings>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <ClCompile>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
-      <DisableSpecificWarnings>4453;28204;4068;4290</DisableSpecificWarnings>
+      <AdditionalOptions>/bigobj /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ZSLIB_EVENTING_NOOP;_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE=1;%(ClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4505</DisableSpecificWarnings>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
-      <DisableSpecificWarnings>4453;28204;4068;4290</DisableSpecificWarnings>
+      <AdditionalOptions>/bigobj /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ZSLIB_EVENTING_NOOP;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4505</DisableSpecificWarnings>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
-      <DisableSpecificWarnings>4453;28204;4068;4290</DisableSpecificWarnings>
+      <AdditionalOptions>/bigobj /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ZSLIB_EVENTING_NOOP;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4505</DisableSpecificWarnings>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
-      <DisableSpecificWarnings>4453;28204;4068;4290</DisableSpecificWarnings>
+      <AdditionalOptions>/bigobj /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ZSLIB_EVENTING_NOOP;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4505</DisableSpecificWarnings>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
-      <DisableSpecificWarnings>4453;28204;4068;4290</DisableSpecificWarnings>
+      <AdditionalOptions>/bigobj /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..;$(ProjectDir)..\..\..\..\zsLib;$(ProjectDir)..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ZSLIB_EVENTING_NOOP;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4505</DisableSpecificWarnings>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -207,6 +225,7 @@
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadBasic.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadPool.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingBlackberryChannels.h" />
+    <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForCppWinrt.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWindows.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWinUWP.h" />
     <ClInclude Include="..\..\..\..\zsLib\zsLib\internal\zsLib_MessageQueueThreadUsingMainThreadMessageQueueForApple.h" />
@@ -265,11 +284,14 @@
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateHelper.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateJson.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructC.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructCppWinrt.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructCx.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructDotNet.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructHeader.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructImplCpp.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructImplHeader.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructMsidl.h" />
+    <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateStructPython.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_GenerateTypesHeader.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_Helper.h" />
     <ClInclude Include="..\..\..\zsLib\eventing\tool\internal\zsLib_eventing_tool_IDLCompiler.h" />
@@ -330,11 +352,13 @@
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_IPAddress.cpp" />
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_Log.cpp" />
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueue.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueAssociator.cpp" />
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueManager.cpp" />
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThread.cpp" />
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadBasic.cpp" />
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadPool.cpp" />
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingBlackberryChannels.cpp" />
+    <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForCppWinrt.cpp" />
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWindows.cpp" />
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingCurrentGUIMessageQueueForWinUWP.cpp" />
     <ClCompile Include="..\..\..\..\zsLib\zsLib\cpp\zsLib_MessageQueueThreadUsingMainThreadMessageQueueForApple.cpp" />
@@ -480,11 +504,14 @@
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateHelper.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateJson.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructC.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructCppWinrt.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructCx.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructDotNet.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructHeader.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructImpHeader.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructImplCpp.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructMsidl.cpp" />
+    <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateStructPython.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_GenerateTypesHeader.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_Helper.cpp" />
     <ClCompile Include="..\..\..\zsLib\eventing\tool\cpp\zsLib_eventing_tool_IDLCompiler.cpp" />

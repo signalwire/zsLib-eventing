@@ -29,6 +29,20 @@ either expressed or implied, of the FreeBSD Project.
 
 */
 
+#ifdef WINUWP
+
+#ifdef __cplusplus_winrt
+#include <windows.ui.core.h>
+#endif //__cplusplus_winrt
+
+#ifdef __has_include
+#if __has_include(<winrt/windows.ui.core.h>)
+#include <winrt/windows.ui.core.h>
+#endif //__has_include(<winrt/windows.ui.core.h>)
+#endif //__has_include
+
+#endif //WINUWP
+
 #include <zsLib/eventing/internal/zsLib_eventing_Helper.h>
 
 #include <zsLib/Numeric.h>
@@ -81,14 +95,14 @@ namespace zsLib
       class CryptoPPHelper
       {
       public:
-        static CryptoPPHelper &singleton()
+        static CryptoPPHelper &singleton() noexcept
         {
           AutoRecursiveLock lock(*zsLib::IHelper::getGlobalLock());
           static Singleton<CryptoPPHelper> singleton;
           return singleton.singleton();
         }
 
-        CryptoPPHelper()
+        CryptoPPHelper() noexcept
         {
           static const char *buffer = "1234567890";
 
@@ -114,7 +128,7 @@ namespace zsLib
 
       protected:
         //-----------------------------------------------------------------------
-        Log::Params log(const char *message)
+        Log::Params log(const char *message) noexcept
         {
           return Log::Params(message, "zsLib::eventing::CryptoPPHelper");
         }
@@ -124,12 +138,12 @@ namespace zsLib
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
       //-----------------------------------------------------------------------
-      #pragma mark
-      #pragma mark Helper
-      #pragma mark
+      //
+      // Helper
+      //
 
       //-----------------------------------------------------------------------
-      Log::Params Helper::slog(const char *message)
+      Log::Params Helper::slog(const char *message) noexcept
       {
         return Log::Params(message, "eventing::Helper");
       }
@@ -139,12 +153,12 @@ namespace zsLib
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
-    #pragma mark
-    #pragma mark IHelper
-    #pragma mark
+    //
+    // IHelper
+    //
 
     //-------------------------------------------------------------------------
-    void IHelper::setup()
+    void IHelper::setup() noexcept
     {
       zsLib::IHelper::setup();
       internal::CryptoPPHelper::singleton();
@@ -152,17 +166,28 @@ namespace zsLib
     }
 
 #ifdef WINUWP
+#ifdef __cplusplus_winrt
     //-------------------------------------------------------------------------
-    void IHelper::setup(Windows::UI::Core::CoreDispatcher ^dispatcher)
+    void IHelper::setup(Windows::UI::Core::CoreDispatcher ^dispatcher) noexcept
     {
       zsLib::IHelper::setup(dispatcher);
       internal::CryptoPPHelper::singleton();
       internal::installRemoteEventingSettingsDefaults();
     }
+#endif  //__cplusplus_winrt
+#ifdef CPPWINRT_VERSION
+    //-------------------------------------------------------------------------
+    void IHelper::setup(winrt::Windows::UI::Core::CoreDispatcher dispatcher) noexcept
+    {
+      zsLib::IHelper::setup(dispatcher);
+      internal::CryptoPPHelper::singleton();
+      internal::installRemoteEventingSettingsDefaults();
+    }
+#endif //CPPWINRT_VERSION
 #endif //WINUWP
 
     //-------------------------------------------------------------------------
-    SecureByteBlockPtr IHelper::loadFile(const char *path) throw (StdError)
+    SecureByteBlockPtr IHelper::loadFile(const char *path) noexcept(false)
     {
       String pathStr(path);
 #ifdef _WIN32
@@ -205,7 +230,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IHelper::saveFile(const char *path, SecureByteBlock &buffer) throw (StdError)
+    void IHelper::saveFile(const char *path, SecureByteBlock &buffer) noexcept(false)
     {
       String pathStr(path);
 #ifdef _WIN32
@@ -238,7 +263,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    void IHelper::mkdir(const char *path, bool ignoreExists) throw (StdError)
+    void IHelper::mkdir(const char *path, bool ignoreExists) noexcept(false)
     {
       String pathStr(path);
 #ifdef _WIN32
@@ -260,14 +285,14 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IHelper::read(const SecureByteBlockPtr buffer)
+    ElementPtr IHelper::read(const SecureByteBlockPtr buffer) noexcept
     {
       if (!buffer) return ElementPtr();
       return read(*buffer);
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IHelper::read(const SecureByteBlock &buffer)
+    ElementPtr IHelper::read(const SecureByteBlock &buffer) noexcept
     {
       if (0 == buffer.size()) return ElementPtr();
       DocumentPtr doc = Document::createFromAutoDetect(reinterpret_cast<const char *>(buffer.BytePtr()));
@@ -278,7 +303,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    ElementPtr IHelper::read(const String &str)
+    ElementPtr IHelper::read(const String &str) noexcept
     {
       if (str.isEmpty()) return ElementPtr();
       DocumentPtr doc = Document::createFromAutoDetect(str);
@@ -292,7 +317,7 @@ namespace zsLib
     SecureByteBlockPtr IHelper::writeJSON(
                                           const Document &doc,
                                           bool prettyPrint
-                                          )
+                                          ) noexcept
     {
       size_t bufferSize = 0;
       std::unique_ptr<char[]> buffer = doc.writeAsJSON(prettyPrint, &bufferSize);
@@ -305,14 +330,14 @@ namespace zsLib
     SecureByteBlockPtr IHelper::writeJSON(
                                           DocumentPtr doc,
                                           bool prettyPrint
-                                          )
+                                          ) noexcept
     {
       if (!doc) return SecureByteBlockPtr();
       return writeJSON(*doc, prettyPrint);
     }
 
     //-------------------------------------------------------------------------
-    SecureByteBlockPtr IHelper::writeXML(const Document &doc)
+    SecureByteBlockPtr IHelper::writeXML(const Document &doc) noexcept
     {
       size_t bufferSize = 0;
       auto buffer = doc.writeAsXML(&bufferSize);
@@ -323,14 +348,14 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    SecureByteBlockPtr IHelper::writeXML(DocumentPtr doc)
+    SecureByteBlockPtr IHelper::writeXML(DocumentPtr doc) noexcept
     {
       if (!doc) return SecureByteBlockPtr();
       return writeXML(*doc);
     }
 
     //-------------------------------------------------------------------------
-    String IHelper::randomString(size_t lengthInChars)
+    String IHelper::randomString(size_t lengthInChars) noexcept
     {
       static const char *randomCharArray = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
       static size_t randomSize = strlen(randomCharArray);
@@ -363,7 +388,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    SecureByteBlockPtr IHelper::random(size_t lengthInBytes)
+    SecureByteBlockPtr IHelper::random(size_t lengthInBytes) noexcept
     {
       SecureByteBlockPtr output(make_shared<SecureByteBlock>());
       AutoSeededRandomPool rng;
@@ -373,9 +398,9 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    size_t IHelper::random(size_t minValue, size_t maxValue)
+    size_t IHelper::random(size_t minValue, size_t maxValue) noexcept
     {
-      ZS_THROW_INVALID_ARGUMENT_IF(minValue > maxValue);
+      ZS_ASSERT(minValue <= maxValue);
 
       if (minValue == maxValue) return minValue;
 
@@ -399,7 +424,7 @@ namespace zsLib
     int IHelper::compare(
                          const SecureByteBlock &left,
                          const SecureByteBlock &right
-                         )
+                         ) noexcept
     {
       SecureByteBlock::size_type minSize = left.SizeInBytes();
       minSize = (right.SizeInBytes() < minSize ? right.SizeInBytes() : minSize);
@@ -423,40 +448,40 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    bool IHelper::isEmpty(SecureByteBlockPtr buffer)
+    bool IHelper::isEmpty(SecureByteBlockPtr buffer) noexcept
     {
       if (!buffer) return true;
       return (buffer->SizeInBytes() < 1);
     }
 
     //-------------------------------------------------------------------------
-    bool IHelper::isEmpty(const SecureByteBlock &buffer)
+    bool IHelper::isEmpty(const SecureByteBlock &buffer) noexcept
     {
       return (buffer.SizeInBytes() < 1);
     }
 
     //-------------------------------------------------------------------------
-    bool IHelper::hasData(SecureByteBlockPtr buffer)
+    bool IHelper::hasData(SecureByteBlockPtr buffer) noexcept
     {
       if (!buffer) return false;
       return (buffer->SizeInBytes() > 0);
     }
 
     //-------------------------------------------------------------------------
-    bool IHelper::hasData(const SecureByteBlock &buffer)
+    bool IHelper::hasData(const SecureByteBlock &buffer) noexcept
     {
       return (buffer.SizeInBytes() > 0);
     }
 
     //-------------------------------------------------------------------------
-    SecureByteBlockPtr IHelper::clone(SecureByteBlockPtr pBuffer)
+    SecureByteBlockPtr IHelper::clone(SecureByteBlockPtr pBuffer) noexcept
     {
       if (!pBuffer) return SecureByteBlockPtr();
       return IHelper::clone(*pBuffer);
     }
 
     //-------------------------------------------------------------------------
-    SecureByteBlockPtr IHelper::clone(const SecureByteBlock &buffer)
+    SecureByteBlockPtr IHelper::clone(const SecureByteBlock &buffer) noexcept
     {
       SecureByteBlockPtr pBuffer(make_shared<SecureByteBlock>());
       SecureByteBlock::size_type size = buffer.SizeInBytes();
@@ -468,14 +493,14 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IHelper::convertToString(const SecureByteBlock &buffer)
+    String IHelper::convertToString(const SecureByteBlock &buffer) noexcept
     {
       if (buffer.size() < 1) return String();
       return (const char *)(buffer.BytePtr());  // return buffer cast as const char *
     }
 
     //-------------------------------------------------------------------------
-    SecureByteBlockPtr IHelper::convertToBuffer(const char *input)
+    SecureByteBlockPtr IHelper::convertToBuffer(const char *input) noexcept
     {
       if (NULL == input) return SecureByteBlockPtr();
 
@@ -490,7 +515,7 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    SecureByteBlockPtr IHelper::convertToBuffer(const std::string &str)
+    SecureByteBlockPtr IHelper::convertToBuffer(const std::string &str) noexcept
     {
       if (str.size() < 1) return SecureByteBlockPtr();
       auto result(make_shared<SecureByteBlock>(str.length()));
@@ -502,7 +527,7 @@ namespace zsLib
     SecureByteBlockPtr IHelper::convertToBuffer(
                                                 const BYTE *buffer,
                                                 size_t bufferLengthInBytes
-                                                )
+                                                ) noexcept
     {
       SecureByteBlockPtr output(make_shared<SecureByteBlock>());
 
@@ -518,7 +543,7 @@ namespace zsLib
                                                 const std::unique_ptr<char[]> &arrayStr,
                                                 size_t lengthInChars,
                                                 bool wipeOriginal
-                                                )
+                                                ) noexcept
     {
       if (!arrayStr.get()) return convertToBuffer((const BYTE *)NULL, 0);
 
@@ -537,7 +562,7 @@ namespace zsLib
     String IHelper::convertToBase64(
                                     const BYTE *buffer,
                                     size_t bufferLengthInBytes
-                                    )
+                                    ) noexcept
     {
       internal::CryptoPPHelper::singleton();
 
@@ -549,21 +574,21 @@ namespace zsLib
     }
 
     //-------------------------------------------------------------------------
-    String IHelper::convertToBase64(const String &input)
+    String IHelper::convertToBase64(const String &input) noexcept
     {
       if (input.isEmpty()) return String();
       return IHelper::convertToBase64((const BYTE *)(input.c_str()), input.length());
     }
 
     //-------------------------------------------------------------------------
-    String IHelper::convertToBase64(const SecureByteBlock &input)
+    String IHelper::convertToBase64(const SecureByteBlock &input) noexcept
     {
       if (input.size() < 1) return String();
       return IHelper::convertToBase64(input, input.size());
     }
 
     //-------------------------------------------------------------------------
-    SecureByteBlockPtr IHelper::convertFromBase64(const String &input)
+    SecureByteBlockPtr IHelper::convertFromBase64(const String &input) noexcept
     {
       internal::CryptoPPHelper::singleton();
 
@@ -592,7 +617,7 @@ namespace zsLib
                                  const BYTE *buffer,
                                  size_t bufferLengthInBytes,
                                  bool outputUpperCase
-                                 )
+                                 ) noexcept
     {
       String result;
 
@@ -607,14 +632,14 @@ namespace zsLib
     String IHelper::convertToHex(
                                  const SecureByteBlock &input,
                                  bool outputUpperCase
-                                 )
+                                 ) noexcept
     {
       return convertToHex(input, input.size(), outputUpperCase);
     }
 
 
     //-------------------------------------------------------------------------
-    SecureByteBlockPtr IHelper::convertFromHex(const String &input)
+    SecureByteBlockPtr IHelper::convertFromHex(const String &input) noexcept
     {
       SecureByteBlockPtr output(make_shared<SecureByteBlock>());
       ByteQueue queue;
@@ -639,7 +664,7 @@ namespace zsLib
                                    const SecureByteBlock &buffer,
                                    size_t bytesPerGroup,
                                    size_t maxLineLength
-                                   )
+                                   ) noexcept
     {
       return zsLib::IHelper::getDebugString(buffer.BytePtr(), buffer.SizeInBytes(), bytesPerGroup, maxLineLength);
     }
