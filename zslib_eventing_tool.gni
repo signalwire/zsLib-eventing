@@ -54,7 +54,7 @@ template("compile_idl_macro") {
       script = "//third_party/ortc/runIDLCompiler.py"
       
       sources = invoker.sources
-      sourcePathPrefix = invoker.sourcePathPrefix
+      idlAlreadyCompletedFlag = invoker.idlAlreadyCompletedFlag
 
       #Not of interest. Added just because outputs is required by action
       #outputs = [ 
@@ -65,7 +65,7 @@ template("compile_idl_macro") {
 
       args = [
         rebase_path(sources[0], root_build_dir),
-        sourcePathPrefix,
+        idlAlreadyCompletedFlag,
         "$current_cpu",
       ]
 
