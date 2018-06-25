@@ -171,7 +171,7 @@ namespace zsLib
         StringListMap mModifiers;
 
       public:
-        virtual ~Context();
+        virtual ~Context() noexcept;
 
         virtual ContextPtr toContext() const noexcept;
         virtual ProjectPtr toProject() const noexcept;

@@ -481,7 +481,7 @@ namespace zsLib
           void targetOutput(
                             const String &inPathStr,
                             const ICompilerTypes::Config &config
-                            ) noexcept(false); // throws Failure
+                            ) noexcept(false) override; // throws Failure
         };
          
       } // namespace internal

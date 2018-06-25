@@ -2361,6 +2361,7 @@ namespace zsLib
             case IEventingTypes::PredefinedTypedef_string:
             case IEventingTypes::PredefinedTypedef_astring:
             case IEventingTypes::PredefinedTypedef_wstring:   return true;
+            default:                                          break;
           }
           return false;
         }
