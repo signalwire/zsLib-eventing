@@ -38,6 +38,11 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <iostream>
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmicrosoft-template"
+#endif /* clang */
+
 #ifndef _WIN32
 #define TEXT(xText) xText
 #endif //_WIN32
@@ -310,3 +315,7 @@ namespace zsLib
     }
   }
 }
+
+#ifdef __clang__
+#pragma clang diagnostic ppop
+#endif /* clang */
