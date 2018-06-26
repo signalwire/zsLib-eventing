@@ -424,6 +424,8 @@ namespace zsLib
     {
       auto hasher = IHasher::sha256();
 
+      hasher->update(getPath());
+      hasher->update(":");
       hasher->update(mName);
 
       if (mDocumentation) {

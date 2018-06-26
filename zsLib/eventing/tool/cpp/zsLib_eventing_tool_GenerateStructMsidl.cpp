@@ -233,7 +233,7 @@ namespace zsLib
             case PredefinedTypedef_sshort:      return "Int16";
             case PredefinedTypedef_uint:        return "UInt32";
             case PredefinedTypedef_int:
-            case PredefinedTypedef_sint:        return "Int16";
+            case PredefinedTypedef_sint:        return "Int32";
             case PredefinedTypedef_ulong:       return "UInt64";
             case PredefinedTypedef_long:
             case PredefinedTypedef_slong:       return "Int64";
