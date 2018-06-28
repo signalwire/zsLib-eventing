@@ -296,7 +296,7 @@ namespace zsLib
 
           if (foundEventHandler) {
             ss << "\n";
-            ss << indentStr << "virtual void wrapper_onObserverCountChanged(size_t count) noexcept override;\n";
+            ss << indentStr << "void wrapper_onObserverCountChanged(size_t count) noexcept override;\n";
           }
 
           indentStr = currentIdentStr;
