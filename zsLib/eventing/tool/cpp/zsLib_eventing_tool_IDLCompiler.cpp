@@ -2017,7 +2017,7 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        void IDLCompiler::fillContext(ContextPtr context) noexcept
+        void IDLCompiler::fillContext(ContextPtr context) noexcept(false)
         {
           if (!context) return;
           mergeDocumentation(context->mDocumentation);

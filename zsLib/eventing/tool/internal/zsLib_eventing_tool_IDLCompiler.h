@@ -174,7 +174,7 @@ namespace zsLib
           void mergeDocumentation(ElementPtr &existingDocumentation) noexcept;
           void mergeDirectives(ElementPtr &existingDocumentation) noexcept;
           void mergeModifiers(ContextPtr context) noexcept(false); // throws FailureWithLine
-          void fillContext(ContextPtr context) noexcept;
+          void fillContext(ContextPtr context) noexcept(false); // throws FailureWithLine
 
           static String makeTypenameFromTokens(const TokenList &tokens) noexcept(false); // throws InvalidContent
 
