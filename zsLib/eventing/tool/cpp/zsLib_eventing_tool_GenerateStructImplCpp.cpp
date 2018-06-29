@@ -262,7 +262,7 @@ namespace zsLib
 
           String dashedLine = GenerateHelper::getDashedComment(String());
 
-          if (!structObj->hasModifier(Modifier_Static)) {
+          if (GenerateHelper::isConstructable(structObj)) {
             ss << dashedLine;
             ss << "wrapper::impl" << structObj->getPathName() << "::" << structObj->mName << "() noexcept\n";
             ss << "{\n";
@@ -279,8 +279,11 @@ namespace zsLib
           }
 
           ss << dashedLine;
-          ss << "wrapper::impl" << structObj->getPathName() << "::~" << structObj->mName << "()\n";
+          ss << "wrapper::impl" << structObj->getPathName() << "::~" << structObj->mName << "() noexcept\n";
           ss << "{\n";
+          if (GenerateHelper::isConstructable(structObj)) {
+            ss << "  thisWeak_.reset();\n";
+          }
           ss << "}\n\n";
 
           if (needsDefaultConstructor) {

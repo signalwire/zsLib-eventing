@@ -81,6 +81,7 @@ namespace zsLib
           static bool hasOnlyStaticMethods(StructPtr structObj);
           static bool hasEventHandlers(StructPtr structObj);
 
+          static bool isConstructable(StructPtr structObj);
           static bool needsDefaultConstructor(StructPtr structObj);
           static bool needsDefaultConstructor(TemplatedStructTypePtr templateObj);
 

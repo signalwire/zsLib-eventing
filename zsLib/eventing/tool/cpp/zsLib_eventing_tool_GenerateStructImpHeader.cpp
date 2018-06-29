@@ -279,9 +279,12 @@ namespace zsLib
           String currentIdentStr = indentStr;
           indentStr += "  ";
 
-          if (!structObj->hasModifier(Modifier_Static)) {
+          if (GenerateHelper::isConstructable(structObj)) {
             ss << indentStr << structObj->mName << "WeakPtr thisWeak_;\n\n";
             ss << indentStr << structObj->mName << "() noexcept;\n";
+          } else {
+            ss << indentStr << structObj->mName << "() noexcept = delete;\n";
+            ss << indentStr << structObj->mName << "(const " << structObj->mName<< " &) noexcept = delete;\n";
           }
           ss << indentStr << "virtual ~" << structObj->mName << "() noexcept;\n";
 

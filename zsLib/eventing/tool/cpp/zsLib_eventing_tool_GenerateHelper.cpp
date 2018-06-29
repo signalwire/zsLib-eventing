@@ -322,11 +322,20 @@ namespace zsLib
         }
 
         //-------------------------------------------------------------------
+        bool GenerateHelper::isConstructable(StructPtr structObj)
+        {
+          if (!structObj) return false;
+          if (structObj->hasModifier(Modifier_Struct_NotConstructable)) return false;
+          if (structObj->hasModifier(Modifier_Static)) return false;
+          return true;
+        }
+
+        //-------------------------------------------------------------------
         bool GenerateHelper::needsDefaultConstructor(StructPtr structObj)
         {
           if (!structObj) return false;
 
-          if (structObj->hasModifier(Modifier_Static)) return false;
+          if (!isConstructable(structObj)) return false;
           if (hasOnlyStaticMethods(structObj)) return false;
 
           for (auto iter = structObj->mMethods.begin(); iter != structObj->mMethods.end(); ++iter)

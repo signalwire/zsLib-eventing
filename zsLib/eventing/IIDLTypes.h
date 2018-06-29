@@ -78,6 +78,7 @@ namespace zsLib
 
         Modifier_Struct_Dictionary = Modifier_First,  // struct is treated as simple structured dictionary data; properties default without getters/setters
         Modifier_Struct_Exception,                    // struct is meant for throws declarations
+        Modifier_Struct_NotConstructable,             // struct cannot be constructed
 
         Modifier_Method_Ctor,
         Modifier_Method_EventHandler,
@@ -93,7 +94,7 @@ namespace zsLib
         Modifier_Property_Getter,           // value is not stored in wrapper, fetched from code
         Modifier_Property_Setter,           // value is not set in wrapper, set in code
 
-        Modifier_Static,                    // method or property is static
+        Modifier_Static,                    // struct, method or property is static
         Modifier_AltName,
         Modifier_Special,                   // namespace is not output, struct wrapper is created through special / custom processing
         Modifier_Platform,                  // platform specific extensions

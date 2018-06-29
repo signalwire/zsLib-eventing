@@ -912,10 +912,12 @@ namespace zsLib
           bool foundCtor {false};
           processMethods(useIDL, structObj, methodsSS, requiresInterface ? interfaceStaticMethodsSS : methodsSS, delegatesSS, interfaceDelegateEventHandlersSS, ctorSS, requiresInterface, foundMethod, foundCtor);
 
-          if (structObj->hasModifier(Modifier_Struct_Dictionary)) {
-            if (!foundCtor) {
-              ctorSS << indentStr << fixName(structObj) << "();\n\n";
-              foundCtor = true;
+          if (GenerateHelper::isConstructable(structObj)) {
+            if (structObj->hasModifier(Modifier_Struct_Dictionary)) {
+              if (!foundCtor) {
+                ctorSS << indentStr << fixName(structObj) << "();\n\n";
+                foundCtor = true;
+              }
             }
           }
 
