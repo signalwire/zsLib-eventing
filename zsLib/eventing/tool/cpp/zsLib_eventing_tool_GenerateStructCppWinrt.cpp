@@ -1831,8 +1831,7 @@ namespace zsLib
             bool isEvent = method->hasModifier(Modifier_Method_EventHandler);
             String methodName = method->mName;
             bool isStatic = method->hasModifier(Modifier_Static);
-            bool isDefault = method->hasModifier(Modifier_Method_Default);
-            bool foundAnotherCtorWithSameNumberOfArguments{ false };
+            bool ctorNeedsToBecomeStaticMethod {false};
 
             //if (method->hasModifier(Modifier_AltName)) {
             //  methodName = method->getModifierValue(Modifier_AltName, 0);
@@ -1845,13 +1844,7 @@ namespace zsLib
             }
 
             if (isCtor) {
-              if (!isDefault) {
-                foundAnotherCtorWithSameNumberOfArguments = GenerateStructMsidl::hasAnotherCtorWithSameNumberOfArguments(derivedStructObj, method);
-                if (foundAnotherCtorWithSameNumberOfArguments) {
-                  String altName = method->getModifierValue(Modifier_AltName);
-                  if (altName.hasData()) methodName = altName;
-                }
-              }
+              ctorNeedsToBecomeStaticMethod = GenerateStructMsidl::ctorNeedsToBecomeStaticMethod(derivedStructObj, method, methodName);
             }
 
             if (firstOutput) {
@@ -1866,7 +1859,7 @@ namespace zsLib
 
             includeCppForType(structFile, method->mResult);
 
-            if (foundAnotherCtorWithSameNumberOfArguments) {
+            if (ctorNeedsToBecomeStaticMethod) {
               implSS << methodImplIndentStr << "auto result = winrt::make_self< " << getCppWinrtType(helperFile, derivedStructObj, GO{ GO::MakeImplementation() }) << " >(WrapperCreate{});\n";
               implSS << methodImplIndentStr << "result->native_ = wrapper" << derivedStructObj->getPathName() << "::wrapper_create()" << ";\n";
               implSS << methodImplIndentStr << "if (!result->native_) {throw hresult_error(E_POINTER);}\n";
@@ -1891,7 +1884,7 @@ namespace zsLib
               implSS << "owner_->" << methodName << "Event_(";
             } else {
               if (isCtor) {
-                implSS << (foundAnotherCtorWithSameNumberOfArguments ? "result->" : "") << "native_->wrapper_init_" << getStructInitName(derivedStructObj) << "(";
+                implSS << (ctorNeedsToBecomeStaticMethod ? "result->" : "") << "native_->wrapper_init_" << getStructInitName(derivedStructObj) << "(";
               } else {
                 if (isStatic) {
                   implSS << "wrapper" << method->getPathName() << "(";
@@ -1954,14 +1947,14 @@ namespace zsLib
             } else {
               cppSS << dashedStr;
 
-              headerMethodsSS << indentStr << ((foundAnotherCtorWithSameNumberOfArguments || method->hasModifier(Modifier_Static)) ? "static " : "");
+              headerMethodsSS << indentStr << ((ctorNeedsToBecomeStaticMethod || method->hasModifier(Modifier_Static)) ? "static " : "");
               if (!isCtor) {
                 includeCppForType(structFile, method->mResult);
 
                 cppSS << getCppWinrtType(helperFile, method->mResult, GO{ GO::Optional(method->hasModifier(Modifier_Optional)), GO::MakeInterface(), GO::MakeReturnResult()}) << " ";
                 headerMethodsSS << getCppWinrtType(helperFile, method->mResult, GO{ GO::Optional(method->hasModifier(Modifier_Optional)), GO::MakeInterface(), GO::MakeReturnResult()}) << " ";
               }
-              if (foundAnotherCtorWithSameNumberOfArguments) {
+              if (ctorNeedsToBecomeStaticMethod) {
                 cppSS << getCppWinrtType(helperFile, derivedStructObj, GO{ GO::MakeInterface(), GO::MakeReturnResult() }) << " ";
                 headerMethodsSS << getCppWinrtType(helperFile, derivedStructObj, GO{ GO::MakeInterface(), GO::MakeReturnResult() }) << " ";
               }
@@ -2016,7 +2009,7 @@ namespace zsLib
             if (method->mThrows.size() > 0) {
               implSS << "  }\n";
             }
-            if (foundAnotherCtorWithSameNumberOfArguments) {
+            if (ctorNeedsToBecomeStaticMethod) {
               implSS << "  return ToCppWinrtInterface(result);\n";
             }
             if (hasResult) {
@@ -2041,7 +2034,7 @@ namespace zsLib
               headerMethodsSS << ");\n";
             }
             cppSS << ")";
-            if ((isCtor) && (!foundAnotherCtorWithSameNumberOfArguments)) {
+            if ((isCtor) && (!ctorNeedsToBecomeStaticMethod)) {
               cppSS << "\n : native_(" << "wrapper" << derivedStructObj->getPathName() << "::wrapper_create()" << ")";
               if (hasEvents) {
                 cppSS << ",\n";
@@ -2051,10 +2044,10 @@ namespace zsLib
 
             cppSS << "\n";
             cppSS << "{\n";
-            if ((!isStatic) && (!foundAnotherCtorWithSameNumberOfArguments)) {
+            if ((!isStatic) && (!ctorNeedsToBecomeStaticMethod)) {
               cppSS << "  if (" << (isEvent ? "nullptr == owner_" : "!native_") << ") {throw hresult_error(E_POINTER);}\n";
             }
-            if (((isCtor) && (!foundAnotherCtorWithSameNumberOfArguments)) && (hasEvents)) {
+            if (((isCtor) && (!ctorNeedsToBecomeStaticMethod)) && (hasEvents)) {
               cppSS << "  native_->wrapper_installObserver(observer_);\n";
             }
             cppSS << implSS.str();

@@ -211,10 +211,11 @@ namespace zsLib
                                  NamePathStructSetMap &ioDerivesInfo
                                  ) noexcept;
 
-          static bool hasAnotherCtorWithSameNumberOfArguments(
-                                                              StructPtr structObj,
-                                                              MethodPtr currentCtor
-                                                              ) noexcept;
+          static bool ctorNeedsToBecomeStaticMethod(
+                                                    StructPtr structObj,
+                                                    MethodPtr currentCtor,
+                                                    String &ioOverrideMethodName
+                                                    ) noexcept;
 
           void processNamespace(
                                 IDLFile &forwardIdl,

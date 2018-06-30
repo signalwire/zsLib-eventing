@@ -623,25 +623,119 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        bool GenerateStructMsidl::hasAnotherCtorWithSameNumberOfArguments(
-                                                                          StructPtr structObj,
-                                                                          MethodPtr currentCtor
-                                                                          ) noexcept
+        static String getAltNameOrName(IIDLTypes::MethodPtr method)
+        {
+          auto altName = method->getModifierValue(IIDLTypes::Modifier_AltName);
+          if (altName.hasData()) return altName;
+          return method->mName;
+        }
+
+        //---------------------------------------------------------------------
+        static String getNameStrippedOfStruct(
+                                              IIDLTypes::StructPtr structObj,
+                                              IIDLTypes::MethodPtr method,
+                                              bool pickAltName
+                                              )
+        {
+          ZS_ASSERT(structObj);
+          ZS_ASSERT(method);
+          String name = pickAltName ? getAltNameOrName(method) : method->mName;
+
+          String structName = structObj->mName;
+
+          String shortenedName = name.substr(0, structName.length());
+          if (0 == structName.compareNoCase(shortenedName)) {
+            auto temp = name.substr(structName.length());
+            if (temp.length() == 0) return String("create");
+            return temp;
+          }
+          return structName;
+        }
+
+        //---------------------------------------------------------------------
+        static bool searchIfIsARelation(
+                                        IIDLTypes::StructPtr searchStruct,
+                                        IIDLTypes::StructPtr checkStruck
+                                        )
+        {
+          if (!searchStruct) return false;
+          if (!checkStruck) return false;
+
+          if (searchStruct == checkStruck) return true;
+
+          for (auto iter = searchStruct->mIsARelationships.begin(); iter != searchStruct->mIsARelationships.end(); ++iter) {
+            auto &related = (*iter).second;
+            if (searchIfIsARelation(related->toStruct(), checkStruck)) return true;
+          }
+          return false;
+        }
+
+        //---------------------------------------------------------------------
+        bool GenerateStructMsidl::ctorNeedsToBecomeStaticMethod(
+                                                                StructPtr structObj,
+                                                                MethodPtr currentCtor,
+                                                                String &ioOverrideMethodName
+                                                                ) noexcept
         {
           if (!structObj) return false;
           if (!currentCtor) return false;
 
-          // scan for other methods with the same number of arguments
-          for (auto iterCheck = structObj->mMethods.begin(); iterCheck != structObj->mMethods.end(); ++iterCheck) {
-            auto &methodCheck = (*iterCheck);
-            if (methodCheck == currentCtor) continue;
-            if (!methodCheck->hasModifier(Modifier_Method_Ctor)) continue;
-            if (methodCheck->hasModifier(Modifier_Method_Delete)) continue;
+          {
+            // check is this is a clone operation
+            if (1 == currentCtor->mArguments.size()) {
+              auto &arg = *(currentCtor->mArguments.begin());
+              if (arg) {
+                auto type = arg->mType;
+                if (type) {
+                  auto structOfArg = arg->mType->toStruct();
+                  if (searchIfIsARelation(structOfArg, structObj)) goto make_static;
+                  if (searchIfIsARelation(structObj, structOfArg)) goto make_static;
+                }
+              }
+            }
 
-            if (currentCtor->mArguments.size() != methodCheck->mArguments.size()) continue;
-            return true;
+            if (currentCtor->hasModifier(Modifier_Method_Default)) return false;
+
+            // scan for other methods with the same number of arguments
+            for (auto iterCheck = structObj->mMethods.begin(); iterCheck != structObj->mMethods.end(); ++iterCheck) {
+              auto &methodCheck = (*iterCheck);
+              if (methodCheck == currentCtor) continue;
+              if (!methodCheck->hasModifier(Modifier_Method_Ctor)) continue;
+              if (methodCheck->hasModifier(Modifier_Method_Delete)) continue;
+
+              if (currentCtor->mArguments.size() != methodCheck->mArguments.size()) continue;
+              goto make_static;
+            }
+            return false;
           }
-          return false;
+
+        make_static:
+          {
+            String name = getNameStrippedOfStruct(structObj, currentCtor, true);
+
+            // check to make sure no other methods collide with the chosen name
+            for (auto iterCheck = structObj->mMethods.begin(); iterCheck != structObj->mMethods.end(); ++iterCheck) {
+              auto &methodCheck = (*iterCheck);
+              if (methodCheck == currentCtor) continue;
+              if (methodCheck->hasModifier(Modifier_Method_Delete)) continue;
+
+              String checkName1 = methodCheck->mName;
+              String checkName2 = getAltNameOrName(methodCheck);
+              String checkName3 = getNameStrippedOfStruct(structObj, methodCheck, false);
+              String checkName4 = getNameStrippedOfStruct(structObj, methodCheck, true);
+
+              if ((0 == checkName1.compareNoCase(name)) ||
+                  (0 == checkName2.compareNoCase(name)) ||
+                  (0 == checkName3.compareNoCase(name)) ||
+                  (0 == checkName4.compareNoCase(name))) {
+                name = getAltNameOrName(currentCtor);
+                break;
+              }
+            }
+
+            ioOverrideMethodName = name;
+          }
+          return true;
         }
 
         //---------------------------------------------------------------------
@@ -1153,9 +1247,10 @@ namespace zsLib
           {
             auto &method = (*iter);
             bool isCtor = method->hasModifier(Modifier_Method_Ctor);
-            bool isDefault = method->hasModifier(Modifier_Method_Default);
             bool isStatic = method->hasModifier(Modifier_Static);
             bool isEvent = method->hasModifier(Modifier_Method_EventHandler);
+
+            String methodName {method->mName};
 
             if (isCtor) outFoundCtor = true;
             if (method->hasModifier(Modifier_Special)) continue;
@@ -1184,7 +1279,7 @@ namespace zsLib
             fixMethodNameAttribute(idl, method, indentStr, handlerSS);
             fixDefaultAttribute(idl, method, indentStr, handlerSS);
 
-            bool foundAnotherCtorWithSameNumberOfArguments{false};
+            bool makeCtorIntoStaticMethod {false};
 
             useSS << useIndentStrForMethod;
             if (!isCtor) {
@@ -1197,21 +1292,17 @@ namespace zsLib
               useSS << toIdlType(idl, GenerationOptions{ GenerationOptions::Optional(isOptional), GenerationOptions::Interface(true) }, resultType) << " ";
             }
             if (isCtor) {
-              if (!isDefault) {
-                foundAnotherCtorWithSameNumberOfArguments = hasAnotherCtorWithSameNumberOfArguments(structObj, method);
-              }
+              makeCtorIntoStaticMethod = ctorNeedsToBecomeStaticMethod(structObj, method, methodName);
             }
-            if (foundAnotherCtorWithSameNumberOfArguments) {
-              String altMethodName = method->getModifierValue(Modifier_AltName);
-
+            if (makeCtorIntoStaticMethod) {
               useSS << "static " << toIdlType(idl, GenerationOptions{ GenerationOptions::Optional(isOptional), GenerationOptions::Interface(requiredInterface) }, structObj) << " ";
-              useSS << (altMethodName.hasData() ? fixName(altMethodName) : fixName(method->mName));
+              useSS << fixName(methodName);
             } else {
               if (isEvent) {
-                handlerSS << indentStr << "event " << fixName(structObj) << "_" << fixName(method->mName) << "Delegate " << fixName(method->mName) << ";\n";
+                handlerSS << indentStr << "event " << fixName(structObj) << "_" << fixName(methodName) << "Delegate " << fixName(methodName) << ";\n";
                 useSS << fixName(structObj) << "_";
               }
-              useSS << (isCtor ? fixName(structObj) : fixName(method->mName));
+              useSS << (isCtor ? fixName(structObj) : fixName(methodName));
               if (isEvent) {
                 useSS << "Delegate";
               }
