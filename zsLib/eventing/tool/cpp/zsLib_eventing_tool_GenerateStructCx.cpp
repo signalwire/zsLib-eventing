@@ -2057,7 +2057,7 @@ namespace zsLib
             cppSS << "  auto result = make_shared< std::map<" << getCppType(false, keyType) << ", " << getCppType(false, valueType) << "> >();\n";
             cppSS << "  std::for_each(Windows::Foundation::Collections::begin(values), Windows::Foundation::Collections::end(values), [](Windows::Foundation::Collections::IKeyValuePair< " << getCxType(false, keyType) << ", " << getCxType(false, valueType) << " >^ pair)\n";
             cppSS << "  {\n";
-            cppSS << "    result[" << getFromCxName(keyType) << "(pair->Key)] = " << getFromCxName(valueType) << "[pair->Value];\n";
+            cppSS << "    (*result)[" << getFromCxName(keyType) << "(pair->Key)] = " << getFromCxName(valueType) << "[pair->Value];\n";
             cppSS << "  }\n";
             cppSS << "  return result;\n";
             cppSS << "}\n";

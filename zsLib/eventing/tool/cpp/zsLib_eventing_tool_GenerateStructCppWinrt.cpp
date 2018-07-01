@@ -2268,7 +2268,7 @@ namespace zsLib
             cppSS << "  {\n";
             cppSS << "    result.Insert(" << getToCppWinrtName(helperFile, keyType, GO{ GO::MakeInterface() }) << "((*iter).first), " << getToCppWinrtName(helperFile, valueType, GO{ GO::MakeInterface() }) << "((*iter).second));\n";
             cppSS << "  }\n";
-            cppSS << "  return result->GetView();\n";
+            cppSS << "  return result.GetView();\n";
             cppSS << "}\n";
             cppSS << "\n";
 
@@ -2279,7 +2279,7 @@ namespace zsLib
             cppSS << "  auto result = make_shared< std::map<" << getCppType(keyType, GO{}) << ", " << getCppType(valueType, GO{}) << "> >();\n";
             cppSS << "  for (Windows::Foundation::Collections::IKeyValuePair< " << getCppWinrtType(helperFile, keyType, GO{}) << ", " << getCppWinrtType(helperFile, valueType, GO{}) << " > const & pair : values)\n";
             cppSS << "  {\n";
-            cppSS << "    result[" << getFromCppWinrtName(keyType) << "(pair.Key())] = " << getFromCppWinrtName(valueType) << "(pair.Value());\n";
+            cppSS << "    (*result)[" << getFromCppWinrtName(keyType) << "(pair.Key())] = " << getFromCppWinrtName(valueType) << "(pair.Value());\n";
             cppSS << "  }\n";
             cppSS << "  return result;\n";
             cppSS << "}\n";
