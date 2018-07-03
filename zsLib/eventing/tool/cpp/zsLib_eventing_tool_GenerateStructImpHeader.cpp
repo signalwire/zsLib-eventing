@@ -278,6 +278,8 @@ namespace zsLib
 
           String currentIdentStr = indentStr;
           indentStr += "  ";
+          ss << indentStr << "ZS_DECLARE_TYPEDEF_PTR(wrapper" << structObj->getPathName() << ", WrapperType);\n";
+          ss << indentStr << "ZS_DECLARE_TYPEDEF_PTR(wrapper::impl" << structObj->getPathName() << ", WrapperImplType);\n";
 
           if (GenerateHelper::isConstructable(structObj)) {
             ss << indentStr << structObj->mName << "WeakPtr thisWeak_;\n\n";

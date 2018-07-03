@@ -253,6 +253,10 @@ namespace zsLib
           bool needsDefaultConstructor = GenerateHelper::needsDefaultConstructor(structObj);
 
           ss << "\n";
+          ss << "// borrow definitions from class\n";
+          ss << "ZS_DECLARE_TYPEDEF_PTR(wrapper::impl" << structObj->getPathName() << "::WrapperImplType, WrapperImplType);\n";
+          ss << "ZS_DECLARE_TYPEDEF_PTR(WrapperImplType::WrapperType, WrapperType);\n";
+          ss << "\n";
 
           for (auto iterStructs = structObj->mStructs.begin(); iterStructs != structObj->mStructs.end(); ++iterStructs)
           {
