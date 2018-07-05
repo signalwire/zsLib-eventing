@@ -999,6 +999,7 @@ namespace zsLib
                 cppSS << "    auto value = promise->value();\n";
                 cppSS << "    if (value) {\n";
                 cppSS << "      auto result = (::Internal::Helper::" << getToCppWinrtName(helperFile, resolveType, GO{}) << "(value));\n";
+                cppSS << "      if (!result) co_return Windows::Foundation::IInspectable {nullptr};\n";
                 cppSS << "      co_return result.as<Windows::Foundation::IInspectable>();\n";
                 cppSS << "    }\n";
                 cppSS << "  }\n";
@@ -1067,6 +1068,7 @@ namespace zsLib
           cppSS << indentStr << "  auto reasonHolder = promiseBase->reason< ::zsLib::AnyHolder< " << getCppType(rejectionType, GO{}) << " > >();\n";
           cppSS << indentStr << "  if (reasonHolder) {\n";
           cppSS << indentStr << "    auto comResult = (::Internal::Helper::" << getToCppWinrtName(helperFile, rejectionType, GO{}) << "(reasonHolder->value_));\n";
+          cppSS << indentStr << "    if (!comResult) co_return Windows::Foundation::IInspectable {nullptr};\n";
           cppSS << indentStr << "    co_return comResult.as<Windows::Foundation::IInspectable>();\n";
           cppSS << indentStr << "  }\n";
           cppSS << indentStr << "}\n";
@@ -1535,6 +1537,7 @@ namespace zsLib
           cppSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult() }) << " " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::ToCppWinrt(" << getCppType(structObj, GO{}) << " value)\n";
           cppSS << "{\n";
           cppSS << "  auto result = ToCppWinrtImpl(value);\n";
+          cppSS << "  if (!result) return " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " {nullptr};\n";
           cppSS << "  return result.as< " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " >();\n";
           cppSS << "}\n";
           cppSS << "\n";
@@ -1549,6 +1552,7 @@ namespace zsLib
           cppSS << dashedStr;
           cppSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult() }) << " " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::ToCppWinrt(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReference(), GO::MakeImplementation(), GO::MakeComPtr() }) << " value)\n";
           cppSS << "{\n";
+          cppSS << "  if (!value) return " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " {nullptr};\n";
           cppSS << "  return value.as< " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " >();\n";
           cppSS << "}\n";
           cppSS << "\n";
@@ -1557,6 +1561,7 @@ namespace zsLib
             cppSS << dashedStr;
             cppSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult() }) << " " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::ToCppWinrt(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReference(), GO::MakeInterface() }) << " value)\n";
             cppSS << "{\n";
+            cppSS << "  if (!value) return " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " {nullptr};\n";
             cppSS << "  return value.as< " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " >();\n";
             cppSS << "}\n";
             cppSS << "\n";
@@ -1567,6 +1572,7 @@ namespace zsLib
             cppSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeInterface() }) << " " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::ToCppWinrtInterface(" << getCppType(structObj, GO{}) << " value)\n";
             cppSS << "{\n";
             cppSS << "  auto result = ToCppWinrtImpl(value);\n";
+            cppSS << "  if (!result) return " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeInterface() }) << " {nullptr};\n";
             cppSS << "  return result.as< " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeInterface() }) << " >();\n";
             cppSS << "}\n";
             cppSS << "\n";
@@ -1574,6 +1580,7 @@ namespace zsLib
             cppSS << dashedStr;
             cppSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeInterface() }) << " " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::ToCppWinrtInterface(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReference() }) << " value)\n";
             cppSS << "{\n";
+            cppSS << "  if (!value) return " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " {nullptr};\n";
             cppSS << "  return value.as< " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " >();\n";
             cppSS << "}\n";
             cppSS << "\n";
@@ -1581,6 +1588,7 @@ namespace zsLib
             cppSS << dashedStr;
             cppSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeInterface() }) << " " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::ToCppWinrtInterface(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation(), GO::MakeComPtr(), GO::MakeReference() }) << " value)\n";
             cppSS << "{\n";
+            cppSS << "  if (!value) return " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " {nullptr};\n";
             cppSS << "  return value.as< " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " >();\n";
             cppSS << "}\n";
             cppSS << "\n";
