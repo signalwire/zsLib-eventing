@@ -2209,7 +2209,7 @@ namespace zsLib
             cppSS << "Windows::Foundation::Collections::IVectorView< " << getCppWinrtType(helperFile, foundType, GO{ GO::MakeReturnResult(), GO::MakeInterface() }) << " > Internal::Helper::" << getToCppWinrtName(helperFile, templatedStruct, GO{}) << "(shared_ptr< std::list< " << getCppType(foundType, GO{}) << " > > values)\n";
             cppSS << "{\n";
             cppSS << "  if (!values) return nullptr;\n";
-            cppSS << "  Windows::Foundation::Collections::IVector< " << getCppWinrtType(helperFile, foundType, GO::MakeInterface()) << " > result;\n";
+            cppSS << "  Windows::Foundation::Collections::IVector< " << getCppWinrtType(helperFile, foundType, GO::MakeInterface()) << " > result = single_threaded_vector< " << getCppWinrtType(helperFile, foundType, GO::MakeInterface()) << " >();\n";
             cppSS << "  for (auto iter = values->begin(); iter != values->end(); ++iter)\n";
             cppSS << "  {\n";
             cppSS << "    result.Append(" << getToCppWinrtName(helperFile, foundType, GO{ GO::MakeInterface() }) << "(*iter));\n";
@@ -2271,7 +2271,7 @@ namespace zsLib
             cppSS << "Windows::Foundation::Collections::IMapView< " << getCppWinrtType(helperFile, keyType, GO::MakeReturnResult()) << ", " << getCppWinrtType(helperFile, valueType, GO::MakeReturnResult()) << " > Internal::Helper::" << getToCppWinrtName(helperFile, templatedStruct, GO{}) << "(shared_ptr< std::map< " << getCppType(keyType, GO{}) << ", " << getCppType(valueType, GO{}) << " > > values)\n";
             cppSS << "{\n";
             cppSS << "  if (!values) return nullptr;\n";
-            cppSS << "  Windows::Foundation::Collections::IMap< " << getCppWinrtType(helperFile, keyType, GO{}) << ", " << getCppWinrtType(helperFile, valueType, GO{}) << " > result;\n";
+            cppSS << "  Windows::Foundation::Collections::IMap< " << getCppWinrtType(helperFile, keyType, GO{}) << ", " << getCppWinrtType(helperFile, valueType, GO{}) << " > result = single_threaded_map< " << getCppWinrtType(helperFile, keyType, GO{}) << " , " << getCppWinrtType(helperFile, valueType, GO{}) << " >;\n";
             cppSS << "  for (auto iter = values->begin(); iter != values->end(); ++iter)\n";
             cppSS << "  {\n";
             cppSS << "    result.Insert(" << getToCppWinrtName(helperFile, keyType, GO{ GO::MakeInterface() }) << "((*iter).first), " << getToCppWinrtName(helperFile, valueType, GO{ GO::MakeInterface() }) << "((*iter).second));\n";
