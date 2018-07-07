@@ -1580,16 +1580,16 @@ namespace zsLib
             cppSS << dashedStr;
             cppSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeInterface() }) << " " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::ToCppWinrtInterface(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReference() }) << " value)\n";
             cppSS << "{\n";
-            cppSS << "  if (!value) return " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " {nullptr};\n";
-            cppSS << "  return value.as< " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " >();\n";
+            cppSS << "  if (!value) return " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeInterface() }) << " {nullptr};\n";
+            cppSS << "  return value.as< " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeInterface() }) << " >();\n";
             cppSS << "}\n";
             cppSS << "\n";
 
             cppSS << dashedStr;
             cppSS << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeInterface() }) << " " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::ToCppWinrtInterface(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation(), GO::MakeComPtr(), GO::MakeReference() }) << " value)\n";
             cppSS << "{\n";
-            cppSS << "  if (!value) return " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " {nullptr};\n";
-            cppSS << "  return value.as< " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " >();\n";
+            cppSS << "  if (!value) return " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeInterface() }) << " {nullptr};\n";
+            cppSS << "  return value.as< " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeReturnResult(), GO::MakeInterface() }) << " >();\n";
             cppSS << "}\n";
             cppSS << "\n";
 
