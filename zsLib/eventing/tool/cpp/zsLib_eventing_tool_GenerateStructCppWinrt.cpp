@@ -98,6 +98,18 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
+        void GenerateStructCppWinrt::HelperFile::specialThrow(TypePtr rejectionType) noexcept
+        {
+          if (!rejectionType) return;
+
+          if (alreadyThrows_.end() != alreadyThrows_.find(rejectionType)) return;
+          alreadyThrows_.insert(rejectionType);
+          auto &ss = headerThrowersSS_;
+
+          ss << headerIndentStr_ << "  void customThrow(" << GenerateStructCppWinrt::getCppType(rejectionType, GO{}) << " error) noexcept(false);\n";
+        }
+
+        //---------------------------------------------------------------------
         bool GenerateStructCppWinrt::HelperFile::isStructNeedingInterface(StructPtr structObj) const noexcept
         {
           return (structsNeedingInterface_->end() != structsNeedingInterface_->find(structObj));
@@ -889,10 +901,10 @@ namespace zsLib
           auto &indentStr = helperFile.headerIndentStr_;
           auto dashedStr = GenerateHelper::getDashedComment(String());
 
-          ss << indentStr << "static Windows::Foundation::IAsyncOperation<Windows::Foundation::IInspectable> ToCppWinrt(::zsLib::PromisePtr promise);\n";
+          ss << indentStr << "static Windows::Foundation::IAsyncAction ToCppWinrt(::zsLib::PromisePtr promise);\n";
 
           cppSS << dashedStr;
-          cppSS << "Windows::Foundation::IAsyncOperation<Windows::Foundation::IInspectable> Internal::Helper::ToCppWinrt(::zsLib::PromisePtr promise)\n";
+          cppSS << "Windows::Foundation::IAsyncAction Internal::Helper::ToCppWinrt(::zsLib::PromisePtr promise)\n";
           cppSS << "{\n";
           cppSS << "  struct Observer : public ::zsLib::IPromiseResolutionDelegate\n";
           cppSS << "  {\n";
@@ -906,7 +918,7 @@ namespace zsLib
           cppSS << "    HANDLE handle_;\n";
           cppSS << "  };\n";
           cppSS << "\n";
-          cppSS << "  if (!promise) co_return Windows::Foundation::IInspectable {nullptr};\n";
+          cppSS << "  if (!promise) co_return;\n";
           cppSS << "\n";
           cppSS << "  HANDLE handle = ::CreateEventEx(NULL, NULL, 0, EVENT_ALL_ACCESS);\n";
           cppSS << "  auto observer = std::make_shared<Observer>(handle);";
@@ -925,7 +937,7 @@ namespace zsLib
           cppSS << "\n";
           cppSS << "    throw hresult_no_interface();\n";
           cppSS << "  }\n";
-          cppSS << "  co_return Windows::Foundation::IInspectable {nullptr};\n";
+          cppSS << "  co_return;\n";
           cppSS << "}\n";
           cppSS << "\n";
         }
@@ -961,9 +973,12 @@ namespace zsLib
                   if (foundArgType != templatedStruct->mTemplateArguments.end()) rejectType = *foundArgType;
                 }
 
+                String nullStr = "{nullptr}";
+
                 String promiseWithStr = "PromiseWithHolderPtr";
                 if (resolveType->toBasicType()) {
                   promiseWithStr = "PromiseWithHolder";
+                  nullStr = "{}";
                 }
 
                 ss << indentStr << "static " << getCppWinrtType(helperFile, templatedStruct, GO::MakeReturnResult()) << " " << getToCppWinrtName(helperFile, templatedStruct, GO{}) << "(shared_ptr< " << promiseWithStr << "< " << getCppType(resolveType, GO{}) << " > > promise);\n";
@@ -984,7 +999,7 @@ namespace zsLib
                 cppSS << "    HANDLE handle_;\n";
                 cppSS << "  };\n";
                 cppSS << "\n";
-                cppSS << "  if (!promise) co_return Windows::Foundation::IInspectable {nullptr};\n";
+                cppSS << "  if (!promise) co_return " << getCppWinrtType(helperFile, resolveType, GO::MakeReturnResult()) << " " << nullStr << ";\n";
                 cppSS << "\n";
                 cppSS << "  HANDLE handle = ::CreateEventEx(NULL, NULL, 0, EVENT_ALL_ACCESS);\n";
                 cppSS << "  auto observer = std::make_shared<Observer>(handle);";
@@ -999,8 +1014,7 @@ namespace zsLib
                 cppSS << "    auto value = promise->value();\n";
                 cppSS << "    if (value) {\n";
                 cppSS << "      auto result = (::Internal::Helper::" << getToCppWinrtName(helperFile, resolveType, GO{}) << "(value));\n";
-                cppSS << "      if (!result) co_return Windows::Foundation::IInspectable {nullptr};\n";
-                cppSS << "      co_return result.as<Windows::Foundation::IInspectable>();\n";
+                cppSS << "      co_return result;\n";
                 cppSS << "    }\n";
                 cppSS << "  }\n";
 
@@ -1018,7 +1032,7 @@ namespace zsLib
                 cppSS << "\n";
                 cppSS << "    throw hresult_no_interface();\n";
                 cppSS << "  }\n";
-                cppSS << "  co_return Windows::Foundation::IInspectable {nullptr};\n";
+                cppSS << "  co_return " << getCppWinrtType(helperFile, resolveType, GO::MakeReturnResult()) << " " << nullStr << ";\n";
                 cppSS << "}\n";
                 cppSS << "\n";
               }
@@ -1063,13 +1077,13 @@ namespace zsLib
 
           String specialName = rejectionType->getPathName();
 
+          helperFile.specialThrow(rejectionType);
+
           auto &cppSS = helperFile.cppBodySS_;
           cppSS << indentStr << "{\n";
           cppSS << indentStr << "  auto reasonHolder = promiseBase->reason< ::zsLib::AnyHolder< " << getCppType(rejectionType, GO{}) << " > >();\n";
           cppSS << indentStr << "  if (reasonHolder) {\n";
-          cppSS << indentStr << "    auto comResult = (::Internal::Helper::" << getToCppWinrtName(helperFile, rejectionType, GO{}) << "(reasonHolder->value_));\n";
-          cppSS << indentStr << "    if (!comResult) co_return Windows::Foundation::IInspectable {nullptr};\n";
-          cppSS << indentStr << "    co_return comResult.as<Windows::Foundation::IInspectable>();\n";
+          cppSS << indentStr << "    ::Internal::Helper::Throwers::singleton().customThrow(reasonHolder->value_);\n";
           cppSS << indentStr << "  }\n";
           cppSS << indentStr << "}\n";
         }
@@ -2012,7 +2026,12 @@ namespace zsLib
               auto throwType = (*iterThrows);
               if (!throwType) continue;
               implSS << "  } catch(const " << getCppType(throwType, GO{}) << " &e) {\n";
-              implSS << "    throw ::Internal::Helper::" << getToCppWinrtName(helperFile, throwType, GO {}) << "(e);\n";
+              if (isDefaultExceptionType(throwType)) {
+                implSS << "    throw ::Internal::Helper::" << getToCppWinrtName(helperFile, throwType, GO{}) << "(e);\n";
+              } else {
+                implSS << "    ::Internal::Helper::Throwers::singleton().customThrow(e);\n";
+                helperFile.specialThrow(throwType);
+              }
             }
             if (method->mThrows.size() > 0) {
               implSS << "  }\n";
@@ -2469,6 +2488,26 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
+        bool GenerateStructCppWinrt::isDefaultExceptionType(TypePtr type)
+        {
+          if (!type) return false;
+
+          auto structType = type->toStruct();
+          if (!structType) return false;
+
+          if (structType->mGenerics.size() > 0) return false;
+
+          if (!structType->hasModifier(Modifier_Special)) return false;
+
+          String comparison("::zs::exceptions::");
+          String specialName = structType->getPathName();
+
+          specialName = specialName.substr(0, comparison.length());
+
+          return comparison == specialName;
+        }
+
+        //---------------------------------------------------------------------
         String GenerateStructCppWinrt::getCppType(
                                                   TypePtr type,
                                                   const GenerationOptions &options
@@ -2518,7 +2557,7 @@ namespace zsLib
               if (structType->hasModifier(Modifier_Special)) {
                 String specialName = structType->getPathName();
                 if ("::zs::Any" == specialName) return makeCppWinrtReferenceAndOptional("Windows::Foundation::IInspectable", options.getAmmended(GO::MakeNotOptional()));
-                if ("::zs::Promise" == specialName) return makeCppWinrtReferenceAndOptional("Windows::Foundation::IAsyncOperation< Windows::Foundation::IInspectable >", options.getAmmended(GO::MakeNotOptional()));
+                if ("::zs::Promise" == specialName) return makeCppWinrtReferenceAndOptional("Windows::Foundation::IAsyncAction", options.getAmmended(GO::MakeNotOptional()));
                 if ("::zs::exceptions::Exception" == specialName) return makeCppWinrtReferenceAndOptional("hresult_error", options.getAmmended(GO::MakeNotOptional())); // E_FAIL
                 if ("::zs::exceptions::InvalidArgument" == specialName) return makeCppWinrtReferenceAndOptional("hresult_invalid_argument", options.getAmmended(GO::MakeNotOptional()));
                 if ("::zs::exceptions::BadState" == specialName) return makeCppWinrtReferenceAndOptional("hresult_error", options.getAmmended(GO::MakeNotOptional()));   // E_NOT_VALID_STATE
@@ -2585,7 +2624,7 @@ namespace zsLib
                     }
                     if ("::std::list" == specialName) templatedTypeStr = "Windows::Foundation::Collections::IVectorView< ";
                     if ("::std::map" == specialName) templatedTypeStr = "Windows::Foundation::Collections::IMapView< ";
-                    if ("::zs::PromiseWith" == specialName) return makeCppWinrtReferenceAndOptional("Windows::Foundation::IAsyncOperation< Windows::Foundation::IInspectable >", options.getAmmended(GO::MakeNotOptional()));
+                    if ("::zs::PromiseWith" == specialName) templatedTypeStr = "Windows::Foundation::IAsyncOperation< ";
                   }
                 }
               }
@@ -3081,7 +3120,8 @@ namespace zsLib
           }
 
           {
-            auto &ss = helperFile.headerStructSS_;
+            auto &ss = helperFile.headerThrowersSS_;
+
             auto &finalSS = helperFile.headerFinalSS_;
             auto &indentStr = helperFile.headerIndentStr_;
 
@@ -3096,12 +3136,25 @@ namespace zsLib
 
             indentStr += "  ";
 
+            ss << indentStr << "struct Throwers\n";
+            ss << indentStr << "{\n";
+            ss << indentStr << "  static Throwers &singleton() noexcept; // this must be declared and implemented somewhere in custom code\n";
+            ss << "\n";
+
             generateSpecialHelpers(helperFile);
           }
 
           generateForNamespace(helperFile, project->mGlobal, String());
 
+          {
+            auto &ss = helperFile.headerThrowersSS_;
+            auto &indentStr = helperFile.headerIndentStr_;
+            ss << indentStr << "};\n";
+            ss << "\n";
+          }
+
           helperFile.headerIncludeSS_ << "\n";
+          helperFile.headerIncludeSS_ << helperFile.headerThrowersSS_.str();
           helperFile.headerIncludeSS_ << helperFile.headerStructSS_.str();
           helperFile.headerIncludeSS_ << helperFile.headerFinalSS_.str();
 

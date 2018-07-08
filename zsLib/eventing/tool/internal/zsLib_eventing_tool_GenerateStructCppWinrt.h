@@ -59,6 +59,8 @@ namespace zsLib
           typedef std::set<String> StringSet;
           typedef std::set<StructPtr> StructSet;
           ZS_DECLARE_PTR(StructSet);
+          typedef std::set<TypePtr> TypeSet;
+          ZS_DECLARE_PTR(TypeSet);
           typedef std::map<NamePath, StructSet> NamePathStructSetMap;
           struct GenerationOptions;
           typedef GenerationOptions GO;
@@ -74,6 +76,7 @@ namespace zsLib
             String headerIndentStr_;
 
             std::stringstream headerIncludeSS_;
+            std::stringstream headerThrowersSS_;
             std::stringstream headerStructSS_;
             std::stringstream headerFinalSS_;
             std::stringstream cppIncludeSS_;
@@ -82,6 +85,8 @@ namespace zsLib
             StringSet headerAlreadyIncluded_;
             StringSet cppAlreadyIncluded_;
 
+            TypeSet alreadyThrows_;
+
             StructSetPtr structsNeedingInterface_;
 
             HelperFile() noexcept;
@@ -89,6 +94,7 @@ namespace zsLib
 
             void includeHeader(const String &headerFile) noexcept;
             void includeCpp(const String &headerFile) noexcept;
+            void specialThrow(TypePtr type) noexcept;
 
             bool isStructNeedingInterface(StructPtr structObj) const noexcept;
           };
@@ -400,6 +406,7 @@ namespace zsLib
                                                                   const String &value,
                                                                   const GenerationOptions &options
                                                                   ) noexcept;
+          static bool isDefaultExceptionType(TypePtr type);
           static String getCppType(
                                    TypePtr type,
                                    const GenerationOptions &options

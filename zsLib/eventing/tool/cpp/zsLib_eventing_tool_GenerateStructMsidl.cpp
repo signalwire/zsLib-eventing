@@ -354,7 +354,7 @@ namespace zsLib
                 if ("::zs::Any" == specialName) return toIdlSimpleType(idl, options, "Object");
                 if ("::zs::Promise" == specialName) {
                   idl.import("windows.foundation.idl");
-                  return "Windows.Foundation.IAsyncOperation< Object >";  // should be IAsyncAction but need a way to return promise rejection reasons
+                  return "Windows.Foundation.IAsyncAction";  // should be IAsyncAction but need a way to return promise rejection reasons
                 }
                 if ("::zs::exceptions::Exception" == specialName) return "Object";
                 if ("::zs::exceptions::InvalidArgument" == specialName) return "Object";
@@ -400,7 +400,6 @@ namespace zsLib
                   idl.import("windows.foundation.idl");
                   name = "Windows.Foundation.IAsyncOperation";
                   maxParams = 1;
-                  return name + "< Object >"; // should use actual reason but cannot return exception directly
                 }
                 if ("::zs::PromiseRejectionReason" == specialName) return "Object";
 
@@ -1409,8 +1408,7 @@ namespace zsLib
 
           try {
             UseHelper::mkdir(pathStr);
-          }
-          catch (const StdError &e) {
+          } catch (const StdError &e) {
             ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Failed to create path \"" + pathStr + "\": " + " error=" + string(e.result()) + ", reason=" + e.message());
           }
           pathStr += "/";
@@ -1418,8 +1416,7 @@ namespace zsLib
           pathStr = UseHelper::fixRelativeFilePath(pathStr, String("generated"));
           try {
             UseHelper::mkdir(pathStr);
-          }
-          catch (const StdError &e) {
+          } catch (const StdError &e) {
             ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Failed to create path \"" + pathStr + "\": " + " error=" + string(e.result()) + ", reason=" + e.message());
           }
           pathStr += "/";
@@ -1427,8 +1424,7 @@ namespace zsLib
           pathStr = UseHelper::fixRelativeFilePath(pathStr, String("msidl"));
           try {
             UseHelper::mkdir(pathStr);
-          }
-          catch (const StdError &e) {
+          } catch (const StdError &e) {
             ZS_THROW_CUSTOM_PROPERTIES_1(Failure, ZS_EVENTING_TOOL_SYSTEM_ERROR, "Failed to create path \"" + pathStr + "\": " + " error=" + string(e.result()) + ", reason=" + e.message());
           }
           pathStr += "/";
