@@ -109,8 +109,9 @@ namespace zsLib
       switch (value)
       {
         case IIDLTypes::Modifier_Struct_Dictionary:         return "dictionary";
-        case IIDLTypes::Modifier_Struct_NotConstructable:   return "notconstructable";
         case IIDLTypes::Modifier_Struct_Exception:          return "exception";
+        case IIDLTypes::Modifier_Struct_NotConstructable:   return "notconstructable";
+        case IIDLTypes::Modifier_Struct_Disposable:         return "disposable";
 
         case IIDLTypes::Modifier_Method_Ctor:               return "constructor";
         case IIDLTypes::Modifier_Method_EventHandler:       return "event";
@@ -146,8 +147,9 @@ namespace zsLib
       switch (value)
       {
         case IIDLTypes::Modifier_Struct_Dictionary:         return 0;
-        case IIDLTypes::Modifier_Struct_NotConstructable:   return 0;
         case IIDLTypes::Modifier_Struct_Exception:          return 0;
+        case IIDLTypes::Modifier_Struct_NotConstructable:   return 0;
+        case IIDLTypes::Modifier_Struct_Disposable:         return 0;
 
         case IIDLTypes::Modifier_Method_Ctor:               return 0;
         case IIDLTypes::Modifier_Method_EventHandler:       return -1;
@@ -230,6 +232,7 @@ namespace zsLib
       {
         case IIDLTypes::Modifier_Struct_Dictionary:
         case IIDLTypes::Modifier_Struct_NotConstructable:
+        case IIDLTypes::Modifier_Struct_Disposable:
         case IIDLTypes::Modifier_Struct_Exception:
         case IIDLTypes::Modifier_Static:
         case IIDLTypes::Modifier_Special:

@@ -481,6 +481,9 @@ namespace zsLib
           }
 
           if (0 == scanPass) {
+            if (structObj->hasModifier(Modifier_Struct_Disposable)) {
+              markAllRelatedStructsAsNeedingInterface(needingInterfaceSet, structObj);
+            }
             if (!structObj->hasModifier(Modifier_Struct_Dictionary)) {
               markAllRelatedStructsAsNeedingInterface(needingInterfaceSet, structObj);
             }
@@ -648,7 +651,7 @@ namespace zsLib
             if (temp.length() == 0) return String("create");
             return temp;
           }
-          return structName;
+          return name;
         }
 
         //---------------------------------------------------------------------
@@ -733,6 +736,28 @@ namespace zsLib
             }
 
             ioOverrideMethodName = name;
+          }
+          return true;
+        }
+
+        //---------------------------------------------------------------------
+        bool GenerateStructMsidl::isClosableMethod(
+                                                   StructPtr structObj,
+                                                   MethodPtr method,
+                                                   String &ioOveridemethodName
+        )
+        {
+          if (method->hasModifier(Modifier_Method_EventHandler)) return false;
+          if (!structObj->hasModifier(Modifier_Struct_Disposable)) return false;
+          if (method->mArguments.size() > 0) return false;
+          if (!method->mResult) return false;
+          if ("::void" != method->mResult->getPathName()) return false;
+          if ("Close" != fixName(ioOveridemethodName)) return false;
+
+          String possibleAltName = getNameStrippedOfStruct(structObj, method, true);
+          if ("Close" != fixName(possibleAltName)) {
+            ioOveridemethodName = possibleAltName;
+            return false;
           }
           return true;
         }
@@ -924,6 +949,7 @@ namespace zsLib
           String &indentStr = outputIdl.indent_;
 
           bool requiresInterface = outputIdl.isStructNeedingInterface(structObj);
+          bool disposable = structObj->hasModifier(Modifier_Struct_Disposable);
 
           IDLFile templateIDL;
           templateIDL.global_ = outputIdl.global_;
@@ -951,17 +977,24 @@ namespace zsLib
             ss << indentStr << "runtimeclass " << fixName(structObj);
             ss << " : [default] I" + fixName(structObj);
 
-            if (structObj->mIsARelationships.size() > 0) {
-              iss << " requires ";
+            bool firstRelation {true};
 
-              bool first {true};
+            if (disposable) {
+              ss << ", Windows.Foundation.IClosable";
+            }
+
+            if (structObj->mIsARelationships.size() > 0) {
+              if (firstRelation) {
+                iss << " requires ";
+              }
+
               for (auto iter = structObj->mIsARelationships.begin(); iter != structObj->mIsARelationships.end(); ++iter)
               {
                 auto &type = (*iter).second;
 
-                if (!first) iss << ", ";
+                if (!firstRelation) iss << ", ";
                 iss << fixNamePath(type, GenerationOptions { GenerationOptions::Interface(true) });
-                first = false;
+                firstRelation = false;
               }
             }
           } else {
@@ -1280,7 +1313,18 @@ namespace zsLib
 
             bool makeCtorIntoStaticMethod {false};
 
+            if (isCtor) {
+              makeCtorIntoStaticMethod = ctorNeedsToBecomeStaticMethod(structObj, method, methodName);
+            }
+
+            bool isDisposableMethod = isClosableMethod(structObj, method, methodName);
+
+            if (isDisposableMethod) {
+              useSS << useIndentStrForMethod << "// (conflicts with IClosable)\n";
+            }
+
             useSS << useIndentStrForMethod;
+
             if (!isCtor) {
               if (isStatic) {
                 useSS << "static ";
@@ -1289,9 +1333,6 @@ namespace zsLib
                 useSS << "delegate ";
               }
               useSS << toIdlType(idl, GenerationOptions{ GenerationOptions::Optional(isOptional), GenerationOptions::Interface(true) }, resultType) << " ";
-            }
-            if (isCtor) {
-              makeCtorIntoStaticMethod = ctorNeedsToBecomeStaticMethod(structObj, method, methodName);
             }
             if (makeCtorIntoStaticMethod) {
               useSS << "static " << toIdlType(idl, GenerationOptions{ GenerationOptions::Optional(isOptional), GenerationOptions::Interface(requiredInterface) }, structObj) << " ";

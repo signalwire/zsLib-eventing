@@ -297,6 +297,13 @@ namespace zsLib
             ss << "}\n\n";
           }
 
+          if (structObj->hasModifier(Modifier_Struct_Disposable)) {
+            ss << dashedLine;
+            ss << "void " << "wrapper::impl" << structObj->getPathName() << "::wrapper_dispose() noexcept\n";
+            ss << "{\n";
+            ss << "}\n\n";
+          }
+
           bool foundEventHandler = false;
           outputMethods(structObj, structObj, ss, foundEventHandler);
 

@@ -217,6 +217,12 @@ namespace zsLib
                                                     String &ioOverrideMethodName
                                                     ) noexcept;
 
+          static bool isClosableMethod(
+                                       StructPtr structObj,
+                                       MethodPtr method,
+                                       String &ioOveridemethodName
+                                       );
+
           void processNamespace(
                                 IDLFile &forwardIdl,
                                 IDLFile &outputIdl,

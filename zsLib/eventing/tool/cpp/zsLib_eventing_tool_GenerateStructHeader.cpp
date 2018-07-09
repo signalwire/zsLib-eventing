@@ -379,7 +379,12 @@ namespace zsLib
           if (!structObj->hasModifier(Modifier_Static)) {
             ss << indentStr << "static " << structObj->mName << "Ptr wrapper_create() noexcept;\n";
           }
-          ss << indentStr << "virtual ~" << structObj->mName << "() noexcept {}\n\n";
+          ss << indentStr << "virtual ~" << structObj->mName << "() noexcept {}\n";
+          if (structObj->hasModifier(Modifier_Struct_Disposable)) {
+            ss << indentStr << "virtual void wrapper_dispose() noexcept = 0;\n\n";
+          } else {
+            ss << "\n";
+          }
 
           for (auto iterStructs = structObj->mStructs.begin(); iterStructs != structObj->mStructs.end(); ++iterStructs)
           {

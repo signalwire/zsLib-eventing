@@ -79,6 +79,7 @@ namespace zsLib
         Modifier_Struct_Dictionary = Modifier_First,  // struct is treated as simple structured dictionary data; properties default without getters/setters
         Modifier_Struct_Exception,                    // struct is meant for throws declarations
         Modifier_Struct_NotConstructable,             // struct cannot be constructed
+        Modifier_Struct_Disposable,                   // struct requires disposable semantics
 
         Modifier_Method_Ctor,
         Modifier_Method_EventHandler,

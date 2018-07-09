@@ -1842,6 +1842,7 @@ namespace zsLib
           }
 
           bool firstOutput = true;
+          bool outputClosable = false;
 
           for (auto iter = structObj->mMethods.begin(); iter != structObj->mMethods.end(); ++iter)
           {
@@ -1867,6 +1868,12 @@ namespace zsLib
 
             if (isCtor) {
               ctorNeedsToBecomeStaticMethod = GenerateStructMsidl::ctorNeedsToBecomeStaticMethod(derivedStructObj, method, methodName);
+            }
+
+            bool isDisposableMethod = GenerateStructMsidl::isClosableMethod(structObj, method, methodName);
+
+            if (isDisposableMethod) {
+              outputClosable = true;
             }
 
             if (firstOutput) {
@@ -2036,6 +2043,10 @@ namespace zsLib
             if (method->mThrows.size() > 0) {
               implSS << "  }\n";
             }
+            if (isDisposableMethod) {
+              implSS << "  if (native_) native_->wrapper_dispose();\n";
+              implSS << "  native_.reset();\n";
+            }
             if (ctorNeedsToBecomeStaticMethod) {
               implSS << "  return ToCppWinrtInterface(result);\n";
             }
@@ -2072,7 +2083,11 @@ namespace zsLib
             cppSS << "\n";
             cppSS << "{\n";
             if ((!isStatic) && (!ctorNeedsToBecomeStaticMethod)) {
-              cppSS << "  if (" << (isEvent ? "nullptr == owner_" : "!native_") << ") {throw hresult_error(E_POINTER);}\n";
+              if (isDisposableMethod) {
+                cppSS << "  if (" << (isEvent ? "nullptr == owner_" : "!native_") << ") return;\n";
+              } else {
+                cppSS << "  if (" << (isEvent ? "nullptr == owner_" : "!native_") << ") {throw hresult_error(E_POINTER);}\n";
+              }
             }
             if (((isCtor) && (!ctorNeedsToBecomeStaticMethod)) && (hasEvents)) {
               cppSS << "  native_->wrapper_installObserver(observer_);\n";
@@ -2080,6 +2095,25 @@ namespace zsLib
             cppSS << implSS.str();
             cppSS << "}\n";
             cppSS << "\n";
+          }
+
+          bool disposable = structObj->hasModifier(Modifier_Struct_Disposable);
+
+          if (derivedStructObj == structObj) {
+            if ((disposable) && (!outputClosable)) {
+              firstOutput = false;
+
+              headerMethodsSS << indentStr << "// Windows.Foundation.IClosable\n";
+              headerMethodsSS << indentStr << "void Close();\n";
+
+              cppSS << dashedStr;
+              cppSS << "void " << getCppWinrtType(helperFile, derivedStructObj, GO{ GO::MakeImplementation() }) << "::Close()\n";
+              cppSS << "{\n";
+              cppSS << "  if (native_) native_->wrapper_dispose();\n";
+              cppSS << "  native_.reset();\n";
+              cppSS << "}\n";
+              cppSS << "\n";
+            }
           }
 
           if (!firstOutput) headerMethodsSS << "\n";

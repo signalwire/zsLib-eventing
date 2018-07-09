@@ -289,6 +289,11 @@ namespace zsLib
             ss << indentStr << structObj->mName << "(const " << structObj->mName<< " &) noexcept = delete;\n";
           }
           ss << indentStr << "virtual ~" << structObj->mName << "() noexcept;\n";
+          if (structObj->hasModifier(Modifier_Struct_Disposable)) {
+            ss << indentStr << "void wrapper_dispose() noexcept override;\n\n";
+          } else {
+            ss << "\n";
+          }
 
           for (auto iterStructs = structObj->mStructs.begin(); iterStructs != structObj->mStructs.end(); ++iterStructs)
           {
