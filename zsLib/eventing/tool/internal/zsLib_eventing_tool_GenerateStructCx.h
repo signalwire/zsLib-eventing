@@ -60,6 +60,8 @@ namespace zsLib
           typedef std::set<StructPtr> StructSet;
           typedef std::map<NamePath, StructSet> NamePathStructSetMap;
 
+          typedef std::set<TypePtr> TypeSet;
+
           struct HelperFile
           {
             NamespacePtr mGlobal;
@@ -71,6 +73,7 @@ namespace zsLib
             String mHeaderIndentStr;
 
             std::stringstream mHeaderIncludeSS;
+            std::stringstream mHeaderThrowersSS;
             std::stringstream mHeaderStructSS;
             std::stringstream mHeaderFinalSS;
             std::stringstream mCppIncludeSS;
@@ -78,12 +81,14 @@ namespace zsLib
 
             StringSet mHeaderAlreadyIncluded;
             StringSet mCppAlreadyIncluded;
+            TypeSet mAlreadyThrows;
 
             HelperFile() noexcept;
             ~HelperFile() noexcept;
 
             void includeHeader(const String &headerFile) noexcept;
             void includeCpp(const String &headerFile) noexcept;
+            void specialThrow(TypePtr rejectionType) noexcept;
           };
 
           struct StructFile
@@ -234,6 +239,7 @@ namespace zsLib
                                        bool isOptional,
                                        const String &value
                                        ) noexcept;
+          static bool isDefaultExceptionType(TypePtr type);
           static String getCppType(
                                    bool isOptional,
                                    TypePtr type

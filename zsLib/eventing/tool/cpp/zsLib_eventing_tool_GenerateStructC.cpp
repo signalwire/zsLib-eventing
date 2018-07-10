@@ -2886,6 +2886,8 @@ namespace zsLib
           std::stringstream cSS;
           std::stringstream cppSS;
 
+          bool disposable = structObj->hasModifier(Modifier_Struct_Disposable);
+
           for (auto iter = structObj->mMethods.begin(); iter != structObj->mMethods.end(); ++iter) {
             auto method = (*iter);
             if (!method) continue;
@@ -3099,6 +3101,9 @@ namespace zsLib
                 ss << exportStr << " " << fixCType(structObj) << " " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperClone(" << fixCType(structObj) << " handle);\n";
                 ss << exportStr << " void " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperDestroy(" << fixCType(structObj) << " handle);\n";
                 ss << exportStr << " instance_id_t " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperInstanceId(" << fixCType(structObj) << " handle);\n";
+                if (disposable) {
+                  ss << exportStr << " void " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperDispose(" << fixCType(structObj) << " handle);\n";
+                }
               }
               {
                 auto &ss = structFile.cFunctionsSS_;
@@ -3131,6 +3136,18 @@ namespace zsLib
                 ss << "  return reinterpret_cast<instance_id_t>((*reinterpret_cast<WrapperTypePtrRawPtr>(handle)).get());\n";
                 ss << "}\n";
                 ss << "\n";
+
+                if (disposable) {
+                  ss << dash;
+                  ss << "void " << getApiCallingDefine(structObj) << " " << fixType(rootStructObj) << "_wrapperDispose(" << fixCType(structObj) << " handle)\n";
+                  ss << "{\n";
+                  ss << "  typedef " << GenerateStructHeader::getWrapperTypeString(false, structObj) << " WrapperTypePtr;\n";
+                  ss << "  typedef WrapperTypePtr * WrapperTypePtrRawPtr;\n";
+                  ss << "  if (0 == handle) return;\n";
+                  ss << "  (*reinterpret_cast<WrapperTypePtrRawPtr>(handle))->wrapper_dispose();\n";
+                  ss << "}\n";
+                  ss << "\n";
+                }
               }
             }
 

@@ -2662,6 +2662,8 @@ namespace zsLib
           if (GenerateHelper::isBuiltInType(structObj)) return;
           if (structObj->mGenerics.size() > 0) return;
 
+          bool disposable = structObj->hasModifier(Modifier_Struct_Disposable);
+
           StructFile structFile(apiFile, structObj);
           structFile.project_ = apiFile.project_;
           structFile.global_ = apiFile.global_;
@@ -2771,6 +2773,9 @@ namespace zsLib
               if (structFile.hasEvents_) {
                 ss << indentStr << "    WrapperObserveEventsCancel();\n";
               }
+              if (disposable) {
+                ss << indentStr << "    " << getApiPath(apiFile) << "." << fixedTypeStr << "_wrapperDispose(this.native_);\n";
+              }
               ss << indentStr << "    " << getApiPath(apiFile) << "." << fixedTypeStr << "_wrapperDestroy(this.native_);\n";
               ss << indentStr << "    this.native_ = System.IntPtr.Zero;\n";
               ss << indentStr << "    if (disposing) System.GC.SuppressFinalize(this);\n";
@@ -2812,6 +2817,11 @@ namespace zsLib
               ss << "\n";
               ss << indentApiStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
               ss << indentApiStr << "public extern static void " << fixedTypeStr << "_wrapperDestroy(" << cTypeStr << " handle);\n";
+              if (disposable) {
+                ss << "\n";
+                ss << indentApiStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
+                ss << indentApiStr << "public extern static void " << fixedTypeStr << "_wrapperDispose(" << cTypeStr << " handle);\n";
+              }
               ss << "\n";
               ss << indentApiStr << "[DllImport(UseDynamicLib, CallingConvention = UseCallingConvention)]\n";
               ss << indentApiStr << "public extern static instance_id_t " << fixedTypeStr << "_wrapperInstanceId(" << cTypeStr << " handle);\n";

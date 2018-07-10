@@ -884,12 +884,18 @@ namespace zsLib
                                                          IDLFile &idl,
                                                          ContextPtr context,
                                                          const String &indentStr,
-                                                         std::stringstream &ss
+                                                         std::stringstream &ss,
+                                                         const String *overrideName
                                                          ) noexcept
         {
-          if (!context->hasModifier(Modifier_AltName)) return;
-
-          String methodName = context->getModifierValue(Modifier_AltName);
+          String methodName;
+          if (context) {
+            if (!context->hasModifier(Modifier_AltName)) return;
+            methodName = context->getModifierValue(Modifier_AltName);
+          }
+          if (overrideName) {
+            methodName = *overrideName;
+          }
 
           idl.import("windows.foundation.idl");
           ss << indentStr << "[method_name(\"" << fixName(methodName) << "\")]\n";
@@ -903,7 +909,9 @@ namespace zsLib
                                                       std::stringstream &ss
                                                       ) noexcept
         {
-          if (!context->hasModifier(Modifier_Method_Default)) return;
+          if (context) {
+            if (!context->hasModifier(Modifier_Method_Default)) return;
+          }
 
           idl.import("windows.foundation.idl");
           ss << indentStr << "[default_overload]\n";
@@ -1226,17 +1234,22 @@ namespace zsLib
           bool foundEvent {false};
           bool firstCtor {false};
           bool firstMethod {true};
+          bool firstCast {true};
 
           if (requiredInterface) {
-            firstMethod = false;
 
             staticMethodsSS << "\n";
             staticMethodsSS << indentStr << "/// <summary>\n";
             staticMethodsSS << indentStr << "/// Cast from " << toIdlType(idl, GenerationOptions{ GenerationOptions::Interface(requiredInterface) }, structObj) << " to " << toIdlType(idl, GenerationOptions{}, structObj) << "\n";
             staticMethodsSS << indentStr << "/// </summary>\n";
+            if (firstCast) {
+              fixDefaultAttribute(idl, nullptr, indentStr, staticMethodsSS);
+              firstCast = false;
+            }
+            String castMethodName = "CastFromI" + fixName(structObj);
+            fixMethodNameAttribute(idl, nullptr, indentStr, staticMethodsSS, &castMethodName);
             staticMethodsSS << indentStr << "static " << toIdlType(idl, GenerationOptions{}, structObj)
-              << " CastFromI" << fixName(structObj) << "("
-              << toIdlType(idl, GenerationOptions{ GenerationOptions::Interface(requiredInterface) }, structObj) << " source);\n";
+              << " Cast(" << toIdlType(idl, GenerationOptions{ GenerationOptions::Interface(requiredInterface) }, structObj) << " source);\n";
           }
 
           {
@@ -1258,16 +1271,27 @@ namespace zsLib
                     staticMethodsSS << indentStr << "/// <summary>\n";
                     staticMethodsSS << indentStr << "/// Cast from " << toIdlType(idl, GenerationOptions{ GenerationOptions::Interface(requiredInterface) }, foundStruct) << " to " << toIdlType(idl, GenerationOptions{ GenerationOptions::Interface(requiredInterface) }, structObj) << "\n";
                     staticMethodsSS << indentStr << "/// </summary>\n";
+                    if (firstCast) {
+                      fixDefaultAttribute(idl, nullptr, indentStr, staticMethodsSS);
+                      firstCast = false;
+                    }
+                    String castMethodName = "CastFromI" + fixName(foundStruct);
+                    fixMethodNameAttribute(idl, nullptr, indentStr, staticMethodsSS, &castMethodName);
                     staticMethodsSS << indentStr << "static " << toIdlType(idl, GenerationOptions{}, structObj)
-                      << " CastFromI" << fixName(foundStruct) << "("
-                      << toIdlType(idl, GenerationOptions{ GenerationOptions::Interface(foundNeedsInterface) }, foundStruct) << " source);\n\n";
+                      << " Cast(" << toIdlType(idl, GenerationOptions{ GenerationOptions::Interface(foundNeedsInterface) }, foundStruct) << " source);\n\n";
                   }
 
                   staticMethodsSS << indentStr << "/// <summary>\n";
                   staticMethodsSS << indentStr << "/// Cast from " << toIdlType(idl, GenerationOptions{ GenerationOptions::Interface(requiredInterface) }, foundStruct) << " to " << toIdlType(idl, GenerationOptions{ GenerationOptions::Interface(requiredInterface) }, structObj) << "\n";
                   staticMethodsSS << indentStr << "/// </summary>\n";
+                  if (firstCast) {
+                    fixDefaultAttribute(idl, nullptr, indentStr, staticMethodsSS);
+                    firstCast = false;
+                  }
+                  String castMethodName = "CastFrom" + fixName(foundStruct);
+                  fixMethodNameAttribute(idl, nullptr, indentStr, staticMethodsSS, &castMethodName);
                   staticMethodsSS << indentStr << "static " << toIdlType(idl, GenerationOptions{ }, structObj)
-                    << " CastFrom" << fixName(foundStruct) << "("
+                    << " Cast("
                     << toIdlType(idl, GenerationOptions{}, foundStruct) << " source);\n";
                 }
               }

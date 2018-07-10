@@ -1682,10 +1682,10 @@ namespace zsLib
             pubSS << indentStr << "/// <summary>\n";
             pubSS << indentStr << "/// Cast from " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeInterface() }) << " to " << fixStructName(structObj) << "\n";
             pubSS << indentStr << "/// </summary>\n";
-            pubSS << indentStr << "static " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " CastFromI" << fixStructName(structObj) << "(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeInterface(), GO::MakeReference() }) << " value);\n";
+            pubSS << indentStr << "static " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " Cast(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeInterface(), GO::MakeReference() }) << " value);\n";
 
             cppSS << dashedStr;
-            cppSS << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::CastFromI" << fixStructName(structObj) << "(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeInterface(), GO::MakeReference() }) << " value)\n";
+            cppSS << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::Cast(" << getCppWinrtType(helperFile, structObj, GO{ GO::MakeInterface(), GO::MakeReference() }) << " value)\n";
             cppSS << "{\n";
             cppSS << "  if (!value) return nullptr;\n";
             cppSS << "  auto nativeObject = ::Internal::Helper::" << getFromCppWinrtName(structObj) << "(value);  \n";
@@ -1713,17 +1713,17 @@ namespace zsLib
                   pubSS << indentStr << "/// <summary>\n";
                   pubSS << indentStr << "/// Cast from " << getCppWinrtType(helperFile, foundStruct, GO{}) << " to " << fixStructName(structObj) << "\n";
                   pubSS << indentStr << "/// </summary>\n";
-                  pubSS << indentStr << "static " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " CastFrom" << fixStructName(foundStruct) << "(" << getCppWinrtType(helperFile, foundStruct, GO::MakeReference()) << " value);\n";
+                  pubSS << indentStr << "static " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " Cast(" << getCppWinrtType(helperFile, foundStruct, GO::MakeReference()) << " value);\n";
                   if (foundRequiresInterface) {
                     pubSS << indentStr << "/// <summary>\n";
                     pubSS << indentStr << "/// Cast from " << getCppWinrtType(helperFile, foundStruct, GO{ GO::MakeInterface() }) << " to " << fixStructName(structObj) << "\n";
                     pubSS << indentStr << "/// </summary>\n";
-                    pubSS << indentStr << "static " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " CastFromI" << fixStructName(foundStruct) << "(" << getCppWinrtType(helperFile, foundStruct, GO{ GO::MakeInterface(), GO::MakeReference() }) << " value);\n";
+                    pubSS << indentStr << "static " << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " Cast(" << getCppWinrtType(helperFile, foundStruct, GO{ GO::MakeInterface(), GO::MakeReference() }) << " value);\n";
                   }
                   foundCast = true;
 
                   cppSS << dashedStr;
-                  cppSS << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::CastFrom" << fixStructName(foundStruct) << "(" << getCppWinrtType(helperFile, foundStruct, GO::MakeReference()) << " value)\n";
+                  cppSS << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::Cast(" << getCppWinrtType(helperFile, foundStruct, GO::MakeReference()) << " value)\n";
                   cppSS << "{\n";
                   cppSS << "  if (!value) return nullptr;\n";
                   cppSS << "  auto nativeObject = ::Internal::Helper::" << getFromCppWinrtName(foundStruct) << "(value);  \n";
@@ -1736,7 +1736,7 @@ namespace zsLib
 
                   if (foundRequiresInterface) {
                     cppSS << dashedStr;
-                    cppSS << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::CastFromI" << fixStructName(foundStruct) << "(" << getCppWinrtType(helperFile, foundStruct, GO{ GO::MakeInterface(), GO::MakeReference() }) << " value)\n";
+                    cppSS << getCppWinrtType(helperFile, structObj, GO::MakeReturnResult()) << " " << getCppWinrtType(helperFile, structObj, GO{ GO::MakeImplementation() }) << "::Cast(" << getCppWinrtType(helperFile, foundStruct, GO{ GO::MakeInterface(), GO::MakeReference() }) << " value)\n";
                     cppSS << "{\n";
                     cppSS << "  if (!value) return nullptr;\n";
                     cppSS << "  auto nativeObject = ::Internal::Helper::" << getFromCppWinrtName(foundStruct) << "(value);  \n";

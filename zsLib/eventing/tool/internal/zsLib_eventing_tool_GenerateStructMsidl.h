@@ -164,7 +164,8 @@ namespace zsLib
                                              IDLFile &idl,
                                              ContextPtr context,
                                              const String &indentStr,
-                                             std::stringstream &ss
+                                             std::stringstream &ss,
+                                             const String *overrideName = nullptr
                                              ) noexcept;
           static void fixDefaultAttribute(
                                           IDLFile &idl,
