@@ -898,19 +898,20 @@ namespace zsLib
 
           auto name = baseFile.project_->mName;
           name.toUpper();
+          name.replaceAll(".", "_");
           return name + "_WRAPPER_C_GENERATED_REQUIRES_CAST";
         }
 
         //---------------------------------------------------------------------
         String GenerateStructDotNet::getApiPath(BaseFile &baseFile) noexcept
         {
-          return "Wrapper." + GenerateStructCx::fixName(baseFile.project_->getMappingName()) + ".Api";
+          return "Wrapper." + GenerateStructCx::fixName(baseFile.project_->getMappingName(),".","_") + ".Api";
         }
 
         //---------------------------------------------------------------------
         String GenerateStructDotNet::getHelperPath(BaseFile &baseFile) noexcept
         {
-          return "Wrapper." + GenerateStructCx::fixName(baseFile.project_->getMappingName()) + ".Helpers";
+          return "Wrapper." + GenerateStructCx::fixName(baseFile.project_->getMappingName(),".","_") + ".Helpers";
         }
 
         //---------------------------------------------------------------------
@@ -984,7 +985,7 @@ namespace zsLib
             ss << "namespace Wrapper\n";
             ss << "{\n";
             apiFile.indentMore();
-            ss << indentStr << "namespace " << GenerateStructCx::fixName(apiFile.project_->getMappingName()) << "\n";
+            ss << indentStr << "namespace " << GenerateStructCx::fixName(apiFile.project_->getMappingName(),".","_") << "\n";
             ss << indentStr << "{\n";
             apiFile.indentMore();
           }
@@ -1091,7 +1092,7 @@ namespace zsLib
 
             ss << "\n";
             apiFile.indentLess();
-            ss << "    } // namespace " << GenerateStructCx::fixName(apiFile.project_->getMappingName()) << "\n";
+            ss << "    } // namespace " << GenerateStructCx::fixName(apiFile.project_->getMappingName(),".","_") << "\n";
             apiFile.indentLess();
             ss << "} // namespace Wrapper\n";
           }
@@ -1421,7 +1422,7 @@ namespace zsLib
               "}\n"
               ;
 
-              String apiNamespaceStr = "Wrapper." + GenerateStructCx::fixName(apiFile.project_->getMappingName()) + ".Api";
+              String apiNamespaceStr = "Wrapper." + GenerateStructCx::fixName(apiFile.project_->getMappingName(),".","_") + ".Api";
 
               String callbackHelpersStr(callbackHelpers);
               callbackHelpersStr.replaceAll("$APINAMESPACE$", apiNamespaceStr);

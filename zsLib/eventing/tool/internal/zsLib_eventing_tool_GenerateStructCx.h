@@ -117,7 +117,11 @@ namespace zsLib
 
           static GenerateStructCxPtr create() noexcept;
 
-          static String fixName(const String &originalName) noexcept;
+          static String fixName(
+                                const String &originalName,
+                                const char *splitter = ".",
+                                const char *combiner = "."
+                                ) noexcept;
           static String fixNamePath(ContextPtr context) noexcept;
           static String fixStructName(StructPtr structObj) noexcept;
           static String fixMethodDeclaration(ContextPtr context) noexcept;

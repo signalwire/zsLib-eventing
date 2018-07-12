@@ -67,6 +67,7 @@ namespace zsLib
 
           struct HelperFile
           {
+            ProjectPtr project_;
             NamespacePtr global_;
             NamePathStructSetMap derives_;
 
@@ -101,6 +102,7 @@ namespace zsLib
 
           struct StructFile
           {
+            ProjectPtr project_;
             StructPtr struct_;
             std::stringstream headerIncludeSS_;
             std::stringstream headerStructPrivateSS_;
@@ -294,8 +296,14 @@ namespace zsLib
                                              StructPtr derivedStruct,
                                              const String &name
                                              ) noexcept;
-          static String fixStructFileName(StructPtr structObj) noexcept;
-          static String fixStructFileNameAsPath(StructPtr structObj) noexcept;
+          static String fixStructFileName(
+                                          ProjectPtr project,
+                                          StructPtr structObj
+                                          ) noexcept;
+          static String fixStructFileNameAsPath(
+                                                ProjectPtr project,
+                                                StructPtr structObj
+                                                ) noexcept;
           static String getStructInitName(StructPtr structObj) noexcept;
           static String getCppWinrtStructInitName(StructPtr structObj) noexcept;
           static String fixEnumName(EnumTypePtr enumObj) noexcept;

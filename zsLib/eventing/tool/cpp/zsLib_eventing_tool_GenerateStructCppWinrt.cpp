@@ -279,20 +279,48 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::fixStructFileName(StructPtr structObj) noexcept
+        String GenerateStructCppWinrt::fixStructFileName(
+                                                         ProjectPtr project,
+                                                         StructPtr structObj
+                                                         ) noexcept
         {
           auto result = fixNamePath(structObj);
           result.replaceAll("::", ".");
           result.trim(".");
+
+          auto projectName = project->getMappingName();
+
+          String trimmedStr = result.substr(0, projectName.length());
+          if (projectName.size() > 0) projectName += ".";
+          if (trimmedStr.size() > 0) trimmedStr += ".";
+
+          if (0 == projectName.compareNoCase(trimmedStr)) {
+            result = result.substr(trimmedStr.length());
+          }
+
           return result;
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCppWinrt::fixStructFileNameAsPath(StructPtr structObj) noexcept
+        String GenerateStructCppWinrt::fixStructFileNameAsPath(
+                                                               ProjectPtr project,
+                                                               StructPtr structObj
+                                                               ) noexcept
         {
           auto result = fixNamePath(structObj);
-          result.replaceAll("::", "/");
-          result.trim("/");
+          result.replaceAll("::", ".");
+          result.trim(".");
+
+          auto projectName = project->getMappingName();
+
+          String trimmedStr = result.substr(0, projectName.length());
+          if (projectName.size() > 0) projectName += ".";
+          if (trimmedStr.size() > 0) trimmedStr += ".";
+
+          if (0 == projectName.compareNoCase(trimmedStr)) {
+            result = result.substr(trimmedStr.length());
+          }
+          result.replaceAll(".", "/");
           return result;
         }
 
@@ -1167,7 +1195,7 @@ namespace zsLib
           auto &indentStr = helperFile.headerIndentStr_;
           auto dashedStr = GenerateHelper::getDashedComment(String());
 
-          helperFile.includeCpp(String("\"") + fixStructFileName(structObj) + ".h\"");
+          helperFile.includeCpp(String("\"") + fixStructFileName(helperFile.project_, structObj) + ".h\"");
           bool requiresInterface = helperFile.isStructNeedingInterface(structObj);
 
           ss << indentStr << "\n";
@@ -1342,10 +1370,11 @@ namespace zsLib
 
           auto dashedStr = GenerateHelper::getDashedComment(String());
 
-          String filename = fixStructFileName(structObj);
-          String filenameAsPath = fixStructFileNameAsPath(structObj);
+          String filename = fixStructFileName(helperFile.project_, structObj);
+          String filenameAsPath = fixStructFileNameAsPath(helperFile.project_, structObj);
 
           StructFile structFile;
+          structFile.project_ = helperFile.project_;
           structFile.struct_ = structObj;
           structFile.structsNeedingInterface_ = helperFile.structsNeedingInterface_;
 
@@ -2954,7 +2983,7 @@ namespace zsLib
               if ("::std::set" == specialName) return;
               if ("::zs::PromiseWith" == specialName) return;
 
-              structFile.includeCpp(String("\"") + fixStructFileName(structObj) + ".h\"");
+              structFile.includeCpp(String("\"") + fixStructFileName(structFile.project_, structObj) + ".h\"");
               return;
             }
           }
@@ -3119,6 +3148,7 @@ namespace zsLib
           if (!project->mGlobal) return;
 
           HelperFile helperFile;
+          helperFile.project_ = project;
           helperFile.global_ = project->mGlobal;
 
           GenerateStructMsidl::scanNamespaceForStructsNeedingToBeInterfaces(*(helperFile.structsNeedingInterface_), helperFile.global_);

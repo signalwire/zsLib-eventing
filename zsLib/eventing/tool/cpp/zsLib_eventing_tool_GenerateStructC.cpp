@@ -457,6 +457,7 @@ namespace zsLib
 
           auto name = project->mName;
           name.toUpper();
+          name.replaceAll(".", "_");
           return name + "_WRAPPER_C_CALLING_CONVENTION";
         }
 
@@ -475,6 +476,7 @@ namespace zsLib
 
           auto name = project->mName;
           name.toUpper();
+          name.replaceAll(".", "_");
           return name + (!endGuard ? "_WRAPPER_C_PLUS_PLUS_BEGIN_GUARD" : "_WRAPPER_C_PLUS_PLUS_END_GUARD");
         }
         

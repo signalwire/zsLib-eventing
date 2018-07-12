@@ -345,10 +345,9 @@ namespace zsLib
         String GenerateStructPython::fixName(const String &originalName) noexcept
         {
           if (originalName.isEmpty()) return String();
-          String firstLetter = originalName.substr(0, 1);
-          String remaining = originalName.substr(1);
-          firstLetter.toUpper();
-          String result = firstLetter + remaining;
+
+          String result = GenerateStructCx::fixName(originalName);
+
           if (result == "None") return "_None";
           return result;
         }
@@ -1073,6 +1072,7 @@ namespace zsLib
 
           auto name = baseFile.project_->mName;
           name.toUpper();
+          name.replaceAll(".", "_");
           return name + "_WRAPPER_C_GENERATED_REQUIRES_CAST";
         }
 

@@ -157,13 +157,27 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
-        String GenerateStructCx::fixName(const String &originalName) noexcept
+        String GenerateStructCx::fixName(
+                                         const String &originalName,
+                                         const char *splitter,
+                                         const char *combiner
+                                         ) noexcept
         {
           if (originalName.isEmpty()) return String();
-          String firstLetter = originalName.substr(0, 1);
-          String remaining = originalName.substr(1);
-          firstLetter.toUpper();
-          return firstLetter + remaining;
+
+          UseHelper::SplitMap splits;
+          UseHelper::split(originalName, splits, splitter);
+
+          for (auto iter = splits.begin(); iter != splits.end(); ++iter) {
+            auto &value = (*iter).second;
+
+            String firstLetter = value.substr(0, 1);
+            String remaining = value.substr(1);
+            firstLetter.toUpper();
+            value = firstLetter + remaining;
+          }
+
+          return UseHelper::combine(splits, combiner);
         }
 
         //---------------------------------------------------------------------
