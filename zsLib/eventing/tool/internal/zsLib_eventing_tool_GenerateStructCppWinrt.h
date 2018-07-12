@@ -89,6 +89,7 @@ namespace zsLib
             TypeSet alreadyThrows_;
 
             StructSetPtr structsNeedingInterface_;
+            size_t totalFlushes_{};
 
             HelperFile() noexcept;
             ~HelperFile() noexcept;
@@ -96,6 +97,7 @@ namespace zsLib
             void includeHeader(const String &headerFile) noexcept;
             void includeCpp(const String &headerFile) noexcept;
             void specialThrow(TypePtr type) noexcept;
+            void flushCppAlreadyIncluded() noexcept;
 
             bool isStructNeedingInterface(StructPtr structObj) const noexcept;
           };
@@ -484,6 +486,12 @@ namespace zsLib
                                                     StructFile &structFile,
                                                     TemplatedStructTypePtr templatedStructObj
                                                     ) noexcept;
+
+          static void writeHelperCppPreamble(HelperFile &helperFile) noexcept;
+          static void flushHelperIfTooBig(
+                                          HelperFile &helperFile,
+                                          bool finalizeNow = false
+                                          ) noexcept;
 
           //-------------------------------------------------------------------
           //

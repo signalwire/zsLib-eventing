@@ -40,6 +40,9 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <sstream>
 
+#define ZS_EVENTING_GENERATE_STRUCT_CPPWINRT_MAX_CPP_BODY_SIZE_IN_CHARS (100000)
+
+
 namespace zsLib { namespace eventing { namespace tool { ZS_DECLARE_SUBSYSTEM(zslib_eventing_tool) } } }
 
 namespace zsLib
@@ -107,6 +110,13 @@ namespace zsLib
           auto &ss = headerThrowersSS_;
 
           ss << headerIndentStr_ << "  void customThrow(" << GenerateStructCppWinrt::getCppType(rejectionType, GO{}) << " error) noexcept(false);\n";
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructCppWinrt::HelperFile::flushCppAlreadyIncluded() noexcept
+        {
+          cppAlreadyIncluded_.clear();
+          ++totalFlushes_;
         }
 
         //---------------------------------------------------------------------
@@ -1130,6 +1140,8 @@ namespace zsLib
             indentStr += "  ";
           }
 
+          flushHelperIfTooBig(helperFile);
+
           for (auto iter = namespaceObj->mNamespaces.begin(); iter != namespaceObj->mNamespaces.end(); ++iter)
           {
             auto subNamespaceObj = (*iter).second;
@@ -1155,6 +1167,8 @@ namespace zsLib
                                                        ) noexcept
         {
           if (!structObj) return;
+
+          flushHelperIfTooBig(helperFile);
 
           auto namePath = structObj->getPathName();
           if (namePath == "::std::list") {
@@ -2229,6 +2243,8 @@ namespace zsLib
                                                      EnumTypePtr enumObj
                                                      ) noexcept
         {
+          flushHelperIfTooBig(helperFile);
+
           auto &ss = helperFile.headerStructSS_;
           auto &cppSS = helperFile.cppBodySS_;
           auto &indentStr = helperFile.headerIndentStr_;
@@ -2276,6 +2292,8 @@ namespace zsLib
           for (auto iter = structObj->mTemplatedStructs.begin(); iter != structObj->mTemplatedStructs.end(); ++iter)
           {
             auto templatedStruct = (*iter).second;
+
+            flushHelperIfTooBig(helperFile);
 
             auto found = templatedStruct->mTemplateArguments.begin();
             if (found == templatedStruct->mTemplateArguments.end()) {
@@ -2331,6 +2349,8 @@ namespace zsLib
           for (auto iter = structObj->mTemplatedStructs.begin(); iter != structObj->mTemplatedStructs.end(); ++iter)
           {
             auto templatedStruct = (*iter).second;
+
+            flushHelperIfTooBig(helperFile);
 
             auto found = templatedStruct->mTemplateArguments.begin();
             if (found == templatedStruct->mTemplateArguments.end()) {
@@ -2393,6 +2413,8 @@ namespace zsLib
           for (auto iter = structObj->mTemplatedStructs.begin(); iter != structObj->mTemplatedStructs.end(); ++iter)
           {
             auto templatedStruct = (*iter).second;
+
+            flushHelperIfTooBig(helperFile);
 
             auto found = templatedStruct->mTemplateArguments.begin();
             if (found == templatedStruct->mTemplateArguments.end()) {
@@ -3091,6 +3113,54 @@ namespace zsLib
         }
 
         //---------------------------------------------------------------------
+        void GenerateStructCppWinrt::writeHelperCppPreamble(HelperFile &helperFile) noexcept
+        {
+          {
+            auto &ss = helperFile.cppIncludeSS_;
+            ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
+            ss << "#include \"pch.h\"\n";
+            ss << "#include \"cppwinrt_Helpers.h\"\n";
+            ss << "\n";
+          }
+
+          {
+            auto &ss = helperFile.cppBodySS_;
+            GenerateStructHeader::generateUsingTypes(ss, "");
+            ss << "using namespace winrt;\n";
+            ss << "\n";
+          }
+        }
+
+        //---------------------------------------------------------------------
+        void GenerateStructCppWinrt::flushHelperIfTooBig(
+                                                         HelperFile &helperFile,
+                                                         bool finalizeNow
+                                                         ) noexcept
+        {
+          if (!finalizeNow) {
+            auto available = helperFile.cppBodySS_.tellp();
+            if (available < ZS_EVENTING_GENERATE_STRUCT_CPPWINRT_MAX_CPP_BODY_SIZE_IN_CHARS) return;
+          }
+
+          helperFile.cppIncludeSS_ << "\n";
+          helperFile.cppIncludeSS_ << helperFile.cppBodySS_.str();
+
+          writeBinary(helperFile.cppFileName_, UseHelper::convertToBuffer(helperFile.cppIncludeSS_.str()));
+
+          helperFile.cppIncludeSS_ = std::stringstream{};
+          helperFile.cppBodySS_ = std::stringstream{};
+
+          helperFile.cppFileName_ = helperFile.cppFileName_.substr(0, helperFile.cppFileName_.length() - strlen(".cpp"));
+
+          helperFile.cppFileName_.trimRight("0123456789");
+          helperFile.cppFileName_ += string(helperFile.totalFlushes_ + 2);  // starts at zero, and want next value after that
+          helperFile.cppFileName_ += ".cpp";
+
+          helperFile.flushCppAlreadyIncluded();
+          writeHelperCppPreamble(helperFile);
+        }
+
+        //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
         //---------------------------------------------------------------------
@@ -3168,20 +3238,7 @@ namespace zsLib
             ss << "\n";
           }
 
-          {
-            auto &ss = helperFile.cppIncludeSS_;
-            ss << "// " ZS_EVENTING_GENERATED_BY "\n\n";
-            ss << "#include \"pch.h\"\n";
-            ss << "#include \"cppwinrt_Helpers.h\"\n";
-            ss << "\n";
-          }
-
-          {
-            auto &ss = helperFile.cppBodySS_;
-            GenerateStructHeader::generateUsingTypes(ss, "");
-            ss << "using namespace winrt;\n";
-            ss << "\n";
-          }
+          writeHelperCppPreamble(helperFile);
 
           {
             auto &ss = helperFile.headerThrowersSS_;
@@ -3206,6 +3263,7 @@ namespace zsLib
             ss << "\n";
 
             generateSpecialHelpers(helperFile);
+            flushHelperIfTooBig(helperFile);
           }
 
           generateForNamespace(helperFile, project->mGlobal, String());
@@ -3222,11 +3280,9 @@ namespace zsLib
           helperFile.headerIncludeSS_ << helperFile.headerStructSS_.str();
           helperFile.headerIncludeSS_ << helperFile.headerFinalSS_.str();
 
-          helperFile.cppIncludeSS_ << "\n";
-          helperFile.cppIncludeSS_ << helperFile.cppBodySS_.str();
-
           writeBinary(helperFile.headerFileName_, UseHelper::convertToBuffer(helperFile.headerIncludeSS_.str()));
-          writeBinary(helperFile.cppFileName_, UseHelper::convertToBuffer(helperFile.cppIncludeSS_.str()));
+
+          flushHelperIfTooBig(helperFile, true);
         }
 
       } // namespace internal
