@@ -8,6 +8,8 @@ inputArray=sys.argv
 idlPath=inputArray[1]
 idlAlreadyCompletedFlagFile=inputArray[2]
 toolchainCPU=inputArray[3]
+idlOutputPath=inputArray[4]
+idlLanguages=inputArray[5]
 #tempToolchain=toolchain.split(":")
 #toolchainCPU=tempToolchain[1]
 
@@ -32,7 +34,7 @@ if not os.path.isfile(idlCompilationFlagPath):
   os.chdir(os.path.dirname(idlPath))
   jsonFile=os.path.basename(idlPath)
 
-  commandPath = compilerNewPath + " -idl c dotnet json cx json wrapper python cppwinrt msidl -c " + jsonFile + " -o ."
+  commandPath = compilerNewPath + " -idl " + idlLanguages + " -c " + jsonFile + " -o " + idlOutputPath
 
   print "runIDLCompiler - idlPath: " + idlPath
   print "runIDLCompiler - jsonFile: " + jsonFile
@@ -45,8 +47,6 @@ if not os.path.isfile(idlCompilationFlagPath):
   if (result!=0):
     sys.exit("Failed idl compilation" + str(result))
     
-  print "runIDLCompiler - UpdateScriptPath:" + updateScriptPath
-
   open(idlCompilationFlagPath,'w').close()
   os.chdir(os.path.dirname(currentWorkingPath))
 else:

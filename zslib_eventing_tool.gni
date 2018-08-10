@@ -56,6 +56,18 @@ template("compile_idl_macro") {
       sources = invoker.sources
       idlAlreadyCompletedFlag = invoker.idlAlreadyCompletedFlag
 
+      if (defined(invoker.idlOutputPath)) {
+        idlOutputPath = invoker.idlOutputPath
+      } else {
+        idlOutputPath = "."
+      }
+
+      if (defined(invoker.idlLanguages)) {
+        idlLanguages = invoker.idlLanguages
+      } else {
+        idlLanguages = "c dotnet json cx json wrapper python cppwinrt msidl"
+      }
+
       #Not of interest. Added just because outputs is required by action
       #outputs = [ 
       #  "$target_out_dir/{source_name_part}",
@@ -67,6 +79,8 @@ template("compile_idl_macro") {
         rebase_path(sources[0], root_build_dir),
         idlAlreadyCompletedFlag,
         "$current_cpu",
+        "$idlOutputPath",
+        "$idlLanguages",
       ]
 
       deps = [ "//third_party/idl/zsLib-eventing:zslib-eventing-tool-compiler($host_toolchain)" ]

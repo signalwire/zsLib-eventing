@@ -135,9 +135,9 @@ if (host_toolchain == current_toolchain) {
       ]
       
       if (is_win && (current_os != "winuwp")) {
-        deps += [ "//third_party/cryptopp(//build/toolchain/win:$current_cpu)", ]
+        deps += [ "//third_party/idl/cryptopp(//build/toolchain/win:$current_cpu)", ]
       } else {
-        deps += [ "//third_party/cryptopp", ]
+        deps += [ "//third_party/idl/cryptopp", ]
       }
       
       if (is_linux) {
