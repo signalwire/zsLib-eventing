@@ -122,7 +122,7 @@ namespace zsLib
           mOutputer(outputer)
         {
 #ifdef _WIN32
-          _Init(NULL, NULL, NULL, &pBegin, &pCurrent, &pLength);
+          this->_Init(NULL, NULL, NULL, &pBegin, &pCurrent, &pLength);
 #endif //_WIN32
           m_outputBuffer.reserve(32);
         }
@@ -196,7 +196,7 @@ namespace zsLib
           mOutputs(make_shared<OutputDelegateMap>())
         {
 #ifdef _WIN32
-          clear();
+          this->clear();
 #endif //_WIN32
         }
 

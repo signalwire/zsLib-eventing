@@ -2048,7 +2048,7 @@ namespace zsLib
             // Author="Robin Raymond"
             // Comments="zsLib Custom Provider Profile"
             // Version="1.0">
-            windowsPerformanceRecorderEl->setAttribute("Author", mConfig.mAuthor.hasData() ? mConfig.mAuthor : "Unknown");
+            windowsPerformanceRecorderEl->setAttribute("Author", mConfig.mAuthor.hasData() ? mConfig.mAuthor.c_str() : "Unknown");
             windowsPerformanceRecorderEl->setAttribute("Comments", provider->mName);
             windowsPerformanceRecorderEl->setAttribute("Version", "1.0");
             addEOL(windowsPerformanceRecorderEl);

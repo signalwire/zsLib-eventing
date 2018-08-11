@@ -456,7 +456,7 @@ namespace zsLib
               ss << "\n";
             }
             firstNamespace = false;
-            processTypesNamespace(iss, ss, namespaceObj->isGlobal() ? "  " : inIndentStr, subNamespaceObj);
+            processTypesNamespace(iss, ss, namespaceObj->isGlobal() ? "  " : inIndentStr.c_str(), subNamespaceObj);
           }
 
           ss << indentStr << "namespace implementation {\n";
