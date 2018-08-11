@@ -45,7 +45,7 @@ namespace zsLib
 {
   namespace eventing
   {
-    typedef CryptoPP::SecBlock<byte, CryptoPP::AllocatorWithNul<byte> > SecureByteBlockWithNulAllocator;
+    typedef CryptoPP::SecBlock<CryptoPP::byte, CryptoPP::AllocatorWithNul<CryptoPP::byte> > SecureByteBlockWithNulAllocator;
     ZS_DECLARE_TYPEDEF_PTR(SecureByteBlockWithNulAllocator, SecureByteBlock);
 
     ZS_DECLARE_TYPEDEF_PTR(std::list<String>, StringList);

@@ -34,7 +34,11 @@ target_include_directories(zsLib-Eventing PUBLIC
 	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
 )
 
-# Link to zslib and cryptocpp
+if (NOT TARGET cryptopp-static)
+	message(FATAL_ERROR "Where is cryptopp?")
+endif()
+
+# Link to zslib and cryptopp
 target_link_libraries(zsLib-Eventing PUBLIC zsLib cryptopp-static)
 
 # Include the bin dir for config discovery
