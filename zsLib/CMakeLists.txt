@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.7.2)
 
-option(ZSLIB_STATIC "Build sw lib as a static library" ON)
+option(ZSLIB_STATIC "Build zsLib-Eventing as a static library" ON)
 
 # Our core file list
 sw_load_sources(zsLib-EventingDeps
@@ -46,3 +46,6 @@ set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
 
 # Setup precompiled header
 sw_pch(zsLib-Eventing "eventing.h")
+
+# Include the tool
+add_subdirectory(eventing/tool)
