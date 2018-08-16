@@ -19,7 +19,7 @@ endif()
 
 # Setup a useful export file for inclusion in other projects
 export(TARGETS zsLib-Eventing
-	FILE zsLibEventingConfig.cmake
+	FILE zsLib-EventingConfig.cmake
 	EXPORT_LINK_INTERFACE_LIBRARIES
 )
 
