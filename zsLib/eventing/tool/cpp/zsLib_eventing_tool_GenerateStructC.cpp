@@ -2191,7 +2191,11 @@ namespace zsLib
                 ss << "\n";
 
                 ss << dash;
-                ss << "void " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_insert(" << fixCType(templatedStructType) << " handle, " << fixCType(keyType) << " key, " << fixCType(listType) << " value)\n";
+                if (isMap) {
+                  ss << "void " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_insert(" << fixCType(templatedStructType) << " handle, " << fixCType(keyType) << " key, " << fixCType(listType) << " value)\n";
+                } else {
+                  ss << "void " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_insert(" << fixCType(templatedStructType) << " handle, " << fixCType(listType) << " value)\n";
+                }
                 ss << "{\n";
                 ss << typedefsSS.str();
                 ss << "  if (0 == handle) return;\n";
