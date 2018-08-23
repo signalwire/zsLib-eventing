@@ -10,15 +10,24 @@ using namespace zsLib::eventing::tool;
 
 int main(int argc, char * const argv[])
 {
-  ICommandLine::StringList arguments;
+  try {
+     ICommandLine::StringList arguments;
 
-  if (argc > 0) {
-    argv = &(argv[1]);
-    --argc;
-  }
+	  if (argc > 0) {
+		argv = &(argv[1]);
+		--argc;
+	  }
 
-  output().installStdOutput();
+	  output().installStdOutput();
 
-  arguments = ICommandLine::toList(argc, argv);
-  return ICommandLine::performDefaultHandling(arguments);
+	  arguments = ICommandLine::toList(argc, argv);
+	  return ICommandLine::performDefaultHandling(arguments);
+   } catch (const std::exception &e) {
+	   std::cout << "Uncaught exception: " << e.what() << std::endl;
+	   return 255;
+   }
+   } catch (...) {
+	   std::cout << "Uncaught exception of unknown type" << std::endl;
+	   return 255;
+   }
 }
