@@ -992,7 +992,7 @@ namespace zsLib
             auto &ss = helperFile.headerCFunctionsSS_;
             ss << "\n";
             ss << "/* void wrapperCallbackFunction(callback_event_t handle); */\n";
-            ss << "typedef void (ORTC_WRAPPER_C_CALLING_CONVENTION *wrapperCallbackFunction)(callback_event_t);\n";
+            ss << "typedef void (" << getApiCallingDefine(helperFile.global_) << " *wrapperCallbackFunction)(callback_event_t);\n";
             ss << "\n";
             ss << getApiExportDefine(helperFile.global_) << " void " << getApiCallingDefine(helperFile.global_) << " callback_wrapperInstall(wrapperCallbackFunction function);\n";
             ss << "\n";
@@ -2191,7 +2191,11 @@ namespace zsLib
                 ss << "\n";
 
                 ss << dash;
-                ss << "void " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_insert(" << fixCType(templatedStructType) << " handle, " << fixCType(listType) << " value)\n";
+                if (isMap) {
+                  ss << "void " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_insert(" << fixCType(templatedStructType) << " handle, " << fixCType(keyType) << " key, " << fixCType(listType) << " value)\n";
+                } else {
+                  ss << "void " << getApiCallingDefine(structType) << " " << fixType(templatedStructType) << "_insert(" << fixCType(templatedStructType) << " handle, " << fixCType(listType) << " value)\n";
+                }
                 ss << "{\n";
                 ss << typedefsSS.str();
                 ss << "  if (0 == handle) return;\n";
@@ -2266,12 +2270,11 @@ namespace zsLib
                   ss << typedefsWithIterSS.str();
                   ss << "  if (0 == iterHandle) return " << fixCType(keyType) << "();\n";
                   if (((keyType->toBasicType()) ||
-                    (keyType->toEnumType())) &&
-                    ("string_t" != fixCType(keyType))) {
+                      (keyType->toEnumType())) &&
+                      ("string_t" != fixCType(keyType))) {
                     ss << "  return (*(*reinterpret_cast<WrapperTypeListIteratorRawPtr>(iterHandle))).first;\n";
-                  }
-                  else {
-                    ss << "  return " << fixType(keyType) << "_wrapperToHandle(*(*reinterpret_cast<WrapperTypeListIteratorRawPtr>(iterHandle)).first);\n";
+                  } else {
+                    ss << "  return " << fixType(keyType) << "_wrapperToHandle((*(*reinterpret_cast<WrapperTypeListIteratorRawPtr>(iterHandle))).first);\n";
                   }
                   ss << "}\n";
                   ss << "\n";
@@ -2287,7 +2290,7 @@ namespace zsLib
                    ("string_t" != fixCType(listType))) {
                   ss << "  return (*(*reinterpret_cast<WrapperTypeListIteratorRawPtr>(iterHandle)))" << (isMap ? ".second" : "") << ";\n";
                 } else {
-                  ss << "  return " << fixType(listType) << "_wrapperToHandle(*(*reinterpret_cast<WrapperTypeListIteratorRawPtr>(iterHandle))" << (isMap ? ".second" : "") << ");\n";
+                  ss << "  return " << fixType(listType) << "_wrapperToHandle((*(*reinterpret_cast<WrapperTypeListIteratorRawPtr>(iterHandle)))" << (isMap ? ".second" : "") << ");\n";
                 }
                 ss << "}\n";
                 ss << "\n";
